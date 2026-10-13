@@ -144,7 +144,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | Layer | Technology | Purpose |
 | --- | --- | --- |
 | Language | TypeScript (strict), Node.js LTS for tooling | One language across all Workers and packages |
-| Package manager / monorepo | pnpm workspaces **[default]** (Turborepo optional) | Three apps, shared packages |
+| Package manager / monorepo | pnpm workspaces **[default]** with Turborepo | Three apps, shared packages |
 | App framework | Next.js 16, App Router, React 19 | Editor, auth, API, marketing |
 | Cloudflare adapter | `@opennextjs/cloudflare`, Wrangler | Run Next.js on Workers; deploy all Workers |
 | UI | Tailwind CSS v4, shadcn/ui (Radix primitives) | Editor UI and portfolio styling |
