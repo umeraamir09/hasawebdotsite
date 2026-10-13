@@ -148,6 +148,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | App framework | Next.js 16, App Router, React 19 | Editor, auth, API, marketing |
 | Cloudflare adapter | `@opennextjs/cloudflare`, Wrangler | Run Next.js on Workers; deploy all Workers |
 | UI | Tailwind CSS v4, shadcn/ui (Radix primitives) | Editor UI and portfolio styling |
+| Animation | GSAP | UI and portfolio animations, with reduced-motion support |
 | Drag and drop | dnd-kit (pointer + keyboard sensors) | Component and entry reordering, with Move up/down fallback buttons |
 | Rich text | Tiptap (ProseMirror), client-side only | Text sections and case studies |
 | Image cropping | `react-easy-crop` + Canvas re-encode **[default]** | Avatar, banner, project, and case-study images |
