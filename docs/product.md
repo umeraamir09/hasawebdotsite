@@ -93,6 +93,14 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 | Social or contact link | At least one valid link or contact method is required. An email address, GitHub profile, or another supported social profile qualifies. A contact form alone does not replace this requirement. |
 | Location | Optional location text displayed with the profile. |
 | Avatar decoration | Optional overlay selected from a curated decoration gallery. Owners can change or remove it. Custom decoration uploads are deferred. |
+| Face Reveal | Optional avatar add-on. An editor toggle shows a second image upload input for a real-face photo, such as a selfie. Visitors toggle between the original avatar and that photo. |
+
+- Face Reveal is off by default. The original avatar is intended for an illustrated or graphical identity, and the second image for the owner's real face. Owners choose the images; the builder does not verify faces automatically.
+- Enabling Face Reveal shows upload, crop, replace, and remove controls for the second image. Both images follow the existing image format and size limits. Enabling the add-on without a successfully uploaded second image blocks publication and shows an error beside that input.
+- Turning Face Reveal off hides the second upload input and permits publication with the original avatar. It retains a successfully uploaded second photo in the private draft for reuse. Removing the second photo while the add-on is enabled blocks publication until the owner replaces it or turns the add-on off.
+- Preview and published portfolios initially show the original avatar on every page load. Clicking or tapping the avatar reveals the second image with a smooth diagonal wipe from the top-left toward the bottom-right. Both images remain fixed in size and position. Activating it again reverses the wipe to restore the original avatar. The revealed state is not remembered across page loads.
+- A subtle visual cue identifies the interactive avatar. Visitors can toggle it with Enter or Space, with visible keyboard focus and an accessible label that changes between "Reveal face" and "Show avatar". Visitors who prefer reduced motion get an immediate image switch. Any selected avatar decoration remains over both images.
+- Owners can test the reveal in preview. Toggle settings, images, and crops save as draft changes and become public only after Publish. The editor explains that the second photo becomes publicly accessible when Face Reveal is published, even before a visitor reveals it. Disabling the add-on and republishing excludes the second photo from public assets while retaining it in the private draft.
 
 - Owners add, edit, remove, and order social or contact links. Each link has an understandable label and a valid destination or email address.
 - Owners choose which links appear in the profile and which also appear in the separate social links component. They do not need to re-enter the same link to display it in both places.
@@ -226,7 +234,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 - Owners can unpublish their portfolio. This removes public access to the portfolio, case studies, and resume while retaining the draft and reserving its subdomain. Owners can later republish at the same address.
 - Permanent account deletion requires explicit confirmation. It removes the public portfolio, draft content, stored uploads, and connected-account access. The confirmation explains the loss before deletion proceeds.
 
-### 19. Features deferred beyond the MVP
+## Features deferred beyond the MVP (Out of Scope)
 
 - Education components; additional portfolios per account; additional templates and alternative layouts.
 - Billing, subscriptions, checkout, paid feature restrictions, and custom domains.
