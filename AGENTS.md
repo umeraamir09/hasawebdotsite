@@ -1,5 +1,11 @@
 # Repository guidelines
 
+## Figma UI reference
+
+Use the [Figma UI direction file](https://www.figma.com/design/rjvDSCHPajF3Lpe8qNxX5U/hasaweb.site---Direction-A---SIDE-B?node-id=8-38&t=Yu7NSm3nQFBs7sQL-1) as the visual reference during development. See [docs/ui-direction.md](docs/ui-direction.md) for Figma MCP access details. Use the connected Figma MCP to read the design when implementing UI.
+
+The Figma file is read-only during development. Do not create, edit, or delete anything in it unless the user specifically asks for changes to the file. If a change is necessary and the user has not requested it, explain the proposed change and why it is needed, then ask for permission before making it. Access through Figma MCP does not authorize changes.
+
 ## Git branch names
 
 Use `<type>/<short-description>` for new work branches.

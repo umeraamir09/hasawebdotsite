@@ -4,6 +4,8 @@ hasawebsite is a component-based portfolio builder for developers. Users add the
 
 This document defines the target audience, the problem the product addresses, and the complete MVP scope. It describes how owners build and maintain their portfolios and what visitors can do on the published sites.
 
+See [UI direction](ui-direction.md) for the project's Figma visual reference, agent access through Figma MCP, and the read-only rule during development.
+
 ## Target audience
 
 hasawebsite should initially target computer science and software engineering students and developers seeking their first professional role who have projects to share with employers. Their portfolio should explain what they built, their individual contributions, and their technical skills, with links to code and working demos.
