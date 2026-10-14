@@ -1,0 +1,51 @@
+# hasaweb.site
+
+Phase 01 establishes the local runtime. Product requirements and later phases are in [docs/roadmap.md](docs/roadmap.md).
+
+## Setup
+
+Use Node.js 22.22.1 and pnpm 12.11.2. The package manager and direct dependencies have exact versions, and `pnpm-lock.yaml` pins transitive dependencies. Next.js is pinned to 16.3.8 because 16.4.0 fails the OpenNext workerd smoke test. See the [compatibility decision](specs/2026-10-14-local-runtime/requirements.md).
+
+```sh
+corepack enable
+corepack prepare pnpm@12.11.2 --activate
+pnpm install --frozen-lockfile
+pnpm local:seed
+pnpm dev
+```
+
+Open http://127.0.0.1:8787. `pnpm dev` builds the web Worker and starts web, site, and jobs together in workerd. Web is the public local entrypoint. Auxiliary Workers are available over service bindings. `pnpm dev:runtime` restarts an existing build without rebuilding. Worker source changes reload automatically; Next.js changes require rebuilding. `pnpm dev:web` provides Next.js hot reload on port 3000 for web-only work. Use the combined runtime to verify cross-Worker, Queue, and Workflow behavior.
+
+Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete that ignored directory only when you want to reset development data, then seed again. The seed command always uses local bindings and contains only runtime fixtures. Account and portfolio seeds arrive when their schemas exist.
+
+## Checks
+
+```sh
+pnpm check
+pnpm build
+pnpm test:runtime
+```
+
+`check` runs Biome, strict TypeScript across all apps/packages, and unit tests. `build` runs Next.js through OpenNext and bundles site/jobs with Wrangler dry runs. `test:runtime` seeds local fixtures, starts all Workers on port 8799, exercises D1/R2/services/Queue/Workflow, and restarts to check persistence. It stops its processes on completion. GitHub Actions runs these checks without Cloudflare credentials.
+
+## Workspace
+
+- `apps/web` holds Next.js App Router and OpenNext.
+- `apps/site` is the thin public serving Worker.
+- `apps/jobs` hosts Workflow, Queue, and scheduled handlers.
+- `packages/schema`, `db`, `components`, `theme`, `render`, `email`, and `github` reserve the agreed module boundaries. Their feature implementations arrive in the relevant phases.
+- `packages/config` supplies shared strict TypeScript settings and runtime utilities.
+
+The plain web development page is a runtime placeholder. UI implementation must read the Figma reference described in [docs/ui-direction.md](docs/ui-direction.md).
+
+## Local and production separation
+
+The committed `wrangler.jsonc` files name only local resources. All commands here use local simulation or dry runs. `APP_ENV=local` and loopback hostname checks restrict development probe routes. The private draft bucket is bound only to web.
+
+Do not deploy these local configurations. Production resource IDs, routes, secrets, and deployment approval are configured in Phase 52 with separate production config files. No production config is supplied until real resources exist. Runtime probe tables, fixtures, handlers, and the probe handlers for the contact/GitHub Queues and publish Workflow are development scaffolding, not publishing or delivery implementations.
+
+Put local secrets in ignored `apps/web/.dev.vars`, starting from `.dev.vars.example`. Use separate development OAuth apps when authentication arrives. Never commit credentials. The current skeleton needs none.
+
+The configuration follows [OpenNext setup](https://opennext.js.org/cloudflare/get-started) and [Cloudflare multi-Worker development](https://developers.cloudflare.com/workers/local-development/multi-workers/).
+
+If your WSL `pnpm` command resolves to a Windows executable, run commands through the Linux package runner, for example `npm exec --yes --package=pnpm@12.11.2 -- pnpm dev`.
