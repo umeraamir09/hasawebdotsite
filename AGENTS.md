@@ -29,3 +29,7 @@ Use Conventional Commits: `<type>(<optional-scope>): <description>`.
 - Examples: `feat(ui): add face reveal`, `fix(ui): prevent mobile menu overflow`, `docs: add git naming conventions`.
 
 Apply these conventions to new branches and commits. Do not rewrite existing history solely to rename commits.
+
+## Roadmap Rule
+
+- Make sure to check off the phases that I have explicitly approved after implementation as complete and not leave a completed phase not checked which will cause confusion. After Implementation ask me if you should check it off or not yet.
