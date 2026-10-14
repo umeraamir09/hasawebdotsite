@@ -1,2 +1,14 @@
 # Generated Figma output
 /output/
+node_modules/
+.next/
+.open-next/
+dist/
+.turbo/
+.wrangler/
+*.tsbuildinfo
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
+coverage/

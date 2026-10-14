@@ -1,0 +1,39 @@
+{
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "vars": {
+    "APP_ENV": "local"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hasaweb-local",
+      "database_id": "00000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "name": "hasaweb-site-local",
+  "main": "src/index.ts",
+  "r2_buckets": [
+    {
+      "binding": "SITES_BUCKET",
+      "bucket_name": "hasaweb-sites-local"
+    },
+    {
+      "binding": "PUBLIC_ASSETS_BUCKET",
+      "bucket_name": "hasaweb-assets-local"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "CONTACT_QUEUE",
+        "queue": "hasaweb-contact-local"
+      },
+      {
+        "binding": "GITHUB_QUEUE",
+        "queue": "hasaweb-github-local"
+      }
+    ]
+  }
+}

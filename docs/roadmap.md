@@ -36,7 +36,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 01. Establish the repository and local runtime
 
 - Set up the planned workspace, `web`, `site`, and `jobs` apps, shared packages, strict TypeScript, pinned dependencies, and local Cloudflare bindings. Add the baseline build, lint, and test commands.
-- [ ] Complete when all three apps run locally with persisted development resources and CI can build the skeleton. Production configuration remains separate from local fixtures and secrets.
+- [x] Complete when all three apps run locally with persisted development resources and CI can build the skeleton. Production configuration remains separate from local fixtures and secrets.
 
 ### Phase 02. Measure publish rendering
 
