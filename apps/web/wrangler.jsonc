@@ -1,0 +1,69 @@
+{
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "vars": {
+    "APP_ENV": "local"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hasaweb-local",
+      "database_id": "00000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "name": "hasaweb-web-local",
+  "main": ".open-next/worker.js",
+  "r2_buckets": [
+    {
+      "binding": "SITES_BUCKET",
+      "bucket_name": "hasaweb-sites-local"
+    },
+    {
+      "binding": "PUBLIC_ASSETS_BUCKET",
+      "bucket_name": "hasaweb-assets-local"
+    },
+    {
+      "binding": "DRAFT_BUCKET",
+      "bucket_name": "hasaweb-draft-local"
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      "binding": "SITE",
+      "service": "hasaweb-site-local"
+    },
+    {
+      "binding": "JOBS",
+      "service": "hasaweb-jobs-local"
+    },
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "hasaweb-web-local"
+    }
+  ],
+  "workflows": [
+    {
+      "binding": "PUBLISH_WORKFLOW",
+      "name": "hasaweb-publish-local",
+      "class_name": "RuntimeWorkflow",
+      "script_name": "hasaweb-jobs-local"
+    }
+  ],
+  "queues": {
+    "producers": [
+      {
+        "binding": "CONTACT_QUEUE",
+        "queue": "hasaweb-contact-local"
+      },
+      {
+        "binding": "GITHUB_QUEUE",
+        "queue": "hasaweb-github-local"
+      }
+    ]
+  }
+}

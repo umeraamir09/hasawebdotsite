@@ -1,0 +1,22 @@
+packages:
+  - apps/*
+  - packages/*
+
+minimumReleaseAgeExclude:
+  - '@cloudflare/workers-types@5.20261014.1'
+  - '@turbo/darwin-64@2.11.8'
+  - '@turbo/darwin-arm64@2.11.8'
+  - '@turbo/linux-64@2.11.8'
+  - '@turbo/linux-arm64@2.11.8'
+  - '@turbo/windows-64@2.11.8'
+  - '@turbo/windows-arm64@2.11.8'
+  - miniflare@5.20261012.0-beta
+  - turbo@2.11.8
+  - wrangler@4.151.0
+
+allowBuilds:
+  esbuild@0.28.2: true
+  workerd@1.20261012.1: true
+  sharp: true
+saveExact: true
+strictPeerDependencies: true
