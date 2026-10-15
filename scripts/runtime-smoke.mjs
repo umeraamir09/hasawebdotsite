@@ -77,6 +77,11 @@ try {
   await eventually(async () =>
     assert.equal((await json("/api/health")).app, "web"),
   );
+  assert.equal(
+    (await fetch(`${base}/api/runtime-spike`)).status,
+    404,
+    "S-2 probe must be disabled by default",
+  );
   const page = await fetch(base);
   assert.equal(page.status, 200);
   assert.match(await page.text(), /hasaweb.site/);

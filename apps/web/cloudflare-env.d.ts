@@ -1,5 +1,9 @@
 interface CloudflareEnv {
   APP_ENV: string;
+  SPIKE_ENABLED?: string;
+  SPIKE_KEY?: string;
+  SPIKE_ORIGIN?: string;
+  BETTER_AUTH_SECRET?: string;
   DB: D1Database;
   DRAFT_BUCKET: R2Bucket;
   SITES_BUCKET: R2Bucket;

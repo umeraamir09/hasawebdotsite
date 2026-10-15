@@ -22,3 +22,4 @@ jobs:
       - run: pnpm check
       - run: pnpm build
       - run: pnpm test:runtime
+      - run: pnpm spike:runtime

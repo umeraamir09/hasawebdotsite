@@ -5,3 +5,7 @@
 3. Run local workerd first-request and warm workloads, including invalid/expired sessions, cross-origin mutations, large JSON, and another owner. Preserve raw elapsed samples and separate sampled CPU profiles.
 4. Measure deployed startup_time_ms and per-request CPU when account resources and credentials are available. Decide runtime changes from evidence before dependent features.
 5. Run correctness, lint, type, build and runtime checks. Record pending external checks honestly. Ask for approval before checking off Phase 03.
+
+## Progress
+
+Local implementation, deployed startup/CPU measurement and the runtime revision are recorded in results.md. The original request CPU assumption fails. Final production failure checks and experiment cleanup are recorded with the evidence. Owner approval to check off Phase 03 remains pending.

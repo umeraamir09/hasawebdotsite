@@ -47,6 +47,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 03. Measure the app and API runtime
 
 - Run S-2 with an OpenNext skeleton, Better Auth session check, and D1 write. Measure startup and request CPU.
+- October 15, 2026: [deployed/local evidence and the required hot-API runtime revision](../specs/2026-10-15-app-runtime/results.md) are recorded. Startup passes; the original request CPU assumption fails. The replacement still needs measurement. Owner completion approval is pending.
 - [ ] Complete when the framework and API approach meets the architecture's limits, or the required endpoint/runtime changes have been decided.
 
 ### Phase 04. Prove hostname and asset routing

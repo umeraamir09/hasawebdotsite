@@ -25,7 +25,7 @@ It covers the MVP as scoped in `product.md`. It does not redesign features, add 
 | --- | --- | --- | --- |
 | D-1 | Budget | Free tier for launch; design so upgrading to Workers Paid ($5/month) is a configuration change, not a rewrite | confirmed |
 | D-2 | Target scale | Up to ~100 portfolios (beta/launch) | confirmed |
-| D-3 | Domain | `hasaweb.site`, **not yet registered**; DNS must live on Cloudflare | confirmed |
+| D-3 | Domain | `hasaweb.site`, owner confirmed registration October 15, 2026; Cloudflare full-zone activation/routing verification is in S-3 | confirmed |
 | D-4 | Framework | Next.js (App Router) on Workers via the OpenNext Cloudflare adapter | confirmed |
 | D-5 | Public serving | Pre-render each portfolio at publish time into R2; a thin Worker serves the snapshots | confirmed |
 | D-6 | Email delivery | Resend free tier, behind an `EmailProvider` adapter so Cloudflare Email Service can replace it later | confirmed |
@@ -117,6 +117,8 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
 | **`jobs`** | Hosts Workflows (publish, unpublish/delete, re-render-all), Queue consumers (contact delivery, GitHub refresh), and Cron handlers (daily sweep, outbox sweeper, garbage collection). | Each step bounded to fit 10 ms on free. |
 
 Splitting these keeps the public path tiny, keeps Next.js CPU off visitor traffic, and means each Worker can scale or be upgraded independently. Cross-Worker calls use service bindings and Workflow bindings.
+
+S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. Keep the web shell and provider authentication in `web`, but route hot owner APIs such as draft save and publish trigger through an internal service binding to a thin Hono entry in `jobs`. Reuse auth configuration per isolate without retaining request identities, retain real Better Auth session/deletion checks, and retest on Cloudflare before dependent feature implementation. This is a required runtime revision, not a proven Free-tier replacement. See [S-2 evidence and limitations](../specs/2026-10-15-app-runtime/results.md).
 
 ### 5.3 Domains and routing
 
@@ -511,7 +513,7 @@ Do these first, in this order, because each can change a decision above.
 | # | Risk or assumption | Spike | Fallback |
 | --- | --- | --- | --- |
 | S-1 | Publish render steps fit in **10 ms CPU** on free | Benchmark `react-dom/server` for a worst-case portfolio and each page in workerd, measuring CPU per step | Local S-1 rejects whole-page steps; [results and revised bounded approach](../specs/2026-10-15-publish-render/results.md) recorded October 15, 2026. Incremental preparation/render/assembly still needs S-8 verification |
-| S-2 | Next.js on the free plan: startup under 1 s, and auth/API route CPU p95 under 10 ms | Deploy a skeleton with Better Auth session check and a D1 write; measure `startup_time_ms` and CPU in logs | Move hot endpoints (draft save, publish trigger) into `jobs`/Hono; upgrade to Paid |
+| S-2 | Next.js on the free plan: startup under 1 s, and auth/API route CPU p95 under 10 ms | Deployed S-2 reports 25 ms startup but authenticated CPU window p95 13.717–18.461 ms for small requests, with sampled/window limitations; exact-limit writes also fail the assumed budget. See [results](../specs/2026-10-15-app-runtime/results.md) | Decide hot draft-save/publish-trigger endpoints in thin `jobs`/Hono with per-isolate auth configuration and real session/deletion checks. Retest before dependent APIs; replacement Free-tier feasibility remains unproven. Paid requires owner approval |
 | S-3 | Wildcard Worker route coexists with the R2 custom domain and the apex | Create the zone, routes, and an explicit no-Worker route for `assets.hasaweb.site` | Serve assets through `site` (costs more Worker requests) |
 | S-4 | Static asset requests do not count toward the Workers request limit | Observe analytics after loading the app repeatedly | Rely on caching; plan for Paid sooner |
 | S-5 | Better Auth on workerd/D1: per-request init, cookie cache, `__Host-` cookies, account-linking behavior vs AC 2.2 | Build the sign-in flow with both providers and linking test cases | Custom Arctic-based auth (already evaluated as the alternative) |
