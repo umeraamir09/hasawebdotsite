@@ -91,7 +91,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 10. Establish persistence and owner boundaries
 
 - Add Drizzle migrations and owner-scoped repositories for portfolios, assets, publication versions, claims, connected services, outbox records, and counters. Enforce one portfolio per account.
-- [ ] Complete when local migrations and fixtures work and another owner cannot read or mutate private records. Mutating APIs check origin and session state.
+- October 15, 2026: [persistence implementation and access-control evidence](../specs/2026-10-15-owner-persistence/results.md) are recorded. All 29 workerd/D1 integration groups, 139 unit tests, lint, typechecks, builds, and the three-Worker runtime smoke test pass. The owner approved Phase 10 completion on October 15, 2026.
+- [x] Complete when local migrations and fixtures work and another owner cannot read or mutate private records. Mutating APIs check origin and session state.
 
 ### Phase 11. Implement sign-up and sign-in
 

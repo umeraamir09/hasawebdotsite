@@ -15,7 +15,9 @@ function wrangler(command) {
   });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }
+wrangler(["d1", "migrations", "apply", "hasaweb-local"]);
 wrangler(["d1", "execute", "DB", "--file", "scripts/fixtures/runtime.sql"]);
+wrangler(["d1", "execute", "DB", "--file", "scripts/fixtures/persistence.sql"]);
 for (const [bucket, file] of [
   ["hasaweb-draft-local", "draft"],
   ["hasaweb-sites-local", "site"],

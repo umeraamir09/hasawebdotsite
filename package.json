@@ -10,6 +10,7 @@
     "dev:runtime": "wrangler dev -c apps/web/wrangler.jsonc -c apps/site/wrangler.jsonc -c apps/jobs/wrangler.jsonc --persist-to .wrangler/state --port 8787 --ip 127.0.0.1",
     "dev:web": "pnpm --filter @hasaweb/web dev",
     "local:seed": "node scripts/seed.mjs",
+    "db:migrate:local": "wrangler d1 migrations apply hasaweb-local --local --config apps/web/wrangler.jsonc --persist-to .wrangler/state",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck",
     "lint": "biome check .",
@@ -28,7 +29,9 @@
     "spike:workflow": "node scripts/workflow-assets-spike.mjs",
     "spike:workflow:live": "node scripts/workflow-assets-live.mjs",
     "spike:workflow:execution:live": "node scripts/workflow-execution-live.mjs",
-    "spike:workflow:observe:live": "node scripts/workflow-observe-live.mjs"
+    "spike:workflow:observe:live": "node scripts/workflow-observe-live.mjs",
+    "db:generate": "pnpm --filter @hasaweb/db generate",
+    "test:persistence": "node scripts/persistence-integration.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
