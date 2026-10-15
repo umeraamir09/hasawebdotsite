@@ -65,7 +65,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 06. Prove GitHub permissions
 
 - Run S-6 with public and explicitly authorized private contribution fixtures. Separate sign-in permissions from private-activity authorization.
-- [ ] Complete when matching-account access, anonymized counts, and revocation detection meet the full MVP requirements.
+- October 15, 2026: [fixture and live provider evidence](../specs/2026-10-15-github-permissions/results.md) are recorded. Forty workerd/D1/Web Crypto checks pass. Live matching-account authorization, both profile-visibility settings, anonymized calendar projection, grant deletion, independent sign-in, and external-revocation detection pass. Visibility-off results separate 425 public from 818 authorized contributions. The owner approved Phase 06 completion on October 15, 2026, with the separate no-scope platform credential check explicitly recorded as untested.
+- [x] Complete when matching-account access, anonymized counts, and revocation detection meet the full MVP requirements.
 
 ### Phase 07. Prove email delivery
 

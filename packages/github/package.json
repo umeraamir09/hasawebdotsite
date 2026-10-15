@@ -7,8 +7,8 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "build": "tsc --noEmit && tsc --noEmit -p spike/tsconfig.json",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p spike/tsconfig.json"
   },
   "devDependencies": {
     "typescript": "7.0.2"
