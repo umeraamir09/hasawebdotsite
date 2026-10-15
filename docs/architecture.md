@@ -71,7 +71,7 @@ Verified against Cloudflare's published limits (Workers limits page last updated
 | **Workflows** | 100K requests/day; 10 ms CPU per invocation (per pricing page) | Used for the publish pipeline. Confirm step and concurrency limits in a spike. |
 | **Workers Logs** | 200K events/day | Structured, sparse logging. |
 | **Cloudflare Email Service** | Sending to arbitrary recipients **requires Workers Paid**; free plan can only send to verified addresses in your own account | Cannot be used for owner or visitor email on the free plan, hence Resend. |
-| **Resend (free)** | 3,000 emails/month, **100/day**, 1 verified domain | Global and per-site daily email budget guard. |
+| **Resend (free)** | 3,000 emails/month, **100/day**, 3 verified domains | Global and per-site daily email budget guard. |
 | **Turnstile, Email Routing (inbound), Universal SSL, DNS** | Free | Spam protection, `abuse@` inbox, TLS for apex and first-level wildcard. |
 
 Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
@@ -316,6 +316,8 @@ Each request is served wholly from one version. Navigating between pages during 
 6. Send test message uses the same path with `is_test`. Limit tests to two per site per UTC day and count them against the site's and global contact allowances. Preview-mode forms never make a network call.
 
 Limits are five submissions per visitor/IP per site per hour and ten accepted messages per site per UTC calendar day. The global contact allowance is 90 emails per UTC day. Reserve the remaining ten of the 100 daily emails for recipient verification and owner notices. Defer those emails when their allowance is exhausted. Show delivery failures in the editor even when the owner notice is deferred.
+
+S-7 confirms the Resend adapter and all three live email types. [Evidence and implementation decisions](../specs/2026-10-15-email-delivery/results.md) include an additional dispatch-day guard to prevent cross-midnight retries from exceeding the provider cap or consuming the ten reserved notice slots. Acceptance reservations still use the original UTC day. Production outbox integration belongs to phases 43 through 45.
 
 ### 8.7 Unpublish and delete (product 18)
 

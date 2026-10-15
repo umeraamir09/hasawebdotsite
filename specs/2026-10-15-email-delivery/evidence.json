@@ -1,0 +1,263 @@
+{
+  "runtime": "local workerd + D1",
+  "checks": [
+    {
+      "name": "verification is accepted with one fixed-sender recipient",
+      "passed": true
+    },
+    {
+      "name": "verification uses plain text and a stable idempotency header",
+      "passed": true
+    },
+    {
+      "name": "verification has only its intended Reply-To",
+      "passed": true
+    },
+    {
+      "name": "contact is accepted with one fixed-sender recipient",
+      "passed": true
+    },
+    {
+      "name": "contact uses plain text and a stable idempotency header",
+      "passed": true
+    },
+    {
+      "name": "contact has only its intended Reply-To",
+      "passed": true
+    },
+    {
+      "name": "failure-notice is accepted with one fixed-sender recipient",
+      "passed": true
+    },
+    {
+      "name": "failure-notice uses plain text and a stable idempotency header",
+      "passed": true
+    },
+    {
+      "name": "failure-notice has only its intended Reply-To",
+      "passed": true
+    },
+    {
+      "name": "400 validation_error maps to rejected",
+      "passed": true
+    },
+    {
+      "name": "validation_error preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "401 missing_api_key maps to rejected",
+      "passed": true
+    },
+    {
+      "name": "missing_api_key preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "403 validation_error maps to rejected",
+      "passed": true
+    },
+    {
+      "name": "validation_error preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "422 validation_error maps to rejected",
+      "passed": true
+    },
+    {
+      "name": "validation_error preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "409 invalid_idempotent_request maps to rejected",
+      "passed": true
+    },
+    {
+      "name": "invalid_idempotent_request preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "409 concurrent_idempotent_requests maps to retry",
+      "passed": true
+    },
+    {
+      "name": "concurrent_idempotent_requests preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "409 resource_locked maps to retry",
+      "passed": true
+    },
+    {
+      "name": "resource_locked preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "429 rate_limit_exceeded maps to retry",
+      "passed": true
+    },
+    {
+      "name": "rate_limit_exceeded preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "429 daily_quota_exceeded maps to quota",
+      "passed": true
+    },
+    {
+      "name": "daily_quota_exceeded preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "429 monthly_quota_exceeded maps to quota",
+      "passed": true
+    },
+    {
+      "name": "monthly_quota_exceeded preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "500 application_error maps to retry",
+      "passed": true
+    },
+    {
+      "name": "application_error preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "503 service_unavailable maps to retry",
+      "passed": true
+    },
+    {
+      "name": "service_unavailable preserves retry delay without provider text",
+      "passed": true
+    },
+    {
+      "name": "network never claims acceptance or leaks data",
+      "passed": true
+    },
+    {
+      "name": "malformed success never claims acceptance or leaks data",
+      "passed": true
+    },
+    {
+      "name": "null success never claims acceptance or leaks data",
+      "passed": true
+    },
+    {
+      "name": "malformed rejection never claims acceptance or leaks data",
+      "passed": true
+    },
+    {
+      "name": "unknown provider error never claims acceptance or leaks data",
+      "passed": true
+    },
+    {
+      "name": "bounded timeout remains ambiguous and retryable",
+      "passed": true
+    },
+    {
+      "name": "HTTP-date Retry-After is respected",
+      "passed": true
+    },
+    {
+      "name": "idempotent replay returns the same provider ID",
+      "passed": true
+    },
+    {
+      "name": "changed payload cannot reuse an idempotency key",
+      "passed": true
+    },
+    {
+      "name": "lost acceptance response retries without sending a second email",
+      "passed": true
+    },
+    {
+      "name": "invalid or multiple-recipient envelope fails locally",
+      "passed": true
+    },
+    {
+      "name": "invalid or multiple-recipient envelope fails locally",
+      "passed": true
+    },
+    {
+      "name": "invalid or multiple-recipient envelope fails locally",
+      "passed": true
+    },
+    {
+      "name": "console provider sends all three types only to the chosen sink",
+      "passed": true
+    },
+    {
+      "name": "25 concurrent requests accept exactly ten at one site",
+      "passed": true
+    },
+    {
+      "name": "retry reuses the original reservation even at the site limit",
+      "passed": true
+    },
+    {
+      "name": "reservation cannot be reused for another site",
+      "passed": true
+    },
+    {
+      "name": "concurrent test messages consume exactly two test slots",
+      "passed": true
+    },
+    {
+      "name": "concurrent global acceptance stops at ninety including tests",
+      "passed": true
+    },
+    {
+      "name": "ten verification and notice slots survive exhausted contact capacity",
+      "passed": true
+    },
+    {
+      "name": "exhausted owner-notice allowance defers instead of accepting",
+      "passed": true
+    },
+    {
+      "name": "all email types together reserve at most one hundred",
+      "passed": true
+    },
+    {
+      "name": "UTC midnight starts a new acceptance day",
+      "passed": true
+    },
+    {
+      "name": "contact retries cannot consume the ten reserved dispatch slots",
+      "passed": true
+    },
+    {
+      "name": "actual dispatch day preserves ten notices and one hundred total attempts",
+      "passed": true
+    },
+    {
+      "name": "same dispatch operation is idempotent at the limit",
+      "passed": true
+    },
+    {
+      "name": "yesterday's retry counts against today's dispatch capacity",
+      "passed": true
+    },
+    {
+      "name": "monthly allowance accepts the three-thousandth attempt",
+      "passed": true
+    },
+    {
+      "name": "monthly allowance blocks the next attempt",
+      "passed": true
+    },
+    {
+      "name": "UTC month rollover restores dispatch capacity",
+      "passed": true
+    }
+  ],
+  "liveProviderVerified": false,
+  "limitations": [
+    "Controlled fixtures do not prove live domain verification or delivery.",
+    "Isolated reservation tables do not implement the production outbox or retry scheduler.",
+    "Dispatch attempts are conservatively charged even after provider errors."
+  ]
+}
