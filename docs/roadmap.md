@@ -77,7 +77,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 08. Prove workflow execution and asset withdrawal
 
 - Run S-8 with multi-page and concurrent publication, then S-9 with published asset removal and cache purge.
-- [ ] Complete when bounded workflow steps can finish and withdrawn assets stop serving through the public origin and CDN. Record any required fallback before building the publish pipeline.
+- October 15, 2026: [workflow/storage experiments, live asset withdrawal evidence and required fallback](../specs/2026-10-15-workflow-assets/results.md) are recorded. The deployed three-page stress test hits the per-invocation API cap, and the fragment-per-step design exceeds the Free daily step allowance at the planned volume; Queue/D1 batching and browser/query cache policy require validation before publication. The owner approved Phase 08 completion on October 15, 2026, with these fallback requirements recorded.
+- [x] Complete when bounded workflow steps can finish and withdrawn assets stop serving through the public origin and CDN. Record any required fallback before building the publish pipeline.
 
 ## Accounts and recoverable drafts
 

@@ -1,6 +1,6 @@
 {
   "extends": "../config/tsconfig.base.json",
-  "include": ["src/**/*.ts", "spike/**/*.ts"],
+  "include": ["src/**/*.ts", "spike/**/*.ts", "workflow-spike/**/*.ts"],
   "compilerOptions": {
     "lib": ["ES2022", "DOM"],
     "types": ["@cloudflare/workers-types"]
