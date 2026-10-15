@@ -1,11 +1,20 @@
-export default function DevelopmentPage() {
+import Link from "next/link";
+import { Brand } from "../components/brand";
+
+export default function HomePage() {
   return (
-    <main>
-      <h1>hasaweb.site</h1>
+    <main className="home">
+      <Brand />
+      <h1>
+        Everyone should have
+        <br />a website.
+      </h1>
       <p>
-        The local runtime is ready. Product screens arrive in later roadmap
-        phases.
+        A portfolio for your profile and work, at your own hasaweb.site address.
       </p>
+      <Link className="ghost-button" href="/sign-in">
+        Start building
+      </Link>
     </main>
   );
 }
