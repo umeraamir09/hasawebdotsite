@@ -31,7 +31,9 @@
     "spike:workflow:execution:live": "node scripts/workflow-execution-live.mjs",
     "spike:workflow:observe:live": "node scripts/workflow-observe-live.mjs",
     "db:generate": "pnpm --filter @hasaweb/db generate",
-    "test:persistence": "node scripts/persistence-integration.mjs"
+    "test:persistence": "node scripts/persistence-integration.mjs",
+    "test:auth": "node scripts/auth-integration.mjs",
+    "test:auth:browser": "node scripts/auth-integration.mjs --browser"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

@@ -24,5 +24,20 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/public/auth/*.svg"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noSvgWithoutTitle": "off"
+          }
+        }
+      },
+      "formatter": {
+        "enabled": false
+      }
+    }
+  ]
 }

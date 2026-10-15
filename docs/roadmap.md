@@ -97,7 +97,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 11. Implement sign-up and sign-in
 
 - Build GitHub and Google authentication using the proven configuration. Include cancellation, failure, retry, sign-out, and authenticated editor access.
-- [ ] Complete when either provider opens the correct account, signed-out editing fails, and authentication recovery preserves account identity. Password and email-only sign-in are absent.
+- October 15, 2026: [implementation, automated checks and real-provider evidence](../specs/2026-10-15-sign-in/results.md) are recorded. All 21 workerd/D1 auth groups, nine Chromium journey checks, 143 unit tests, lint, typechecks, builds, 31 persistence groups and runtime smoke checks pass. The owner completed real GitHub/Google sign-in, returning sign-in, sign-out, Google cancellation and retry locally; D1 confirms the same verified account without duplicates. Production callback/TLS and CPU checks remain for deployment verification. The owner approved Phase 11 completion on October 15, 2026.
+- [x] Complete when either provider opens the correct account, signed-out editing fails, and authentication recovery preserves account identity. Password and email-only sign-in are absent.
 
 ### Phase 12. Start the single sample portfolio
 

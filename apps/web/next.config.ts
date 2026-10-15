@@ -5,7 +5,7 @@ if (process.env.NODE_ENV === "development") {
   initOpenNextCloudflareForDev({ persist: { path: "../../.wrangler/state" } });
 }
 const config: NextConfig = {
-  transpilePackages: ["@hasaweb/config"],
+  transpilePackages: ["@hasaweb/config", "@hasaweb/db", "@hasaweb/schema"],
   images: { unoptimized: true },
 };
 export default config;

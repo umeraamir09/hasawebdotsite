@@ -1,2 +1,9 @@
-# Local values only. Copy to .dev.vars when providers are introduced.
+# Local values only. Copy to apps/web/.dev.vars. Never commit real secrets.
 NEXTJS_ENV=development
+# Match the URL used in the browser. Use port 3000 with pnpm dev:web.
+APP_ORIGIN=http://127.0.0.1:8787
+BETTER_AUTH_SECRET=replace-with-a-random-secret-of-at-least-32-characters
+GITHUB_CLIENT_ID=replace-with-local-github-oauth-client-id
+GITHUB_CLIENT_SECRET=replace-with-local-github-oauth-client-secret
+GOOGLE_CLIENT_ID=replace-with-local-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=replace-with-local-google-oauth-client-secret

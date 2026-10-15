@@ -171,6 +171,11 @@ export async function checkBrowserCookies(cookies) {
       if (browser.exitCode === null && browser.signalCode === null)
         browser.kill("SIGKILL");
     }
-    await rm(profile, { recursive: true, force: true });
+    await rm(profile, {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
   }
 }
