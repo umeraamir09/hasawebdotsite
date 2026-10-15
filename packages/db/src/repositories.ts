@@ -72,7 +72,7 @@ export async function ownerRepositories(
             // A NULL expression makes a revoked-session insert fail the NOT NULL constraint.
             status: sql`case when ${activeSession()} then 'draft' else null end`,
           })
-          .onConflictDoNothing({ target: tables.portfolio.userId });
+          .onConflictDoNothing();
         return db.select().from(tables.portfolio).where(activeOwner()).get();
       },
     },
@@ -360,6 +360,7 @@ export async function ownerRepositories(
           .where(
             and(
               eq(tables.contactOutbox.id, id),
+              inArray(tables.contactOutbox.status, ["queued", "sending"]),
               owned(tables.contactOutbox.portfolioId),
             ),
           )

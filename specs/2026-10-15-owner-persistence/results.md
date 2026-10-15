@@ -19,7 +19,7 @@ Local seeding applies migrations before adding development identities and valid 
 | Frozen dependency installation | Passed |
 | `pnpm check` | Passed Biome, all 11 package typechecks, and 139 unit tests |
 | `pnpm build` | Passed all 11 packages, including OpenNext and both Worker dry runs |
-| `pnpm test:persistence` | Passed 29 integration groups in actual local workerd/D1 |
+| `pnpm test:persistence` | Passed 31 integration groups in actual local workerd/D1 |
 | `pnpm test:runtime` | Passed three Workers, D1, three R2 buckets, service bindings, Queue, Workflow, and restart persistence |
 | Drizzle regeneration | No schema changes or missing migrations |
 | `git diff --check` | Passed |
@@ -45,3 +45,9 @@ The first integration run caught drizzle-kit's omission of `ON DELETE CASCADE` w
 At the owner's explicit request, the accidentally concurrent chat's alternate guard, tests, fixture, draft-update method, package/seed changes, and report were removed. They are not part of this implementation. Its conflicting tables in the default local database were backed up under ignored `.wrangler/` storage and removed before applying these tracked migrations. The pre-existing runtime probe and R2 fixtures were preserved; the full local runtime smoke test passes afterward.
 
 No public UI changed, so no Figma access or writes were needed. Provider sign-in flows, draft save/revision endpoints, upload validation, live-pointer/first-claim transactions, encryption and provider authorization, global contact budget acceptance, delivery workers, operator tools, and production deployment remain in their scheduled phases. The private fixture appearance IDs do not approve a public theme/font catalog. These local checks do not establish Cloudflare production CPU feasibility or replace the required hot-API runtime measurement.
+
+## PR review fixes
+
+Both findings on PR #9 were reproduced against local workerd/D1 before fixing them. Portfolio creation now ignores all uniqueness conflicts before reading only the active owner's portfolio. Outbox finalization now updates only queued or sending rows, so a later attempt cannot replace a sent/failed result or its error metadata.
+
+Two new regression groups cover portfolio ID collisions for owners with and without an existing portfolio, duplicate finalization, both terminal outcomes, and concurrent finalization from queued and sending states. `pnpm check` passes with 139 unit tests; `pnpm test:persistence` passes all 31 integration groups, repeated migrations/fixtures, and restart persistence. Updated evidence is recorded in [evidence.json](evidence.json).

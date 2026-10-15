@@ -154,6 +154,28 @@ export default {
         },
       );
       await check(
+        "portfolio ID collisions across owners return no record",
+        async () => {
+          const newcomer = await ownerRepositories(env.DB, identity("cached"));
+          const original = await alice.portfolio.get();
+          equal(
+            await newcomer.portfolio.create("portfolio-a", draft()),
+            undefined,
+          );
+          equal(await newcomer.portfolio.get(), undefined);
+          equal(await alice.portfolio.get(), original);
+          equal(
+            (await newcomer.portfolio.create("portfolio-newcomer", draft()))
+              ?.id,
+            "portfolio-newcomer",
+          );
+          equal(
+            (await newcomer.portfolio.create("portfolio-a", draft()))?.id,
+            "portfolio-newcomer",
+          );
+        },
+      );
+      await check(
         "repositories retain only their own resolved identity",
         async () => {
           const original = identity("alice");
@@ -505,6 +527,54 @@ export default {
             )?.payload,
             null,
           );
+        },
+      );
+      await check(
+        "outbox finalization preserves the first terminal result",
+        async () => {
+          for (const [id, nextStatus] of [
+            ["message-a", "failed"],
+            ["message-failed", "sent"],
+          ] as const) {
+            const finalized = await alice.outbox.get(id);
+            equal(
+              await alice.outbox.finalize(id, nextStatus, "late attempt"),
+              undefined,
+            );
+            equal(
+              await alice.outbox.finalize(
+                id,
+                finalized?.status === "sent" ? "sent" : "failed",
+                "duplicate attempt",
+              ),
+              undefined,
+            );
+            equal(await alice.outbox.get(id), finalized);
+          }
+          const competing = await ownerRepositories(env.DB, identity("alice"));
+          for (const initialStatus of ["queued", "sending"] as const) {
+            const id = `overlapping-${initialStatus}`;
+            await alice.outbox.create({
+              id,
+              payload: { message: "private" },
+              acceptedAt: now,
+              deadlineAt: new Date(now.getTime() + 86_400_000),
+              budgetWindowStart: 0,
+            });
+            if (initialStatus === "sending")
+              await db
+                .update(schema.contactOutbox)
+                .set({ status: "sending" })
+                .where(eq(schema.contactOutbox.id, id));
+            const results = await Promise.all([
+              alice.outbox.finalize(id, "sent"),
+              competing.outbox.finalize(id, "failed", "overlapping failure"),
+            ]);
+            const winners = results.filter((result) => result !== undefined);
+            equal(winners.length, 1);
+            equal(await alice.outbox.get(id), winners[0]);
+            equal(winners[0]?.payload, null);
+          }
         },
       );
       await check(
