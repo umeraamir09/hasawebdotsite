@@ -16,7 +16,8 @@
     "format": "biome check --write .",
     "test": "vitest run",
     "test:runtime": "node scripts/runtime-smoke.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "spike:render": "node scripts/publish-render-benchmark.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

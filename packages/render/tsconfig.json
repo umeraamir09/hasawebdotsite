@@ -1,4 +1,8 @@
 {
   "extends": "../config/tsconfig.base.json",
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "spike/**/*.ts"],
+  "compilerOptions": {
+    "lib": ["ES2022", "DOM"],
+    "types": ["@cloudflare/workers-types"]
+  }
 }
