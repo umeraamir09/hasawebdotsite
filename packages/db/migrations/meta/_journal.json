@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1792061701052,
+      "tag": "0000_persistence",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792061703231,
+      "tag": "0001_owner_constraints",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792061746158,
+      "tag": "0002_counter_owner",
+      "breakpoints": true
+    }
+  ]
+}

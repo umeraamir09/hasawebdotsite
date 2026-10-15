@@ -16,7 +16,7 @@ pnpm dev
 
 Open http://127.0.0.1:8787. `pnpm dev` builds the web Worker and starts web, site, and jobs together in workerd. Web is the public local entrypoint. Auxiliary Workers are available over service bindings. `pnpm dev:runtime` restarts an existing build without rebuilding. Worker source changes reload automatically; Next.js changes require rebuilding. `pnpm dev:web` provides Next.js hot reload on port 3000 for web-only work. Use the combined runtime to verify cross-Worker, Queue, and Workflow behavior.
 
-Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete that ignored directory only when you want to reset development data, then seed again. The seed command always uses local bindings and contains only runtime fixtures. Account and portfolio seeds arrive when their schemas exist.
+Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete that ignored directory only when you want to reset development data, then seed again. The seed applies the tracked local database migrations and adds runtime fixtures plus two development accounts with private empty drafts. It creates no usable sessions or provider credentials. Existing drafts survive repeat seeding.
 
 ## Checks
 
@@ -24,16 +24,17 @@ Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete t
 pnpm check
 pnpm build
 pnpm test:runtime
+pnpm test:persistence
 ```
 
-`check` runs Biome, strict TypeScript across all apps/packages, and unit tests. `build` runs Next.js through OpenNext and bundles site/jobs with Wrangler dry runs. `test:runtime` seeds local fixtures, starts all Workers on port 8799, exercises D1/R2/services/Queue/Workflow, and restarts to check persistence. It stops its processes on completion. GitHub Actions runs these checks without Cloudflare credentials.
+`check` runs Biome, strict TypeScript across all apps/packages, and unit tests. `build` runs Next.js through OpenNext and bundles site/jobs with Wrangler dry runs. `test:runtime` seeds local fixtures, starts all Workers on port 8799, exercises D1/R2/services/Queue/Workflow, and restarts to check persistence. It stops its processes on completion. `test:persistence` verifies migrations, fixtures, owner isolation, session revocation, deletion, and restart persistence in isolated workerd/D1. GitHub Actions runs these checks without Cloudflare credentials. See [database usage and boundaries](packages/db/README.md).
 
 ## Workspace
 
 - `apps/web` holds Next.js App Router and OpenNext.
 - `apps/site` is the thin public serving Worker.
 - `apps/jobs` hosts Workflow, Queue, and scheduled handlers.
-- `packages/schema`, `db`, `components`, `theme`, `render`, `email`, and `github` reserve the agreed module boundaries. Their feature implementations arrive in the relevant phases.
+- `packages/schema`, `db`, `components`, `theme`, `render`, `email`, and `github` reserve the agreed module boundaries. The schema and database packages provide draft contracts, persistence, and owner access checks. Other feature implementations arrive in their scheduled phases.
 - `packages/config` supplies shared strict TypeScript settings and runtime utilities.
 
 The plain web development page is a runtime placeholder. UI implementation must read the Figma reference described in [docs/ui-direction.md](docs/ui-direction.md).

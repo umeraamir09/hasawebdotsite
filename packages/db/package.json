@@ -8,9 +8,17 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate": "drizzle-kit generate --config drizzle.config.ts"
+  },
+  "dependencies": {
+    "@hasaweb/schema": "workspace:*",
+    "drizzle-orm": "0.45.4"
   },
   "devDependencies": {
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "@cloudflare/workers-types": "5.20261014.1",
+    "drizzle-kit": "0.31.11",
+    "better-auth": "1.7.7"
   }
 }
