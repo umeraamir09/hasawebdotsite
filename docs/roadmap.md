@@ -53,6 +53,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 04. Prove hostname and asset routing
 
 - Run S-3 and S-4, with S-10's domain availability and registration dependency. Check the apex, wildcard portfolios, reserved hosts, asset-host exclusion, TLS, and static-request accounting.
+- October 15, 2026: [production routing/TLS and asset-accounting evidence](../specs/2026-10-15-host-routing/results.md) is recorded. The owner already registered the domain and approved temporary test routing. All 36 deployed host/path/method checks pass; accounting observations retain adaptive-sampling limitations. Completion approval is pending.
 - [ ] Complete when routing and quota assumptions have evidence. Document any external setup still required; local host simulation alone does not pass production routing checks.
 
 ### Phase 05. Prove authentication behavior

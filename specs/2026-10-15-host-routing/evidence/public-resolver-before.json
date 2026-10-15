@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-15T03:39:18.959Z",
+  "resolver": "1.1.1.1",
+  "rows": [
+    {
+      "host": "hasaweb.site",
+      "ipv4": ["192.0.2.1"]
+    },
+    {
+      "host": "www.hasaweb.site",
+      "ipv4": ["192.0.2.1"]
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "ipv4": ["192.0.2.1"]
+    },
+    {
+      "host": "assets.hasaweb.site",
+      "ipv4": ["104.21.43.115", "172.67.178.143"]
+    }
+  ]
+}

@@ -5,3 +5,7 @@
 3. Inspect public DNS/RDAP/TLS without purchasing or mutating production. Record S-10 availability limitations and the purchase dependency.
 4. After access and explicit routing approval, exercise deployed S-3 routing and S-4 request accounting with before/after analytics, including static hits and misses.
 5. Record configuration, evidence, fallback and missing dependencies. Ask for approval before checking off Phase 04.
+
+## Outcome
+
+Implementation, local boundaries, domain/zone setup, approved deployed routing, TLS and production accounting checks are recorded in results.md. All 36 deployed checks pass. Temporary fixtures/routes remain for review; the S-2 write probe is disabled. The owner must approve completion before the roadmap checkbox changes.

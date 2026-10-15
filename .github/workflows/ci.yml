@@ -23,3 +23,4 @@ jobs:
       - run: pnpm build
       - run: pnpm test:runtime
       - run: pnpm spike:runtime
+      - run: pnpm spike:routing

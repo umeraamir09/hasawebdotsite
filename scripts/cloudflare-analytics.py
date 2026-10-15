@@ -11,6 +11,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--account", required=True)
 parser.add_argument("--worker", required=True)
 parser.add_argument("--requests")
+parser.add_argument("--windows")
+parser.add_argument("--colo")
 parser.add_argument("--from", dest="start")
 parser.add_argument("--to", dest="end")
 parser.add_argument("--output", required=True)
@@ -31,13 +33,17 @@ if args.requests:
             continue
         samples = [sample for sample in data["samples"] if sample["case"] == case]
         windows.append({"case": case, "from": iso(samples[0]["at"]), "to": iso(samples[-1]["at"] + samples[-1]["elapsedMs"]), "clientCount": len(samples)})
+elif args.windows:
+    windows = [{"case": window["name"], **window} for window in json.loads(Path(args.windows).read_text())["windows"]]
 else:
-    assert args.start and args.end, "Supply --requests or --from and --to"
+    assert args.start and args.end, "Supply --requests, --windows or --from and --to"
     windows.append({"case": "window", "from": args.start, "to": args.end})
 fields = []
 for index, window in enumerate(windows):
     filters = "scriptName:" + json.dumps(args.worker) + ",datetime_geq:" + json.dumps(window["from"]) + ",datetime_lt:" + json.dumps(window["to"])
-    fields.append(f"c{index}:workersInvocationsAdaptive(limit:100,filter:{{{filters}}}) {{ dimensions {{status coloCode}} sum {{requests errors cpuTimeUs}} quantiles {{cpuTimeP50 cpuTimeP95 cpuTimeP99}} }}")
+    if args.colo:
+        filters += ",coloCode:" + json.dumps(args.colo)
+    fields.append(f"c{index}:workersInvocationsAdaptive(limit:100,filter:{{{filters}}}) {{ dimensions {{status coloCode}} avg {{sampleInterval}} sum {{requests errors cpuTimeUs}} quantiles {{cpuTimeP50 cpuTimeP95 cpuTimeP99}} }}")
 query = "query {viewer {accounts(filter:{accountTag:" + json.dumps(args.account) + "}) {" + " ".join(fields) + "}}}"
 request = urllib.request.Request("https://api.cloudflare.com/client/v4/graphql", data=json.dumps({"query": query}).encode(), headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
 result = json.load(urllib.request.urlopen(request, timeout=30))

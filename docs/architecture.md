@@ -125,7 +125,7 @@ S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. K
 | Hostname | Target | Notes |
 | --- | --- | --- |
 | `hasaweb.site`, `www.hasaweb.site` | `web` | Apex is the app; `www` redirects to the apex. |
-| `assets.hasaweb.site` | R2 public bucket (custom domain) | No Worker in the path. Needs an explicit "no Worker" route so the wildcard route does not capture it **[spike]**. |
+| `assets.hasaweb.site` | R2 public bucket (custom domain) | No Worker in the path. The more-specific no-script route excludes it from the wildcard. Deployed S-3 verifies hits and missing keys; see the routing evidence. |
 | `*.hasaweb.site` (single level) | `site` | Wildcard Worker route plus a proxied wildcard DNS record. Universal SSL covers apex plus one wildcard level. |
 | `mail.hasaweb.site` (or apex) | Resend sending domain | SPF/DKIM records on Cloudflare DNS. |
 
@@ -481,7 +481,7 @@ Assumptions: 100 portfolios; 30 owner editing sessions per day averaging ~250 AP
 | Queue operations | ~1,000/day | 10,000/day | ~10x |
 | Emails (Resend) | <20/day typical | 100/day, 3,000/month | ~5x |
 
-Static asset requests (the Next.js bundle) are assumed not to count against the Worker request limit **[spike]**.
+Deployed S-4 observations support Next.js build-file requests bypassing Worker invocation accounting under asset-first routing. Prerendered Next.js documents and missing build files still invoke the Worker. Adaptive analytics is approximate; [evidence and configuration limits](../specs/2026-10-15-host-routing/results.md) are recorded. This does not prove overall Free-tier feasibility.
 
 ### 14.2 What will break first
 
@@ -514,14 +514,14 @@ Do these first, in this order, because each can change a decision above.
 | --- | --- | --- | --- |
 | S-1 | Publish render steps fit in **10 ms CPU** on free | Benchmark `react-dom/server` for a worst-case portfolio and each page in workerd, measuring CPU per step | Local S-1 rejects whole-page steps; [results and revised bounded approach](../specs/2026-10-15-publish-render/results.md) recorded October 15, 2026. Incremental preparation/render/assembly still needs S-8 verification |
 | S-2 | Next.js on the free plan: startup under 1 s, and auth/API route CPU p95 under 10 ms | Deployed S-2 reports 25 ms startup but authenticated CPU window p95 13.717–18.461 ms for small requests, with sampled/window limitations; exact-limit writes also fail the assumed budget. See [results](../specs/2026-10-15-app-runtime/results.md) | Decide hot draft-save/publish-trigger endpoints in thin `jobs`/Hono with per-isolate auth configuration and real session/deletion checks. Retest before dependent APIs; replacement Free-tier feasibility remains unproven. Paid requires owner approval |
-| S-3 | Wildcard Worker route coexists with the R2 custom domain and the apex | Create the zone, routes, and an explicit no-Worker route for `assets.hasaweb.site` | Serve assets through `site` (costs more Worker requests) |
-| S-4 | Static asset requests do not count toward the Workers request limit | Observe analytics after loading the app repeatedly | Rely on caching; plan for Paid sooner |
+| S-3 | Wildcard Worker route coexists with the R2 custom domain and the apex | [Deployed October 15 evidence](../specs/2026-10-15-host-routing/results.md) passes apex/www, wildcard/reserved/invalid hosts, private R2 fixture boundaries and TLS. Explicit assets no-script exception works | Serving assets through `site` would add Worker requests and require a revised budget |
+| S-4 | Static asset requests do not count toward the Workers request limit | [Deployed asset-first measurements](../specs/2026-10-15-host-routing/results.md) report no Worker invocations for existing build files or R2 asset hits/misses. Next.js documents and missing build files invoke Workers. Adaptive counts are approximate | Preserve asset-first handling; remeasure worker-first changes. Paid requires owner approval |
 | S-5 | Better Auth on workerd/D1: per-request init, cookie cache, `__Host-` cookies, account-linking behavior vs AC 2.2 | Build the sign-in flow with both providers and linking test cases | Custom Arctic-based auth (already evaluated as the alternative) |
 | S-6 | GitHub scopes and private-contribution semantics, token revocation detection | Test with public-only and authorized private-activity accounts (AC 9.10) | Public-only graph in MVP, private as fast follow |
 | S-7 | Resend: domain verification (SPF/DKIM) and the 100/day cap against all email types | Verify domain; send each email type; confirm budget guard | Upgrade to Paid and use Cloudflare Email Service |
 | S-8 | Workflows on free: step CPU, step count, concurrency | Run a publish with N pages concurrently | Replace with a Queue plus D1 state machine |
 | S-9 | CDN purge-by-URL removes withdrawn assets promptly (AC 4.14) | Publish, withdraw, purge, fetch from several locations | Short TTL on sensitive asset classes |
-| S-10 | `.site` availability on Cloudflare Registrar | Search at purchase time | Register elsewhere and point nameservers to Cloudflare (a full zone is required either way) |
+| S-10 | `.site` availability on Cloudflare Registrar | Owner already registered hasaweb.site through Porkbun; RDAP and active Cloudflare full-zone/delegation evidence recorded October 15 | External-registrar alternative is in use. No purchase or transfer performed by the spike |
 
 ---
 

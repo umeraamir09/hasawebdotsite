@@ -1,0 +1,13 @@
+
+ ⛅️ wrangler 4.151.0
+────────────────────
+Total Upload: 2.05 KiB / gzip: 0.92 KiB
+Worker Startup Time: 2 ms
+Your Worker has access to the following bindings:
+Binding                                  Resource
+env.SITES_BUCKET (hasaweb-s3-sites)      R2 Bucket
+
+Uploaded hasaweb-s3-site (4.87 sec)
+Deployed hasaweb-s3-site triggers (2.47 sec)
+  https://hasaweb-s3-site.umerthepro2009.workers.dev
+Current Version ID: 57f8ed01-d900-495e-aedd-4c46e4539c03
