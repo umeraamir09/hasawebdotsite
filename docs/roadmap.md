@@ -59,6 +59,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 05. Prove authentication behavior
 
 - Run S-5 with GitHub and Google fixtures, workerd/D1 sessions, cookie isolation, verified-email linking, and proof of ownership.
+- October 15, 2026: [26 local provider-fixture and Chromium cookie checks](../specs/2026-10-15-auth-behavior/results.md) pass. The tested configuration includes strict apex/Origin guards and verified-only linking. Live provider applications and deployed callbacks remain unverified; owner approval to check off the phase is pending.
 - [ ] Complete when both providers work and missing or unverified emails cannot merge accounts. Record the supported cookie and account-linking configuration.
 
 ### Phase 06. Prove GitHub permissions
