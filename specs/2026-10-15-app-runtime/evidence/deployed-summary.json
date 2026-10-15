@@ -1,0 +1,144 @@
+{
+  "recordedAt": "2026-10-15T03:19:08.525Z",
+  "origin": "https://hasaweb-s2-spike.umerthepro2009.workers.dev",
+  "version": "e84b4438-7003-4187-a3b5-3b0f26d9419e",
+  "startupTimeMs": 25,
+  "startupPass": true,
+  "method": "Cloudflare real-time tail cpuTime/wallTime in milliseconds. Matched by case label on isolated Worker and controlled run interval. Warmups excluded. Nearest-rank p95 from 100 observations per case. Tail may sample; completeCpuSamples requires all 100 measured requests. Query run IDs are redacted by Cloudflare. Client elapsed timings remain separate.",
+  "firstCandidate": [
+    {
+      "at": 1792034351375,
+      "outcome": "ok",
+      "cpuTime": 275,
+      "wallTime": 797,
+      "url": "https://hasaweb-s2-spike.umerthepro2009.workers.dev/api/runtime-spike?run=REDACTED&case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-s2-spike",
+      "version": "e84b4438-7003-4187-a3b5-3b0f26d9419e"
+    }
+  ],
+  "groups": [
+    {
+      "name": "session-d1",
+      "bodyBytes": 0,
+      "elapsedMs": {
+        "count": 100,
+        "min": 369.98369600000296,
+        "p50": 382.03350299999875,
+        "p95": 784.814507000001,
+        "max": 819.4030039999998
+      },
+      "cloudflareCpuMs": {
+        "count": 38,
+        "min": 7,
+        "p50": 10,
+        "p95": 15,
+        "max": 18
+      },
+      "cloudflareWallMs": {
+        "count": 38,
+        "min": 355,
+        "p50": 363,
+        "p95": 383,
+        "max": 385
+      },
+      "completeCpuSamples": false,
+      "under10ms": false,
+      "outcomes": {
+        "ok": 38
+      }
+    },
+    {
+      "name": "session-cache",
+      "bodyBytes": 0,
+      "elapsedMs": {
+        "count": 100,
+        "min": 134.11329999999725,
+        "p50": 144.69000100000267,
+        "p95": 166.35550099999818,
+        "max": 683.1881009999925
+      },
+      "cloudflareCpuMs": {
+        "count": 15,
+        "min": 5,
+        "p50": 7,
+        "p95": 16,
+        "max": 16
+      },
+      "cloudflareWallMs": {
+        "count": 15,
+        "min": 118,
+        "p50": 129,
+        "p95": 244,
+        "max": 244
+      },
+      "completeCpuSamples": false,
+      "under10ms": false,
+      "outcomes": {
+        "ok": 15
+      }
+    },
+    {
+      "name": "write-small-d1",
+      "bodyBytes": 1011,
+      "elapsedMs": {
+        "count": 100,
+        "min": 501.1608019999985,
+        "p50": 518.5839010000054,
+        "p95": 694.0793050000066,
+        "max": 931.3129990000016
+      },
+      "cloudflareCpuMs": {
+        "count": 54,
+        "min": 9,
+        "p50": 11,
+        "p95": 16,
+        "max": 80
+      },
+      "cloudflareWallMs": {
+        "count": 54,
+        "min": 488,
+        "p50": 502,
+        "p95": 703,
+        "max": 813
+      },
+      "completeCpuSamples": false,
+      "under10ms": false,
+      "outcomes": {
+        "ok": 54
+      }
+    },
+    {
+      "name": "write-small-cache",
+      "bodyBytes": 1011,
+      "elapsedMs": {
+        "count": 100,
+        "min": 267.0720990000118,
+        "p50": 280.09729800000787,
+        "p95": 302.1974990000017,
+        "max": 493.11949599999934
+      },
+      "cloudflareCpuMs": {
+        "count": 29,
+        "min": 6,
+        "p50": 7,
+        "p95": 16,
+        "max": 16
+      },
+      "cloudflareWallMs": {
+        "count": 29,
+        "min": 256,
+        "p50": 265,
+        "p95": 285,
+        "max": 466
+      },
+      "completeCpuSamples": false,
+      "under10ms": false,
+      "outcomes": {
+        "ok": 29
+      }
+    }
+  ],
+  "requestCpuPass": false,
+  "clientFailure": "AssertionError [ERR_ASSERTION]: write-limit-cache: status 503, ray a4abb35d2d3699ec-KHI\n\n503 !== 200\n"
+}

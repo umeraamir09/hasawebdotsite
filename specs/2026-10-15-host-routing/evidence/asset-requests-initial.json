@@ -1,0 +1,1627 @@
+{
+  "recordedAt": "2026-10-15T03:41:10.110Z",
+  "method": "Actual deployed R2 custom-domain HTTPS requests, resolved through public 1.1.1.1, strict TLS, no Host/IP simulation. Existing assets and missing keys must both bypass Workers. Separate before/after positive controls invoke the site Worker on its workers.dev hostname, which it rejects. Join these windows to all routed Workers' analytics.",
+  "addresses": ["172.67.178.143", "104.21.43.115"],
+  "windows": [
+    {
+      "name": "site-control-before",
+      "from": "2026-10-15T03:40:02.861Z",
+      "to": "2026-10-15T03:40:05.940Z",
+      "clientRequests": 20
+    },
+    {
+      "name": "assets-only",
+      "from": "2026-10-15T03:40:08.941Z",
+      "to": "2026-10-15T03:41:04.030Z",
+      "clientRequests": 120
+    },
+    {
+      "name": "site-control-after",
+      "from": "2026-10-15T03:41:07.043Z",
+      "to": "2026-10-15T03:41:10.101Z",
+      "clientRequests": 20
+    }
+  ],
+  "observations": [
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035602861,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce30bae541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603305,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce37cb9541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603372,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce3eda7541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603421,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce41e06541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603449,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce44e6c541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603489,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce48edd541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603521,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce4cf56541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603553,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce4ef96541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603578,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce51fe0541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603603,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce55877541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603669,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce5a968541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603697,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce5d9b7541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603724,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce5fa0c541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603747,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce62a5b541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603781,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce65ac0541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603807,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce67b04541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603828,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce6ab7e541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603859,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce6dbcb541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603884,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce6fc04541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-before",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035603916,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abcce72c66541f-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035608942,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd06bb7c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035610810,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd123d1c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035611194,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd149ad4541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035611626,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd174881541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035612011,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd19bdcb541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035612434,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd1c5bb3541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035612815,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd1eb957541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035613212,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd213ee6541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035613649,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd23fd20541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035614042,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd266ab1541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035614443,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd28e856541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035614803,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd2b2d1c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035615182,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd2d8aa9541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035615552,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd2fdfce541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035615971,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd327df3541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035616386,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd350bbf541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035616794,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd37994e541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035617181,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd3a0f03541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035617550,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd3c5ca5541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035618026,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd3f4dac541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035618496,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd423cfa541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035618853,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd447a88541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035619230,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd46d81a541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035619612,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd493da1541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035620007,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd4babe2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035620389,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd4e19e1541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035620812,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd50b814541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035621180,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd530cae541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035621617,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd55bb24541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035621993,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd5818f7541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035622351,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd5a5eb2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035622746,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd5cccaa541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035623114,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd5f1ac3541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035623482,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd616ff0541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035623866,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd63cd37541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035624249,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd663b4e541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035624625,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd688875541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035625072,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd6b5e65541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035625473,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd6ddb9a541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035625877,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd705981541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035626259,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd72cefe541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035626984,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd77fac3541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035627574,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd7af99a541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035628023,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd7dcfa2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035628390,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd801cc7541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035628776,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd827a79541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035629190,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd851875541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035629646,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd87edd2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035630041,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd8a6b03541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035630431,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd8cdffd541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035630792,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd8f1c71541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035631159,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd9169c7541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035631548,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd93cf73541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035631924,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd962cac541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035632315,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd989afb541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035632694,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd9affdf541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035633069,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd9d5d6c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035633482,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcd9feae2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035634033,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcda35a9d541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035634403,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcda5afc6541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035634811,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcda83dbd541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035635221,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdaacc2b541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035635642,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdad69fb541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035636014,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdafcf6a541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035636983,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdb5ce22541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035637391,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdb85c96541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035637820,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdbb0b06541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035638207,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdbd68ae541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035638600,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdbfef38541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035639162,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdc36f41541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035639871,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdc7d8c1541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035640326,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdcaaf64541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035640787,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdcd8e3f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035641773,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdd3bbe2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035642336,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdd73c44541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035642749,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdd9da2b541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035643205,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcddca8b0541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035643841,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcde0a9a2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035644309,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcde3981f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035645155,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcde8db58541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035645955,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdedde63541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035646495,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdf13d89541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035646909,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdf3dae2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035647339,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdf6888c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035647769,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdf93eaa541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035648159,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdfbac4f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035648617,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abcdfe7a3f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035649006,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce00ff38541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035649388,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce034c12541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035649817,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce05fa1b541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035650182,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce084ea7541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035650567,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce0aabac541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035650978,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce0d38df541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035651346,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce0f8daa541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035651737,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce11fb06541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035652096,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce143ff8541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035652534,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce16fdc4541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035652905,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce194a98541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035653267,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce1b9ffc541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/asset.txt",
+      "at": 1792035653656,
+      "status": 200,
+      "bytes": 52,
+      "target": null,
+      "ray": "a4abce1dfcd3541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035654027,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce2049b9541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035654399,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce22ae87541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035654789,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce251bab541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035655185,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce278936541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035655563,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce29ee6f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035655931,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce2c3b5b541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035656310,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce2e98fe541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035656678,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce30ddc2541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035657101,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce338b76541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035657466,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce35c8a9541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035657814,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce37fd6c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035658469,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce3c1e8f541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035658833,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce3e5ba7541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035659189,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce4088bb541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035659559,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce42eddd541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035659939,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce454b00541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035660306,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce4788a1541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035660884,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce4b2941541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035661256,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce4d8e61541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "assets-only",
+      "url": "https://assets.hasaweb.site/routing-probe/missing.txt",
+      "at": 1792035661662,
+      "status": 404,
+      "bytes": 27150,
+      "target": null,
+      "ray": "a4abce500c2c541f-KHI",
+      "cacheStatus": "DYNAMIC"
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667043,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce72fbf0c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667272,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce734d24c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667336,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce73ae46c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667394,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce73ef15c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667443,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce746873c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667497,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce749934c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667533,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce750a77c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667600,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce758c06c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667671,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce75ed49c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667741,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce763e43c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667787,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce765ecac697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667814,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce768f6ac697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667847,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce76c874c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667879,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce770927c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667915,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce7739bfc697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667951,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce776a2fc697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035667975,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce778a92c697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035668003,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce77bafcc697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035668035,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce77fbadc697-KHI",
+      "cacheStatus": null
+    },
+    {
+      "case": "site-control-after",
+      "url": "https://hasaweb-s3-site.umerthepro2009.workers.dev/",
+      "at": 1792035668065,
+      "status": 421,
+      "bytes": 13,
+      "target": "site",
+      "ray": "a4abce782c3cc697-KHI",
+      "cacheStatus": null
+    }
+  ]
+}

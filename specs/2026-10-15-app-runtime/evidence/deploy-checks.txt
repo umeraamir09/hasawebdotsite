@@ -1,0 +1,28 @@
+
+ ⛅️ wrangler 4.151.0
+────────────────────
+🌀 Building list of assets...
+✨ Read 15 files from the assets directory /home/umer/hasawebdotsite/apps/web/.open-next/assets
+🌀 Starting asset upload...
+🌀 Found 1 new or modified static asset to upload. Proceeding with upload...
++ /BUILD_ID
+Uploaded 1 of 1 asset
+✨ Success! Uploaded 1 file (9 already uploaded) (1.50 sec)
+
+Total Upload: 5825.63 KiB / gzip: 1202.78 KiB
+Worker Startup Time: 20 ms
+Your Worker has access to the following bindings:
+Binding                                                                     Resource
+env.DB (hasaweb-s2-spike)                                                   D1 Database
+env.WORKER_SELF_REFERENCE (hasaweb-s2-spike)                                Worker
+env.ASSETS                                                                  Assets
+env.APP_ENV ("spike")                                                       Environment Variable
+env.SPIKE_ENABLED ("true")                                                  Environment Variable
+env.SPIKE_ORIGIN ("https://hasaweb-s2-spike.umerthepro20...")               Environment Variable
+env.SPIKE_KEY ("(hidden)")                                                  Environment Variable
+env.BETTER_AUTH_SECRET ("(hidden)")                                         Environment Variable
+
+Uploaded hasaweb-s2-spike (16.90 sec)
+Deployed hasaweb-s2-spike triggers (2.16 sec)
+  https://hasaweb-s2-spike.umerthepro2009.workers.dev
+Current Version ID: c6cad82d-fb47-4b65-afdd-c5fe3ce386dd

@@ -1,0 +1,50 @@
+{
+  "query": "query { viewer { accounts(filter:{accountTag:\"b6f9a87e6702c76c45a8d61744826e0f\"}) { workersInvocationsAdaptive(limit:100, filter:{scriptName:\"hasaweb-s2-spike\",datetime_geq:\"2026-10-15T03:19:08.525Z\",datetime_leq:\"2026-10-15T03:24:42.839193+00:00\"}) { dimensions {status usageModel coloCode} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } } } }",
+  "result": {
+    "data": {
+      "viewer": {
+        "accounts": [
+          {
+            "workersInvocationsAdaptive": [
+              {
+                "dimensions": {
+                  "coloCode": "KHI",
+                  "status": "exceededResources",
+                  "usageModel": "standard"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 12085,
+                  "cpuTimeP95": 12085,
+                  "cpuTimeP99": 12085
+                },
+                "sum": {
+                  "cpuTimeUs": 12085,
+                  "errors": 1,
+                  "requests": 1
+                }
+              },
+              {
+                "dimensions": {
+                  "coloCode": "KHI",
+                  "status": "success",
+                  "usageModel": "standard"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 10610,
+                  "cpuTimeP95": 25264,
+                  "cpuTimeP99": 80410
+                },
+                "sum": {
+                  "cpuTimeUs": 7093533,
+                  "errors": 0,
+                  "requests": 516
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "errors": null
+  }
+}

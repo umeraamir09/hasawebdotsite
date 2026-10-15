@@ -1,0 +1,39 @@
+
+ ⛅️ wrangler 4.151.0
+────────────────────
+🌀 Building list of assets...
+✨ Read 15 files from the assets directory /home/umer/hasawebdotsite/apps/web/.open-next/assets
+🌀 Starting asset upload...
+🌀 Found 10 new or modified static assets to upload. Proceeding with upload...
++ /BUILD_ID
++ /_next/static/aaozSWLb-v8aGdTWS6fdf/_buildManifest.js
++ /_next/static/chunks/2efhrnm4cv-td.js
++ /_next/static/chunks/37moyd8q9mxsz.js
++ /_next/static/aaozSWLb-v8aGdTWS6fdf/_ssgManifest.js
++ /_next/static/chunks/turbopack-2y1cth_k-0hdm.js
++ /_next/static/chunks/0cz1d0mv5g_q7.js
++ /_next/static/aaozSWLb-v8aGdTWS6fdf/_clientMiddlewareManifest.js
++ /_next/static/chunks/2o7sxk05lmwb_.js
++ /_next/static/chunks/3rlukl98h7_nf.js
+Uploaded 3 of 10 assets
+Uploaded 6 of 10 assets
+Uploaded 10 of 10 assets
+✨ Success! Uploaded 10 files (2.69 sec)
+
+Total Upload: 5825.28 KiB / gzip: 1202.67 KiB
+Worker Startup Time: 25 ms
+Your Worker has access to the following bindings:
+Binding                                                                     Resource
+env.DB (hasaweb-s2-spike)                                                   D1 Database
+env.WORKER_SELF_REFERENCE (hasaweb-s2-spike)                                Worker
+env.ASSETS                                                                  Assets
+env.APP_ENV ("spike")                                                       Environment Variable
+env.SPIKE_ENABLED ("true")                                                  Environment Variable
+env.SPIKE_ORIGIN ("https://hasaweb-s2-spike.umerthepro20...")               Environment Variable
+env.SPIKE_KEY ("(hidden)")                                                  Environment Variable
+env.BETTER_AUTH_SECRET ("(hidden)")                                         Environment Variable
+
+Uploaded hasaweb-s2-spike (15.92 sec)
+Deployed hasaweb-s2-spike triggers (2.20 sec)
+  https://hasaweb-s2-spike.umerthepro2009.workers.dev
+Current Version ID: e84b4438-7003-4187-a3b5-3b0f26d9419e

@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-15T03:35:34.705043+00:00",
+  "dns": [
+    {
+      "name": "hasaweb.site",
+      "type": "NS",
+      "error": "URLError"
+    },
+    {
+      "name": "hasaweb.site",
+      "type": "A",
+      "error": "URLError"
+    },
+    {
+      "name": "hasaweb.site",
+      "type": "AAAA",
+      "error": "URLError"
+    },
+    {
+      "name": "www.hasaweb.site",
+      "type": "A",
+      "error": "URLError"
+    },
+    {
+      "name": "routingprobe.hasaweb.site",
+      "type": "A",
+      "error": "URLError"
+    },
+    {
+      "name": "assets.hasaweb.site",
+      "type": "A",
+      "error": "URLError"
+    }
+  ],
+  "rdap": {
+    "server": "https://rdap.radix.host/rdap/",
+    "name": "hasaweb.site",
+    "status": [
+      "client transfer prohibited",
+      "client delete prohibited",
+      "add period"
+    ],
+    "events": [
+      {
+        "eventAction": "registration",
+        "eventActor": "porkbun",
+        "eventDate": "2026-10-14T16:45:09.207Z"
+      },
+      {
+        "eventAction": "expiration",
+        "eventDate": "2027-10-14T16:45:09.207Z"
+      },
+      {
+        "eventAction": "last changed",
+        "eventDate": "2026-10-15T03:28:16.430Z"
+      },
+      {
+        "eventAction": "last update of RDAP database",
+        "eventDate": "2026-10-15T03:36:37.502Z"
+      }
+    ],
+    "nameservers": ["rajeev.ns.cloudflare.com", "tina.ns.cloudflare.com"]
+  }
+}

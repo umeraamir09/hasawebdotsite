@@ -1,0 +1,228 @@
+{
+  "recordedAt": "2026-10-15T03:30:43.191Z",
+  "method": "Local workerd dispatch into the S-3 site entry with a real local R2 fixture. This tests handler boundaries only. It does not model Cloudflare route selection, DNS, TLS, R2 custom domains or request billing.",
+  "node": "v22.22.1",
+  "wrangler": "4.151.0",
+  "workerd": "1.20261012.1",
+  "observations": [
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/",
+      "status": 200,
+      "observed": 200,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/",
+      "method": "HEAD",
+      "status": 200,
+      "observed": 200,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/",
+      "method": "POST",
+      "status": 405,
+      "observed": 405,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/api/runtime-spike",
+      "status": 404,
+      "observed": 404,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/api/draft",
+      "status": 404,
+      "observed": 404,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site",
+      "path": "/draft/private.png",
+      "status": 404,
+      "observed": 404,
+      "target": "site"
+    },
+    {
+      "host": "unknown.hasaweb.site",
+      "path": "/",
+      "status": 404,
+      "observed": 404,
+      "target": "site"
+    },
+    {
+      "host": "example.hasaweb.site",
+      "path": "/",
+      "status": 404,
+      "observed": 404,
+      "target": "site"
+    },
+    {
+      "host": "hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "www.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "assets.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "app.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "api.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "mail.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "admin.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "status.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "docs.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "blog.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "help.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "support.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "static.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "cdn.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "demo.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "a.b.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "ab.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "-alice.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "ali_ce.hasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "hasaweb.site.evil.test",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "evilhasaweb.site",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site.",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    },
+    {
+      "host": "routingprobe.hasaweb.site:444",
+      "path": "/",
+      "status": 421,
+      "observed": 421,
+      "target": "site"
+    }
+  ]
+}

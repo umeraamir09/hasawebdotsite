@@ -1,0 +1,158 @@
+{
+  "at": "2026-10-15T03:46:29.494774+00:00",
+  "zone": {
+    "name": "hasaweb.site",
+    "status": "active"
+  },
+  "beforeRoutes": {
+    "httpStatus": 200,
+    "response": {
+      "result": [
+        {
+          "id": "80af018eb70e47089971e2c9630c9cb9",
+          "pattern": "*.hasaweb.site/*",
+          "script": "hasaweb-s3-site",
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "3bc15359490544428b5be5e79f5890e0",
+          "pattern": "assets.hasaweb.site/*",
+          "script": null,
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "095dc0f9262c44699e5c56cef2674581",
+          "pattern": "hasaweb.site/*",
+          "script": "hasaweb-s2-spike",
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "4cfc80daf7974031a1dbad2e53c58581",
+          "pattern": "www.hasaweb.site/*",
+          "script": "hasaweb-s3-redirect",
+          "request_limit_fail_open": false
+        }
+      ],
+      "success": true,
+      "errors": [],
+      "messages": []
+    }
+  },
+  "plan": [
+    {
+      "pattern": "assets.hasaweb.site/*",
+      "script": null,
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "hasaweb.site/*",
+      "script": "hasaweb-s2-spike",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "www.hasaweb.site/*",
+      "script": "hasaweb-s3-redirect",
+      "request_limit_fail_open": false
+    },
+    {
+      "pattern": "*.hasaweb.site/*",
+      "script": "hasaweb-s3-site",
+      "request_limit_fail_open": false
+    }
+  ],
+  "applied": [],
+  "afterRoutes": {
+    "httpStatus": 200,
+    "response": {
+      "result": [
+        {
+          "id": "80af018eb70e47089971e2c9630c9cb9",
+          "pattern": "*.hasaweb.site/*",
+          "script": "hasaweb-s3-site",
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "3bc15359490544428b5be5e79f5890e0",
+          "pattern": "assets.hasaweb.site/*",
+          "script": null,
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "095dc0f9262c44699e5c56cef2674581",
+          "pattern": "hasaweb.site/*",
+          "script": "hasaweb-s2-spike",
+          "request_limit_fail_open": false
+        },
+        {
+          "id": "4cfc80daf7974031a1dbad2e53c58581",
+          "pattern": "www.hasaweb.site/*",
+          "script": "hasaweb-s3-redirect",
+          "request_limit_fail_open": false
+        }
+      ],
+      "success": true,
+      "errors": [],
+      "messages": []
+    }
+  },
+  "assetDomainStatus": {
+    "httpStatus": 200,
+    "response": {
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "result": {
+        "domains": [
+          {
+            "domain": "assets.hasaweb.site",
+            "status": {
+              "ssl": "active",
+              "ownership": "active"
+            },
+            "zoneId": "86935ec740f2f63695422cc388bbb0bd",
+            "zoneName": "hasaweb.site",
+            "minTLS": "1.2",
+            "enabled": true
+          }
+        ]
+      }
+    }
+  },
+  "sitesDomainStatus": {
+    "httpStatus": 200,
+    "response": {
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "result": {
+        "domains": []
+      }
+    }
+  },
+  "assetsManagedDomain": {
+    "httpStatus": 200,
+    "response": {
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "result": {
+        "enabled": false,
+        "bucketId": "fd6a0128c8d147b0bfe40a24af3e88df",
+        "domain": "pub-fd6a0128c8d147b0bfe40a24af3e88df.r2.dev"
+      }
+    }
+  },
+  "sitesManagedDomain": {
+    "httpStatus": 200,
+    "response": {
+      "success": true,
+      "errors": [],
+      "messages": [],
+      "result": {
+        "enabled": false,
+        "bucketId": "859b35a80e974587a6121dc89a0915e1",
+        "domain": "pub-859b35a80e974587a6121dc89a0915e1.r2.dev"
+      }
+    }
+  }
+}

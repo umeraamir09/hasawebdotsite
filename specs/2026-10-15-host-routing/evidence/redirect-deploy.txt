@@ -1,0 +1,9 @@
+
+ ⛅️ wrangler 4.151.0
+────────────────────
+Total Upload: 0.40 KiB / gzip: 0.26 KiB
+Worker Startup Time: 2 ms
+Uploaded hasaweb-s3-redirect (3.74 sec)
+Deployed hasaweb-s3-redirect triggers (2.36 sec)
+  https://hasaweb-s3-redirect.umerthepro2009.workers.dev
+Current Version ID: bcac961e-4f39-4a89-88a9-dbf76ab90aa4

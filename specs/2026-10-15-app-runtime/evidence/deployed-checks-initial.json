@@ -1,0 +1,18 @@
+{
+  "recordedAt": "2026-10-15T03:26:11.169Z",
+  "runId": "6f6e4abb-d6e5-40f0-93c7-504aa282cef6",
+  "origin": "https://hasaweb-s2-spike.umerthepro2009.workers.dev",
+  "node": "v22.22.1",
+  "method": "Deployed sequential HTTPS elapsed timing. Ten warmups and 100 samples per case. CPU must be joined from Cloudflare logs by run/case; response elapsed is not CPU. First candidate after deploy is not guaranteed isolate-cold.",
+  "results": [],
+  "samples": [
+    {
+      "case": "first-candidate",
+      "at": 1792034771175,
+      "elapsedMs": 466.3268989999997,
+      "status": 503,
+      "ray": "a4abb893abc6a813-KHI"
+    }
+  ],
+  "failure": "AssertionError [ERR_ASSERTION]: first-candidate: status 503, ray a4abb893abc6a813-KHI\n\n503 !== 200\n"
+}
