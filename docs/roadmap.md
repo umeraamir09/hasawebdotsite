@@ -47,14 +47,14 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 03. Measure the app and API runtime
 
 - Run S-2 with an OpenNext skeleton, Better Auth session check, and D1 write. Measure startup and request CPU.
-- October 15, 2026: [deployed/local evidence and the required hot-API runtime revision](../specs/2026-10-15-app-runtime/results.md) are recorded. Startup passes; the original request CPU assumption fails. The replacement still needs measurement. Owner completion approval is pending.
-- [ ] Complete when the framework and API approach meets the architecture's limits, or the required endpoint/runtime changes have been decided.
+- October 15, 2026: [deployed/local evidence and the required hot-API runtime revision](../specs/2026-10-15-app-runtime/results.md) are recorded. Startup passes; the original request CPU assumption fails. The replacement still needs measurement. The owner approved completion on October 15, 2026 under the criterion that the required endpoint/runtime changes have been decided.
+- [x] Complete when the framework and API approach meets the architecture's limits, or the required endpoint/runtime changes have been decided.
 
 ### Phase 04. Prove hostname and asset routing
 
 - Run S-3 and S-4, with S-10's domain availability and registration dependency. Check the apex, wildcard portfolios, reserved hosts, asset-host exclusion, TLS, and static-request accounting.
-- October 15, 2026: [production routing/TLS and asset-accounting evidence](../specs/2026-10-15-host-routing/results.md) is recorded. The owner already registered the domain and approved temporary test routing. All 36 deployed host/path/method checks pass; accounting observations retain adaptive-sampling limitations. Completion approval is pending.
-- [ ] Complete when routing and quota assumptions have evidence. Document any external setup still required; local host simulation alone does not pass production routing checks.
+- October 15, 2026: [production routing/TLS and asset-accounting evidence](../specs/2026-10-15-host-routing/results.md) is recorded. The owner already registered the domain and approved temporary test routing. All 36 deployed host/path/method checks pass; accounting observations retain adaptive-sampling limitations. The owner approved completion on October 15, 2026.
+- [x] Complete when routing and quota assumptions have evidence. Document any external setup still required; local host simulation alone does not pass production routing checks.
 
 ### Phase 05. Prove authentication behavior
 

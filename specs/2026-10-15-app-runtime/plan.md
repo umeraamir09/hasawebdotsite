@@ -8,4 +8,4 @@
 
 ## Progress
 
-Local implementation, deployed startup/CPU measurement and the runtime revision are recorded in results.md. The original request CPU assumption fails. Final production failure checks and experiment cleanup are recorded with the evidence. Owner approval to check off Phase 03 remains pending.
+Local implementation, deployed startup/CPU measurement and the runtime revision are recorded in results.md. The original request CPU assumption fails. Final production failure checks and experiment cleanup are recorded with the evidence. The owner approved checking off Phase 03 on October 15, 2026 under the required-runtime-changes-decided alternative. Replacement performance remains unproven.

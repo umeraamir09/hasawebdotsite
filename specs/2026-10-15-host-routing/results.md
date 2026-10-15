@@ -1,6 +1,6 @@
 # S-3, S-4 and S-10 results
 
-Measured October 15, 2026. Production hostname/TLS routing and the tested asset-first request-accounting assumptions pass this spike. The owner approved temporary routing and performed the DNS changes. Phase 04 remains unchecked pending separate completion approval. These observations do not establish overall Free-tier feasibility; S-2 failed its request CPU target and S-1/S-8 still require a proven bounded publication pipeline.
+Measured October 15, 2026. Production hostname/TLS routing and the tested asset-first request-accounting assumptions pass this spike. The owner approved temporary routing and performed the DNS changes. The owner approved Phase 04 completion on October 15, 2026. These observations do not establish overall Free-tier feasibility; S-2 failed its request CPU target and S-1/S-8 still require a proven bounded publication pipeline.
 
 ## Production routing and TLS
 
@@ -73,7 +73,7 @@ The www redirect uses a disposable Worker so even matching static paths redirect
 
 Temporary approved routes and tiny fixture resources remain for review. The real-auth write probe is disabled and its synthetic sessions/users have been removed. The empty S-2 database is isolated from existing account databases. The optional fixture cleanup/route rollback must preserve the user's new zone, DNS and unrelated resources. The pre-experiment route list was empty. Review proposed-configuration.md before cleanup or migration.
 
-No technical external check required by S-3/S-4/S-10 is left pending for the tested configuration. Owner approval to check off Phase 04 remains pending. S-2's replacement runtime measurement, S-8's Workflow/assembly proof and later product/provider phases remain separate dependencies.
+No technical external check required by S-3/S-4/S-10 is left pending for the tested configuration. The owner approved checking off Phase 04 on October 15, 2026. S-2's replacement runtime measurement, S-8's Workflow/assembly proof and later product/provider phases remain separate dependencies.
 
 ## Reproduce and verify
 
