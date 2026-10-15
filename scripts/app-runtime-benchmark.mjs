@@ -111,6 +111,8 @@ cli([
   "--file",
   fixturePath,
 ]);
+// Let Node process closed keep-alive sockets after the blocking CLI.
+await setTimeout(100);
 await rm(fixturePath);
 let child;
 let logs = "";
@@ -354,6 +356,10 @@ try {
       }),
     );
   }
+  await writeFile(
+    join(output, "timings.json"),
+    `${JSON.stringify({ recordedAt: new Date().toISOString(), cold, results }, null, 2)}\n`,
+  );
   // Assert failure paths do not increment writes. Owner B remains untouched.
   const before = (await request()).data.writes;
   const failures = [
@@ -396,6 +402,8 @@ try {
     "--file",
     cachePath,
   ]);
+  // Let Node process closed keep-alive sockets after the blocking CLI.
+  await setTimeout(100);
   await request({ cookie: cached });
   await request({ status: 401 });
   await rm(cachePath);
@@ -417,6 +425,8 @@ try {
     "--file",
     deletePath,
   ]);
+  // Let Node process closed keep-alive sockets after the blocking CLI.
+  await setTimeout(100);
   await request({ cookie: cached, status: 403 });
   await rm(deletePath);
   const failurePath = join(output, "failure.sql");
@@ -433,6 +443,8 @@ try {
     "--file",
     failurePath,
   ]);
+  // Let Node process closed keep-alive sockets after the blocking CLI.
+  await setTimeout(100);
   await request({ cookie: cached, method: "POST", body: "{}", status: 503 });
   await rm(failurePath);
   const report = {
