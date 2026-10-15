@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["AUTH_SPIKE_CHROMIUM"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
