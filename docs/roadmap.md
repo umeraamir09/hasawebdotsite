@@ -85,7 +85,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 09. Define the draft and component contracts
 
 - Create the versioned draft schema, sample markers, rich-text allowlist, asset references, component registry, and migration contracts. Declare the full MVP component list and singleton rules, with multiple text sections allowed.
-- [ ] Complete when valid drafts round-trip, unsafe content and invalid component structures fail validation, and schema/component migrations preserve content.
+- October 15, 2026: [contract implementation and validation evidence](../specs/2026-10-15-draft-component-contracts/results.md) are recorded. All 123 contract tests and all 139 repository tests pass, along with lint, typechecks and the full build. The owner approved Phase 09 completion on October 15, 2026.
+- [x] Complete when valid drafts round-trip, unsafe content and invalid component structures fail validation, and schema/component migrations preserve content.
 
 ### Phase 10. Establish persistence and owner boundaries
 

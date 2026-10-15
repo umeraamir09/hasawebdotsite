@@ -214,7 +214,7 @@ type DraftDoc = {
     avatar?: { assetId: string; alt?: string; accepted: boolean };
     banner?: { assetId: string; alt?: string };
     decorationId?: string;
-    faceReveal: { enabled: boolean; assetId?: string; alt?: string };
+    faceReveal: { enabled: boolean; image?: { assetId: string; alt?: string } };
   };
   links: Array<{                       // single source for profile + social component
     id: string; label: string; kind: 'email' | 'github' | 'linkedin' | 'x' | 'website' | string;
@@ -226,6 +226,8 @@ type DraftDoc = {
   samples: Record<string, true>;       // fields still holding untouched sample content
 };
 ```
+
+Phase 09 implements the strict version 1 contract and documents its exact fields in [`packages/schema/README.md`](../packages/schema/README.md). Draft validation permits unfinished content; publication requirements and checks against authoritative asset/provider records remain separate. Sample keys use profile field names and stable component IDs rather than array indices.
 
 - **Sample tracking:** sample values are flagged in `samples` and cleared on first edit, which drives "untouched optional samples are omitted" and "editing a sample triggers normal validation".
 - **Size cap:** 1 MiB per draft (D1 rows max out at 2 MB). If real portfolios outgrow it, case studies can move to their own rows without changing the API.
@@ -333,7 +335,9 @@ S-7 confirms the Resend adapter and all three live email types. [Evidence and im
 
 ### 9.1 Component registry (supports "new components over time")
 
-Each component type is a folder in `packages/components` exporting one object, and the registry is the only place the system learns that it exists:
+The canonical data contracts and registry live in `packages/schema`, with a module per optional component type. `packages/components` re-exports this registry and will attach the editor and renderer implementations in their scheduled phases. This keeps draft validation usable in browsers and Workers without importing React or creating a package dependency cycle. The registry is the only list of supported optional types; it generates their discriminated union.
+
+The full component definition will combine these data contracts with the following UI and rendering adapters:
 
 ```ts
 defineComponent({

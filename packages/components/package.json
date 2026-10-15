@@ -10,6 +10,9 @@
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@hasaweb/schema": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "7.0.2"
   }
