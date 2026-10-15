@@ -49,3 +49,7 @@ Put local secrets in ignored `apps/web/.dev.vars`, starting from `.dev.vars.exam
 The configuration follows [OpenNext setup](https://opennext.js.org/cloudflare/get-started) and [Cloudflare multi-Worker development](https://developers.cloudflare.com/workers/local-development/multi-workers/).
 
 If your WSL `pnpm` command resolves to a Windows executable, run commands through the Linux package runner, for example `npm exec --yes --package=pnpm@12.11.2 -- pnpm dev`.
+
+## Publish rendering spike
+
+Run `pnpm spike:render` to benchmark synthetic near-limit portfolio, case-study, and resume pages with production React in local workerd. It writes timing samples and CPU profiles under `.wrangler/render-spike/` without deploying. See the [S-1 findings and revised approach](specs/2026-10-15-publish-render/results.md) before implementing publication.

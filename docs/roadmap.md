@@ -41,7 +41,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 02. Measure publish rendering
 
 - Run spike S-1 with representative worst-case portfolio, case-study, and resume pages in workerd.
-- [ ] Complete when CPU measurements support a bounded rendering approach within the intended plan, or a revised approach has been recorded before implementing publication.
+- S-1 ran on October 15, 2026. Whole-page rendering exceeded the local budget; [measurements and a revised bounded approach](../specs/2026-10-15-publish-render/results.md) are recorded. The owner approved Phase 02 completion on October 15, 2026, under the recorded-revised-approach condition.
+- [x] Complete when CPU measurements support a bounded rendering approach within the intended plan, or a revised approach has been recorded before implementing publication.
 
 ### Phase 03. Measure the app and API runtime
 

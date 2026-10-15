@@ -1,0 +1,8 @@
+{
+  "name": "hasaweb-render-spike-local",
+  "main": "worker.ts",
+  "compatibility_date": "2026-10-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "define": { "process.env.NODE_ENV": "\"production\"" }
+}
