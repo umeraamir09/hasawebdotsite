@@ -71,7 +71,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 07. Prove email delivery
 
 - Run S-7 with the sending domain, verification mail, contact mail, and failure notices. Confirm the provider's quota behavior and the planned email budget guard.
-- [ ] Complete when each email type can be delivered and controlled rejection, timeout, and quota fixtures are available.
+- October 15, 2026: [local fixture and live delivery evidence](../specs/2026-10-15-email-delivery/results.md) are recorded. All 63 workerd/D1 checks pass. Resend confirms the sending domain and SPF/DKIM, and all three authorized email types reached delivered status. Quota behavior uses controlled fixtures. The owner approved Phase 07 completion on October 15, 2026.
+- [x] Complete when each email type can be delivered and controlled rejection, timeout, and quota fixtures are available.
 
 ### Phase 08. Prove workflow execution and asset withdrawal
 

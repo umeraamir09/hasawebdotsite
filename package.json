@@ -22,7 +22,9 @@
     "spike:routing": "node scripts/host-routing-spike.mjs",
     "spike:auth": "node scripts/auth-behavior-spike.mjs",
     "spike:github": "node scripts/github-permissions-spike.mjs",
-    "spike:github:live": "node scripts/github-live-oauth.mjs"
+    "spike:github:live": "node scripts/github-live-oauth.mjs",
+    "spike:email": "node scripts/email-delivery-spike.mjs",
+    "spike:email:live": "node scripts/email-live.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
