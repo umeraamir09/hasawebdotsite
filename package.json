@@ -24,7 +24,11 @@
     "spike:github": "node scripts/github-permissions-spike.mjs",
     "spike:github:live": "node scripts/github-live-oauth.mjs",
     "spike:email": "node scripts/email-delivery-spike.mjs",
-    "spike:email:live": "node scripts/email-live.mjs"
+    "spike:email:live": "node scripts/email-live.mjs",
+    "spike:workflow": "node scripts/workflow-assets-spike.mjs",
+    "spike:workflow:live": "node scripts/workflow-assets-live.mjs",
+    "spike:workflow:execution:live": "node scripts/workflow-execution-live.mjs",
+    "spike:workflow:observe:live": "node scripts/workflow-observe-live.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

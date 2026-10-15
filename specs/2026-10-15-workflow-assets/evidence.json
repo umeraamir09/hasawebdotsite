@@ -1,0 +1,4808 @@
+{
+  "recordedAt": "2026-10-15T08:29:37.990Z",
+  "runtime": "Wrangler local workerd, actual Workflows/D1/R2",
+  "elapsedMs": 37712,
+  "checks": [
+    {
+      "name": "both concurrent multi-page Workflows complete",
+      "passed": true
+    },
+    {
+      "name": "permanent post-write failure exhausts retries",
+      "passed": true
+    },
+    {
+      "name": "exactly one competing commit wins",
+      "passed": true
+    },
+    {
+      "name": "failed candidate preserves prior pointer",
+      "passed": true
+    },
+    {
+      "name": "transient post-write fault retries once",
+      "passed": true
+    },
+    {
+      "name": "transient retry candidate completes",
+      "passed": true
+    },
+    {
+      "name": "failed candidate has no complete manifest",
+      "passed": true
+    },
+    {
+      "name": "D1 pointer identifies the complete winning manifest",
+      "passed": true
+    },
+    {
+      "name": "durable step results remain below 1 MiB",
+      "passed": true
+    },
+    {
+      "name": "Workflow stays within 1024 step limit",
+      "passed": true
+    },
+    {
+      "name": "complete immutable manifest persisted",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-a/manifest.json portfolio exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-a/manifest.json case-study exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-a/manifest.json resume exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "Workflow stays within 1024 step limit",
+      "passed": true
+    },
+    {
+      "name": "complete immutable manifest persisted",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-b/manifest.json portfolio exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-b/manifest.json case-study exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "candidate/candidate-b/manifest.json resume exact ordered output",
+      "passed": true
+    },
+    {
+      "name": "withdrawn public origin returns 404",
+      "passed": true
+    },
+    {
+      "name": "private original survives withdrawal",
+      "passed": true
+    },
+    {
+      "name": "repeated public deletion is idempotent",
+      "passed": true
+    }
+  ],
+  "pages": [
+    {
+      "name": "portfolio",
+      "fragments": 133
+    },
+    {
+      "name": "case-study",
+      "fragments": 179
+    },
+    {
+      "name": "resume",
+      "fragments": 128
+    }
+  ],
+  "statuses": [
+    {
+      "status": "complete",
+      "__LOCAL_DEV_STEP_OUTPUTS": [
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-1",
+          "size": 3992,
+          "renderMs": 7
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-2",
+          "size": 4016,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-0",
+          "size": 4509,
+          "renderMs": 12
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-3",
+          "size": 4024,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-4",
+          "size": 3803,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-5",
+          "size": 2173,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-6",
+          "size": 6041,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-7",
+          "size": 4941,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-8",
+          "size": 9720,
+          "renderMs": 7
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-9",
+          "size": 10626,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-10",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-11",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-12",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-13",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-14",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-15",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-16",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-17",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-18",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-19",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-20",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-21",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-22",
+          "size": 10626,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-23",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-24",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-25",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-26",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-27",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-28",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-29",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-30",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-31",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-32",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-33",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-34",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-35",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-36",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-37",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-38",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-39",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-40",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-41",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-42",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-43",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-44",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-45",
+          "size": 10626,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-46",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-47",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-48",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-49",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-50",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-51",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-52",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-53",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-54",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-55",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-56",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-57",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-58",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-59",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-60",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-61",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-62",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-63",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-64",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-65",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-66",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-67",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-68",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-69",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-70",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-71",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-72",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-73",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-74",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-75",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-76",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-77",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-78",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-79",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-80",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-81",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-82",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-83",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-84",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-85",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-86",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-87",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-88",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-89",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-90",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-91",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-92",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-93",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-94",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-95",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-96",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-97",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-98",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-99",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-100",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-101",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-102",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-103",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-104",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-105",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-106",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-107",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-108",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-109",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-110",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-111",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-112",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-113",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-114",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-115",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-116",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-117",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-118",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-119",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-120",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-121",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-122",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-123",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-124",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-125",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-126",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-127",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-128",
+          "size": 10626,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-129",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-130",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-132",
+          "size": 5334,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/fragment-131",
+          "size": 10626,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-0-0",
+          "size": 287617
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-0-32",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-0-64",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-0-96",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-0-128",
+          "size": 47838
+        },
+        {
+          "key": "candidate/candidate-a/portfolio/level-1-0",
+          "size": 1355551
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-0",
+          "size": 5517,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-1",
+          "size": 4780,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-2",
+          "size": 4864,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-3",
+          "size": 6114,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-4",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-5",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-6",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-7",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-8",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-9",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-10",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-11",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-12",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-13",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-14",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-15",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-16",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-17",
+          "size": 6464,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-18",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-19",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-20",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-21",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-22",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-23",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-24",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-25",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-26",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-27",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-28",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-29",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-30",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-31",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-32",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-33",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-34",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-35",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-36",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-37",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-38",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-39",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-40",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-41",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-42",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-43",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-44",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-45",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-46",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-47",
+          "size": 6464,
+          "renderMs": 6
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-48",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-49",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-50",
+          "size": 6464,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-51",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-52",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-53",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-54",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-55",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-56",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-57",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-58",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-59",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-60",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-61",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-62",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-63",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-64",
+          "size": 6464,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-65",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-66",
+          "size": 6464,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-67",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-68",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-69",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-70",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-71",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-72",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-73",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-74",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-75",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-76",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-77",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-78",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-79",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-80",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-81",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-82",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-83",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-84",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-85",
+          "size": 6464,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-86",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-87",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-88",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-89",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-90",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-91",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-92",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-93",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-94",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-95",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-96",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-97",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-98",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-99",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-100",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-101",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-102",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-103",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-104",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-105",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-106",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-107",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-108",
+          "size": 6464,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-109",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-110",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-111",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-112",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-113",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-114",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-115",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-116",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-117",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-118",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-119",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-120",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-121",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-122",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-123",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-124",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-125",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-126",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-127",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-128",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-129",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-130",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-131",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-132",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-133",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-134",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-135",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-136",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-137",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-138",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-139",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-140",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-141",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-142",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-143",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-144",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-145",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-146",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-147",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-148",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-149",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-150",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-151",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-152",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-153",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-154",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-155",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-156",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-157",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-158",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-159",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-160",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-161",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-162",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-163",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-164",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-165",
+          "size": 6464,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-166",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-167",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-168",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-169",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-170",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-171",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-172",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-173",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-174",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-175",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-178",
+          "size": 4364,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-176",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/case-study/fragment-177",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-0",
+          "size": 202267
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-32",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-64",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-96",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-128",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-0-160",
+          "size": 120716
+        },
+        {
+          "key": "candidate/candidate-a/case-study/level-1-0",
+          "size": 1150375
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-0",
+          "size": 10588,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-1",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-2",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-3",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-4",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-5",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-6",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-7",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-8",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-9",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-10",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-11",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-12",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-13",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-14",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-15",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-16",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-17",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-18",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-19",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-20",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-21",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-22",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-23",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-24",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-25",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-26",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-27",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-28",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-29",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-30",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-31",
+          "size": 10710,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-32",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-33",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-34",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-35",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-36",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-37",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-38",
+          "size": 10710,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-39",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-40",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-41",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-42",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-43",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-44",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-45",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-46",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-47",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-48",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-49",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-50",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-51",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-52",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-53",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-54",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-55",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-56",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-57",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-58",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-59",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-60",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-61",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-62",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-63",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-64",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-65",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-66",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-67",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-68",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-69",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-70",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-71",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-72",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-73",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-74",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-75",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-76",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-77",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-78",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-79",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-80",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-81",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-82",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-83",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-84",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-85",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-86",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-87",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-88",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-89",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-90",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-91",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-92",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-93",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-94",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-95",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-96",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-97",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-98",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-99",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-100",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-101",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-102",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-103",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-104",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-105",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-106",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-107",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-108",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-109",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-110",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-111",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-112",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-113",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-114",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-115",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-116",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-117",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-118",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-119",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-120",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-121",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-122",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-123",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-124",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-125",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-126",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/fragment-127",
+          "size": 10731,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-a/resume/level-0-0",
+          "size": 342598
+        },
+        {
+          "key": "candidate/candidate-a/resume/level-0-32",
+          "size": 342720
+        },
+        {
+          "key": "candidate/candidate-a/resume/level-0-64",
+          "size": 342720
+        },
+        {
+          "key": "candidate/candidate-a/resume/level-0-96",
+          "size": 342741
+        },
+        {
+          "key": "candidate/candidate-a/resume/level-1-0",
+          "size": 1370779
+        },
+        "candidate/candidate-a/manifest.json",
+        true
+      ],
+      "output": {
+        "committed": true,
+        "manifest": "candidate/candidate-a/manifest.json",
+        "pages": [
+          {
+            "key": "candidate/candidate-a/portfolio/level-1-0",
+            "size": 1355551
+          },
+          {
+            "key": "candidate/candidate-a/case-study/level-1-0",
+            "size": 1150375
+          },
+          {
+            "key": "candidate/candidate-a/resume/level-1-0",
+            "size": 1370779
+          }
+        ],
+        "steps": 460
+      }
+    },
+    {
+      "status": "complete",
+      "__LOCAL_DEV_STEP_OUTPUTS": [
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-1",
+          "size": 3992,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-0",
+          "size": 4509,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-2",
+          "size": 4016,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-3",
+          "size": 4024,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-4",
+          "size": 3803,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-5",
+          "size": 2173,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-6",
+          "size": 6041,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-7",
+          "size": 4941,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-8",
+          "size": 9720,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-9",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-10",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-11",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-12",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-13",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-14",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-15",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-16",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-17",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-18",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-19",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-20",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-21",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-22",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-23",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-24",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-25",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-26",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-27",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-28",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-29",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-30",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-31",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-32",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-33",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-34",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-35",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-36",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-37",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-38",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-39",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-40",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-41",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-42",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-43",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-44",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-45",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-46",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-47",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-48",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-49",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-50",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-51",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-52",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-53",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-54",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-55",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-56",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-57",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-58",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-59",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-60",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-61",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-62",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-63",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-64",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-65",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-66",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-67",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-68",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-69",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-70",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-71",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-72",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-73",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-74",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-75",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-76",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-77",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-78",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-79",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-80",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-81",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-82",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-83",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-84",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-85",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-86",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-87",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-88",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-89",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-90",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-91",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-92",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-93",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-94",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-95",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-96",
+          "size": 10626,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-97",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-98",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-99",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-100",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-101",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-102",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-103",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-104",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-105",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-106",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-107",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-108",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-109",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-110",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-111",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-112",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-113",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-114",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-115",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-116",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-117",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-118",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-119",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-120",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-121",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-122",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-123",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-124",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-125",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-126",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-127",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-128",
+          "size": 10626,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-129",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-130",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-132",
+          "size": 5334,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/fragment-131",
+          "size": 10626,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-0-0",
+          "size": 287617
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-0-32",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-0-64",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-0-96",
+          "size": 340032
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-0-128",
+          "size": 47838
+        },
+        {
+          "key": "candidate/candidate-b/portfolio/level-1-0",
+          "size": 1355551
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-0",
+          "size": 5517,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-1",
+          "size": 4780,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-2",
+          "size": 4864,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-3",
+          "size": 6114,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-4",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-5",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-6",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-7",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-8",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-9",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-10",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-11",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-12",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-13",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-14",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-15",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-16",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-17",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-18",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-19",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-20",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-21",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-22",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-23",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-24",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-25",
+          "size": 6464,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-26",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-27",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-28",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-29",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-30",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-31",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-32",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-33",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-34",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-35",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-36",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-37",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-38",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-39",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-40",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-41",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-42",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-43",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-44",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-45",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-46",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-47",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-48",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-49",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-50",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-51",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-52",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-53",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-54",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-55",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-56",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-57",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-58",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-59",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-60",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-61",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-62",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-63",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-64",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-65",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-66",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-67",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-68",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-69",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-70",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-71",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-72",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-73",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-74",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-75",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-76",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-77",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-78",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-79",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-80",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-81",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-82",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-83",
+          "size": 6464,
+          "renderMs": 4
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-84",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-85",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-86",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-87",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-88",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-89",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-90",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-91",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-92",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-93",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-94",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-95",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-96",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-97",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-98",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-99",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-100",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-101",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-102",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-103",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-104",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-105",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-106",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-107",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-108",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-109",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-110",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-111",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-112",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-113",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-114",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-115",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-116",
+          "size": 6464,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-117",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-118",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-119",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-120",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-121",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-122",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-123",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-124",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-125",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-126",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-127",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-128",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-129",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-130",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-131",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-132",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-133",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-134",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-135",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-136",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-137",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-138",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-139",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-140",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-141",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-142",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-143",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-144",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-145",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-146",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-147",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-148",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-149",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-150",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-151",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-152",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-153",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-154",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-155",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-156",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-157",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-158",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-159",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-160",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-161",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-162",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-163",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-164",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-165",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-166",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-167",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-168",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-169",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-170",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-171",
+          "size": 6464,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-172",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-173",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-174",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-175",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-178",
+          "size": 4364,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-176",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/fragment-177",
+          "size": 6464,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-0",
+          "size": 202267
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-32",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-64",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-96",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-128",
+          "size": 206848
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-0-160",
+          "size": 120716
+        },
+        {
+          "key": "candidate/candidate-b/case-study/level-1-0",
+          "size": 1150375
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-0",
+          "size": 10588,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-1",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-2",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-3",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-4",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-5",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-6",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-7",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-8",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-9",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-10",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-11",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-12",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-13",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-14",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-15",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-16",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-17",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-18",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-19",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-20",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-21",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-22",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-23",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-24",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-25",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-26",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-27",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-28",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-29",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-30",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-31",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-32",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-33",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-34",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-35",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-36",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-37",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-38",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-39",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-40",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-41",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-42",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-43",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-44",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-45",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-46",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-47",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-48",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-49",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-50",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-51",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-52",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-53",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-54",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-55",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-56",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-57",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-58",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-59",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-60",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-61",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-62",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-63",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-64",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-65",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-66",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-67",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-68",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-69",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-70",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-71",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-72",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-73",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-74",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-75",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-76",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-77",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-78",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-79",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-80",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-81",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-82",
+          "size": 10710,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-83",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-84",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-85",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-86",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-87",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-88",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-89",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-90",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-91",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-92",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-93",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-94",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-95",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-96",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-97",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-98",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-99",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-100",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-101",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-102",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-103",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-104",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-105",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-106",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-107",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-108",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-109",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-110",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-111",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-112",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-113",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-114",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-115",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-116",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-117",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-118",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-119",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-120",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-121",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-122",
+          "size": 10710,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-123",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-124",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-125",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-126",
+          "size": 10710,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/fragment-127",
+          "size": 10731,
+          "renderMs": 0
+        },
+        {
+          "key": "candidate/candidate-b/resume/level-0-0",
+          "size": 342598
+        },
+        {
+          "key": "candidate/candidate-b/resume/level-0-32",
+          "size": 342720
+        },
+        {
+          "key": "candidate/candidate-b/resume/level-0-64",
+          "size": 342720
+        },
+        {
+          "key": "candidate/candidate-b/resume/level-0-96",
+          "size": 342741
+        },
+        {
+          "key": "candidate/candidate-b/resume/level-1-0",
+          "size": 1370779
+        },
+        "candidate/candidate-b/manifest.json",
+        false
+      ],
+      "output": {
+        "committed": false,
+        "manifest": "candidate/candidate-b/manifest.json",
+        "pages": [
+          {
+            "key": "candidate/candidate-b/portfolio/level-1-0",
+            "size": 1355551
+          },
+          {
+            "key": "candidate/candidate-b/case-study/level-1-0",
+            "size": 1150375
+          },
+          {
+            "key": "candidate/candidate-b/resume/level-1-0",
+            "size": 1370779
+          }
+        ],
+        "steps": 460
+      }
+    },
+    {
+      "status": "errored",
+      "__LOCAL_DEV_STEP_OUTPUTS": [
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-1",
+          "size": 3992,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-2",
+          "size": 4016,
+          "renderMs": 3
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-3",
+          "size": 4024,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-4",
+          "size": 3803,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-5",
+          "size": 2173,
+          "renderMs": 1
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-6",
+          "size": 6041,
+          "renderMs": 2
+        },
+        {
+          "key": "candidate/candidate-fail/portfolio/fragment-7",
+          "size": 4941,
+          "renderMs": 1
+        }
+      ],
+      "output": null,
+      "error": {
+        "message": "Injected fault after R2 write",
+        "name": "Error"
+      }
+    },
+    {
+      "status": "complete",
+      "__LOCAL_DEV_STEP_OUTPUTS": [
+        {
+          "key": "candidate/candidate-retry/portfolio/fragment-0",
+          "size": 4530,
+          "renderMs": 1
+        },
+        "candidate/candidate-retry/manifest.json",
+        true
+      ],
+      "output": {
+        "committed": true,
+        "manifest": "candidate/candidate-retry/manifest.json",
+        "pages": [
+          {
+            "key": "candidate/candidate-retry/portfolio/fragment-0",
+            "size": 4530,
+            "renderMs": 1
+          }
+        ],
+        "steps": 3
+      }
+    }
+  ],
+  "snapshots": {
+    "sites": [
+      {
+        "id": "race",
+        "version": "candidate-a"
+      },
+      {
+        "id": "failure",
+        "version": "old"
+      },
+      {
+        "id": "retry",
+        "version": "candidate-retry"
+      }
+    ],
+    "attempts": [
+      {
+        "id": "candidate-retry",
+        "count": 2
+      },
+      {
+        "id": "candidate-fail",
+        "count": 2
+      }
+    ]
+  },
+  "limitations": [
+    "Local runtime does not enforce deployed Free CPU quotas",
+    "Pre-normalized input records stand in for future transactional draft normalization",
+    "Near-limit fixture per page intentionally overstates the total 1 MiB portfolio draft",
+    "Local R2 deletion does not prove CDN purge or multiple edge locations"
+  ]
+}
