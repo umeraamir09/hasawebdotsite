@@ -20,7 +20,9 @@
     "spike:render": "node scripts/publish-render-benchmark.mjs",
     "spike:runtime": "node scripts/app-runtime-benchmark.mjs",
     "spike:routing": "node scripts/host-routing-spike.mjs",
-    "spike:auth": "node scripts/auth-behavior-spike.mjs"
+    "spike:auth": "node scripts/auth-behavior-spike.mjs",
+    "spike:github": "node scripts/github-permissions-spike.mjs",
+    "spike:github:live": "node scripts/github-live-oauth.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

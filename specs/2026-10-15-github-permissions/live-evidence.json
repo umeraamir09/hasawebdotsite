@@ -1,0 +1,235 @@
+{
+  "runtime": "isolated Node.js loopback OAuth harness",
+  "events": [
+    {
+      "at": "2026-10-15T04:44:40.581Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T04:44:58.031Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T04:45:33.782Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 392,
+      "days": 366,
+      "total": 817,
+      "calendarHash": "9ccae409e4db746c6294f8e2fb8ea0872a81d1fc5263e5492bacf40c5d68a924"
+    },
+    {
+      "at": "2026-10-15T04:50:24.827Z",
+      "check": "activity_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["read:user"],
+      "grantedScopes": ["read:user"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T04:52:17.027Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 392,
+      "days": 366,
+      "total": 817,
+      "calendarHash": "9ccae409e4db746c6294f8e2fb8ea0872a81d1fc5263e5492bacf40c5d68a924"
+    },
+    {
+      "at": "2026-10-15T04:52:17.962Z",
+      "check": "activity_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["read:user"],
+      "restrictedCount": 0,
+      "days": 366,
+      "total": 817,
+      "calendarHash": "9ccae409e4db746c6294f8e2fb8ea0872a81d1fc5263e5492bacf40c5d68a924",
+      "adapterAccepted": true
+    },
+    {
+      "at": "2026-10-15T04:54:39.162Z",
+      "check": "activity_grant_deletion",
+      "outcome": "revoked",
+      "status": 204
+    },
+    {
+      "at": "2026-10-15T04:54:40.542Z",
+      "check": "independent_signin_after_activity_revoke",
+      "outcome": "passed",
+      "activityTokenStatus": 401
+    },
+    {
+      "at": "2026-10-15T04:55:15.321Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 392,
+      "days": 366,
+      "total": 817,
+      "calendarHash": "9ccae409e4db746c6294f8e2fb8ea0872a81d1fc5263e5492bacf40c5d68a924"
+    },
+    {
+      "at": "2026-10-15T07:19:56.620Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:21:44.330Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 393,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c"
+    },
+    {
+      "at": "2026-10-15T07:21:56.463Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 393,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c"
+    },
+    {
+      "at": "2026-10-15T07:22:06.494Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:23:45.986Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:24:12.806Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 393,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c"
+    },
+    {
+      "at": "2026-10-15T07:25:40.565Z",
+      "check": "signin_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["user:email"],
+      "grantedScopes": ["user:email"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:25:44.368Z",
+      "check": "activity_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["read:user"],
+      "grantedScopes": ["read:user"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:25:51.194Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 393,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c"
+    },
+    {
+      "at": "2026-10-15T07:25:51.932Z",
+      "check": "activity_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["read:user"],
+      "restrictedCount": 0,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c",
+      "adapterAccepted": true
+    },
+    {
+      "at": "2026-10-15T07:27:08.066Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 393,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c"
+    },
+    {
+      "at": "2026-10-15T07:27:08.410Z",
+      "check": "external_activity_revocation",
+      "outcome": "detected_401_private_data_removed"
+    },
+    {
+      "at": "2026-10-15T07:29:09.541Z",
+      "check": "activity_authorization",
+      "outcome": "matching_account_authorized",
+      "requestedScopes": ["read:user"],
+      "grantedScopes": ["read:user"],
+      "pkce": "S256"
+    },
+    {
+      "at": "2026-10-15T07:29:15.121Z",
+      "check": "signin_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["user:email"],
+      "restrictedCount": 0,
+      "days": 366,
+      "total": 425,
+      "calendarHash": "e23a47b3a54f0e971852b44d3eb95df1b1bef5136eea374d7495b571d2c253c7"
+    },
+    {
+      "at": "2026-10-15T07:29:15.997Z",
+      "check": "activity_calendar",
+      "outcome": "observed",
+      "status": 200,
+      "scopes": ["read:user"],
+      "restrictedCount": 0,
+      "days": 366,
+      "total": 818,
+      "calendarHash": "7bbe1867dd9114f3dced110d5c2c8543f1dc8512e63d2d957e266a19353f0d7c",
+      "adapterAccepted": true
+    }
+  ],
+  "limitations": [
+    "Local HTTP harness does not verify production Better Auth cookies or callbacks",
+    "Same contribution account used for public and private observations; platform identity remains separate",
+    "Known contribution accuracy and visibility settings require owner confirmation",
+    "Production refresh scheduling and CDN purge are not exercised"
+  ]
+}
