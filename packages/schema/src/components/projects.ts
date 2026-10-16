@@ -5,7 +5,10 @@ import {
   idSchema,
   imageReferenceSchema,
 } from "../primitives";
-import { caseStudyRichTextSchema } from "../rich-text";
+import {
+  caseStudyRichTextContentSchema,
+  caseStudyRichTextSchema,
+} from "../rich-text";
 
 export const projectSchema = z.strictObject({
   id: idSchema,
@@ -26,21 +29,30 @@ export const projectSchema = z.strictObject({
     })
     .optional(),
 });
-export const projectsSchema = z
-  .strictObject({
-    entries: z.array(projectSchema),
-  })
-  .superRefine((data, ctx) => {
-    checkUniqueIds(data.entries, ctx, ["entries"]);
-    const slugs = new Set<string>();
-    data.entries.forEach((entry, index) => {
-      if (!entry.caseStudy) return;
-      if (slugs.has(entry.caseStudy.slug))
-        ctx.addIssue({
-          code: "custom",
-          path: ["entries", index, "caseStudy", "slug"],
-          message: "Duplicate case-study slug",
-        });
-      slugs.add(entry.caseStudy.slug);
+function projectsWith(schema: z.ZodType<z.infer<typeof projectSchema>>) {
+  return z
+    .strictObject({ entries: z.array(schema) })
+    .superRefine((data, ctx) => {
+      checkUniqueIds(data.entries, ctx, ["entries"]);
+      const slugs = new Set<string>();
+      data.entries.forEach((entry, index) => {
+        if (!entry.caseStudy) return;
+        if (slugs.has(entry.caseStudy.slug))
+          ctx.addIssue({
+            code: "custom",
+            path: ["entries", index, "caseStudy", "slug"],
+            message: "Duplicate case-study slug",
+          });
+        slugs.add(entry.caseStudy.slug);
+      });
     });
-  });
+}
+export const projectsSchema = projectsWith(projectSchema);
+export const projectsContentSchema = projectsWith(
+  projectSchema.extend({
+    caseStudy: projectSchema.shape.caseStudy
+      .unwrap()
+      .extend({ body: caseStudyRichTextContentSchema })
+      .optional(),
+  }),
+);

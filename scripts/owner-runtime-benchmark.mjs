@@ -15,13 +15,16 @@ const wrangler = join(
 );
 const remote = process.argv.includes("--remote");
 const recovery = process.argv.includes("--recovery");
+const sampleCount = Number(process.env.OWNER_RUNTIME_SAMPLES ?? 100);
+const warmupCount = Number(process.env.OWNER_RUNTIME_WARMUPS ?? 10);
+const selectedCases = process.env.OWNER_RUNTIME_CASES?.split(",");
 const output = join(
   root,
   remote ? ".wrangler/owner-runtime-remote" : ".wrangler/owner-runtime-local",
 );
 const evidencePath = join(
   root,
-  "specs/2026-10-16-owner-api-runtime",
+  process.env.OWNER_RUNTIME_EVIDENCE ?? "specs/2026-10-16-owner-api-runtime",
   remote
     ? recovery
       ? "deployed-recovery.json"
@@ -450,11 +453,13 @@ try {
     ["signed-out", null, null],
   ];
   for (const [name, operation, draft] of cases.filter(
-    ([name]) => !recovery || name === "signed-out",
+    ([name]) =>
+      (!recovery || name === "signed-out") &&
+      (!selectedCases || selectedCases.includes(name)),
   )) {
     const start = new Date().toISOString();
-    for (let i = 0; i < 110; i++) {
-      const measured = i >= 10;
+    for (let i = 0; i < sampleCount + warmupCount; i++) {
+      const measured = i >= warmupCount;
       const data = await request({
         name: `${measured ? "" : "warmup-"}${name}`,
         ...(name === "signed-out" ? { id: null, status: 401 } : {}),
@@ -471,7 +476,7 @@ try {
       name,
       from: start,
       to: new Date().toISOString(),
-      clientCount: 110,
+      clientCount: sampleCount + warmupCount,
     });
     console.log(`Measured ${name}`);
   }
@@ -529,7 +534,7 @@ try {
   // Never persist cookie, body, session token or secret in evidence.
   await writeFile(
     evidencePath,
-    `${JSON.stringify({ recordedAt: new Date().toISOString(), completed: stopped, recovery, method: remote ? "HTTPS to isolated web experiment using the actual web Worker adapter and named jobs service binding. Real Better Auth and persisted session/deletion checks. Elapsed is client wall time, never CPU. First candidate is not guaranteed isolate-cold. Ten warmups and 100 samples per workload." : "Local workerd runs the actual web Worker adapter and named jobs binding with real Better Auth, D1 migrations and draft validation. Client elapsed time is not CPU or deployed startup.", fixtureBytes: recovery ? null : { draft: 1048576 }, checks, windows, samples }, null, 2)}\n`,
+    `${JSON.stringify({ recordedAt: new Date().toISOString(), completed: stopped, recovery, sampleCount, warmupCount, method: remote ? "HTTPS to isolated web experiment using the actual web Worker adapter and named jobs service binding. Real Better Auth and persisted session/deletion checks. Elapsed is client wall time, never CPU. First candidate is not guaranteed isolate-cold. Ten warmups and 100 samples per workload." : "Local workerd runs the actual web Worker adapter and named jobs binding with real Better Auth, D1 migrations and draft validation. Client elapsed time is not CPU or deployed startup.", fixtureBytes: recovery ? null : { draft: 1048576 }, checks, windows, samples }, null, 2)}\n`,
   );
   await sql("DELETE FROM user WHERE id LIKE 'runtime-%';");
   if (!remote) await rm(join(output, ".dev.vars"), { force: true });

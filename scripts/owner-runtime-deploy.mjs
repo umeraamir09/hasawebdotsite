@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,7 +14,10 @@ const wrangler = join(
   "bin/wrangler.js",
 );
 const directory = join(root, ".wrangler/owner-runtime-remote");
-const evidence = join(root, "specs/2026-10-16-owner-api-runtime");
+const evidence = join(
+  root,
+  process.env.OWNER_RUNTIME_EVIDENCE ?? "specs/2026-10-16-owner-api-runtime",
+);
 function cli(args) {
   const result = spawnSync(process.execPath, [wrangler, ...args], {
     cwd: root,

@@ -2,7 +2,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { privateJson } from "@hasaweb/db";
-import { DRAFT_MAX_BYTES, draftSchema } from "@hasaweb/schema";
+import { DRAFT_MAX_BYTES, serializeDraft } from "@hasaweb/schema";
 import { z } from "zod";
 import { completeDraft } from "../../../packages/schema/src/fixtures.test-support";
 import jobs from "../src/index";
@@ -61,8 +61,12 @@ app.post("/api/owner/runtime/:operation", async (c) => {
   if (raw === null) return privateJson(null, 413);
   const input = envelope.safeParse(raw);
   if (!input.success) return privateJson(null, 422);
-  const parsed = draftSchema.safeParse(input.data.draft);
-  if (!parsed.success) return privateJson(null, 422);
+  let parsed: ReturnType<typeof serializeDraft>;
+  try {
+    parsed = serializeDraft(input.data.draft);
+  } catch {
+    return privateJson(null, 422);
+  }
   if (operation === "validate") return privateJson({ ok: true });
   const identity = c.get("owner").identity;
   // A fixture-only race proves the mutation rechecks authorization after parsing.
@@ -81,7 +85,7 @@ app.post("/api/owner/runtime/:operation", async (c) => {
     RETURNING revision
   `)
     .bind(
-      JSON.stringify(parsed.data),
+      parsed.json,
       JSON.stringify(input.data.progress),
       identity.user.id,
       input.data.revision,
