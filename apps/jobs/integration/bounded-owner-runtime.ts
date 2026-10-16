@@ -7,6 +7,7 @@ import { z } from "zod";
 import jobs from "../src/index";
 import { createOwnerRouter } from "../src/owner-api";
 import { prepareBounded } from "./bounded-preparation";
+import { measureDb } from "./measure-db";
 
 const app = createOwnerRouter();
 const progress = z.strictObject({
@@ -46,6 +47,9 @@ const actions = {
   commit: z.strictObject({ id: z.string().uuid(), sequence: number }),
   abort: z.strictObject({ id: z.string().uuid() }),
   cleanup: z.strictObject({}),
+  pending: z.strictObject({}),
+  status: z.strictObject({ id: z.string().uuid() }),
+  resume: z.strictObject({ id: z.string().uuid() }),
 };
 app.post("/api/owner/bounded/:action", async (c) => {
   const action = c.req.param("action");
@@ -54,17 +58,18 @@ app.post("/api/owner/bounded/:action", async (c) => {
   const reader = c.req.raw.body?.getReader();
   if (!reader) return privateJson(null, 400);
   const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
-  let bytes = 0,
-    oversized = false;
+  let bytes = 0;
   try {
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > 8192) oversized = true;
-      if (!oversized) text += decoder.decode(value, { stream: true });
+      if (bytes > 8192) {
+        void reader.cancel().catch(() => {});
+        return privateJson(null, 413);
+      }
+      text += decoder.decode(value, { stream: true });
     }
-    if (oversized) return privateJson(null, 413);
     text += decoder.decode();
   } catch {
     return privateJson(null, 400);
@@ -95,7 +100,29 @@ app.post("/api/owner/bounded/:action", async (c) => {
     );
   }
   const owner = c.get("owner");
-  const saves = boundedSaves(c.env.DB, owner.identity, {
+  const measured =
+    (c.env as AuthEnvironment & { MEASURE_DB?: string }).MEASURE_DB === "true"
+      ? measureDb(c.env.DB)
+      : null;
+  const respond = (body: unknown, status = 200) => {
+    const response = privateJson(body, status);
+    if (measured) {
+      response.headers.set(
+        "X-Fixture-Rows-Read",
+        String(measured.counts.reads),
+      );
+      response.headers.set(
+        "X-Fixture-Rows-Written",
+        String(measured.counts.writes),
+      );
+      response.headers.set(
+        "X-Fixture-Queries",
+        String(measured.counts.queries),
+      );
+    }
+    return response;
+  };
+  const saves = boundedSaves(measured?.db ?? c.env.DB, owner.identity, {
     table: "owner_runtime_fixture",
     owner: "user_id",
     draft: "draft",
@@ -111,45 +138,53 @@ app.post("/api/owner/bounded/:action", async (c) => {
     switch (action) {
       case "begin": {
         const v = actions.begin.parse(raw);
-        return privateJson(await saves.begin(v.revision, v.progress));
+        return respond(await saves.begin(v.revision, v.progress));
       }
       case "patch": {
         const v = actions.patch.parse(raw);
-        return privateJson(
+        return respond(
           await saves.change(v.change as SaveChange, v.revision, v.progress),
         );
       }
       case "change": {
         const v = actions.change.parse(raw);
-        return privateJson(
+        return respond(
           await saves.change(v.change as SaveChange, 0, {}, v.id, v.sequence),
         );
       }
       case "string-start": {
         const v = actions["string-start"].parse(raw);
-        return privateJson(await saves.stringStart(v.id, v.sequence, v.path));
+        return respond(await saves.stringStart(v.id, v.sequence, v.path));
       }
       case "piece": {
         const v = actions.piece.parse(raw);
-        return privateJson(await saves.stringPiece(v.id, v.sequence, v.text));
+        return respond(await saves.stringPiece(v.id, v.sequence, v.text));
       }
       case "string-finish": {
         const v = actions["string-finish"].parse(raw);
-        return privateJson(await saves.stringFinish(v.id, v.sequence));
+        return respond(await saves.stringFinish(v.id, v.sequence));
       }
       case "commit": {
         const v = actions.commit.parse(raw);
-        return privateJson(await saves.commit(v.id, v.sequence));
+        return respond(await saves.commit(v.id, v.sequence));
       }
       case "abort": {
         const v = actions.abort.parse(raw);
-        return privateJson(await saves.abort(v.id));
+        return respond(await saves.abort(v.id));
       }
+      case "pending":
+        return respond(await saves.pending());
+      case "status":
+        return respond(await saves.status(actions.status.parse(raw).id));
+      case "resume":
+        return respond(await saves.resume(actions.resume.parse(raw).id));
       case "cleanup":
-        return privateJson(await saves.cleanup());
+        return respond(await saves.cleanup());
     }
   } catch (error) {
-    return privateJson(
+    if (error instanceof Error && error.message.startsWith("D1_"))
+      return respond({ error: "storage_unavailable" }, 503);
+    return respond(
       {
         error:
           error instanceof SaveError ? error.message : "Invalid draft update",
@@ -157,7 +192,7 @@ app.post("/api/owner/bounded/:action", async (c) => {
       error instanceof SaveError ? error.status : 422,
     );
   }
-  return privateJson(null, 404);
+  return respond(null, 404);
 });
 export class RuntimeOwnerApi extends WorkerEntrypoint<AuthEnvironment> {
   fetch(request: Request) {

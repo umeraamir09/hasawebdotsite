@@ -3,6 +3,7 @@ import {
   type DraftPath,
   encodeJson,
   freeStringMinimum,
+  SAVE_MAX_PIECES,
   SAVE_PIECE_BYTES,
   sqlJsonPath,
   validateAppend,
@@ -111,6 +112,27 @@ export function boundedSaves(
     if (!row)
       throw new SaveError(409, "Attempt unavailable, expired or revoked");
     return row;
+  }
+  async function pending() {
+    const params: unknown[] = [];
+    const arg = condition(params);
+    return db
+      .prepare(
+        `SELECT id,base_revision,sequence,state,piece_count,string_path,expires_at,session_id!=${arg(identity.session.id)} AS requiresResume FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND expires_at>${arg(Date.now())} AND ${active(arg)}`,
+      )
+      .bind(...params)
+      .first<Record<string, unknown>>();
+  }
+  async function resume(id: string) {
+    const params: unknown[] = [];
+    const arg = condition(params);
+    await db
+      .prepare(
+        `UPDATE owner_save_attempt SET session_id=${arg(identity.session.id)},sequence=sequence+1,last_hash=NULL WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id!=${arg(identity.session.id)} AND expires_at>${arg(Date.now())} AND state IN ('open','string') AND ${active(arg)}`,
+      )
+      .bind(...params)
+      .run();
+    return attempt(id);
   }
   async function begin(revision: number, proposedProgress: unknown) {
     const encoded = encodeJson(proposedProgress, SAVE_PIECE_BYTES);
@@ -281,6 +303,8 @@ export function boundedSaves(
       return { sequence: state.sequence, replayed: true };
     if (state.state !== "string" || state.sequence !== sequence || !text.length)
       throw new SaveError(409, "Wrong sequence/state or empty piece");
+    if (state.piece_count >= SAVE_MAX_PIECES)
+      throw new SaveError(413, "Too many pieces; restart with larger pieces");
     const first = text.charCodeAt(0);
     if (
       state.last_code_unit !== null &&
@@ -386,7 +410,7 @@ export function boundedSaves(
   async function cleanup() {
     const params: unknown[] = [];
     const arg = condition(params);
-    const expired = `SELECT id FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND expires_at<=${arg(Date.now())} AND ${active(arg)}`;
+    const expired = `SELECT id FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND (expires_at<=${arg(Date.now())} OR state IN ('committed','aborted') OR NOT EXISTS(SELECT 1 FROM session old WHERE old.id=owner_save_attempt.session_id AND old.user_id=owner_save_attempt.user_id AND old.expires_at>${arg(Date.now())})) AND ${active(arg)}`;
     const pieces = await db
       .prepare(
         `DELETE FROM owner_save_piece WHERE rowid IN (SELECT rowid FROM owner_save_piece WHERE attempt_id IN (${expired}) LIMIT 32)`,
@@ -402,6 +426,8 @@ export function boundedSaves(
     return { pieces: pieces.meta.changes, attempts: attempts.meta.changes };
   }
   return {
+    pending,
+    resume,
     begin,
     change,
     stringStart,

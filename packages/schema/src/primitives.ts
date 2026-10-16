@@ -3,9 +3,25 @@ import { z } from "zod";
 // IDs are references, never storage keys, paths, URLs or user-supplied CSS.
 export const idSchema = z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/);
 export const versionSchema = z.number().int().positive();
-export const emailSchema = z.email();
+export const URL_MAX_BYTES = 2048;
+export const EMAIL_MAX_BYTES = 254;
+export function utf8Within(value: string, limit: number): boolean {
+  return (
+    value.length <= limit && new TextEncoder().encode(value).byteLength <= limit
+  );
+}
+// Explicitly approved October 16, 2026 for bounded server validation.
+export const emailSchema = z
+  .string()
+  .max(EMAIL_MAX_BYTES)
+  .refine(
+    (value) => utf8Within(value, EMAIL_MAX_BYTES),
+    "Email exceeds 254 UTF-8 bytes",
+  )
+  .pipe(z.email());
 
 export function isWebUrl(value: string): boolean {
+  if (!utf8Within(value, URL_MAX_BYTES)) return false;
   if (!/^https?:\/\//i.test(value) || /[\s\\]/u.test(value)) return false;
   for (const character of value) {
     const code = character.charCodeAt(0);

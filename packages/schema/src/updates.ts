@@ -3,6 +3,7 @@ import { draftFields, draftSchema } from "./draft";
 import { encodeJson, JSON_MAX_DEPTH } from "./json";
 
 export const SAVE_PIECE_BYTES = 4096;
+export const SAVE_MAX_PIECES = 512;
 export type DraftPath = (string | number)[];
 const root = z.strictObject(draftFields);
 type Definition = {
@@ -98,7 +99,14 @@ export function resolveDraftPath(
     let def = definition(schema);
     if (def.type === "union") {
       const type = types[sqlJsonPath(prefix)];
-      const matching = def.options?.find(
+      const options = (candidate: z.ZodType): z.ZodType[] => {
+        const current = unwrap(candidate);
+        const def = definition(current);
+        return def.type === "union"
+          ? (def.options ?? []).flatMap(options)
+          : [current];
+      };
+      const matching = options(schema).find(
         (option) =>
           definition(unwrap(option)).shape?.type &&
           definition(
@@ -147,7 +155,8 @@ export function validateDraftValue(
   types: Record<string, unknown>,
   value: unknown,
 ): string {
-  const json = encodeJson(value, SAVE_PIECE_BYTES);
+  // Includes room for a maximum-length escaped URL plus its link object.
+  const json = encodeJson(value, SAVE_PIECE_BYTES + 1024);
   checkDepth(value, path.length);
   if (!path.length) draftSchema.parse(value);
   else resolveDraftPath(path, types).parse(value);

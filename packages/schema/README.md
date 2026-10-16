@@ -20,6 +20,8 @@ The fixed `profile` contains name, bio, optional location, optional avatar/banne
 
 `links` is the single ordered list of social/contact entries. Each has an ID, label, kind, value, `showInProfile` and `showInSocialComponent`. Email values are plain addresses. Other values are HTTP(S) URLs. The social-links component has no duplicate entry collection. Its order follows `links`.
 
+URLs are limited to 2,048 UTF-8 bytes and email addresses to 254 UTF-8 bytes, explicitly approved October 16, 2026. These rules also apply to rich-text destinations and component URLs. Existing longer values must be corrected explicitly, never silently truncated. Free text and the complete draft retain the 1 MiB ceiling. [The bounded-save protocol](../../specs/2026-10-16-free-owner-saves/protocol.md) explains how server validation preserves large text without loading a complete document in one Worker request.
+
 `components` is the ordered list below the fixed profile. IDs remain stable across reordering. The registry generates the discriminated union used by the draft validator.
 
 | Type | Data | Instances |

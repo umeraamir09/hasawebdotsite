@@ -19,12 +19,20 @@ const count = Number(
     process.argv.find((a) => a.startsWith("--samples="))?.split("=")[1] ?? 100,
   ),
   warmups = 10;
+const selectedCases = process.argv
+  .find((a) => a.startsWith("--cases="))
+  ?.slice("--cases=".length)
+  .split(",");
 const directory = join(
     root,
     remote ? ".wrangler/owner-runtime-remote" : ".wrangler/bounded-owner-local",
   ),
   state = join(directory, "state");
-const evidence = join(root, "specs/2026-10-16-free-owner-saves/bounded");
+const evidence = join(
+  root,
+  process.env.BOUNDED_SAVE_EVIDENCE ??
+    "specs/2026-10-16-free-owner-saves/bounded",
+);
 await mkdir(directory, { recursive: true });
 await mkdir(evidence, { recursive: true });
 const configs = {
@@ -110,7 +118,12 @@ async function request(action, body = {}, extra = {}) {
     },
     ...(extra.method === "GET"
       ? {}
-      : { body: typeof body === "string" ? body : JSON.stringify(body) }),
+      : {
+          body:
+            typeof body === "string" || body instanceof Uint8Array
+              ? body
+              : JSON.stringify(body),
+        }),
     signal: AbortSignal.timeout(30000),
   });
   pendingPreparation = undefined;
@@ -121,6 +134,9 @@ async function request(action, body = {}, extra = {}) {
       at,
       elapsedMs: +(performance.now() - start).toFixed(3),
       status: r.status,
+      rowsRead: Number(r.headers.get("X-Fixture-Rows-Read") ?? 0),
+      rowsWritten: Number(r.headers.get("X-Fixture-Rows-Written") ?? 0),
+      queries: Number(r.headers.get("X-Fixture-Queries") ?? 0),
       colo: r.headers.get("cf-ray")?.split("-")[1] ?? null,
     });
   const expected = extra.status ?? 200;
@@ -235,6 +251,7 @@ if (!remote) {
       ],
       vars: {
         APP_ENV: "test",
+        MEASURE_DB: "true",
         APP_ORIGIN: "https://hasaweb.site",
         RUNTIME_ENABLED: "true",
         GITHUB_CLIENT_ID: "fixture",
@@ -346,6 +363,31 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
     },
   );
   await check(
+    "bounded transport rejects malformed, oversized and unsafe requests",
+    async () => {
+      await request("patch", new Uint8Array([0x7b, 0xff, 0x7d]), {
+        status: 400,
+      });
+      await request("patch", " ".repeat(8193), { status: 413 });
+      await request("patch", '{"revision":NaN}', { status: 400 });
+      await request(
+        "patch",
+        { revision: 0, progress, extra: true },
+        { status: 422 },
+      );
+      await request("__proto__", {}, { status: 404 });
+      await request(
+        "patch",
+        {
+          revision: 0,
+          progress,
+          change: { op: "set", path: ["__proto__"], value: true },
+        },
+        { status: 422 },
+      );
+    },
+  );
+  await check(
     "small atomic patches reject stale revisions and unsafe content",
     async () => {
       await patch(change("set", ["profile", "name"], { value: "New name" }));
@@ -367,7 +409,7 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
       });
       await patch(change("remove", ["profile", "name"]), { status: 422 });
       await patch(
-        change("set", ["profile", "bio"], { value: "x".repeat(5000) }),
+        change("set", ["profile", "bio"], { value: "x".repeat(6000) }),
         { status: 422 },
       );
     },
@@ -397,6 +439,116 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
       status: 409,
     });
   });
+  await check("parallel saves have one revision winner", async () => {
+    const body = {
+      revision,
+      progress,
+      change: change("set", ["profile", "bio"], { value: "one winner" }),
+    };
+    const rows = await Promise.all(
+      Array.from({ length: 4 }, () =>
+        request("patch", body, { status: [200, 409] }),
+      ),
+    );
+    const winners = rows.filter((row) => row.revision !== undefined);
+    assert.equal(winners.length, 1);
+    revision = winners[0].revision;
+  });
+  await check(
+    "nested rich-text list paths use stored discriminators",
+    async () => {
+      const body = {
+        type: "doc",
+        content: [
+          {
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  {
+                    type: "paragraph",
+                    content: [{ type: "text", text: "Outer" }],
+                  },
+                  {
+                    type: "orderedList",
+                    content: [
+                      {
+                        type: "listItem",
+                        content: [
+                          {
+                            type: "paragraph",
+                            content: [{ type: "text", text: "Nested" }],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      await patch(
+        change("set", ["components", 3, "data", "body"], { value: body }),
+      );
+      const path = [
+        "components",
+        3,
+        "data",
+        "body",
+        "content",
+        0,
+        "content",
+        0,
+        "content",
+        1,
+        "content",
+        0,
+        "content",
+        0,
+        "content",
+        0,
+        "text",
+      ];
+      await patch(change("set", path, { value: "Changed" }));
+      const saved = await sql(
+        "SELECT draft FROM owner_runtime_fixture WHERE user_id='runtime-alice';",
+      );
+      const actual = draftSchema.parse(JSON.parse(saved[0].results[0].draft));
+      let value = actual;
+      for (const part of path) value = value[part];
+      assert.equal(value, "Changed");
+    },
+  );
+  await check(
+    "approved URL and email limits apply to bounded saves",
+    async () => {
+      const prefix = "https://example.test/";
+      const url = `${prefix}${'"'.repeat(2048 - prefix.length)}`;
+      const link = { ...baseDraft.links[1], value: url };
+      await patch(change("set", ["links", 1], { value: link }));
+      await patch(
+        change("set", ["links", 1], { value: { ...link, value: `${url}x` } }),
+        { status: 422 },
+      );
+      const email = `${"a".repeat(242)}@example.com`;
+      await patch(
+        change("set", ["links", 0], {
+          value: { ...baseDraft.links[0], value: email },
+        }),
+      );
+      await patch(
+        change("set", ["links", 0], {
+          value: { ...baseDraft.links[0], value: `a${email}` },
+        }),
+        { status: 422 },
+      );
+      for (let i = 0; i < 2; i++)
+        await patch(change("set", ["links", i], { value: baseDraft.links[i] }));
+    },
+  );
   let attempt;
   await check(
     "private attempts, sequence checks, immutable retries and owner isolation",
@@ -437,6 +589,39 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
         "SELECT json_extract(draft,'$.profile.name') AS name,revision FROM owner_runtime_fixture WHERE user_id='runtime-alice';",
       );
       assert.equal(rows[0].results[0].name, "New name");
+    },
+  );
+  await check(
+    "pending saves survive lost responses and explicit session recovery",
+    async () => {
+      tokens.alice2 = randomBytes(32).toString("hex");
+      const now = Date.now();
+      await sql(
+        `INSERT INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES('runtime-session-alice2','${tokens.alice2}','runtime-alice',${now + 7200000},${now},${now});`,
+      );
+      const pending = await request("pending");
+      assert.equal(pending.id, attempt.id);
+      assert.equal(await request("pending", {}, { id: "bob" }), null);
+      await request("status", { id: attempt.id }, { id: "bob", status: 409 });
+      assert.equal(
+        (await request("pending", {}, { id: "alice2" })).requiresResume,
+        1,
+      );
+      const resumed = await request(
+        "resume",
+        { id: attempt.id },
+        { id: "alice2" },
+      );
+      assert.equal(resumed.sequence, attempt.sequence + 1);
+      assert.equal(
+        (await request("resume", { id: attempt.id }, { id: "alice2" }))
+          .sequence,
+        resumed.sequence,
+      );
+      await request("status", { id: attempt.id }, { status: 409 });
+      const back = await request("resume", { id: attempt.id });
+      attempt.sequence = back.sequence;
+      assert.equal(back.sequence, resumed.sequence + 1);
     },
   );
   await check(
@@ -591,12 +776,13 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
   );
   if (benchmark) {
     const run = async (name, prepare, work) => {
+      if (selectedCases && !selectedCases.includes(name)) return;
       const start = new Date().toISOString();
       for (let i = 0; i < warmups + count; i++) {
         deferredPreparation = true;
         try {
           await prepare?.();
-          await work(i >= warmups ? name : `warmup-${name}`);
+          await work(i >= warmups ? name : `warmup-${name}`, i);
         } finally {
           deferredPreparation = false;
           pendingPreparation = undefined;
@@ -674,6 +860,20 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
         revision = row.revision;
       });
     }
+    await prep("canonical", undefined, "full");
+    await patch(change("set", ["profile", "bio"], { value: "" }));
+    await run("patch-url", undefined, async (name) => {
+      const prefix = "https://example.test/";
+      await patch(
+        change("set", ["links", 1], {
+          value: {
+            ...baseDraft.links[1],
+            value: `${prefix}${'"'.repeat(2048 - prefix.length)}`,
+          },
+        }),
+        { name },
+      );
+    });
     await run(
       "abort",
       () => prep("open", largeAttempt.id, "full"),
@@ -707,7 +907,67 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
         );
       },
     );
+    await run("pending", undefined, (name) => request("pending", {}, { name }));
+    await run("status", undefined, (name) =>
+      request("status", { id: largeAttempt.id }, { name }),
+    );
+    await run("resume", undefined, (name, i) =>
+      request(
+        "resume",
+        { id: largeAttempt.id },
+        { name, id: i % 2 ? "alice" : "alice2" },
+      ),
+    );
   }
+  await prep("canonical", undefined, "full");
+  await check(
+    "expired attempts cannot commit and cleanup deletes at most 32 pieces",
+    async () => {
+      await prep("cleanup", largeAttempt.id);
+      await request(
+        "commit",
+        { id: largeAttempt.id, sequence: 0 },
+        { status: 409 },
+      );
+      let removed = 0;
+      for (let step = 0; step < 20; step++) {
+        const row = await request("cleanup");
+        assert.ok(row.pieces <= 32);
+        removed += row.pieces;
+        if (!row.pieces) break;
+      }
+      assert.ok(removed >= 64);
+      await patch(
+        change("set", ["profile", "name"], {
+          value: `${baseDraft.profile.name}x`,
+        }),
+        { status: 409 },
+      );
+    },
+  );
+  await check(
+    "a revoked creating session can be discarded without waiting for expiry",
+    async () => {
+      await prep("drop-attempt");
+      const next = await request("begin", { revision, progress });
+      const string = await request("string-start", {
+        id: next.id,
+        sequence: next.sequence,
+        path: ["profile", "bio"],
+      });
+      await sql(
+        `UPDATE owner_save_attempt SET piece_count=512 WHERE id='${next.id}';`,
+      );
+      await request(
+        "piece",
+        { id: next.id, sequence: string.sequence, text: "x" },
+        { status: 413 },
+      );
+      await request("resume", { id: next.id }, { id: "alice2" });
+      await sql("DELETE FROM session WHERE id='runtime-session-alice2';");
+      assert.equal((await request("cleanup")).attempts, 1);
+    },
+  );
   await check(
     "revocation/deletion and expiry block staged/direct writes",
     async () => {
@@ -729,6 +989,20 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
       await request("begin", { revision, progress }, { status: 401 });
     },
   );
+  await check("a real D1 failure returns private 503", async () => {
+    await sql(
+      "UPDATE user SET deleting_at=NULL WHERE id='runtime-bob'; DROP TABLE owner_runtime_fixture;",
+    );
+    await request(
+      "patch",
+      {
+        revision: 0,
+        progress,
+        change: change("set", ["profile", "bio"], { value: "unavailable" }),
+      },
+      { id: "bob", status: 503 },
+    );
+  });
   completed = true;
 } catch (error) {
   console.error(

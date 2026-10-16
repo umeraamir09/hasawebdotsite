@@ -30,6 +30,7 @@ function cli(args) {
 }
 await mkdir(directory, { recursive: true });
 const action = process.argv[2];
+const bounded = process.argv.includes("--bounded");
 assert.ok(
   ["prepare", "deploy", "cleanup"].includes(action),
   "Use prepare, deploy or cleanup",
@@ -71,7 +72,12 @@ if (action === "prepare") {
       {
         ...base,
         name: names.jobs,
-        main: join(root, "apps/jobs/integration/owner-runtime.ts"),
+        main: join(
+          root,
+          bounded
+            ? "apps/jobs/integration/bounded-owner-runtime.ts"
+            : "apps/jobs/integration/owner-runtime.ts",
+        ),
         d1_databases: [
           {
             binding: "DB",
