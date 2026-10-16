@@ -105,6 +105,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: completed Phases 01, 03, 05, 10, 11 and the recorded S-2 revision.
 - Implement and measure the thin Hono/jobs owner-API approach through internal bindings with the real session/deletion checks, representative draft validation, and the 1 MiB boundary. Include the planned content/progress write path; keep source identities scoped to each request.
+- October 16, 2026: [thin owner API implementation and measurements](../specs/2026-10-16-owner-api-runtime/results.md) record passing startup and small-request CPU estimates, but 1 MiB validation/saves exceed the target and a save invocation hits `exceededCpu`. The [bounded-save revision](../specs/2026-10-16-owner-api-runtime/revision.md) is proposed for owner agreement. Completion approval is pending.
 - [ ] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
 
 ### Phase 11B. Extend contracts and persistence for initial setup

@@ -1,0 +1,176 @@
+{
+  "recordedAt": "2026-10-16T12:38:41.718Z",
+  "completed": false,
+  "method": "HTTPS to isolated web experiment using the actual web Worker adapter and named jobs service binding. Real Better Auth and persisted session/deletion checks. Elapsed is client wall time, never CPU. First candidate is not guaranteed isolate-cold. Ten warmups and 100 samples per workload.",
+  "fixtureBytes": {
+    "draft": 1048576
+  },
+  "checks": [
+    {
+      "name": "default jobs HTTP entry cannot invoke owner APIs",
+      "passed": true
+    },
+    {
+      "name": "real signed session and private owner response",
+      "passed": true
+    },
+    {
+      "name": "missing, tampered, expired, revoked and deleting sessions fail",
+      "passed": true
+    },
+    {
+      "name": "exact Origin, JSON type and method checks",
+      "passed": true
+    }
+  ],
+  "windows": [],
+  "samples": [
+    {
+      "case": "first-candidate",
+      "at": 1792154308167,
+      "elapsedMs": 1378.631,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154309647,
+      "elapsedMs": 30.705,
+      "status": 404,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154309679,
+      "elapsedMs": 661.062,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154310340,
+      "elapsedMs": 30.53,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154310371,
+      "elapsedMs": 621.516,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154310993,
+      "elapsedMs": 187.997,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311181,
+      "elapsedMs": 587.128,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311768,
+      "elapsedMs": 30.749,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311799,
+      "elapsedMs": 35.812,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311835,
+      "elapsedMs": 31.008,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311866,
+      "elapsedMs": 31.199,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311898,
+      "elapsedMs": 29.767,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311928,
+      "elapsedMs": 30.589,
+      "status": 415,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311958,
+      "elapsedMs": 27.179,
+      "status": 405,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154311986,
+      "elapsedMs": 445.576,
+      "status": 405,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154312432,
+      "elapsedMs": 463.978,
+      "status": 400,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154312896,
+      "elapsedMs": 448.435,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154313344,
+      "elapsedMs": 438.645,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154313783,
+      "elapsedMs": 466.353,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154314252,
+      "elapsedMs": 631.943,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792154314884,
+      "elapsedMs": 598.652,
+      "status": 413,
+      "colo": "LHE"
+    }
+  ]
+}

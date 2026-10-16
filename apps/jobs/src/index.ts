@@ -1,6 +1,15 @@
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
-import { WorkflowEntrypoint } from "cloudflare:workers";
+import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
+import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
+import { ownerRouter } from "./owner-api";
+
+// Only a named service binding can reach this API. The default HTTP entry has no owner routes.
+export class OwnerApi extends WorkerEntrypoint<AuthEnvironment> {
+  fetch(request: Request) {
+    return ownerRouter.fetch(request, this.env, this.ctx);
+  }
+}
 
 interface Env {
   APP_ENV: string;
@@ -25,7 +34,7 @@ export class RuntimeWorkflow extends WorkflowEntrypoint<Env, { id: string }> {
   }
 }
 export default {
-  async fetch(request, env) {
+  async fetch(request: Request, env: Env) {
     const path = new URL(request.url).pathname;
     if (path === "/health") return health("jobs");
     if (!isLocalProbe(request, env.APP_ENV))

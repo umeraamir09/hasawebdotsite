@@ -1,0 +1,20 @@
+
+ ⛅️ wrangler 4.151.0 (update available 4.151.1)
+───────────────────────────────────────────────
+Successfully deleted hasaweb-owner-runtime-web
+
+
+ ⛅️ wrangler 4.151.0 (update available 4.151.1)
+───────────────────────────────────────────────
+Successfully deleted hasaweb-owner-runtime-jobs
+
+
+ ⛅️ wrangler 4.151.0 (update available 4.151.1)
+───────────────────────────────────────────────
+Resource location: remote 
+
+About to delete remote database DB 'hasaweb-owner-runtime-spike' (1d557fae-3ca1-4333-b82a-c75711836769).
+This action is irreversible and will permanently delete all data in the database.
+
+Deleting...
+Deleted 'hasaweb-owner-runtime-spike' successfully.

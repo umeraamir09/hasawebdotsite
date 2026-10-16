@@ -10,7 +10,7 @@ const child = spawn(
   [
     join(dirname(require.resolve("wrangler/package.json")), "bin/wrangler.js"),
     "tail",
-    "hasaweb-s2-spike",
+    process.argv[3] ?? "hasaweb-s2-spike",
     "--format",
     "json",
   ],
