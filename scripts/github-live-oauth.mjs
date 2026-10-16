@@ -9,11 +9,24 @@ import { parseEnv } from "node:util";
 const root = fileURLToPath(new URL("..", import.meta.url));
 const local = join(root, ".wrangler/github-live");
 const origin = "http://localhost:3000";
+const platformEvidenceFile =
+  process.env.GITHUB_PLATFORM_EVIDENCE ??
+  join(root, "specs/2026-10-16-github-platform-credential/live-evidence.json");
+const platformEvidenceLimitations = [
+  "Local HTTP harness; production Better Auth callbacks, cookies, and scheduling are not exercised",
+  "The platform credential is a local classic PAT with no scopes; production storage and rotation remain later-phase work",
+  "Contribution visibility labels are owner-attested; expected public counts require owner confirmation",
+  "The public baseline request is read-only and asks for no repository objects",
+];
 const callbackPaths = {
   signin: "/api/auth/callback/github",
   activity: "/api/github/callback",
 };
 const scopeFor = { signin: "user:email", activity: "read:user" };
+export function scopeHeaderState(value) {
+  if (value === null || value === undefined) return "absent";
+  return value.trim() === "" ? "present-empty" : "nonempty";
+}
 const equal = (a, b) =>
   typeof a === "string" &&
   typeof b === "string" &&
@@ -108,6 +121,11 @@ export async function startLiveServer() {
     throw new Error("separate_oauth_apps_required");
   if (!/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(config.GITHUB_TEST_USERNAME))
     throw new Error("invalid_test_username");
+  const platformToken =
+    typeof config.GITHUB_PLATFORM_TOKEN === "string" &&
+    config.GITHUB_PLATFORM_TOKEN.trim() !== ""
+      ? config.GITHUB_PLATFORM_TOKEN.trim()
+      : null;
   await mkdir(local, { recursive: true, mode: 0o700 });
   const require = createRequire(import.meta.url);
   const wranglerRequire = createRequire(
@@ -141,6 +159,17 @@ export async function startLiveServer() {
     if (!Array.isArray(previous.events))
       throw new Error("invalid_saved_evidence");
     events.push(...previous.events);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  const platformEvents = [];
+  // Phase 11C platform observations are written to their own spec directory
+  // so the Phase 06 historical evidence stays untouched.
+  try {
+    const previous = JSON.parse(await readFile(platformEvidenceFile, "utf8"));
+    if (!Array.isArray(previous.events))
+      throw new Error("invalid_saved_evidence");
+    platformEvents.push(...previous.events);
   } catch (error) {
     if (error.code !== "ENOENT") throw error;
   }
@@ -178,6 +207,55 @@ export async function startLiveServer() {
     );
     console.log(`LIVE ${event.check}: ${event.outcome}`);
   }
+  async function platformEvidence(event) {
+    platformEvents.push({ at: new Date().toISOString(), ...event });
+    await writeFile(
+      platformEvidenceFile,
+      `${JSON.stringify(
+        {
+          runtime:
+            "isolated Node.js loopback harness (Phase 11C platform credential)",
+          events: platformEvents,
+          limitations: platformEvidenceLimitations,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    console.log(
+      `LIVE ${event.check}: ${event.outcome ?? event.classification}`,
+    );
+  }
+  function lastYearRange(now) {
+    const start = new Date(now);
+    start.setUTCFullYear(start.getUTCFullYear() - 1);
+    start.setUTCHours(0, 0, 0, 0);
+    return { from: start.toISOString(), to: now.toISOString() };
+  }
+  function classification(result) {
+    return result.status === "available"
+      ? "available"
+      : `${result.status}/${result.reason}`;
+  }
+  function dayStats(days) {
+    return {
+      days: days.length,
+      total: days.reduce((sum, day) => sum + day.count, 0),
+      calendarHash: createHash("sha256")
+        .update(JSON.stringify(days))
+        .digest("hex"),
+    };
+  }
+  async function graphql(token, range) {
+    return api("https://api.github.com/graphql", token, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: policy.QUERY,
+        variables: { login: config.GITHUB_TEST_USERNAME, ...range },
+      }),
+    });
+  }
   async function api(url, token, init = {}) {
     return fetch(url, {
       ...init,
@@ -213,6 +291,15 @@ export async function startLiveServer() {
     return `<form method="post" action="${path}"><input type="hidden" name="csrf" value="${session.csrf}">${extra}<button>${label}</button></form>`;
   }
   function page(session) {
+    const platformSection = platformToken
+      ? `<h2>5. Public baseline with the separate platform credential (Phase 11C)</h2>
+      <p>This step uses only the platform credential and needs no sign-in. Set the contribution account's GitHub visibility first, then fetch. Expected public counts are compared by you, not printed here.</p>
+      ${form(session, "/platform/probe", "Fetch public baseline", '<p><label>Current contribution visibility: <select name="visibility"><option value="off">Private contributions hidden</option><option value="on">Private contributions shown</option></select></label></p>')}
+      ${form(session, "/platform/failure", "Test invalid platform credential handling")}
+      ${session.platformSummary ? `<details open><summary>Last platform baseline observation</summary><pre>${escapeHtml(JSON.stringify(session.platformSummary, null, 2))}</pre></details>` : ""}
+      ${session.platformFailureSummary ? `<details open><summary>Last platform failure probe</summary><pre>${escapeHtml(JSON.stringify(session.platformFailureSummary, null, 2))}</pre></details>` : ""}`
+      : `<h2>5. Public baseline with the separate platform credential (Phase 11C)</h2>
+      <p><strong>GITHUB_PLATFORM_TOKEN is not configured.</strong> Add the separate zero-scope classic PAT to .env.github-spike.local to run the platform baseline protocol.</p>`;
     return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>GitHub permission test</title><body>
       <h1>GitHub permission test</h1><p>Local S-6 test for ${escapeHtml(config.GITHUB_TEST_USERNAME)}. Tokens remain encrypted in server memory and disappear when this process stops.</p>
       <p>${escapeHtml(session.message ?? "Start by authorizing sign-in.")}</p>
@@ -222,6 +309,7 @@ export async function startLiveServer() {
       ${session.activity ? form(session, "/disconnect", "4. Disconnect activity and revoke the activity test app grant") : ""}
       <p>To test external revocation, remove only the activity app at <a href="https://github.com/settings/applications" rel="noreferrer">GitHub Authorized OAuth Apps</a>, then fetch again.</p>
       <p>Private contribution visibility on GitHub can affect these results. Change it only yourself, then fetch again.</p>
+      ${platformSection}
       <pre>${escapeHtml(JSON.stringify(session.summary ?? {}, null, 2))}</pre>
       ${session.calendar ? `<details><summary>Inspect anonymized authorized calendar</summary><pre>${escapeHtml(JSON.stringify(session.calendar, null, 2))}</pre></details>` : ""}
       </body></html>`;
@@ -326,6 +414,102 @@ export async function startLiveServer() {
     session.summary = observations;
     session.message =
       "Contribution observations recorded. Compare the private calendar with known activity. No repository details were requested.";
+  }
+  async function platformProbe(session, visibility) {
+    if (!platformToken) throw new Error("platform_credential_missing");
+    const now = new Date();
+    const range = lastYearRange(now);
+    const response = await graphql(platformToken, range);
+    const scopeHeader = scopeHeaderState(
+      response.headers.get("x-oauth-scopes"),
+    );
+    let selected = {
+      id: `unverified:${session.id}`,
+      login: config.GITHUB_TEST_USERNAME,
+    };
+    let restrictedCount = null;
+    let viewerSeparate = null;
+    let loginMismatch = false;
+    if (response.ok) {
+      const data = await response
+        .clone()
+        .json()
+        .catch(() => null);
+      const target = data?.data?.user;
+      const viewer = data?.data?.viewer;
+      if (
+        typeof target?.id === "string" &&
+        typeof target?.login === "string" &&
+        target.login.toLowerCase() === config.GITHUB_TEST_USERNAME.toLowerCase()
+      ) {
+        selected = { id: target.id, login: target.login };
+        viewerSeparate =
+          typeof viewer?.id === "string" ? viewer.id !== target.id : false;
+        const restricted =
+          target.contributionsCollection?.restrictedContributionsCount;
+        restrictedCount = typeof restricted === "number" ? restricted : null;
+      } else loginMismatch = true;
+    }
+    const result = await policy.fetchPublicBaseline(
+      async () => response.clone(),
+      platformToken,
+      selected,
+      range,
+      now.toISOString(),
+    );
+    if (loginMismatch)
+      await platformEvidence({
+        check: "platform_identity",
+        outcome: "requested_login_mismatch",
+        classification: classification(result),
+        scopeHeader,
+      });
+    const observation = {
+      classification: classification(result),
+      visibility,
+      rawStatus: response.status,
+      scopeHeader,
+      viewerSeparate,
+      restrictedCount,
+    };
+    if (result.status === "available")
+      Object.assign(observation, dayStats(result.calendar.days), {
+        adapterAccepted: true,
+        fetchedAt: result.calendar.fetchedAt,
+      });
+    await platformEvidence({ check: "platform_baseline", ...observation });
+    session.platformSummary = observation;
+    session.message =
+      result.status === "available"
+        ? "Platform public baseline accepted. Compare the total with known public contributions."
+        : `Platform baseline classification ${classification(result)}. Compare with the known visibility case.`;
+  }
+  async function platformFailureProbe(session) {
+    if (!platformToken) throw new Error("platform_credential_missing");
+    const now = new Date();
+    const range = lastYearRange(now);
+    // A fixed fake credential; the real token is never sent by this probe.
+    const invalidToken = "0".repeat(40);
+    const response = await graphql(invalidToken, range);
+    const result = await policy.fetchPublicBaseline(
+      async () => response.clone(),
+      invalidToken,
+      { id: `invalid:${session.id}`, login: config.GITHUB_TEST_USERNAME },
+      range,
+      now.toISOString(),
+    );
+    const observation = {
+      classification: classification(result),
+      rawStatus: response.status,
+      scopeHeader: scopeHeaderState(response.headers.get("x-oauth-scopes")),
+    };
+    await platformEvidence({
+      check: "platform_credential_failure",
+      ...observation,
+    });
+    session.platformFailureSummary = observation;
+    session.message =
+      "Invalid platform credential classified. No owner reconnect is requested for platform failures.";
   }
   const server = createServer(async (request, response) => {
     response.setHeader("Cache-Control", "no-store");
@@ -508,8 +692,16 @@ export async function startLiveServer() {
           response.writeHead(303, { Location: authorize.href }).end();
           return;
         }
-        if (!session.signin) throw new Error("signin_required");
-        if (url.pathname === "/probe") await probe(session);
+        if (!url.pathname.startsWith("/platform/") && !session.signin)
+          throw new Error("signin_required");
+        if (url.pathname === "/platform/probe")
+          await platformProbe(
+            session,
+            fields.get("visibility") === "on" ? "on" : "off",
+          );
+        else if (url.pathname === "/platform/failure")
+          await platformFailureProbe(session);
+        else if (url.pathname === "/probe") await probe(session);
         else if (url.pathname === "/disconnect" && session.activity) {
           const token = await decrypt(session, "activity");
           session.state = policy.withdraw(session.state);
@@ -588,6 +780,7 @@ export async function startLiveServer() {
         "calendar_graphql_failed",
         "calendar_request_failed",
         "identity_request_failed",
+        "platform_credential_missing",
       ].includes(error.message)
         ? error.message
         : "request_failed";
