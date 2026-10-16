@@ -1,4 +1,4 @@
-import type { DraftDoc } from "@hasaweb/schema";
+import type { DraftDoc, SetupProgress } from "@hasaweb/schema";
 import { sql } from "drizzle-orm";
 import {
   check,
@@ -97,6 +97,18 @@ export const portfolio = sqliteTable(
     publishedVersion: integer("published_version"),
     draft: text("draft", { mode: "json" }).$type<DraftDoc>().notNull(),
     draftRev: integer("draft_rev").notNull().default(0),
+    // Legacy envelopes predate the approved bounded URL/email rules. Version
+    // alone is not proof that incremental validation is safe for their content.
+    draftValidationVersion: integer("draft_validation_version")
+      .notNull()
+      .default(0),
+    setupProgress: text("setup_progress", { mode: "json" })
+      .$type<SetupProgress>()
+      .notNull()
+      .default({ schemaVersion: 1, step: "address" }),
+    firstEditorEnteredAt: integer("first_editor_entered_at", {
+      mode: "timestamp_ms",
+    }),
     suspendedAt: integer("suspended_at", { mode: "timestamp_ms" }),
     suspendedReason: text("suspended_reason"),
     ...timestamps(),
@@ -112,6 +124,65 @@ export const portfolio = sqliteTable(
     ),
     check("draft_bytes", sql`length(cast(${t.draft} as blob)) <= 1048576`),
     check("draft_revision", sql`${t.draftRev} >= 0`),
+    check("setup_progress_json", sql`json_valid(${t.setupProgress})`),
+    check(
+      "first_editor_entry",
+      sql`${t.firstEditorEnteredAt} is null or ${t.firstEditorEnteredAt} > 0`,
+    ),
+  ],
+);
+// Private bounded-save preparation, shared with setup and later editor saving.
+export const ownerSaveAttempt = sqliteTable(
+  "owner_save_attempt",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .unique()
+      .references(() => user.id, { onDelete: "cascade" }),
+    sessionId: text("session_id").notNull(),
+    baseRevision: integer("base_revision").notNull(),
+    sequence: integer("sequence").notNull().default(0),
+    lastHash: text("last_hash"),
+    state: text("state").notNull().default("open"),
+    draft: text("draft"),
+    progress: text("progress").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    stringPath: text("string_path"),
+    stringMinimum: integer("string_minimum"),
+    pieceCount: integer("piece_count").notNull().default(0),
+    stringChars: integer("string_chars").notNull().default(0),
+    stringBytes: integer("string_bytes").notNull().default(0),
+    lastCodeUnit: integer("last_code_unit"),
+  },
+  (t) => [
+    index("save_attempt_expiry").on(t.expiresAt),
+    check(
+      "save_attempt_state",
+      sql`${t.state} in ('open','string','committed','aborted')`,
+    ),
+    check(
+      "save_attempt_draft",
+      sql`${t.draft} is null or (json_valid(${t.draft}) and length(cast(${t.draft} as blob)) <= 1048576)`,
+    ),
+    check("save_attempt_progress", sql`json_valid(${t.progress})`),
+  ],
+);
+export const ownerSavePiece = sqliteTable(
+  "owner_save_piece",
+  {
+    attemptId: text("attempt_id")
+      .notNull()
+      .references(() => ownerSaveAttempt.id, { onDelete: "cascade" }),
+    n: integer("n").notNull(),
+    data: text("data").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.attemptId, t.n] }),
+    check(
+      "save_piece_data",
+      sql`json_valid(${t.data}) and json_type(${t.data}) = 'text' and length(cast(${t.data} as blob)) <= 4096`,
+    ),
   ],
 );
 const portfolioId = () =>

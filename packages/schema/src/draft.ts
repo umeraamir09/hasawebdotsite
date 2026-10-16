@@ -10,7 +10,14 @@ import {
 import { profileDefinition, profileSchema } from "./profile";
 import { componentContentSchema, componentRegistry } from "./registry";
 
-export const DRAFT_SCHEMA_VERSION = 1;
+export const DRAFT_SCHEMA_VERSION = 2;
+// Availability/reserved-name checks belong to the address service. This value
+// never reserves a name and is not the portfolio's claimed public address.
+export const requestedSubdomainSchema = z
+  .string()
+  .min(3)
+  .max(30)
+  .regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])$/);
 export const linkSchema = z
   .strictObject({
     id: idSchema,
@@ -59,6 +66,7 @@ const samplesSchema = z.record(sampleKeySchema, z.literal(true));
 
 export const draftFields = {
   schemaVersion: z.literal(DRAFT_SCHEMA_VERSION),
+  requestedSubdomain: requestedSubdomainSchema.optional(),
   profile: profileSchema,
   links: z.array(linkSchema),
   components: z.array(componentContentSchema),
@@ -126,6 +134,39 @@ export const migrationEnvelopeSchema = z.looseObject({
     }),
   ),
 });
+
+// Preserve strict v1 root fields while allowing registered component migrations
+// to run before the final current-draft validation.
+const { requestedSubdomain: _candidate, ...legacyFields } = draftFields;
+export const legacyDraftEnvelopeSchema = z.strictObject({
+  ...legacyFields,
+  schemaVersion: z.literal(1),
+  components: migrationEnvelopeSchema.shape.components,
+});
+
+// An explicit allowlist for downstream snapshot construction. Publication must
+// still omit untouched samples and validate readiness before rendering.
+export const publicContentSchema = z.strictObject({
+  schemaVersion: draftFields.schemaVersion,
+  profile: draftFields.profile,
+  links: draftFields.links,
+  components: draftFields.components,
+  appearance: draftFields.appearance,
+  seo: draftFields.seo,
+});
+export type PublicContent = z.infer<typeof publicContentSchema>;
+export function toPublicContent(draft: DraftDoc): PublicContent {
+  const { schemaVersion, profile, links, components, appearance, seo } =
+    draftSchema.parse(draft);
+  return publicContentSchema.parse({
+    schemaVersion,
+    profile,
+    links,
+    components,
+    appearance,
+    seo,
+  });
+}
 
 export function createEmptyDraft(
   appearance: z.infer<typeof appearanceSchema>,

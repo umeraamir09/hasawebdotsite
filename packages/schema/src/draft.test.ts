@@ -62,7 +62,7 @@ describe("draft round trips and registry", () => {
       "social-links",
       "resume",
     ]);
-    expect(DRAFT_SCHEMA_VERSION).toBe(1);
+    expect(DRAFT_SCHEMA_VERSION).toBe(2);
     expect(profileDefinition.fixed).toBe(true);
     expect(profileDefinition.singleton).toBe(true);
     expect(
@@ -116,7 +116,7 @@ describe("draft round trips and registry", () => {
     },
   );
 
-  it.each([0, -1, 1.5, 2, "1"])(
+  it.each([0, -1, 1.5, 3, "1"])(
     "rejects unsupported envelope/component version %s",
     (version) => {
       const draft = completeDraft();

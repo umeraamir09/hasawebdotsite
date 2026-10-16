@@ -1,6 +1,12 @@
-import { type DraftDoc, draftSchema } from "@hasaweb/schema";
+import {
+  type DraftDoc,
+  draftSchema,
+  readDraft,
+  setupProgressSchema,
+} from "@hasaweb/schema";
 import { type AnyColumn, and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { boundedSaves, SaveError } from "./bounded-save";
 import * as tables from "./schema";
 
 export type SessionIdentity = { user: { id: string }; session: { id: string } };
@@ -44,19 +50,38 @@ export async function ownerRepositories(
     .where(and(eq(tables.user.id, identity.user.id), activeSession()))
     .get();
   if (!authorized) throw new OwnerAccessError();
+  const setupSaves = boundedSaves(binding, identity, {
+    table: "portfolio",
+    owner: "user_id",
+    revision: "draft_rev",
+    draft: "draft",
+    progress: "setup_progress",
+    setupMilestone: "first_editor_entered_at",
+    validationVersion: "draft_validation_version",
+    updatedAt: "updated_at",
+  });
+  const getPortfolio = async (id?: string) => {
+    const row = await db
+      .select()
+      .from(tables.portfolio)
+      .where(
+        and(
+          activeOwner(),
+          id === undefined ? undefined : eq(tables.portfolio.id, id),
+        ),
+      )
+      .get();
+    return row ? { ...row, draft: readDraft(row.draft) } : undefined;
+  };
 
   return {
     portfolio: {
-      get: (id?: string) =>
+      get: getPortfolio,
+      summary: () =>
         db
-          .select()
+          .select({ id: tables.portfolio.id })
           .from(tables.portfolio)
-          .where(
-            and(
-              activeOwner(),
-              id === undefined ? undefined : eq(tables.portfolio.id, id),
-            ),
-          )
+          .where(activeOwner())
           .get(),
       async create(id: string, draft: DraftDoc) {
         const parsed = draftSchema.parse(draft);
@@ -67,13 +92,91 @@ export async function ownerRepositories(
             id,
             userId: identity.user.id,
             draft: parsed,
+            draftValidationVersion: 2,
             createdAt: now,
             updatedAt: now,
             // A NULL expression makes a revoked-session insert fail the NOT NULL constraint.
             status: sql`case when ${activeSession()} then 'draft' else null end`,
           })
           .onConflictDoNothing();
-        return db.select().from(tables.portfolio).where(activeOwner()).get();
+        return getPortfolio();
+      },
+    },
+    setup: {
+      // Reference validator for offline migration/maintenance, not a hot HTTP
+      // save path. Phase 13 must supply bounded validation/correction before
+      // enabling legacy rows whose destinations predate the approved limits.
+      async validateLegacyDraft() {
+        const row = await getPortfolio(); // readDraft validates the full content.
+        if (!row) throw new SaveError(409, "Unavailable draft");
+        const result = await db
+          .update(tables.portfolio)
+          .set({ draftValidationVersion: 2 })
+          .where(
+            and(activeOwner(), eq(tables.portfolio.draftRev, row.draftRev)),
+          )
+          .returning({ revision: tables.portfolio.draftRev })
+          .get();
+        if (!result)
+          throw new SaveError(409, "Draft changed during validation");
+        return result;
+      },
+      // This state is private. A step is navigation, not a permission grant.
+      get: () =>
+        db
+          .select({
+            progress: tables.portfolio.setupProgress,
+            revision: tables.portfolio.draftRev,
+            firstEditorEnteredAt: tables.portfolio.firstEditorEnteredAt,
+          })
+          .from(tables.portfolio)
+          .where(activeOwner())
+          .get(),
+      saves: setupSaves,
+      saveProgress: (revision: number, progress: unknown) =>
+        setupSaves.change(
+          { op: "set", path: ["schemaVersion"], value: 2 },
+          revision,
+          setupProgressSchema.parse(progress),
+        ),
+      // Internal persistence operation ONLY. The authoritative handoff service
+      // must validate saved required content and ready owned assets at this
+      // exact revision before calling it. Never map a client milestone flag here.
+      async recordFirstEditorEntry(revision: number) {
+        if (
+          !Number.isSafeInteger(revision) ||
+          revision < 0 ||
+          revision >= Number.MAX_SAFE_INTEGER
+        )
+          throw new SaveError(422, "Invalid revision");
+        const enteredAt = new Date();
+        await db
+          .update(tables.portfolio)
+          .set({
+            firstEditorEnteredAt: enteredAt,
+            draftRev: sql`${tables.portfolio.draftRev} + 1`,
+            updatedAt: enteredAt,
+          })
+          .where(
+            and(
+              activeOwner(),
+              eq(tables.portfolio.draftRev, revision),
+              eq(tables.portfolio.draftValidationVersion, 2),
+              sql`${tables.portfolio.firstEditorEnteredAt} is null`,
+            ),
+          )
+          .run();
+        const result = await db
+          .select({
+            firstEditorEnteredAt: tables.portfolio.firstEditorEnteredAt,
+            revision: tables.portfolio.draftRev,
+          })
+          .from(tables.portfolio)
+          .where(activeOwner())
+          .get();
+        if (!result?.firstEditorEnteredAt)
+          throw new SaveError(409, "Stale revision or unavailable handoff");
+        return result;
       },
     },
     assets: {

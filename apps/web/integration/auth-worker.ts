@@ -67,6 +67,45 @@ export default {
       );
       return privateJson({ ok: true });
     }
+    if (url.pathname === "/__fixture/legacy-portfolio") {
+      const owner = await currentOwner(settings, request.headers, auth);
+      if (!owner) return privateJson(null, 401);
+      if (url.searchParams.has("kind")) {
+        const draft = createEmptyDraft({
+          themeId: "fixture-theme",
+          fontId: "fixture-font",
+          colorMode: "system",
+        });
+        const email = url.searchParams.get("kind") === "email";
+        draft.links = [
+          {
+            id: "legacy-link",
+            label: "Legacy destination",
+            kind: email ? "email" : "website",
+            value: email
+              ? `${"x".repeat(250)}@example.test`
+              : `https://example.test/${"x".repeat(2048)}`,
+            showInProfile: true,
+            showInSocialComponent: false,
+          },
+        ];
+        await env.DB.prepare(
+          "UPDATE portfolio SET draft=?,draft_validation_version=0 WHERE user_id=?",
+        )
+          .bind(
+            JSON.stringify({ ...draft, schemaVersion: 1 }),
+            owner.identity.user.id,
+          )
+          .run();
+      }
+      return privateJson(
+        await env.DB.prepare(
+          "SELECT draft,draft_validation_version FROM portfolio WHERE user_id=?",
+        )
+          .bind(owner.identity.user.id)
+          .first(),
+      );
+    }
     if (["/__fixture/expire", "/__fixture/delete"].includes(url.pathname)) {
       const owner = await currentOwner(settings, request.headers, auth);
       if (!owner) return privateJson(null, 401);

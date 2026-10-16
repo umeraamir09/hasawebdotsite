@@ -3,6 +3,7 @@ import {
   DRAFT_SCHEMA_VERSION,
   type DraftDoc,
   draftSchema,
+  legacyDraftEnvelopeSchema,
   migrationEnvelopeSchema,
 } from "./draft";
 import { assertJson, cloneJson } from "./json";
@@ -24,7 +25,16 @@ export interface DraftMigrationContract<T> {
 export const draftMigrationContract: DraftMigrationContract<DraftDoc> = {
   version: DRAFT_SCHEMA_VERSION,
   envelopeSchema: migrationEnvelopeSchema,
-  envelopeMigrations: {},
+  envelopeMigrations: {
+    1: {
+      inputSchema: legacyDraftEnvelopeSchema,
+      // Optional candidate means a max-size legacy document does not grow.
+      migrate: (input) => ({
+        ...legacyDraftEnvelopeSchema.parse(input),
+        schemaVersion: 2,
+      }),
+    },
+  },
   components: componentRegistry,
   schema: draftSchema,
 };

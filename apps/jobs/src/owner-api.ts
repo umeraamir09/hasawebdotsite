@@ -76,7 +76,7 @@ export function createOwnerRouter() {
   });
   app.get("/api/owner", async (c) => {
     const owner = c.get("owner");
-    const portfolio = await owner.repositories.portfolio.get();
+    const portfolio = await owner.repositories.portfolio.summary();
     return privateJson({
       user: { id: owner.identity.user.id, name: owner.identity.user.name },
       portfolio: portfolio ? { id: portfolio.id } : null,
