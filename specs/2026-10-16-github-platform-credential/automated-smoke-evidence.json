@@ -1,0 +1,46 @@
+{
+  "note": "Local smoke run on October 16, 2026 with a deliberately invalid dummy platform token. This is not live provider evidence; the owner protocol in live-setup.md produces live-evidence.json.",
+  "runtime": "isolated Node.js loopback harness (Phase 11C platform credential)",
+  "events": [
+    {
+      "at": "2026-10-16T18:51:56.413Z",
+      "check": "platform_credential_failure",
+      "classification": "retry/credential",
+      "rawStatus": 401,
+      "scopeHeader": "absent"
+    },
+    {
+      "at": "2026-10-16T18:51:57.027Z",
+      "check": "platform_baseline",
+      "classification": "retry/credential",
+      "visibility": "off",
+      "rawStatus": 401,
+      "scopeHeader": "absent",
+      "viewerSeparate": null,
+      "restrictedCount": null
+    }
+  ],
+  "observations": [
+    {
+      "check": "platform step without sign-in session",
+      "result": "passed",
+      "detail": "The page rendered the platform section and both platform actions completed without any owner sign-in."
+    },
+    {
+      "check": "invalid platform credential classification",
+      "result": "retry/credential",
+      "detail": "HTTP 401 from the fixed fake credential; no owner reconnect classification and no real token sent."
+    },
+    {
+      "check": "evidence redaction",
+      "result": "passed",
+      "detail": "No token, username, stable ID, or provider payload appears in the recorded events."
+    }
+  ],
+  "limitations": [
+    "Local HTTP harness; production Better Auth callbacks, cookies, and scheduling are not exercised",
+    "The platform credential is a local classic PAT with no scopes; production storage and rotation remain later-phase work",
+    "Contribution visibility labels are owner-attested; expected public counts require owner confirmation",
+    "The public baseline request is read-only and asks for no repository objects"
+  ]
+}
