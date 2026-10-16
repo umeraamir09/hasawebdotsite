@@ -40,3 +40,9 @@ This increment implements contracts and persistence. No new save/handoff HTTP en
 Public projection is an allowlist, not publication validation. The later publication pipeline still needs to omit untouched samples, validate readiness and collect reachable assets before rendering. Appearance identifiers remain fixtures until Phase 11E approval.
 
 All new verification is local functional evidence. No production deployment or new deployed CPU/quotas claim is made. Figma was not modified; this phase changes no UI.
+
+## Review regression fix
+
+The PR review identified that `/api/auth/get-session` still called the validating portfolio reader. A version 1 draft with a destination exceeding the approved limits caused that session endpoint to return 503 for an authenticated owner. Switching the auth owner response to the existing metadata-only `portfolio.summary()` fixes the failure without weakening draft validation.
+
+The new real-session regression reproduced `503 !== 200` before the fix. Afterward, both oversized-URL and oversized-email fixtures return 200 from the session/owner endpoints, expose only the expected identity metadata, and leave the version 1 JSON and validation generation 0 unchanged. All 22 auth groups, 167 unit tests, 12 package typechecks and focused Biome checks pass. See [auth-review-evidence.json](auth-review-evidence.json). Historical authentication evidence remains unchanged.

@@ -170,7 +170,7 @@ export async function ownerResponse(
   try {
     const owner = await currentOwner(env, request.headers, auth);
     if (!owner) return privateJson(null, 401);
-    const portfolio = await owner.repositories.portfolio.get();
+    const portfolio = await owner.repositories.portfolio.summary();
     return privateJson({
       user: { id: owner.identity.user.id, name: owner.identity.user.name },
       portfolio: portfolio ? { id: portfolio.id } : null,

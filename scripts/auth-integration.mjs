@@ -466,6 +466,37 @@ try {
     },
   );
   await check(
+    "session lookup preserves unvalidated legacy URL/email drafts without parsing them",
+    async () => {
+      const owner = await login("github", "explicit");
+      for (const kind of ["url", "email"]) {
+        const fixture = await request(
+          `/__fixture/legacy-portfolio?kind=${kind}`,
+          owner.jar,
+        );
+        assert.equal(fixture.status, 200);
+        const before = await fixture.json();
+        assert.equal(JSON.parse(before.draft).schemaVersion, 1);
+        assert.equal(before.draft_validation_version, 0);
+        for (const path of ["/api/auth/get-session", "/api/owner"]) {
+          const response = await request(path, owner.jar);
+          assert.equal(response.status, 200, `${path} with legacy ${kind}`);
+          assert.equal(
+            response.headers.get("Cache-Control"),
+            "private, no-store",
+          );
+          const body = await response.json();
+          assert.deepEqual(body, owner.data);
+          assert.deepEqual(Object.keys(body.portfolio), ["id"]);
+        }
+        const after = await (
+          await request("/__fixture/legacy-portfolio", owner.jar)
+        ).json();
+        assert.deepEqual(after, before);
+      }
+    },
+  );
+  await check(
     "expiry, deletion and copied cache cookies deny owner access",
     async () => {
       const expired = await login("github", "other");
