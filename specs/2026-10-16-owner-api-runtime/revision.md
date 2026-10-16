@@ -15,3 +15,7 @@ The next experiment should implement a bounded, revision-scoped save protocol be
 This changes the save transport and preparation protocol. It does not add a second editable draft, publish partial content, lower the 1 MiB ceiling or move trust to the browser. Its feasibility remains unproven until measured. The existing bounded-preparation fallback in S-2 is the starting point; the immutable attempt, server validation generation, cross-piece strings and atomic canonical/progress commit are the concrete follow-up to measure.
 
 Phase 11A can use its alternative completion criterion only after the owner agrees to a compatible revision. Agreement to this document does not implement the staged protocol or establish its CPU/quotas. Dependent APIs must not silently ship the failed full-body path.
+
+## Implemented follow-up
+
+On October 16, 2026 the owner explicitly requested implementation/testing of the bounded approach with reversible Git changes, then approved 2,048-byte URL and 254-byte email limits. The [implemented protocol](../2026-10-16-free-owner-saves/protocol.md), [measurements](../2026-10-16-free-owner-saves/results.md) and [quota model](../2026-10-16-free-owner-saves/quotas.md) supersede the implementation-pending status above. The original failed measurements remain historical evidence. Agreement to implementation and field limits does not approve a phase checkbox; completion still requires the owner's post-implementation answer.

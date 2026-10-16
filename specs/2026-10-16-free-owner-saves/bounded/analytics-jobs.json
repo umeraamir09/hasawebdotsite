@@ -1,0 +1,342 @@
+{
+  "recordedAt": "2026-10-16T15:23:40.124815+00:00",
+  "windows": [
+    {
+      "case": "piece",
+      "from": "2026-10-16T13:43:40.313Z",
+      "to": "2026-10-16T13:44:52.047Z",
+      "clientCount": 100
+    },
+    {
+      "case": "piece-remainder",
+      "from": "2026-10-16T13:44:52.048Z",
+      "to": "2026-10-16T13:46:40.110Z",
+      "clientCount": 152
+    },
+    {
+      "case": "commit",
+      "from": "2026-10-16T13:46:53.888Z",
+      "to": "2026-10-16T13:48:22.183Z",
+      "clientCount": 100
+    },
+    {
+      "case": "string-finish",
+      "from": "2026-10-16T13:48:31.713Z",
+      "to": "2026-10-16T13:50:04.451Z",
+      "clientCount": 100
+    },
+    {
+      "case": "change",
+      "from": "2026-10-16T13:50:13.385Z",
+      "to": "2026-10-16T13:51:40.092Z",
+      "clientCount": 100
+    },
+    {
+      "case": "patch-full",
+      "from": "2026-10-16T13:51:47.652Z",
+      "to": "2026-10-16T13:53:00.417Z",
+      "clientCount": 100
+    },
+    {
+      "case": "patch-dense",
+      "from": "2026-10-16T13:53:08.955Z",
+      "to": "2026-10-16T13:54:32.891Z",
+      "clientCount": 100
+    },
+    {
+      "case": "patch-components",
+      "from": "2026-10-16T13:54:40.843Z",
+      "to": "2026-10-16T13:55:59.228Z",
+      "clientCount": 100
+    },
+    {
+      "case": "abort",
+      "from": "2026-10-16T13:56:08.247Z",
+      "to": "2026-10-16T13:57:36.497Z",
+      "clientCount": 100
+    },
+    {
+      "case": "cleanup",
+      "from": "2026-10-16T13:57:45.420Z",
+      "to": "2026-10-16T13:59:11.310Z",
+      "clientCount": 100
+    },
+    {
+      "case": "begin",
+      "from": "2026-10-16T13:59:25.175Z",
+      "to": "2026-10-16T14:00:41.227Z",
+      "clientCount": 100
+    },
+    {
+      "case": "string-start",
+      "from": "2026-10-16T14:00:51.983Z",
+      "to": "2026-10-16T14:02:37.717Z",
+      "clientCount": 100
+    }
+  ],
+  "query": "query {viewer {accounts(filter:{accountTag:\"b6f9a87e6702c76c45a8d61744826e0f\"}) {c0:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:43:40.313Z\",datetime_lt:\"2026-10-16T13:44:52.047Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c1:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:44:52.048Z\",datetime_lt:\"2026-10-16T13:46:40.110Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c2:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:46:53.888Z\",datetime_lt:\"2026-10-16T13:48:22.183Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c3:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:48:31.713Z\",datetime_lt:\"2026-10-16T13:50:04.451Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c4:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:50:13.385Z\",datetime_lt:\"2026-10-16T13:51:40.092Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c5:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:51:47.652Z\",datetime_lt:\"2026-10-16T13:53:00.417Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c6:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:53:08.955Z\",datetime_lt:\"2026-10-16T13:54:32.891Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c7:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:54:40.843Z\",datetime_lt:\"2026-10-16T13:55:59.228Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c8:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:56:08.247Z\",datetime_lt:\"2026-10-16T13:57:36.497Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c9:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:57:45.420Z\",datetime_lt:\"2026-10-16T13:59:11.310Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c10:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:59:25.175Z\",datetime_lt:\"2026-10-16T14:00:41.227Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c11:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T14:00:51.983Z\",datetime_lt:\"2026-10-16T14:02:37.717Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} }}}}",
+  "result": {
+    "data": {
+      "viewer": {
+        "accounts": [
+          {
+            "c0": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4709,
+                  "cpuTimeP95": 5837,
+                  "cpuTimeP99": 9406
+                },
+                "sum": {
+                  "cpuTimeUs": 472612,
+                  "errors": 0,
+                  "requests": 98
+                }
+              }
+            ],
+            "c1": [
+              {
+                "avg": {
+                  "sampleInterval": 1.1216216216216217
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4538,
+                  "cpuTimeP95": 6101,
+                  "cpuTimeP99": 8076
+                },
+                "sum": {
+                  "cpuTimeUs": 784088,
+                  "errors": 0,
+                  "requests": 166
+                }
+              }
+            ],
+            "c10": [
+              {
+                "avg": {
+                  "sampleInterval": 1.1818181818181819
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4385,
+                  "cpuTimeP95": 9609,
+                  "cpuTimeP99": 9609
+                },
+                "sum": {
+                  "cpuTimeUs": 578218,
+                  "errors": 0,
+                  "requests": 117
+                }
+              }
+            ],
+            "c11": [
+              {
+                "avg": {
+                  "sampleInterval": 1.0918367346938775
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 5521,
+                  "cpuTimeP95": 7147,
+                  "cpuTimeP99": 9764
+                },
+                "sum": {
+                  "cpuTimeUs": 646725,
+                  "errors": 0,
+                  "requests": 107
+                }
+              }
+            ],
+            "c2": [
+              {
+                "avg": {
+                  "sampleInterval": 1.098901098901099
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4743,
+                  "cpuTimeP95": 5923,
+                  "cpuTimeP99": 7554
+                },
+                "sum": {
+                  "cpuTimeUs": 494747,
+                  "errors": 0,
+                  "requests": 100
+                }
+              }
+            ],
+            "c3": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4818,
+                  "cpuTimeP95": 6355,
+                  "cpuTimeP99": 10229
+                },
+                "sum": {
+                  "cpuTimeUs": 494064,
+                  "errors": 0,
+                  "requests": 97
+                }
+              }
+            ],
+            "c4": [
+              {
+                "avg": {
+                  "sampleInterval": 1.1170212765957446
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 5063,
+                  "cpuTimeP95": 8095,
+                  "cpuTimeP99": 11331
+                },
+                "sum": {
+                  "cpuTimeUs": 600383,
+                  "errors": 0,
+                  "requests": 105
+                }
+              }
+            ],
+            "c5": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4553,
+                  "cpuTimeP95": 6358,
+                  "cpuTimeP99": 8829
+                },
+                "sum": {
+                  "cpuTimeUs": 481737,
+                  "errors": 0,
+                  "requests": 100
+                }
+              }
+            ],
+            "c6": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4391,
+                  "cpuTimeP95": 5795,
+                  "cpuTimeP99": 7095
+                },
+                "sum": {
+                  "cpuTimeUs": 451372,
+                  "errors": 0,
+                  "requests": 99
+                }
+              }
+            ],
+            "c7": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4746,
+                  "cpuTimeP95": 6724,
+                  "cpuTimeP99": 7966
+                },
+                "sum": {
+                  "cpuTimeUs": 487763,
+                  "errors": 0,
+                  "requests": 98
+                }
+              }
+            ],
+            "c8": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4890,
+                  "cpuTimeP95": 6744,
+                  "cpuTimeP99": 9045
+                },
+                "sum": {
+                  "cpuTimeUs": 510445,
+                  "errors": 0,
+                  "requests": 98
+                }
+              }
+            ],
+            "c9": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 4679,
+                  "cpuTimeP95": 5744,
+                  "cpuTimeP99": 6597
+                },
+                "sum": {
+                  "cpuTimeUs": 470776,
+                  "errors": 0,
+                  "requests": 98
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "errors": null
+  },
+  "units": "cpuTimePXX and cpuTimeUs are microseconds. Divide by 1000 for milliseconds. Adaptive analytics and client-time window boundaries can change counts; this is not an unsampled request trace."
+}

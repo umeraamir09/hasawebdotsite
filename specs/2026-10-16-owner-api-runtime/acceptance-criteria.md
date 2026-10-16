@@ -12,3 +12,7 @@
 ## Verification outcome
 
 The implementation and access/validation/atomic-write criteria pass the local groups and deployed correctness checks described in [results.md](results.md). Startup passes at 49/98 ms. The maximum-size CPU criterion fails at 44.337 ms validation p95 and 59.874 ms save p95 in the incomplete distribution, with a confirmed save `exceededCpu` outcome. The compatible-revision alternative awaits owner agreement to [revision.md](revision.md). Phase completion is pending; no checkbox approval has been inferred.
+
+## Implemented follow-up
+
+On October 16, 2026 the owner explicitly requested implementation/testing of the bounded approach with reversible Git changes, then approved 2,048-byte URL and 254-byte email limits. The [implemented protocol](../2026-10-16-free-owner-saves/protocol.md), [measurements](../2026-10-16-free-owner-saves/results.md) and [quota model](../2026-10-16-free-owner-saves/quotas.md) supersede the implementation-pending status above. The original failed measurements remain historical evidence. Agreement to implementation and field limits does not approve a phase checkbox; completion still requires the owner's post-implementation answer.

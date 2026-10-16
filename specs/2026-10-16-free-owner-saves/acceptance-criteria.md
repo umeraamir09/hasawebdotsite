@@ -8,3 +8,5 @@
 - Provider CPU p95 is strictly below 10 ms for every supported request class, including final commit and cleanup, with startup below 1,000 ms. Include failure counts, sample/telemetry limitations and first-request observations. Do not infer CPU from timers.
 - Additional Worker/D1/storage quotas are quantified for the architecture's target scale; retries/cleanup are bounded and abandoned attempts expire.
 - Relevant repository checks pass, experiment resources/secrets are removed, and Phase 11A remains unchecked until explicit owner approval after implementation.
+
+Implementation and measurement are complete. [The results](results.md) and machine-checked [summary](summary.json) record passing warm CPU/startup, correctness, repository checks and the quota/storage model. [The quota limits](quotas.md) and cold/tail risks remain explicit parts of the result. Production mapping, legacy validation-generation/backfill and autosave UI remain in their approved later phases. Phase 11A completion approval is still pending; implementation authorization and the approved URL/email limits do not check off that phase.
