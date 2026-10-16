@@ -13,7 +13,7 @@ Status: implementation and automated verification complete. The owner live proto
   - `retry` / `rate`, `server`, `network` — bounded retry with backoff; retain the last good graph and date.
   - `invalid` / `scope`, `identity`, `payload` — misconfigured or unsupported provider behavior; fail closed, serve no baseline from this credential, alert the operator.
 - Existing `fetchCalendar()` behavior and the 40-check fixture matrix are unchanged, so `specs/2026-10-15-github-permissions/evidence.json` still reproduces byte-for-byte.
-- `scripts/github-live-oauth.mjs` adds a platform step that needs no owner sign-in: it fetches the public baseline for `GITHUB_TEST_USERNAME` with the separate credential, records the scope-header state, viewer separation, restricted count, and classification, and offers an owner-attested visibility selector (`on` / `off`). A separate probe classifies an invalid credential using a fixed fake token; the real token is never sent.
+- `scripts/github-live-oauth.mjs` adds a platform step that needs no owner sign-in: it fetches the public baseline for `GITHUB_TEST_USERNAME` with the separate credential, records the scope-header state, viewer separation, restricted count, and classification, and offers an owner-attested visibility selector (`on` / `off`). A separate probe classifies an invalid credential using a fixed fake token; the real token is never sent. The harness also starts in platform-only mode when only `GITHUB_TEST_USERNAME` and `GITHUB_PLATFORM_TOKEN` are configured; the sign-in/activity flows render a disabled notice and their actions are rejected.
 - Platform events are written to this directory's `live-evidence.json` (override with `GITHUB_PLATFORM_EVIDENCE`), leaving the Phase 06 evidence files untouched.
 - The shared template `specs/2026-10-15-github-permissions/.env.example` gains `GITHUB_PLATFORM_TOKEN` with the separate-account, no-scope requirement noted.
 
@@ -24,7 +24,7 @@ Status: implementation and automated verification complete. The owner live proto
 | `pnpm check` | Pass: Biome, all 12 package typechecks, 173 unit tests across 17 files (6 new tests) |
 | `pnpm spike:github` | Pass: 40 workerd/D1/Web Crypto checks; `specs/2026-10-15-github-permissions/evidence.json` unchanged |
 | Chromium harness regression | Pass: exact `http://localhost:3000` Origin and intercepted GitHub authorization destination with the platform section present |
-| Local smoke run | Pass: platform section and both platform actions worked without any sign-in session; HTTP 401 from the fake credential classified `retry/credential`; no secret in evidence. See [automated-smoke-evidence.json](automated-smoke-evidence.json). |
+| Local smoke run | Pass: platform section and both platform actions worked without any sign-in session; platform-only startup, the sign-in-disabled notice, and the `signin_not_configured` rejection also pass; HTTP 401 from the fake credential classified `retry/credential`; no secret in evidence. See [automated-smoke-evidence.json](automated-smoke-evidence.json). |
 
 The new unit coverage includes: accepted separate zero-scope baseline, restricted baseline unavailable, credential/rate/server/network retries, scope/identity/payload fail-closed cases, present-but-empty vs absent scope header, and the explicit assertion that no platform failure produces an owner reconnect. The harness test adds the scope-header state helper.
 

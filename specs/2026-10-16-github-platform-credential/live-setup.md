@@ -8,9 +8,7 @@ The platform step needs no owner sign-in session. The harness serves it even whe
 
 1. Sign into a dedicated GitHub account. Do not use your personal account or the contribution account under observation.
 2. Open [Developer settings](https://github.com/settings/developers) → **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**. Do not tick any scope. The candidate policy expects the present-and-empty `X-OAuth-Scopes` header that a classic zero-scope token sends; fine-grained tokens are out of scope.
-3. Copy the updated template at [../2026-10-15-github-permissions/.env.example](../2026-10-15-github-permissions/.env.example) to the repository root as `.env.github-spike.local` (git-ignored) and fill in the existing S-6 fields plus:
-   - `GITHUB_TEST_USERNAME` — the contribution account under observation.
-   - `GITHUB_PLATFORM_TOKEN` — the separate account's classic PAT.
+3. Copy the updated template at [../2026-10-15-github-permissions/.env.example](../2026-10-15-github-permissions/.env.example) to the repository root as `.env.github-spike.local` (git-ignored). For the platform protocol only `GITHUB_TEST_USERNAME` (the contribution account under observation) and `GITHUB_PLATFORM_TOKEN` (the separate account's classic PAT) are required; the four S-6 OAuth app fields are optional and only enable the Phase 06 sign-in/activity flows.
 4. Never paste the token into chat, a terminal command, or a committed file.
 5. Record the contribution account's expected public contribution totals for the running 12-month window privately. A previous Phase 06 observation cannot be the expectation; check the live profile or your own notes.
 

@@ -1,5 +1,5 @@
 {
-  "note": "Local smoke run on October 16, 2026 with a deliberately invalid dummy platform token. This is not live provider evidence; the owner protocol in live-setup.md produces live-evidence.json.",
+  "note": "Local smoke runs on October 16, 2026 with a deliberately invalid dummy platform token. This is not live provider evidence; the owner protocol in live-setup.md produces live-evidence.json.",
   "runtime": "isolated Node.js loopback harness (Phase 11C platform credential)",
   "events": [
     {
@@ -25,6 +25,11 @@
       "check": "platform step without sign-in session",
       "result": "passed",
       "detail": "The page rendered the platform section and both platform actions completed without any owner sign-in."
+    },
+    {
+      "check": "platform-only startup",
+      "result": "passed",
+      "detail": "With only GITHUB_TEST_USERNAME and GITHUB_PLATFORM_TOKEN configured, the harness started, rendered the sign-in-disabled notice, rejected the sign-in action with signin_not_configured, and completed both platform actions."
     },
     {
       "check": "invalid platform credential classification",
