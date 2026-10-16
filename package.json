@@ -34,7 +34,8 @@
     "test:persistence": "node scripts/persistence-integration.mjs",
     "test:auth": "node scripts/auth-integration.mjs",
     "test:auth:browser": "node scripts/auth-integration.mjs --browser",
-    "test:owner-runtime": "node scripts/owner-runtime-benchmark.mjs"
+    "test:owner-runtime": "node scripts/owner-runtime-benchmark.mjs",
+    "test:bounded-saves": "node scripts/bounded-save-runtime.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

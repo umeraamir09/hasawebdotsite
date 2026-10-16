@@ -8,3 +8,4 @@ export * from "./profile";
 export * from "./registry";
 export * from "./rich-text";
 export * from "./samples";
+export * from "./updates";
