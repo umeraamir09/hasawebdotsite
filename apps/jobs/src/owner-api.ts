@@ -22,15 +22,27 @@ export function createOwnerRouter() {
     try {
       await next();
     } finally {
-      // Finish forwarding rejected bodies before returning across the binding.
-      // Discard each chunk immediately; do not parse or retain rejected input.
+      // Finish small rejected bodies across the binding, but bound cleanup work.
       if (!c.req.raw.bodyUsed && c.req.raw.body) {
         const reader = c.req.raw.body.getReader();
+        const cancel = () => void reader.cancel().catch(() => {});
+        const timeout = setTimeout(cancel, 100);
+        let done = false;
         try {
-          while (!(await reader.read()).done) {
-            /* discard */
+          let bytes = 0;
+          while (bytes < 8192) {
+            const chunk = await reader.read();
+            if (chunk.done) {
+              done = true;
+              break;
+            }
+            bytes += chunk.value.byteLength;
           }
+        } catch {
+          // A failed upload must not replace the rejection response.
         } finally {
+          clearTimeout(timeout);
+          if (!done) cancel();
           reader.releaseLock();
         }
       }
