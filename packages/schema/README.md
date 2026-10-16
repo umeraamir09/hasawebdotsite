@@ -1,6 +1,6 @@
 # Draft and component contracts
 
-`@hasaweb/schema` owns version 1 of the private draft JSON, the data-only component registry and the migration runners. It uses Zod and Web Platform APIs, with no React, Node, database or provider dependency. `@hasaweb/components` re-exports the registry so future editor and renderer adapters share these definitions without a package dependency cycle.
+`@hasaweb/schema` owns version 2 of the private draft JSON, the data-only component registry and the migration runners. It uses Zod and Web Platform APIs, with no React, Node, database or provider dependency. `@hasaweb/components` re-exports the registry so future editor and renderer adapters share these definitions without a package dependency cycle.
 
 ```ts
 import { createComponent, createEmptyDraft, draftSchema, readDraft } from "@hasaweb/schema";
@@ -13,6 +13,14 @@ const restored = readDraft(JSON.parse(JSON.stringify(validated)));
 ```
 
 Both APIs return validated copies. `draftSchema.safeParse` returns Zod issues with field paths. `readDraft` also runs registered migrations and can throw `MigrationError` with a scope, version and cause. It does not save anything. The repository will persist migrated documents on the next successful save.
+
+## Private setup contracts
+
+Version 2 adds optional `requestedSubdomain`, a non-reserving candidate with the existing 3–30 lowercase ASCII letter/digit/hyphen format. Missing candidates remain absent. Format validation does not check availability or reserve a name. The database's unique `portfolio.subdomain` and permanent claims remain separate.
+
+`setupProgressSchema` is a separate private version 1 navigation contract with a `step` of address, profile, links, skills, projects, github or review. Its initial value is Address. Progress proves no required completion and accepts no milestone flag or duplicated answers. `firstEditorEnteredAt` belongs to private persistence, outside the draft.
+
+`toPublicContent` returns only schema version, profile, links, components, appearance and SEO. It excludes the candidate and sample metadata. Publication must first omit untouched samples and validate readiness; this projection alone is not a publish-ready snapshot. Never serialize a complete portfolio row as public data.
 
 ## Document and component rules
 
@@ -67,4 +75,4 @@ Each optional definition has an independent `version`, current schema and migrat
 
 `createDraftReader` first migrates the envelope one version at a time, then migrates each component, then validates the complete current document. Envelope callbacks must increment `schemaVersion` exactly once. Component versions are advanced by the runner. All callbacks receive cloned data. Missing steps, future versions, invalid source/intermediate/final values, unsafe output and thrown errors stop the read without modifying the caller or stored content. Migration functions must remain pure, with no external writes.
 
-Version 1 is the first production contract. The production maps are empty. Tests exercise multi-step component migrations, combined envelope/component upgrades, unchanged-envelope upgrades, repeated reads and injected failures using fixture-only contracts.
+Version 1 is the first production contract. Its envelope migration changes only schemaVersion to 2, preserving all content, stable IDs and sample markers without increasing a maximum-size document. Component versions remain unchanged. Unknown v1 root fields and invalid final relationships fail. Reads upgrade in memory; validated bounded saves upgrade the stored envelope on the next successful save. Tests exercise multi-step component migrations, combined envelope/component upgrades, unchanged-envelope upgrades, repeated reads and injected failures using fixture-only contracts.

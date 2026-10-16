@@ -57,10 +57,11 @@ describe("migration contracts", () => {
 
   it("migrates a stored envelope and component together then validates the whole draft", () => {
     const original = completeDraft();
-    const oldInput = { ...original, legacySeo: original.seo } as Record<
-      string,
-      unknown
-    >;
+    const oldInput = {
+      ...original,
+      schemaVersion: 1,
+      legacySeo: original.seo,
+    } as Record<string, unknown>;
     delete oldInput.seo;
     oldInput.components = original.components.map((component) =>
       component.type === "text"
@@ -169,7 +170,7 @@ describe("migration contracts", () => {
     expect(reader(input)).toEqual(original);
   });
 
-  it.each([0, -1, 1.5, 2])(
+  it.each([0, -1, 1.5, 3])(
     "rejects invalid or future stored version %s",
     (schemaVersion) => {
       expect(() => readDraft({ ...completeDraft(), schemaVersion })).toThrow();
@@ -191,7 +192,11 @@ describe("migration contracts", () => {
       }),
     ).toThrow(MigrationError);
     expect(() =>
-      createDraftReader({ ...draftMigrationContract, version: 2 })(draft),
+      createDraftReader({
+        ...draftMigrationContract,
+        version: 3,
+        envelopeMigrations: {},
+      })(draft),
     ).toThrow(MigrationError);
     expect(() =>
       migrateVersioned(
@@ -257,12 +262,12 @@ describe("migration contracts", () => {
   });
 
   it("requires an envelope step to increment exactly one version", () => {
-    for (const schemaVersion of [1, 3]) {
+    for (const schemaVersion of [2, 4]) {
       const reader = createDraftReader({
         ...draftMigrationContract,
-        version: 2,
+        version: 3,
         envelopeMigrations: {
-          1: {
+          2: {
             inputSchema: draftSchema,
             migrate: (value) => ({
               ...draftSchema.parse(value),

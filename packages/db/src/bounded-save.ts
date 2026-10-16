@@ -5,6 +5,7 @@ import {
   freeStringMinimum,
   SAVE_MAX_PIECES,
   SAVE_PIECE_BYTES,
+  setupProgressSchema,
   sqlJsonPath,
   validateAppend,
   validateDraftValue,
@@ -26,6 +27,10 @@ export type SaveTarget = {
   revision: string;
   draft: string;
   progress: string;
+  // Setup writes are denied permanently after the trusted first handoff.
+  setupMilestone?: string;
+  validationVersion?: string;
+  updatedAt?: string;
 };
 export type SaveChange =
   | { op: "set"; path: DraftPath; value: unknown }
@@ -93,13 +98,39 @@ export function boundedSaves(
   identity: SessionIdentity,
   target: SaveTarget,
 ) {
+  identity = {
+    user: { id: identity.user.id },
+    session: { id: identity.session.id },
+  };
   const table = identifier(target.table),
     owner = identifier(target.owner),
     rev = identifier(target.revision),
     draft = identifier(target.draft),
     progress = identifier(target.progress);
   const active = (arg: ReturnType<typeof condition>) =>
-    `EXISTS (SELECT 1 FROM session s JOIN user u ON u.id=s.user_id WHERE s.id=${arg(identity.session.id)} AND s.user_id=${arg(identity.user.id)} AND s.expires_at>${arg(Date.now())} AND u.deleting_at IS NULL)`;
+    `EXISTS (SELECT 1 FROM session s JOIN user u ON u.id=s.user_id WHERE s.id=${arg(identity.session.id)} AND s.user_id=${arg(identity.user.id)} AND s.expires_at>${arg(Date.now())} AND u.deleting_at IS NULL)` +
+    (target.setupMilestone
+      ? ` AND EXISTS (SELECT 1 FROM ${table} p WHERE p.${owner}=${arg(identity.user.id)} AND p.${identifier(target.setupMilestone)} IS NULL)`
+      : "");
+  const canonicalReady = (arg: ReturnType<typeof condition>) =>
+    target.validationVersion
+      ? ` AND EXISTS (SELECT 1 FROM ${table} p WHERE p.${owner}=${arg(identity.user.id)} AND p.${identifier(target.validationVersion)}=2 AND json_extract(p.${draft},'$.schemaVersion') IN (1,2))`
+      : "";
+  const encodeProgress = (value: unknown) => {
+    encodeJson(value, SAVE_PIECE_BYTES);
+    return encodeJson(
+      target.setupMilestone ? setupProgressSchema.parse(value) : value,
+      SAVE_PIECE_BYTES,
+    );
+  };
+  const checkRevision = (value: number) => {
+    if (
+      !Number.isSafeInteger(value) ||
+      value < 0 ||
+      value >= Number.MAX_SAFE_INTEGER
+    )
+      throw new SaveError(422, "Invalid revision");
+  };
   async function attempt(id: string): Promise<Attempt> {
     const params: unknown[] = [];
     const arg = condition(params);
@@ -135,14 +166,15 @@ export function boundedSaves(
     return attempt(id);
   }
   async function begin(revision: number, proposedProgress: unknown) {
-    const encoded = encodeJson(proposedProgress, SAVE_PIECE_BYTES);
+    checkRevision(revision);
+    const encoded = encodeProgress(proposedProgress);
     const id = crypto.randomUUID();
     const params: unknown[] = [];
     const arg = condition(params);
     const result = await db
       .prepare(`INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,draft,progress,expires_at)
-      SELECT ${arg(id)},${arg(identity.user.id)},${arg(identity.session.id)},${arg(revision)},${draft},${arg(encoded)},${arg(Date.now() + TTL)} FROM ${table}
-      WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)} AND ${active(arg)}
+      SELECT ${arg(id)},${arg(identity.user.id)},${arg(identity.session.id)},${arg(revision)},${sourceDraft()},${arg(encoded)},${arg(Date.now() + TTL)} FROM ${table}
+      WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)} AND ${active(arg)}${canonicalReady(arg)}
       ON CONFLICT(user_id) DO NOTHING RETURNING id,sequence`)
       .bind(...params)
       .first<{ id: string; sequence: number }>();
@@ -152,6 +184,13 @@ export function boundedSaves(
         "Stale revision or an existing attempt must be resumed/cleaned",
       );
     return result;
+  }
+  function sourceDraft() {
+    // v1 -> v2 only changes the single-digit envelope version. D1 performs the
+    // upgrade without reading a large body into Worker JS or growing its size.
+    return target.setupMilestone
+      ? `CASE WHEN json_extract(${draft},'$.schemaVersion')=1 THEN json_set(${draft},'$.schemaVersion',2) ELSE ${draft} END`
+      : draft;
   }
   async function metadata(path: DraftPath, id?: string) {
     const params: unknown[] = [];
@@ -190,6 +229,7 @@ export function boundedSaves(
     id?: string,
     sequence?: number,
   ) {
+    checkRevision(revision);
     // Entire submitted work is bounded before any schema traversal or SQL generation.
     encodeJson(change, SAVE_PIECE_BYTES + 1024);
     const hash = await digest(change);
@@ -227,28 +267,29 @@ export function boundedSaves(
     const params: unknown[] = [];
     const arg = condition(params);
     const source = id ? "owner_save_attempt" : table,
-      sourceDraft = id ? "draft" : draft;
+      sourceDoc = id ? "draft" : sourceDraft();
     const pathSql = sqlJsonPath(change.path);
     let expression: string;
     if (change.op === "remove")
-      expression = `json_remove(${sourceDraft},${arg(pathSql)})`;
+      expression = `json_remove(${sourceDoc},${arg(pathSql)})`;
     else if (change.op === "set")
       expression = change.path.length
-        ? `json_set(${sourceDraft},${arg(pathSql)},json(${arg(encoded[0])}))`
+        ? `json_set(${sourceDoc},${arg(pathSql)},json(${arg(encoded[0])}))`
         : `json(${arg(encoded[0])})`;
     else
-      expression = `json_insert(${sourceDraft},${encoded.map((value) => `${arg(`${pathSql}[#]`)},json(${arg(value)})`).join(",")})`;
+      expression = `json_insert(${sourceDoc},${encoded.map((value) => `${arg(`${pathSql}[#]`)},json(${arg(value)})`).join(",")})`;
     const expected = id
       ? `id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='open' AND expires_at>${arg(Date.now())}`
       : `${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)}`;
-    const access = active(arg);
-    const encodedProgress = encodeJson(proposedProgress, SAVE_PIECE_BYTES);
+    const access = active(arg) + (id ? "" : canonicalReady(arg));
+    const encodedProgress = id ? "{}" : encodeProgress(proposedProgress);
     const assignments = id
       ? `draft=(SELECT doc FROM candidate),sequence=sequence+1,last_hash=${arg(hash)}`
-      : `${draft}=(SELECT doc FROM candidate),${progress}=${arg(encodedProgress)},${rev}=${rev}+1`;
-    const milestone = id
-      ? "1"
-      : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract(${arg(encodedProgress)},'$.enteredEditor')=1)`;
+      : `${draft}=(SELECT doc FROM candidate),${progress}=${arg(encodedProgress)},${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}`;
+    const milestone =
+      id || target.setupMilestone
+        ? "1"
+        : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract(${arg(encodedProgress)},'$.enteredEditor')=1)`;
     const result = await db
       .prepare(`WITH candidate(doc) AS MATERIALIZED (SELECT ${expression} FROM ${source} WHERE ${expected} AND ${access})
       UPDATE ${source} SET ${assignments} WHERE ${expected} AND ${access} AND ${milestone} AND ${invariants("(SELECT doc FROM candidate)")}
@@ -377,9 +418,9 @@ export function boundedSaves(
     const attemptId = arg(id);
     const selection = `SELECT a.draft FROM owner_save_attempt a WHERE a.id=${attemptId} AND a.user_id=${arg(identity.user.id)} AND a.session_id=${arg(identity.session.id)} AND a.sequence=${arg(sequence)} AND a.state='open' AND a.expires_at>${arg(Date.now())}`;
     const update = db
-      .prepare(`UPDATE ${table} SET ${draft}=(${selection}),${progress}=(SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),${rev}=${rev}+1
-      WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(state.base_revision)} AND (${selection}) IS NOT NULL AND ${active(arg)}
-      AND (json_extract(${progress},'$.enteredEditor')=0 OR json_extract((SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),'$.enteredEditor')=1) RETURNING ${rev} AS revision`)
+      .prepare(`UPDATE ${table} SET ${draft}=(${selection}),${progress}=(SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}
+      WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(state.base_revision)} AND (${selection}) IS NOT NULL AND ${active(arg)}${canonicalReady(arg)}
+      AND ${target.setupMilestone ? "1" : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract((SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),'$.enteredEditor')=1)`} RETURNING ${rev} AS revision`)
       .bind(...params);
     const mark = db
       .prepare(

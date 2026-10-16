@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -15,6 +15,7 @@ const wrangler = join(
 const output = join(root, ".wrangler/persistence-integration");
 const state = join(output, "state");
 const config = join(output, "wrangler.json");
+const legacyMigrations = join(output, "legacy-migrations");
 const port = 8810;
 const base = `http://127.0.0.1:${port}`;
 let runtime;
@@ -22,24 +23,29 @@ let logs = "";
 const env = { ...process.env, WRANGLER_SEND_METRICS: "false", BROWSER: "none" };
 await mkdir(output, { recursive: true });
 await rm(state, { recursive: true, force: true });
-await writeFile(
-  config,
-  JSON.stringify({
-    name: "hasaweb-persistence-integration",
-    main: join(root, "packages/db/integration/worker.ts"),
-    compatibility_date: "2026-10-14",
-    compatibility_flags: ["nodejs_compat"],
-    vars: { APP_ENV: "local" },
-    d1_databases: [
-      {
-        binding: "DB",
-        database_name: "persistence-integration",
-        database_id: "00000000-0000-0000-0000-000000000010",
-        migrations_dir: join(root, "packages/db/migrations"),
-      },
-    ],
-  }),
-);
+await mkdir(legacyMigrations, { recursive: true });
+for (const name of await readdir(join(root, "packages/db/migrations")))
+  if (/^000[0-2]_.*\.sql$/.test(name))
+    await copyFile(
+      join(root, "packages/db/migrations", name),
+      join(legacyMigrations, name),
+    );
+const configuration = {
+  name: "hasaweb-persistence-integration",
+  main: join(root, "packages/db/integration/worker.ts"),
+  compatibility_date: "2026-10-14",
+  compatibility_flags: ["nodejs_compat"],
+  vars: { APP_ENV: "local" },
+  d1_databases: [
+    {
+      binding: "DB",
+      database_name: "persistence-integration",
+      database_id: "00000000-0000-0000-0000-000000000010",
+      migrations_dir: legacyMigrations,
+    },
+  ],
+};
+await writeFile(config, JSON.stringify(configuration));
 function command(args) {
   const result = spawnSync(
     process.execPath,
@@ -93,6 +99,31 @@ async function stop() {
     process.kill(-runtime.pid, "SIGKILL");
 }
 try {
+  // Populate the deployed v1 schema before applying the additive setup migration.
+  command(["d1", "migrations", "apply", "persistence-integration"]);
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--file",
+    join(root, "scripts/fixtures/persistence.sql"),
+  ]);
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    `
+    UPDATE portfolio SET draft=json_set(draft,'$.profile.name','Migration content','$.samples',json('{"profile.name":true}')) WHERE id='local-portfolio';
+    INSERT INTO asset(id,portfolio_id,kind,content_type,bytes,status,created_at,updated_at) VALUES('migration-asset','local-portfolio','avatar','image/webp',10,'ready',1,1);
+    INSERT INTO subdomain_claim(name,portfolio_id) VALUES('migration-site','local-portfolio');
+  `,
+  ]);
+  configuration.d1_databases[0].migrations_dir = join(
+    root,
+    "packages/db/migrations",
+  );
+  await writeFile(config, JSON.stringify(configuration));
   command(["d1", "migrations", "apply", "persistence-integration"]);
   const reapplied = command([
     "d1",

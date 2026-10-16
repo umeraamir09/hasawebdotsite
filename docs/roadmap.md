@@ -112,7 +112,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 09, 10, 11A and the agreed onboarding specification.
 - Add a versioned non-unique `requestedSubdomain` draft field, separate private progress, and a permanent first-editor-entry milestone with revision-aware owner-scoped storage. Preserve content/sample-marker compatibility and exclude setup metadata from public snapshots. Do not put an unclaimed candidate in the current unique claimed-subdomain column.
-- [ ] Complete when migrations preserve version 1 fixtures/content, two owners can save the same candidate without a claim, repeated creation retains one portfolio, and stale updates/another owner cannot reset milestones or overwrite content/progress. This is follow-up work to completed Phases 09 and 10.
+- October 16, 2026: [contract, migration and owner-scoped setup storage evidence](../specs/2026-10-16-initial-setup-storage/results.md) is recorded. All 167 unit tests, 45 persistence/access groups, 21 auth groups, 17 bounded-save groups, builds and runtime smoke checks pass. Version 1 compatibility, duplicate candidates, revision conflicts, permanent entry, prepared-save races and private-data cleanup are covered. The final lint run flags an unrelated untracked HTML file, documented in the evidence. The owner approved Phase 11B completion on October 16, 2026.
+- [x] Complete when migrations preserve version 1 fixtures/content, two owners can save the same candidate without a claim, repeated creation retains one portfolio, and stale updates/another owner cannot reset milestones or overwrite content/progress. This is follow-up work to completed Phases 09 and 10.
 
 ### Phase 11C. Verify the separate public GitHub credential
 

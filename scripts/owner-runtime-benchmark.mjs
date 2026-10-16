@@ -291,7 +291,7 @@ try {
   if (!remote) await start();
   await request({ name: "first-candidate" });
   const recoveryDraft = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     profile: { name: "عمر Example", bio: "", faceReveal: { enabled: false } },
     links: [],
     components: [],

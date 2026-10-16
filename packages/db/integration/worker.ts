@@ -1,4 +1,4 @@
-import { createEmptyDraft, draftSchema } from "@hasaweb/schema";
+import { createEmptyDraft, readDraft } from "@hasaweb/schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
@@ -7,6 +7,7 @@ import { ownerApi, privateJson } from "../src/owner-api";
 import { ownerRepositories, type SessionIdentity } from "../src/repositories";
 import { RESERVED_SUBDOMAINS } from "../src/reserved-subdomains";
 import * as schema from "../src/schema";
+import { runSetupChecks } from "./setup";
 
 function equal(actual: unknown, expected: unknown) {
   if (JSON.stringify(actual) !== JSON.stringify(expected))
@@ -109,7 +110,33 @@ export default {
         async () => {
           const rows = await db.select().from(schema.portfolio);
           equal(rows.length, 2);
-          for (const row of rows) draftSchema.parse(row.draft);
+          for (const row of rows) readDraft(row.draft);
+          const legacy = rows.find((row) => row.id === "local-portfolio");
+          equal(legacy?.draft.schemaVersion, 1);
+          equal(legacy?.draft.profile.name, "Migration content");
+          equal(legacy?.draft.samples, { "profile.name": true });
+          equal(legacy?.setupProgress, { schemaVersion: 1, step: "address" });
+          equal(legacy?.firstEditorEnteredAt, null);
+          equal(
+            (
+              await db
+                .select()
+                .from(schema.asset)
+                .where(eq(schema.asset.id, "migration-asset"))
+                .get()
+            )?.status,
+            "ready",
+          );
+          equal(
+            (
+              await db
+                .select()
+                .from(schema.subdomainClaim)
+                .where(eq(schema.subdomainClaim.name, "migration-site"))
+                .get()
+            )?.portfolioId,
+            "local-portfolio",
+          );
           equal(
             (
               await db
@@ -121,6 +148,7 @@ export default {
           );
         },
       );
+      await runSetupChecks(env.DB, check);
       await check("reserved table matches the platform constant", async () => {
         equal(
           (await db.select().from(schema.reservedSubdomain))
