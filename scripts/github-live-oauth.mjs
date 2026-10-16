@@ -108,17 +108,8 @@ export async function startLiveServer() {
   const config = parseEnv(
     await readFile(join(root, ".env.github-spike.local"), "utf8"),
   );
-  const keys = [
-    "GITHUB_SIGN_IN_CLIENT_ID",
-    "GITHUB_SIGN_IN_CLIENT_SECRET",
-    "GITHUB_ACTIVITY_CLIENT_ID",
-    "GITHUB_ACTIVITY_CLIENT_SECRET",
-    "GITHUB_TEST_USERNAME",
-  ];
-  if (keys.some((key) => !config[key]))
+  if (!config.GITHUB_TEST_USERNAME)
     throw new Error("missing_local_configuration");
-  if (config.GITHUB_SIGN_IN_CLIENT_ID === config.GITHUB_ACTIVITY_CLIENT_ID)
-    throw new Error("separate_oauth_apps_required");
   if (!/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(config.GITHUB_TEST_USERNAME))
     throw new Error("invalid_test_username");
   const platformToken =
@@ -126,6 +117,21 @@ export async function startLiveServer() {
     config.GITHUB_PLATFORM_TOKEN.trim() !== ""
       ? config.GITHUB_PLATFORM_TOKEN.trim()
       : null;
+  // The Phase 11C platform protocol needs no OAuth apps. Sign-in and activity
+  // flows are enabled only when their full credential set is present.
+  const signInConfigured = [
+    "GITHUB_SIGN_IN_CLIENT_ID",
+    "GITHUB_SIGN_IN_CLIENT_SECRET",
+    "GITHUB_ACTIVITY_CLIENT_ID",
+    "GITHUB_ACTIVITY_CLIENT_SECRET",
+  ].every((key) => config[key]);
+  if (
+    signInConfigured &&
+    config.GITHUB_SIGN_IN_CLIENT_ID === config.GITHUB_ACTIVITY_CLIENT_ID
+  )
+    throw new Error("separate_oauth_apps_required");
+  if (!signInConfigured && !platformToken)
+    throw new Error("missing_local_configuration");
   await mkdir(local, { recursive: true, mode: 0o700 });
   const require = createRequire(import.meta.url);
   const wranglerRequire = createRequire(
@@ -292,23 +298,26 @@ export async function startLiveServer() {
   }
   function page(session) {
     const platformSection = platformToken
-      ? `<h2>5. Public baseline with the separate platform credential (Phase 11C)</h2>
+      ? `<h2>Public baseline with the separate platform credential (Phase 11C)</h2>
       <p>This step uses only the platform credential and needs no sign-in. Set the contribution account's GitHub visibility first, then fetch. Expected public counts are compared by you, not printed here.</p>
       ${form(session, "/platform/probe", "Fetch public baseline", '<p><label>Current contribution visibility: <select name="visibility"><option value="off">Private contributions hidden</option><option value="on">Private contributions shown</option></select></label></p>')}
       ${form(session, "/platform/failure", "Test invalid platform credential handling")}
       ${session.platformSummary ? `<details open><summary>Last platform baseline observation</summary><pre>${escapeHtml(JSON.stringify(session.platformSummary, null, 2))}</pre></details>` : ""}
       ${session.platformFailureSummary ? `<details open><summary>Last platform failure probe</summary><pre>${escapeHtml(JSON.stringify(session.platformFailureSummary, null, 2))}</pre></details>` : ""}`
-      : `<h2>5. Public baseline with the separate platform credential (Phase 11C)</h2>
+      : `<h2>Public baseline with the separate platform credential (Phase 11C)</h2>
       <p><strong>GITHUB_PLATFORM_TOKEN is not configured.</strong> Add the separate zero-scope classic PAT to .env.github-spike.local to run the platform baseline protocol.</p>`;
-    return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>GitHub permission test</title><body>
-      <h1>GitHub permission test</h1><p>Local S-6 test for ${escapeHtml(config.GITHUB_TEST_USERNAME)}. Tokens remain encrypted in server memory and disappear when this process stops.</p>
-      <p>${escapeHtml(session.message ?? "Start by authorizing sign-in.")}</p>
-      ${form(session, "/authorize/signin", "1. Authorize sign-in, user:email")}
+    const signInSection = signInConfigured
+      ? `${form(session, "/authorize/signin", "1. Authorize sign-in, user:email")}
       ${session.signin ? form(session, "/authorize/activity", "2. Authorize private activity, read:user", '<p><label><input type="checkbox" name="consent" value="yes" required> I authorize this matching account and understand visitors would see anonymized contribution counts.</label></p>') : ""}
       ${session.signin ? form(session, "/probe", "3. Fetch and compare contribution calendars") : ""}
       ${session.activity ? form(session, "/disconnect", "4. Disconnect activity and revoke the activity test app grant") : ""}
       <p>To test external revocation, remove only the activity app at <a href="https://github.com/settings/applications" rel="noreferrer">GitHub Authorized OAuth Apps</a>, then fetch again.</p>
-      <p>Private contribution visibility on GitHub can affect these results. Change it only yourself, then fetch again.</p>
+      <p>Private contribution visibility on GitHub can affect these results. Change it only yourself, then fetch again.</p>`
+      : `<h2>Sign-in and activity flows</h2><p>Not configured in this environment. The platform baseline steps below use only <code>GITHUB_PLATFORM_TOKEN</code>.</p>`;
+    return `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>GitHub permission test</title><body>
+      <h1>GitHub permission test</h1><p>Local S-6/11C test for ${escapeHtml(config.GITHUB_TEST_USERNAME)}. Tokens remain in server memory and disappear when this process stops.</p>
+      <p>${escapeHtml(session.message ?? (signInConfigured ? "Start by authorizing sign-in, or fetch the platform public baseline." : "Start with the platform public baseline."))}</p>
+      ${signInSection}
       ${platformSection}
       <pre>${escapeHtml(JSON.stringify(session.summary ?? {}, null, 2))}</pre>
       ${session.calendar ? `<details><summary>Inspect anonymized authorized calendar</summary><pre>${escapeHtml(JSON.stringify(session.calendar, null, 2))}</pre></details>` : ""}
@@ -668,6 +677,7 @@ export async function startLiveServer() {
           const kind = url.pathname.slice("/authorize/".length);
           if (!Object.hasOwn(callbackPaths, kind))
             throw new Error("unknown_provider_flow");
+          if (!signInConfigured) throw new Error("signin_not_configured");
           if (
             kind === "activity" &&
             (!session.signin || fields.get("consent") !== "yes")
@@ -781,6 +791,7 @@ export async function startLiveServer() {
         "calendar_request_failed",
         "identity_request_failed",
         "platform_credential_missing",
+        "signin_not_configured",
       ].includes(error.message)
         ? error.message
         : "request_failed";
