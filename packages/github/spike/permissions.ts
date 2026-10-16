@@ -29,15 +29,26 @@ export type State = {
   error: string | null;
 };
 type Failure = "reconnect" | "retry" | "invalid";
+export type FailureReason =
+  | "credential"
+  | "rate"
+  | "server"
+  | "network"
+  | "scope"
+  | "identity"
+  | "payload";
 export class ProviderError extends Error {
-  constructor(public readonly kind: Failure) {
+  constructor(
+    public readonly kind: Failure,
+    public readonly reason?: FailureReason,
+  ) {
     super(kind);
   }
 }
 export type Transport = (url: string, init: RequestInit) => Promise<Response>;
 const record = (value: unknown): Record<string, unknown> => {
   if (!value || typeof value !== "object" || Array.isArray(value))
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "payload");
   return value as Record<string, unknown>;
 };
 function identity(value: unknown): Identity {
@@ -48,7 +59,7 @@ function identity(value: unknown): Identity {
     typeof data.login !== "string" ||
     !/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(data.login)
   )
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "payload");
   return { id: data.id, login: data.login };
 }
 export function matches(a: Identity, b: Identity) {
@@ -83,34 +94,38 @@ export async function fetchCalendar(
       }),
     });
   } catch {
-    throw new ProviderError("retry");
+    throw new ProviderError("retry", "network");
   }
-  if (response.status === 401) throw new ProviderError("reconnect");
+  if (response.status === 401)
+    throw new ProviderError("reconnect", "credential");
   // A 403 may be a rate limit or organization policy, not a revoked token.
-  if (!response.ok) throw new ProviderError("retry");
+  if (!response.ok)
+    throw response.status === 403 || response.status === 429
+      ? new ProviderError("retry", "rate")
+      : new ProviderError("retry", "server");
   if (
     privateActivity &&
     !hasActivityScope(response.headers.get("X-OAuth-Scopes") ?? "")
   )
-    throw new ProviderError("reconnect");
+    throw new ProviderError("reconnect", "scope");
   if (!privateActivity && response.headers.get("X-OAuth-Scopes")?.trim() !== "")
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "scope");
   let body: Record<string, unknown>;
   try {
     body = record(await response.json());
   } catch {
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "payload");
   }
-  if (body.errors) throw new ProviderError("retry");
+  if (body.errors) throw new ProviderError("retry", "server");
   const data = record(body.data);
   const user = record(data.user);
   if (!privateActivity && identity(data.viewer).id === selected.id)
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "identity");
   if (
     !matches(identity(user), selected) ||
     (privateActivity && !matches(identity(data.viewer), selected))
   )
-    throw new ProviderError("reconnect");
+    throw new ProviderError("reconnect", "identity");
   const collection = record(user.contributionsCollection);
   const restricted = collection.restrictedContributionsCount;
   if (
@@ -118,18 +133,18 @@ export async function fetchCalendar(
     !Number.isSafeInteger(restricted) ||
     restricted < 0
   )
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "payload");
   // No per-day private subtraction is possible from this aggregate alone.
   if (!privateActivity && restricted > 0) return null;
   const weeks = record(collection.contributionCalendar).weeks;
   if (!Array.isArray(weeks) || weeks.length < 1 || weeks.length > 54)
-    throw new ProviderError("invalid");
+    throw new ProviderError("invalid", "payload");
   const days: Day[] = [];
   const seen = new Set<string>();
   for (const week of weeks) {
     const entries = record(week).contributionDays;
     if (!Array.isArray(entries) || entries.length < 1 || entries.length > 7)
-      throw new ProviderError("invalid");
+      throw new ProviderError("invalid", "payload");
     for (const entry of entries) {
       const day = record(entry);
       if (
@@ -144,12 +159,73 @@ export async function fetchCalendar(
         !Number.isSafeInteger(day.contributionCount) ||
         day.contributionCount < 0
       )
-        throw new ProviderError("invalid");
+        throw new ProviderError("invalid", "payload");
       seen.add(day.date);
       days.push({ date: day.date, count: day.contributionCount });
     }
   }
   return { days: days.sort((a, b) => a.date.localeCompare(b.date)), fetchedAt };
+}
+
+/**
+ * Classified public baseline for the separate no-scope platform credential.
+ * Dependent graph work (Phases 11D and 40-42) must treat every outcome as
+ * platform-level, never as an owner sign-in/activity state:
+ * - `available`: serve the public baseline and its fetch date.
+ * - `unavailable`: the baseline contains restricted contributions; serve a
+ *   clear unavailable state and never add or subtract calendars.
+ * - `retry`: platform credential rotation, rate limits, server failures, and
+ *   network failures. Retry with backoff, retain the last good baseline or
+ *   unavailable, and never ask the owner to reconnect.
+ * - `invalid`: misconfigured or unsupported provider behavior. Fail closed,
+ *   serve no baseline from this credential, and alert the operator.
+ */
+export type PublicBaseline =
+  | { status: "available"; calendar: Calendar }
+  | { status: "unavailable"; reason: "restricted" }
+  | { status: "retry"; reason: "credential" | "rate" | "server" | "network" }
+  | { status: "invalid"; reason: "scope" | "identity" | "payload" };
+export async function fetchPublicBaseline(
+  transport: Transport,
+  token: string,
+  selected: Identity,
+  range: { from: string; to: string },
+  fetchedAt: string,
+): Promise<PublicBaseline> {
+  try {
+    const calendar = await fetchCalendar(
+      transport,
+      token,
+      selected,
+      range,
+      false,
+      fetchedAt,
+    );
+    return calendar
+      ? { status: "available", calendar }
+      : { status: "unavailable", reason: "restricted" };
+  } catch (error) {
+    if (!(error instanceof ProviderError)) throw error;
+    if (error.kind === "retry")
+      return {
+        status: "retry",
+        reason:
+          error.reason === "rate" || error.reason === "network"
+            ? error.reason
+            : "server",
+      };
+    if (error.kind === "reconnect")
+      return error.reason === "credential"
+        ? { status: "retry", reason: "credential" }
+        : { status: "invalid", reason: "identity" };
+    return {
+      status: "invalid",
+      reason:
+        error.reason === "scope" || error.reason === "identity"
+          ? error.reason
+          : "payload",
+    };
+  }
 }
 export function enable(
   state: State,
