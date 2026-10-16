@@ -1,10 +1,11 @@
 # MVP implementation roadmap
 
-Build the full MVP in the order below. Each numbered phase is a small, reviewable increment with a concrete completion check. All phases start unchecked; this document plans work and does not claim that the app already passes any checks. Split a phase further if it cannot be reviewed as one focused change.
+Build the full MVP in the written order below. Existing phase IDs remain stable for references; lettered phases are explicit additions. Phases 01 through 11 retain their historical completion and evidence. All new and revised pending work remains unchecked. Each phase is a small, reviewable increment with a concrete completion check; split it further if it cannot be reviewed as one focused change.
 
 ## Sources and scope
 
 - [product.md](product.md) defines the required behavior and MVP scope.
+- [onboarding.md](onboarding.md) records the October 16, 2026 agreement: mandatory Address/Profile/Links, optional Skills/Projects/GitHub public/private setup, private Review, and permanent first editor handoff.
 - [acceptance-criteria.md](acceptance-criteria.md) defines pass/fail checks. References such as AC 15 refer to its matching feature section.
 - [architecture.md](architecture.md) defines the implementation approach and confirmed decisions. Its section 13 resolves verification settings that the acceptance document originally left open.
 - [rough-idea.md](rough-idea.md) explains the original concept. Use it for context; the agreed product scope controls what ships.
@@ -17,7 +18,7 @@ Follow the confirmed Next.js/OpenNext, Cloudflare D1/R2, three-Worker architectu
 
 ## How to complete a phase
 
-Before starting feature work, create a branch named `Feature/Feature-name`, replacing `Feature` with the feature or work group's name and `Feature-name` with the specific feature name.
+Before starting feature work, create a branch named `<type>/<short-description>` using the types and lowercase kebab-case convention in [AGENTS.md](../AGENTS.md), such as `feat/initial-setup` or `docs/onboarding-plan`. Leave existing shared branch names unchanged.
 
 Create a directory at `specs/YYYY-MM-DD-feature-name/` for that work, using the start date and feature name. Add these files before implementation:
 
@@ -25,9 +26,9 @@ Create a directory at `specs/YYYY-MM-DD-feature-name/` for that work, using the 
 - `requirements.md` records the scope, decisions, and context.
 - `acceptance-criteria.md` defines how to verify that the implementation succeeded and is ready to merge.
 
-Work sequentially unless a phase explicitly identifies an independent dependency. Read the relevant source sections before implementing; the short scopes below do not replace their detailed requirements. Complete the phase's check and record evidence against the acceptance criteria before checking its box. Run relevant failure and access-control checks as each capability arrives, then run the complete acceptance review before launch.
+Work sequentially unless a phase explicitly identifies an independent dependency. Read the relevant source sections before implementing; the short scopes below do not replace their detailed requirements. Complete the phase's check and record evidence against the acceptance criteria, then ask the owner whether to check it off. Check it only after explicit owner approval of implementation completion. Approval of this planning update does not complete any implementation phase. Run relevant failure and access-control checks as each capability arrives, then run the complete acceptance review before launch.
 
-Use the confirmed settings in [architecture section 13](architecture.md#13-testing-strategy-mapped-to-acceptance-criteriamd), including upload byte limits, contrast standard, browser/viewport coverage, GitHub refresh intervals, contact budgets, retry deadlines, and provider fixtures. Do not invent replacement values. The theme/font/decoration catalog still needs a design decision and approval before appearance verification and launch.
+Use the confirmed settings in [architecture section 13](architecture.md#13-testing-strategy-mapped-to-acceptance-criteriamd), including upload byte limits, contrast standard, browser/viewport coverage, GitHub refresh intervals, contact budgets, retry deadlines, and provider fixtures. Do not invent replacement values. The theme/font/decoration catalog still needs its separate design decision and approval. Phase 11E extracts that existing decision from pending appearance work so draft defaults are approved before provisioning and dependent validation. It does not add an onboarding appearance step.
 
 ## Foundation and feasibility
 
@@ -100,98 +101,151 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 - October 15, 2026: [implementation, automated checks and real-provider evidence](../specs/2026-10-15-sign-in/results.md) are recorded. All 21 workerd/D1 auth groups, nine Chromium journey checks, 143 unit tests, lint, typechecks, builds, 31 persistence groups and runtime smoke checks pass. The owner completed real GitHub/Google sign-in, returning sign-in, sign-out, Google cancellation and retry locally; D1 confirms the same verified account without duplicates. Production callback/TLS and CPU checks remain for deployment verification. The owner approved Phase 11 completion on October 15, 2026.
 - [x] Complete when either provider opens the correct account, signed-out editing fails, and authentication recovery preserves account identity. Password and email-only sign-in are absent.
 
-### Phase 12. Start the single sample portfolio
+### Phase 11A. Verify the revised owner API runtime
 
-- Provision the preselected template with clearly marked sample profile and project content. Track required sample replacement and explicit provider-avatar acceptance.
-- [ ] Complete when a new owner gets exactly one recoverable draft, with no template picker, and samples cannot satisfy required publication fields.
+- Dependencies: completed Phases 01, 03, 05, 10, 11 and the recorded S-2 revision.
+- Implement and measure the thin Hono/jobs owner-API approach through internal bindings with the real session/deletion checks, representative draft validation, and the 1 MiB boundary. Include the planned content/progress write path; keep source identities scoped to each request.
+- [ ] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
 
-### Phase 13. Implement revision-aware draft APIs
+### Phase 11B. Extend contracts and persistence for initial setup
 
-- Add validated draft reads and saves using the stored revision and atomic compare-and-swap. Enforce the architecture's draft-size cap and ownership checks.
-- [ ] Complete when saves return confirmed revisions and a stale save returns a conflict without overwriting the newer draft. Draft APIs never change the published version.
+- Dependencies: 09, 10, 11A and the agreed onboarding specification.
+- Add a versioned non-unique `requestedSubdomain` draft field, separate private progress, and a permanent first-editor-entry milestone with revision-aware owner-scoped storage. Preserve content/sample-marker compatibility and exclude setup metadata from public snapshots. Do not put an unclaimed candidate in the current unique claimed-subdomain column.
+- [ ] Complete when migrations preserve version 1 fixtures/content, two owners can save the same candidate without a claim, repeated creation retains one portfolio, and stale updates/another owner cannot reset milestones or overwrite content/progress. This is follow-up work to completed Phases 09 and 10.
 
-### Phase 14. Add autosave and local recovery
+### Phase 11C. Verify the separate public GitHub credential
 
-- Save content, order, appearance, and completed asset references automatically. Show Saving, Saved, and Couldn't save with Retry; retain recoverable unsaved edits locally.
-- [ ] Complete when reopening after Saved restores exact values and controlled interruptions preserve unsaved input for successful retry.
+- Dependencies: 06 and its recorded outstanding platform-credential check.
+- Close S-6's untested live public baseline using a separate platform-only credential and controlled accounts with public/private visibility cases. Do not substitute a sign-in token that can expose authorized activity.
+- [ ] Complete when live evidence establishes the safe public contribution baseline and a documented failure/retry setup for dependent graph work. Preserve Phase 06's historical completion and its original limitations.
+
+### Phase 11D. Reconcile GitHub storage and refresh contracts
+
+- Dependencies: 09, 10, 11A, 11C and S-6's tested projection/generation rules.
+- Add connection generations and conditional writes for refresh successes and errors. Reconcile `privateCounts` with the complete authorized calendar; select public or authorized data without addition/subtraction. Gate public output by matching published configuration and current authorization. Define encrypted retryable activity-grant cleanup and serialize grant-wide revocation with new consent for the same app/account, so stale cleanup cannot revoke a fresh grant.
+- [ ] Complete when migrations/fixtures prove non-additive counts, no pre-Publish private exposure, and stale jobs cannot restore withdrawn data or invalidate newer grants. Include remove, failed remote cleanup, attempted reconnect, and delayed cleanup retry. Unknown legacy authorized caches require safe refetch rather than reinterpretation as complete calendars. Production graph/OAuth UI remains Phases 40–42.
+
+### Phase 11E. Approve catalog identifiers and portfolio defaults
+
+- Dependencies: architecture Q-3, the existing read-only Figma direction, and the product's single-template/three-theme scope.
+- Perform the existing catalog decision previously grouped into Phases 35 and 37: obtain approval of themes, curated fonts, decoration assets, and the configured default theme/font/mode used by new drafts. Record identifiers/assets for later controls and verification. This is an extracted prerequisite, not a new theme picker or an approved catalog by implication.
+- [ ] Complete when the owner has approved the catalog and the default identifiers can be used by provisioning, the basic renderer, and validation. Phases 35 and 37 implement their respective controls using this decision.
+
+### Phase 12. Provision the single private starting portfolio
+
+- Dependencies: 11B, 11E and completed authentication.
+- Provision the preselected template and approved defaults once, with empty owner fields, no inserted sample profile/project, and recoverable private setup metadata. Keep provider identity separate until reviewed/accepted. Initialization must never overwrite an existing draft.
+- [ ] Complete when new/repeated/concurrent authenticated setup returns exactly one recoverable private draft, no template picker or invented content, and explicit provider-avatar acceptance remains required.
+
+### Phase 13. Implement revision-aware draft and progress APIs
+
+- Dependencies: 11A, 11B, 12.
+- Add validated reads/saves with stored revision and atomic compare-and-swap. Save content and private progress consistently, enforce the draft-size cap and ownership checks, and protect the permanent milestone against stale updates.
+- [ ] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address.
+
+### Phase 14. Add shared autosave and local recovery
+
+- Dependencies: 13.
+- Share autosave for onboarding/editor content, order, appearance, ready asset references, and setup progress. Show Saving, Saved, and Couldn't save with Retry. Preserve invalid unfinished input locally without claiming it is saved across devices; make applicable recovery available after handoff.
+- [ ] Complete when reopening after Saved restores exact valid values/progress across sessions, same-browser invalid input survives controlled interruption, recovery stays owner/portfolio-scoped, and failures never report false Saved.
 
 ### Phase 15. Handle conflicting edits and expired sessions
 
-- Offer Load newer version or Keep my edits for review after a conflict. Reauthenticate after session expiry without discarding recoverable edits.
-- [ ] Complete when two tabs/devices cannot silently overwrite each other and a recovered session can save the preserved draft.
+- Dependencies: 14 and existing auth recovery.
+- Offer Load newer version or Keep my edits for review for setup/editor conflicts. Reauthenticate without discarding recoverable input and return to the controlled pending flow. Prevent a stale setup tab from resetting a later editor-entry milestone.
+- [ ] Complete when two tabs/devices cannot silently overwrite content/progress, reauthentication saves the preserved draft, and post-handoff setup tabs cannot reinitialize the portfolio.
 
-## The minimum publishing journey
+## Shared editor and publication foundations
 
-This group delivers the first complete profile-only publishing journey. It is an intermediate milestone; the remaining phases are required for the full MVP.
+Build the shared primitives before onboarding adapters. Earlier editor/publication checks use explicit owner fixtures representing a successful first-editor handoff; they do not claim that the new signup journey is usable yet. The complete first-user journey becomes testable in Phases 42E–42F after all required setup and optional graph capabilities exist. No partially usable mandatory signup flow is released before then.
 
 ### Phase 16. Build the shared portfolio renderer
 
-- Render the fixed profile and component order through shared markup-only components. Establish responsive styling, security headers, and the small public interaction script used by preview and snapshots.
-- [ ] Complete when the same fixture renders consistently in browser preview and publish output, with safe links, readable layout, keyboard controls, and unavailable-page states.
+- Dependencies: 09, 11E, 12 and the recorded rendering constraints.
+- Render the fixed profile and component order through shared markup-only components with the approved default styling/font. Establish responsive styling, security headers, and the small public interaction script used by previews and snapshots. Permit honest private rendering of incomplete drafts.
+- [ ] Complete when the same fixture renders consistently in private browser preview and publish output with safe links, readable layout, keyboard controls, and unavailable/incomplete states. Onboarding Review later reuses this renderer.
 
 ### Phase 17. Build the editor and live preview
 
-- Add the content/customization panel, component selection, and live preview. Support desktop/mobile editing and viewport-specific iframe preview without server-rendering drafts.
-- [ ] Complete when selecting a component opens its controls and edits appear immediately at either preview width. Draft preview messages and routes remain owner-only.
+- Dependencies: 13–16.
+- Add the content/customization panel, component selection, and live preview. Support desktop/mobile editing and viewport-specific iframe preview without server-rendering drafts. The editor must open the existing prepared draft without applying initialization again.
+- [ ] Complete when selecting a component opens its controls and edits appear immediately at either preview width. Private preview routes/messages stay owner-only. Use handoff fixtures until setup routing is activated in 42E.
 
 ### Phase 18. Implement private upload storage
 
-- Accept JPEG, PNG, WebP, and PDF under the confirmed limits. Check file signatures and size on the server, track pending/ready/failed states, and serve drafts only through owner-authorized routes.
-- [ ] Complete when exact-limit files pass, oversized or disguised files fail, and signed-out visitors and other owners cannot fetch draft assets.
+- Dependencies: 10, 11A, 13.
+- Accept JPEG, PNG, WebP, and PDF under the confirmed limits. Check signatures and size server-side, track pending/ready/failed states, and serve drafts only through owner-authorized routes usable during setup and editing.
+- [ ] Complete when exact-limit files pass, oversized/disguised files fail, and visitors/other owners cannot fetch assets. Pending/failed/foreign assets cannot satisfy required setup or publication.
 
-### Phase 19. Add upload controls and image cropping
+### Phase 19. Add shared upload controls and image cropping
 
-- Provide upload progress, crop, replace, remove, descriptions, and retry controls. Re-encode images as planned and reference a replacement only after successful upload.
-- [ ] Complete when saved crops match preview, failed replacements retain the previous asset, and interrupted uploads can be retried without changing published files.
+- Dependencies: 14, 17, 18.
+- Provide upload progress, descriptions, retry, crop/replace/remove, and shared avatar/banner dialogs with repositioning, zoom, Reset, Apply crop, and Cancel. Re-encode locally and reference replacements only after readiness. Store only finished crops, with original-file reselection required to recover excluded regions after returning.
+- [ ] Complete when preview matches saved crops, profile controls are usable by keyboard/mobile, cancelled/failed replacements preserve the previous asset, and interruption/retry affects no published file. Reset must not promise durable original retention.
 
-### Phase 20. Edit the required profile
+### Phase 20. Edit the required profile and accept provider suggestions
 
-- Add name, bio, optional location, required avatar/banner, and explicit acceptance of an imported avatar. Distinguish sample images and text from owner-selected values.
-- [ ] Complete when required values can be replaced and saved, missing values identify their controls, and the fixed profile renders the owner's exact input.
+- Dependencies: 17–19 and Phase 11's existing authenticated session/owner boundary.
+- Add name, bio, optional editor location, required avatar/banner, and explicit provider-name/photo acceptance. Implement new owner-authorized provider name/photo/email suggestion retrieval and a validated private photo import path using the same crop/upload/readiness checks. Phase 11 did not implement these suggestion/import capabilities. New profiles use no sample identity; compatible older samples still cannot satisfy requirements.
+- [ ] Complete when owner-confirmed values/images can be entered, cropped, saved, replaced, or removed and rendered exactly. Provider URLs alone are not assets; failed imports offer upload/retry without false acceptance. These controls later supply the combined onboarding Profile screen.
 
 ### Phase 21. Manage social and contact identity
 
-- Add, edit, remove, and order labeled links with valid destinations or email addresses. Store profile and social-component placement choices against the same link entry.
-- [ ] Complete when a valid email or supported profile link satisfies the profile requirement, invalid links fail, and a contact form alone cannot satisfy it. Explain that displayed email links are public.
+- Dependencies: 13–17, 20.
+- Add, edit, remove, and order labeled links with valid HTTP(S) destinations or email addresses. Store profile/social-component placement against one entry. Suggest account email only for deliberate public acceptance; explain its visibility.
+- [ ] Complete when one valid profile-displayed email/social/website link satisfies setup/profile requirements, invalid links fail, and a contact form alone cannot substitute. The same controls/data are reused in onboarding.
 
-### Phase 22. Implement subdomain selection
+### Phase 22. Implement unreserved address selection
 
-- Add format validation, reserved-name checks, availability feedback, and atomic claim storage. Apply the permanent-reservation rules from the architecture.
-- [ ] Complete when boundary and reserved-name tests pass, availability is presented without a claim guarantee, and the address becomes fixed only after successful first publication.
+- Dependencies: 11B, 13–15, 17 and the existing reserved-name/claim contracts.
+- Add format/reserved-name/current-availability validation and save the non-unique candidate for onboarding/editor use. Explain that selection is not reservation and allow editor changes until first publication. Atomic claim mutation belongs to Phase 25.
+- [ ] Complete when boundary/reserved-name checks pass, two owners can select the same candidate without a claim, and later conflicts are actionable. The address becomes fixed only after successful first publication.
+
+### Phase 22A. Add setup-aware account entry and handoff services
+
+- Dependencies: 11B, 12–22 and completed Phase 11's auth boundaries.
+- Implement controlled post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in`, direct editor navigation, and recovery. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Setup saves/uploads/private previews must remain accessible without an editor milestone.
+- [ ] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
 
 ### Phase 23. Build publication validation and checklist
 
-- Share authoritative validation between the server and editor. Check owner-entered profile data, valid links, ready assets, sample omission, subdomain rules, and the setup of included components.
-- [ ] Complete when each issue opens its relevant control, untouched optional samples are omitted, and edited samples use normal component requirements. Extend these checks in each later component phase.
+- Dependencies: 11E, 13, 18–22A and the current component contracts.
+- Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, catalog membership, compatible sample omission, selected address/claim rules, and included components. Resolve a taken onboarding candidate in the editor rather than restarting setup.
+- [ ] Complete when each issue opens its control, untouched compatible samples are omitted, and owner-edited/incomplete optional content uses normal validation. Extend checks during later component phases. Setup completion alone must never count as publication readiness.
 
 ### Phase 24. Prepare immutable publication versions
 
-- Flush autosave and capture the exact saved revision. Snapshot included content, copy only reachable assets, render pages in bounded workflow steps, and retain content-hashed platform assets.
-- [ ] Complete when a candidate version has a complete manifest and does not change the live pointer. Injected preparation failures preserve the previous public version and clean up uncommitted public assets.
+- Dependencies: 02, 08, 11A, 16, 18, 23 and successful measurement of the S-8 Queue/D1 batching fallback with the full shared quota/CPU model. Also validate the S-9 browser/query cache requirements before dependent withdrawal behavior.
+- Flush autosave and capture the exact saved revision. Snapshot only public portfolio content, exclude private setup/progress metadata, copy only reachable assets, and render using the measured bounded task dispatch. Retain content-hashed platform assets.
+- [ ] Complete when a candidate version has a complete manifest without changing the live pointer, and injected failures preserve the old public version and clean uncommitted public assets. Old recorded fallback decisions alone do not prove the implementation feasible.
 
 ### Phase 25. Commit and serve a complete version
 
-- Atomically claim the first subdomain and switch the published-version pointer. Build thin public serving for approved hosts, pages, assets, and unavailable states.
-- [ ] Complete when competing first publications produce one claimant, failed commits leave no successful claim, and requests serve complete old or new versions. Draft routes and assets stay inaccessible to visitors.
+- Dependencies: 04, 22–24 and the permanently reserved subdomain rules.
+- Atomically claim the selected candidate on first Publish and switch the published-version pointer. Build thin public serving for approved hosts, pages, assets, and unavailable states. Keep setup/progress private and exclude unvalidated private graph access from public output.
+- [ ] Complete when concurrent first publications produce one claimant, failed commits create no successful claim, and requests serve complete old or new versions. Another owner saving the same candidate earlier confers no ownership; draft routes/assets remain inaccessible.
 
-### Phase 26. Finish first publication and republishing
+### Phase 26. Finish publication and republishing primitives
 
-- Add Publish progress, actionable errors, Retry, and the resulting URL's Open and Copy controls. Remove withdrawn public assets and purge their caches after a successful version change.
-- [ ] Complete when a profile-only owner can publish, return to a saved draft, and republish at the same URL. Unsaved edits, unfinished uploads, and publication failures cannot produce a false success or corrupt the live site.
+- Dependencies: 14–15, 23–25 and verified S-9 withdrawal/cache policy.
+- Add Publish progress, actionable errors, Retry, and public URL Open/Copy. Remove withdrawn public assets and purge caches after successful version changes. Recheck candidate availability and permit a replacement before first publication without rerunning setup.
+- [ ] Complete when a profile-only handoff fixture can publish, reopen its saved editor draft, and republish at the same URL. Unsaved edits, unfinished uploads, and failures cannot report false success or corrupt the live site. The real signup-to-publication journey is verified in 42F and 54.
 
 ## Optional content and public pages
 
-Add each capability through the shared registry, draft saving, validation, preview, and publishing path. None may update public content merely because the owner edits or removes it.
+Add each capability through the shared registry, draft saving, validation, preview, and publishing path. Draft component changes become public on Publish. Confirmed GitHub graph removal also withdraws private access/data immediately under the existing live-data exception; the public component itself is removed on Publish.
 
 ### Phase 27. Add the component picker and ordering controls
 
-- Explain each component's requirements, enforce instance limits, and support drag and drop plus Move up/Move down. Confirm removal of entered content and provide entry-ordering controls.
-- [ ] Complete when the profile remains first, multiple text sections work, singleton duplicates fail, and keyboard/mobile ordering and cancelled deletion preserve the intended draft.
+- Dependencies: 17, 23–26.
+- Explain each component's requirements, enforce instance limits, and support drag and drop plus Move up/Move down. Confirm removal of entered content and provide entry ordering. Build controls reusable by guided content adapters; private GitHub withdrawal is integrated in 41.
+- [ ] Complete when profile stays first, multiple text sections work, singleton duplicates fail, and keyboard/mobile ordering and cancelled deletion preserve the intended draft.
 
 ### Phase 28. Add project cards
 
-- Implement manual project creation, editing, deletion, and ordering with title, summary, image, technologies, individual contribution, and optional code/demo links.
-- [ ] Complete when title/summary validation works, omitted optional fields create no empty controls, and published cards match the chosen content and order. The initial sample project remains optional.
+- Dependencies: 19, 23–27.
+- Implement manual project creation/editing/deletion/ordering with title, summary, image, technologies, individual contribution, and optional code/demo links. Reuse controls and stable entry IDs during onboarding. New owners receive no sample project.
+- [ ] Complete when title/summary validation works, partial owner entries remain recoverable and block publication until repaired/removed, omitted optional fields create no empty controls, and published cards match chosen content/order.
 
 ### Phase 29. Add safe rich text and text sections
 
@@ -205,8 +259,9 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ### Phase 31. Add skills and technology categories
 
-- Implement one skills component with manually entered names, optional named categories, and ordering for entries and categories.
-- [ ] Complete when grouped and uncategorized entries render in the saved order and no proficiency ratings or automatic extraction appear.
+- Dependencies: 23–27.
+- Implement one skills component with manually entered names, optional named categories, and entry/category ordering. Onboarding reuses simple name entry; category controls stay in the editor.
+- [ ] Complete when grouped/uncategorized entries render in saved order and no ratings or automatic extraction appear. Verify the empty-step-to-no-component adapter behavior later in 42C rather than making this increment depend on onboarding screens.
 
 ### Phase 32. Add work experience
 
@@ -225,10 +280,11 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ## Appearance and complete preview
 
-### Phase 35. Choose the catalog and add preset styling
+### Phase 35. Add preset appearance controls across pages
 
-- Complete the later design task and obtain the catalog approval recorded in architecture Q-3. Add exactly three preset themes, curated self-hosted fonts, and initial light/dark/system mode.
-- [ ] Complete when approved presets and fonts apply across portfolio, case-study, and resume pages without changing content, order, or template. Visitor mode switching works on every page type.
+- Dependencies: the approved catalog/defaults from 11E, renderer 16, and completed portfolio/case-study/resume capabilities through 34.
+- Reuse the catalog decision rather than repeat it. Add exactly three preset-theme controls, curated self-hosted fonts, and initial light/dark/system mode across page types. The existing default styles support setup without adding an appearance step.
+- [ ] Complete when approved presets/fonts apply across all pages without changing content, order, or template, and visitor mode switching works on each page type.
 
 ### Phase 36. Generate coordinated custom colors
 
@@ -237,8 +293,9 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ### Phase 37. Add decorations and Face Reveal setup
 
-- Add the approved decoration gallery and optional Face Reveal toggle with a second image's upload, crop, replace, remove, and description controls. Explain that publishing makes that photo publicly accessible.
-- [ ] Complete when Face Reveal defaults off, enabled incomplete uploads block publication, and disabling retains a successful second image privately. Custom decoration uploads remain absent.
+- Dependencies: 11E, 19, 35–36 and the existing Face Reveal publication rules.
+- Reuse the approved decoration gallery and add editor controls plus the optional Face Reveal second-image toggle/upload/crop/replace/remove/description. Explain public accessibility of the published photo. Keep these controls out of onboarding.
+- [ ] Complete when Face Reveal defaults off, enabled incomplete uploads block publication, disabling retains a ready second photo privately, and custom decoration uploads remain absent.
 
 ### Phase 38. Add Face Reveal interaction and withdrawal
 
@@ -254,18 +311,64 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ### Phase 40. Add public GitHub graph setup
 
-- Add one graph component, detected or manually entered username, profile link, connection/fetch status, Retry, and successful contribution rendering.
-- [ ] Complete when zero contributions are valid but missing/failed fetches block new or changed graph publication. Google owners can configure a username, and graph failures do not break the portfolio.
+- Dependencies: 06, 11C–11D, 13–17, 23–27 and the shared preview/serving path.
+- Implement the production graph service, safe public fetch, detected/manual username, profile link, status, Retry, and rendering. Both signup providers explicitly add a graph. Provide owner-authorized draft data and public endpoints that use the matching published configuration.
+- [ ] Complete when zero contributions succeed, missing/failed initial fetches block publication of that graph but do not break the draft/portfolio, Google owners can use a username without sign-in linking, and tested public responses contain no authorized private calendar. Onboarding reuses this setup.
 
-### Phase 41. Add private activity and revoke handling
+### Phase 41. Add private activity, consent recovery, and withdrawal
 
-- Require explicit matching-account authorization, encrypt tokens, and expose only anonymized counts. Disable private activity on username mismatch; remove private access/data on disconnect or detected revocation.
-- [ ] Complete when no private repository details enter public responses and private counts disappear without Publish. Available public-only data or an unavailable state replaces them, including after cache purge.
+- Dependencies: 06, 11D, 15, 40 and the existing cache-purge boundary.
+- Implement separate `read:user` activity consent for either signup provider with state/PKCE/owner-session/identity checks. Encrypt tokens, select the authorized calendar safely, require a successful fetch, and expose no private repository details. Add Retry/public-only/later-repair states and reusable controlled consent returns.
+- Implement immediate local/cache withdrawal and durable remote revocation on disconnect, mismatch/revocation, or confirmed graph removal. Advance generation and reject stale results/errors. Coordinate grant-wide cleanup and new private consent for the same app/account; do not start new consent while prior cleanup is pending/in flight. Graph removal explains withdrawal and preserves GitHub sign-in; Skip preserves content/grants. Phase 47 later reuses this cleanup.
+- [ ] Complete when public/private preview and published output obey consent and Publish boundaries, failure/mismatch never silently changes the selected user, incomplete setup is repairable in the editor, and withdrawal removes private data without Publish despite racing jobs or failed remote revocation. A delayed old cleanup must not revoke newly authorized access; pending private cleanup cannot block public-only setup or editor entry.
 
 ### Phase 42. Refresh GitHub activity independently
 
-- Add the confirmed six-hour refresh-on-visit TTL and daily private-activity sweep, with deduplicated bounded work and recovery of stuck jobs.
-- [ ] Complete when graphs update without Publish, failures retain the last good graph/date, and Retry/Reconnect states work. Revocation fixtures confirm removal on the next refresh or sweep.
+- Dependencies: 40–41 and the shared job/runtime/quota checks.
+- Add six-hour refresh-on-visit TTL and daily private sweep with deduplication, bounded work, stuck-job recovery, and connection-generation writes. Reuse the same graph service for editor and onboarding.
+- [ ] Complete when graphs update without Publish, transient failures preserve last good data/date, Retry/Reconnect works, revocation withdraws data on next refresh/sweep, and stale responses/errors cannot restore removed access or corrupt a new grant.
+
+## Initial setup and guided content
+
+All shared editor/content/GitHub phases above are prerequisites rather than duplicate onboarding implementations. Keeping Phases 27–42 before these adapters preserves their existing IDs and provides every editor capability that the guide collects. Location, categories, case studies, other components, and appearance controls remain editor-only. All checks below include the applicable ON criteria in AC 2.
+
+### Phase 42A. Build the guide shell, progress, and Address screen
+
+- Dependencies: 11A–11B, 12–17, 22–22A, 35, and the confirmed read-only UI direction.
+- Add the focused responsive step shell, progress/navigation, saved-step resume, and first required Address screen. Use the same unreserved candidate and availability checks as the editor, with no initial skip/editor bypass. Preserve local recovery and revision conflicts.
+- [ ] Complete when ON-01/02/13/14/19 pass for this increment, two owners can select the same name without a claim, and required navigation cannot be forged. Do not activate an incomplete required signup journey yet.
+
+### Phase 42B. Add the combined Profile and required Links screens
+
+- Dependencies: 19–22A, 42A.
+- Adapt shared profile/import/crop controls into one name/bio/avatar/banner screen with both previews. Add required labeled profile links, provider suggestions, explicit acceptance, and public-email disclosure. There is no skip until these required screens pass.
+- [ ] Complete when ON-03/04/05 and relevant upload/ownership checks pass, ready owned images and at least one valid displayed link are required, and no sample starter or duplicate links are inserted.
+
+### Phase 42C. Add optional Skills and Projects adapters
+
+- Dependencies: 27–28, 31, 42B and shared saving/recovery.
+- Reuse the entry controls for ordered skill names and multiple projects with the agreed fields. Add Skip this step and Skip remaining steps after required setup; preserve entered partial content and stable IDs. Keep categories and case studies in the editor.
+- [ ] Complete when the available content/persistence portions of ON-06/07/12/13 pass: empty skips create no components, incomplete projects survive with normal publication blockers, and Back/retry does not duplicate entries. Verify a stable remaining-steps navigation intent here. Actual Review navigation and full ON-06/12 integration are completed in 42E–42F, not prerequisites to this increment.
+
+### Phase 42D. Integrate optional public/private GitHub onboarding
+
+- Dependencies: 40–42, 42B–42C and controlled account/consent routing from 22A.
+- Adapt the shared graph service for both signup providers and return private consent to the preserved step. Offer explicit Add graph, Retry/public-only/later repair, and confirmed removal/withdrawal. No separate onboarding OAuth app, fetch implementation, or sign-in linking behavior.
+- [ ] Complete when ON-08 through ON-11 pass in the guide, cancellation/mismatch/session expiry preserves input, zero/failure/private states are honest, and no optional graph failure becomes a mandatory editor gate.
+
+### Phase 42E. Add Review, first editor handoff, and route activation
+
+- Dependencies: 16–17, 22A–26, 35, 40–42, 42A–42D.
+- Render the actual saved private portfolio with desktop/mobile switching, Back, incomplete statuses, and Open editor. Route all remaining-step skips here. Flush valid saves and reuse the authoritative idempotent handoff service; retain applicable local optional recovery. Activate the complete controlled post-auth entry resolver only now.
+- [ ] Complete when ON-06/12/15/16/17/18 pass, including actual Skip remaining navigation to Review. The editor receives exact prepared content, all-optional-skipped owners see only their real profile/links, no route exposes drafts publicly, and later missing required content blocks Publish without rerunning onboarding.
+
+### Phase 42F. Verify onboarding recovery and the full new-user journey
+
+- Dependencies: 42E and the actual publication/GitHub paths through 42.
+- Run ON-01 through ON-19 with both signup providers, completed/skipped/partial optional content, two tabs/devices, another owner, invalid local input, failures, crop/import retry, authorization return/removal, address collisions, and permanent handoff. Compare saved values with Review/editor and published output.
+- [ ] Complete when recorded automated browser/viewport/provider-fixture checks pass and no new work is marked complete without owner approval. Phase 53 still performs the full cross-feature acceptance review, and Phase 54 retains target-user timing/launch checks.
+
+## Message delivery
 
 ### Phase 43. Add email adapters and recipient verification
 
@@ -291,8 +394,9 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ### Phase 47. Finish connected-provider settings
 
-- Show connected providers, allow ownership-proven linking and disconnect, prevent removing the final usable sign-in method, and connect GitHub disconnect to private-activity cleanup.
-- [ ] Complete when the remaining provider can reopen the same portfolio and disconnect/reconnect handles authorized capabilities correctly.
+- Dependencies: 11, 22A, 41 and the existing account ownership/linking rules.
+- Show providers, allow ownership-proven sign-in linking/disconnect, and prevent removing the final usable sign-in method. Reuse Phase 41's separate activity-grant cleanup when GitHub sign-in is explicitly disconnected; activity consent/removal alone must not add/remove a sign-in provider.
+- [ ] Complete when remaining sign-in providers reopen the same editor portfolio without rerunning setup, and disconnect/reconnect integrates activity cleanup without duplicating its implementation.
 
 ### Phase 48. Add unpublish and restore
 
@@ -301,35 +405,41 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 ### Phase 49. Add permanent account deletion
 
-- Explain the loss and require explicit confirmation. Immediately deny public and owner access, invalidate sessions, revoke grants, and run retryable removal of drafts, uploads, snapshots, and account records.
+- Dependencies: 10, 11B, 18, 24–26, 41, 48 and retryable cleanup.
+- Explain loss and require confirmation. Immediately deny public/owner access, invalidate sessions, revoke grants, and retry removal of draft content, private setup/progress/milestone data, uploads, snapshots, local recovery, and account records. An unclaimed candidate leaves no reservation.
 - [ ] Complete when cached sessions cannot bypass deletion and cleanup failures recover. Only a previously claimed subdomain's ownerless permanent reservation survives; cancellation preserves the account.
 
 ### Phase 50. Complete discovery and the example portfolio
 
-- Build the entry page with component/customization examples, the free one-portfolio offer, public-subdomain explanation, and Start building. Publish the internal example through the real renderer.
-- [ ] Complete when a signed-out visitor can inspect the example and appearance options, understand the offer, and enter authentication. This phase depends on the completed capabilities it presents.
+- Dependencies: the full capabilities presented, including 42E–42F.
+- Build the entry page with examples, free one-portfolio offer, public-subdomain explanation, and Start building. Explain required initial setup with optional content steps; do not promise a direct editor bypass or early address reservation. Publish the internal example through the real renderer.
+- [ ] Complete when visitors can inspect the example/appearance options, understand the offer and required setup, authenticate, and reach the complete first-user flow.
 
 ## Operations and release checks
 
 ### Phase 51. Add operator controls and cleanup
 
-- Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, and audited operator email lookup with a case reference. Add bounded garbage collection and audit retention cleanup.
-- [ ] Complete when suspension blocks serving, operator email access leaves the required audit without logging the email, deletion removes account-linked audits, and unreferenced objects can be cleaned safely. Keep operator controls out of the product UI.
+- Dependencies: shared publication/lifecycle/GitHub/email capabilities and setup persistence from 11B.
+- Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, audited operator lookup, bounded garbage collection, and audit cleanup. Protect assets referenced by unfinished setup/partial drafts and delete abandoned unreachable uploads under the existing GC policy. Keep operator controls out of the product UI.
+- [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup cannot delete active setup assets or retain deleted-account setup data. No source-image retention is introduced.
 
 ### Phase 52. Prepare production delivery and recovery
 
-- Configure backward-compatible migrations and GitHub Environment approval for the `jobs`, `site`, `web` deployment order. Add structured operational logs, quota/CPU alerts, restore and rollback procedures, and renderer-version retention/rerender checks.
-- [ ] Complete when CI runs the architecture's required checks and release configuration covers DNS/TLS, provider callbacks, secrets, cache purge, abuse email, and resource bindings. Re-verify current provider limits before launch and confirm the upgrade path requires no application rewrite.
+- Dependencies: all feature/lifecycle increments, including 11A–11D, 22A, 42A–42F and the measured publication/withdrawal revisions.
+- Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/candidate migrations, activity OAuth returns/revocation cleanup, both signup callbacks, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
+- [ ] Complete when CI and release config cover the architecture's required checks, the full guide is available before required routing is activated, and rollback preserves drafts/milestones. Re-verify provider limits before launch; no application rewrite is needed for the approved upgrade path.
 
 ### Phase 53. Run the complete acceptance review
 
-- Run every numbered criterion with new/returning owners, signed-out visitors, and another owner. Compare all pages/assets before and after Publish; include races, injected failures, recovery, deletion, and live-data exceptions.
-- [ ] Complete when functional checks pass with recorded evidence across the confirmed browser and viewport matrix. Audit keyboard/focus behavior, contrast, descriptions, reduced motion, forms, and all deferred-feature exclusions. Follow the architecture's confirmed verification scope rather than adding real-device or assistive-technology test requirements.
+- Dependencies: all preceding implementation and operational phases.
+- Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Cover all optional completion paths, publication/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
+- [ ] Complete when checks pass with recorded evidence across the confirmed browser/viewport matrix, including keyboard/focus, contrast, crop dialogs, recovery, private consent, reduced motion, and deferred-scope exclusions. Do not add real-device/assistive-technology verification requirements beyond the confirmed scope.
 
 ### Phase 54. Validate the journey and release the MVP
 
-- Run the complete discovery-to-republish journey and timed profile-only publishing sessions with target users whose content is ready. Gather owner/visitor feedback separately from functional results; fix failures and repeat affected checks.
-- [ ] Complete when the under-15-minute publishing target and the full acceptance review pass, the catalog is approved, and the production release passes smoke checks through the real public hostnames. Record qualitative findings without inventing additional success thresholds.
+- Dependencies: 11E, 50, 52–53 and the full new-user journey from 42F.
+- Run discovery through required Address/Profile/Links, skipped optional steps, Review, editor, first Publish, and later republish with target users whose content is ready. Also gather feedback on optional/partial paths and owner/visitor understanding; fix failures and repeat affected checks.
+- [ ] Complete when the unchanged under-15-minute profile-only publishing target and full acceptance review pass, the catalog is approved, and production smoke checks pass through real hosts and controlled consent returns. Record qualitative findings without inventing new onboarding timing/completion targets.
 
 After launch, submit `hasaweb.site` to the Public Suffix List as architecture Q-5 requires. Submission acceptance is not an MVP launch prerequisite. Continue monitoring operational limits and failures; expanding the feature scope belongs in a separate roadmap.
 
@@ -339,27 +449,27 @@ The phase checks are incremental. Phase 53 verifies each acceptance section in f
 
 | Product and acceptance section | Main implementation phases |
 | --- | --- |
-| 1. Discover and evaluate | 50 |
-| 2. Account and starting portfolio | 05, 11, 12, 15, 47 |
-| 3. Editor, ordering, and preview | 09, 16, 17, 27, 39, 45 |
-| 4. Profile, images, and identity | 18 through 21, 33, 37, 38 |
-| 5. Projects and case studies | 28 through 30 |
-| 6. Skills and technologies | 31 |
+| 1. Discover and evaluate | 42E–42F, 50 |
+| 2. Account, setup, ON-01 through ON-19 | 05, 11, 11A–11B, 12–15, 22A, 42A–42F, 47 |
+| 3. Editor, ordering, and preview | 09, 16–17, 27, 39, 42E–42F, 45 |
+| 4. Profile, images, and identity | 18–21, 33, 37–38, 42B |
+| 5. Projects and case studies | 28–30, 42C |
+| 6. Skills and technologies | 31, 42C |
 | 7. Work experience | 32 |
 | 8. General text sections | 09, 29 |
-| 9. GitHub activity | 06, 40 through 42, 47 |
+| 9. GitHub activity | 06, 11C–11D, 40–42, 42D, 47 |
 | 10. Contact and delivery | 07, 43 through 45 |
 | 11. Resume | 18, 19, 34, 39 |
-| 12. Appearance | 35, 36 |
-| 13. Upload handling | 08, 18, 19, 24, 26, 34, 37, 38 |
-| 14. Draft saving and recovery | 13 through 15 |
-| 15. Subdomains and publication | 22 through 26 |
+| 12. Appearance | 11E, 16, 35–36 |
+| 13. Upload handling | 08, 18–19, 24, 26, 34, 37–38, 42B |
+| 14. Draft saving and recovery | 11A–11B, 13–15, 22A, 42A–42F |
+| 15. Subdomains and publication | 11B, 22–26, 42A, 42E–42F |
 | 16. Visitor experience | 16, 25, 30, 34, 35, 38 through 45, 48, 49, 53 |
 | 17. Search and sharing | 39, 46, 48, 49 |
-| 18. Account lifecycle | 11, 15, 26, 41, 47 through 49 |
-| Cross-feature outcomes and exclusions | 53, 54 |
-| Architecture feasibility and operations | 01 through 10, 24, 25, 42 through 45, 49, 51, 52 |
+| 18. Account lifecycle | 11, 11B, 15, 22A, 26, 41, 42E–42F, 47–49 |
+| Cross-feature outcomes and exclusions | 42F, 53–54 |
+| Architecture feasibility and operations | 01–10, 11A–11D, 24–25, 42–45, 49, 51–52 |
 
 ## Deferred scope
 
-Keep the exclusions in [product.md](product.md#features-deferred-beyond-the-mvp-out-of-scope) out of every phase. They include additional portfolios/templates, education, billing, custom domains, arbitrary layout/CSS, custom decoration uploads/stickers, individual palette editing, automatic project/skill imports, repository statistics, proficiency ratings, structured resume authoring, inbox/attachments/automatic replies, AI generation, collaboration, visitor accounts, multilingual editing, version history, and visitor analytics or cookie-based tracking. Private GitHub contribution activity remains required.
+Keep the exclusions in [product.md](product.md#features-deferred-beyond-the-mvp-out-of-scope) out of every phase. They include additional portfolios/templates, education, billing, custom domains, arbitrary layout/CSS, custom decoration uploads/stickers, individual palette editing, automatic project/skill imports, repository statistics, proficiency ratings, structured resume authoring, inbox/attachments/automatic replies, AI generation, collaboration, visitor accounts, multilingual editing, version history, and visitor analytics or cookie-based tracking. Private GitHub contribution activity remains required. The initial guide also excludes repeat onboarding, an editor bypass before required setup, goal/persona surveys, retained source images, and extra screens for editor-only capabilities. These exclusions do not remove any existing full MVP editor feature.

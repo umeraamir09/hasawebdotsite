@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| **Status** | Draft v0.2, open-question decisions confirmed |
-| **Date** | October 13, 2026 |
-| **Inputs** | [product.md](product.md), [acceptance-criteria.md](acceptance-criteria.md), [rough-idea.md](rough-idea.md), architecture interview |
+| **Status** | Draft v0.3, confirmed initial-setup plan; implementation follow-ups pending |
+| **Date** | October 16, 2026; original architecture decisions October 13, 2026 |
+| **Inputs** | [product.md](product.md), [acceptance-criteria.md](acceptance-criteria.md), [rough-idea.md](rough-idea.md), architecture interview, [confirmed onboarding interview](onboarding.md) |
 | **Cloudflare limits verified** | October 12-13, 2026 against official documentation (see [Sources](#18-sources)). Limits change; re-verify before launch. |
 
 ---
@@ -14,6 +14,8 @@
 This document defines the technical architecture for the hasawebsite MVP: the technologies used, how the system is split across Cloudflare services, how data flows, and how the design stays inside Cloudflare's free tier while keeping a one-step upgrade path to Workers Paid ($5/month).
 
 It covers the MVP as scoped in `product.md`. It does not redesign features, add capabilities, or choose visual design details (theme names, fonts, decoration art), which `product.md` leaves open. Section 16 records the confirmed decisions and the remaining design task.
+
+The October 16 onboarding specification adds required first-user setup and optional content collection. It changes the target architecture described below, not the current code. The implementation still stops at the authenticated account shell; completed Phases 09–11 need the explicit contract, persistence, and routing follow-ups in the roadmap. See [onboarding baseline](onboarding.md#current-implementation-and-changes-to-prior-plans).
 
 **Conventions.** Items marked **[confirmed]** were decided by you in the interview. Items marked **[default]** are architect defaults you did not discuss and may override. Items marked **[spike]** rest on an assumption that must be verified early (see [section 15](#15-risks-and-spikes)).
 
@@ -35,6 +37,9 @@ It covers the MVP as scoped in `product.md`. It does not redesign features, add 
 | D-10 | Rich text | Tiptap (ProseMirror) | confirmed |
 | D-11 | Environments | Local development + production only | confirmed |
 | D-12 | Abuse handling | Operator kill-switch to suspend a site, plus a report-abuse email address | confirmed |
+| D-13 | First portfolio setup | Required Address, combined Profile, and Links before first editor entry; optional Skills, Projects, GitHub public/private setup; Review then editor | confirmed October 16 |
+| D-14 | Setup data and exit | One canonical private draft, separate private progress and permanent editor-entry milestone; retain partial optional content and normal publication validation | confirmed October 16 |
+| D-15 | Address and crops | Select an unreserved candidate first, claim only on Publish; retain only finished cropped images | confirmed October 16 |
 
 ---
 
@@ -112,7 +117,7 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
 
 | Worker | Responsibility | CPU profile |
 | --- | --- | --- |
-| **`web`** | Next.js app: marketing page (statically prerendered), sign-in, editor shell (client-rendered), full-page preview (client-rendered), settings, REST route handlers (`/api/*`), authenticated draft-asset streaming, publish trigger, subdomain checks. Never serves user portfolios. | Light per request. No ISR, no data cache, no Node middleware (unsupported by OpenNext); auth checks happen in route handlers and layouts. |
+| **`web`** | Next.js app: marketing page (statically prerendered), sign-in, onboarding, editor shell (client-rendered), private review/full-page preview (client-rendered), settings, REST route adapters (`/api/*`), authenticated draft-asset streaming, publish trigger, subdomain checks. Never serves user portfolios. | Light per request. No ISR, no data cache, no Node middleware (unsupported by OpenNext); owner checks and setup gates are enforced server-side at the relevant entry/API boundaries. |
 | **`site`** | Serves `*.hasaweb.site`: resolves subdomain to the live version, streams pre-rendered HTML and the resume PDF from R2, and hosts two small public endpoints (`/_/github.json`, `/_/contact`). | Near-zero. No rendering, no framework. |
 | **`jobs`** | Hosts Workflows (publish, unpublish/delete, re-render-all), Queue consumers (contact delivery, GitHub refresh), and Cron handlers (daily sweep, outbox sweeper, garbage collection). | Each step bounded to fit 10 ms on free. |
 
@@ -190,14 +195,14 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | Table | Key columns | Notes |
 | --- | --- | --- |
 | Better Auth tables (`user`, `session`, `account`, `verification`) | per Better Auth, plus `user.deleting_at` | Sessions use Better Auth's cookie cache. Authorization must still check deletion state before allowing owner access. |
-| `portfolio` | `id`, `user_id` (unique), `subdomain` (unique, nullable), `status` (`draft`/`published`/`unpublished`/`suspended`/`deleting`), `published_version` (nullable), `draft` (JSON, capped at 1 MiB), `draft_rev` (integer), `suspended_at`, `suspended_reason`, timestamps | One row per account (one portfolio per account). The `subdomain_claim` table enforces ownership and permanent reservations atomically. Do not index `draft_rev` or `updated_at`. |
+| `portfolio` | `id`, `user_id` (unique), `subdomain` (unique, nullable), `status` (`draft`/`published`/`unpublished`/`suspended`/`deleting`), `published_version` (nullable), `draft` (JSON, capped at 1 MiB), `draft_rev` (integer), `suspended_at`, `suspended_reason`, timestamps; planned private setup metadata alongside the draft | One row per account. `subdomain` is the claimed address, never an onboarding candidate. `subdomain_claim` enforces permanent ownership atomically. Planned setup progress and the editor-entry milestone participate in revision checks but stay outside public snapshots. Do not index `draft_rev` or `updated_at`. |
 | `asset` | `id`, `portfolio_id`, `kind` (`avatar`/`banner`/`face`/`project`/`case_study`/`resume`/`og`), `content_type`, `bytes`, `width`, `height`, `status` (`pending`/`ready`/`failed`) | Alt text lives in the draft document, not here. |
 | `publish_version` | `id`, `portfolio_id`, `n`, `status` (`rendering`/`live`/`failed`/`superseded`), `renderer_version`, `manifest` (JSON: pages, public assets, byte sizes), `error`, timestamps | Snapshot JSON itself is stored in R2, not D1. |
 | `reserved_subdomain` | `name` | Seeded from the constant list. |
 | `subdomain_claim` | `name` primary key, `portfolio_id` unique and nullable | First Publish inserts the claim atomically with the live pointer update. Account deletion clears `portfolio_id` and retains only `name` permanently. Claims with no owner cannot be reassigned. |
 | `operator_email_audit` | `id`, `operator_id`, `account_id`, `case_reference`, `accessed_at` | Records each operator email lookup without the retrieved email. Delete after 90 days or on deletion of the associated account. |
-| `github_connection` | `portfolio_id`, `login`, `github_user_id`, `token_enc`, `scopes`, `private_enabled`, `status` (`ok`/`needs_reconnect`/`disconnected`), `last_checked_at` | Token encrypted with AES-GCM (Web Crypto) using a secret key. |
-| `github_activity` | `portfolio_id`, `public_days` (JSON), `private_counts` (JSON, nullable), `fetched_at`, `last_error`, `refresh_requested_at` | Public output is computed at read time from flags, so disabling private activity takes effect immediately. |
+| `github_connection` | `portfolio_id`, `login`, `github_user_id`, `token_enc`, `scopes`, `private_enabled`, `status` (`ok`/`needs_reconnect`/`disconnected`), `last_checked_at`; planned connection generation | Token encrypted with AES-GCM. Follow-up migration adds generation checks for refresh results/errors and durable remote-revocation cleanup. |
+| `github_activity` | `portfolio_id`, safe public calendar, complete authorized calendar, fetch/error/refresh state associated with connection generation | Target semantics follow S-6. The current implementation calls authorized data `private_counts`; migrate/reconcile this before production use. Select public or authorized calendar, never their sum. Public selection also requires the published graph's matching configuration; revocation disables authorized output immediately. |
 | `contact_recipient` | `portfolio_id`, `email`, `verified_at`, `pending_token_hash`, `token_expires_at` | Initially the account's verified provider email. |
 | `contact_outbox` | `id`, `portfolio_id`, `payload` (JSON), `status` (`queued`/`sending`/`sent`/`failed`), `attempts`, `next_attempt_at`, `last_error`, `is_test`, `accepted_at`, `deadline_at`, `budget_window_start` | The budget reservation uses the UTC acceptance day. Payload is deleted on success and after final failure (data minimization). |
 | `counter` | `key`, `window_start`, `count` | Fixed-window rate limits and the daily email budget. |
@@ -229,7 +234,9 @@ type DraftDoc = {
 
 Phase 09 implements the strict version 1 contract and documents its exact fields in [`packages/schema/README.md`](../packages/schema/README.md). Draft validation permits unfinished content; publication requirements and checks against authoritative asset/provider records remain separate. Sample keys use profile field names and stable component IDs rather than array indices.
 
-- **Sample tracking:** sample values are flagged in `samples` and cleared on first edit, which drives "untouched optional samples are omitted" and "editing a sample triggers normal validation".
+The planned next contract version adds `requestedSubdomain` for the non-reserving candidate. Validate entered format and retain invalid in-progress text only through local recovery. Keep first-editor-entry/progress metadata separate from portfolio content and exclude it from public snapshots. Version 1 currently rejects this field, so implement and verify a content-preserving migration before the Address screen. The current unique `portfolio.subdomain` cannot store candidates without incorrectly reserving names.
+
+- **Sample tracking:** retain Phase 09's compatible markers and validation for existing fixtures/migrated drafts. New provisioning inserts no sample profile or project. Any existing sample values remain flagged in `samples` and clear on first edit; untouched optional samples are omitted and edited samples use normal validation.
 - **Size cap:** 1 MiB per draft (D1 rows max out at 2 MB). If real portfolios outgrow it, case studies can move to their own rows without changing the API.
 - **Migrations:** each component type owns a version number and a migration function; `schemaVersion` migrates the envelope. Migrations run on read and are written back on next save.
 
@@ -247,14 +254,29 @@ Asset IDs are never reused, so published image URLs are immutable and replaced i
 
 ## 8. Key flows
 
+### 8.0 Initial setup and first editor entry
+
+The agreed sequence and content mappings are in [onboarding.md](onboarding.md#screen-sequence-and-content-mapping). These are planned additions to completed authentication/persistence, not implemented routes.
+
+1. Resolve the authenticated owner through the existing uncached session/deletion checks. Idempotently provision the single empty private draft with the configured template/default appearance and explicit setup metadata. Do not infer completion from `portfolio !== null` or automatically copy provider identity into public content.
+2. Use a fixed internal post-auth entry resolver for both OAuth callbacks and signed-in `/sign-in` visits. Owners without the permanent editor-entry milestone resume onboarding; owners with it enter the editor. Preserve the exact callback allowlist and approved-origin checks rather than accepting arbitrary redirect URLs. The final resolver route is specified in the implementation spec and activated only when the complete guide works.
+3. Save content, the non-unique `requestedSubdomain`, and private progress under the same revision-aware owner boundary. Reuse the draft store, recovery, uploads, and component controls. Progress changes must not race with content or overwrite a completed milestone. Repeated steps/callbacks use stable IDs.
+4. Server-enforce required Address/Profile/Links before first editor handoff and prevent direct route or client-state bypass. Setup must still be able to use its authenticated draft/save/upload endpoints and private preview. Required setup and editor permissions are distinct from sign-in; gating must not make the shared setup APIs inaccessible.
+5. Optional steps can be skipped individually or together without deleting entered content. Invalid text stays in local recovery; valid partial entries/configuration remain in the draft with normal publication blockers. Review is private, noindex/no-store, client-rendered with the shared renderer, and supports desktop/mobile widths. Draft graph preview uses owner-authorized data, not the public portfolio endpoint.
+6. Open editor flushes valid saves, validates authoritative required content/ready owned assets, and records the permanent milestone with revision checks. Repeated handoffs are idempotent. Failure returns an actionable retry state without claiming success. Later missing required fields affect Publish only. Stale setup tabs must reload the editor state and cannot reinitialize content or clear the milestone.
+
+An availability check permits continuing from Address but confers no ownership. If the candidate is later taken, first Publish reports it and the editor offers another choice. Do not force a completed owner back into onboarding or claim a name merely by saving a draft.
+
 ### 8.1 Autosave and conflict handling (product 14)
 
-1. The editor keeps the draft in a Zustand store. After a ~2 s debounce it sends `PUT /api/draft` with the document and `baseRev`.
+1. Onboarding and the editor share the draft store. After a ~2 s debounce it sends `PUT /api/draft` with the document and `baseRev`; planned private progress updates participate in the same concurrency boundary.
 2. The server validates with Zod and runs `UPDATE portfolio SET draft=?, draft_rev=draft_rev+1 WHERE id=? AND user_id=? AND draft_rev=?`.
 3. **One row changed:** return the new `rev`; UI shows **Saved**. **Zero rows:** return `409` with the newer document; UI offers **Load newer version** or **Keep my edits for review**. Nothing is overwritten silently.
 4. While a save is in flight the UI shows **Saving**; on failure it shows **Couldn't save** with Retry.
 5. Unsaved edits are mirrored to IndexedDB (keyed by portfolio and base revision) and removed after a confirmed save, so a crash or temporary failure loses nothing.
 6. On `401` (expired session) a sign-in popup restores the session without discarding editor state, then the save retries.
+
+The same recovery works during required setup and private activity consent. Resume confirmed progress across devices. Structurally invalid unfinished input, including partial URLs, is stored locally and never labeled cloud-saved. The first-editor handoff transfers applicable local recovery to the editor without fabricating a successful draft save. Owner/portfolio keys must prevent recovery into another account. Invalid input must not disable the optional Skip actions.
 
 At roughly 100 owners this is a handful of thousand D1 row writes per day, far below 100,000.
 
@@ -265,6 +287,8 @@ At roughly 100 owners this is a handful of thousand D1 row writes per day, far b
 3. The server re-checks size and **magic bytes**, writes to `hasaweb-draft`, inserts an `asset` row (`pending` then `ready`).
 4. The draft references the new asset ID **only after** the asset is `ready`. A failed or interrupted replacement therefore leaves the previous asset in place in both draft and published use.
 5. Draft assets are fetched only through `GET /api/assets/{id}` with an ownership check; everyone else gets `404` (AC 13.7).
+
+Onboarding's combined profile step and editor share reposition/zoom/reset/apply/cancel crop dialogs and previews. Provider-photo import enters through an owner-accepted, validated private import/upload path and returns an owned ready asset, never an external URL in the draft. Cropping applies to imported photos too. Reuse existing image limits and canvas re-encoding. Keep only the finished cropped file, with no durable source/crop metadata. Reset uses the current local selection; recovering excluded regions after returning requires reselecting the original. Do not introduce retained originals as an implicit implementation extension.
 
 ### 8.3 Publish (product 15), the core flow
 
@@ -302,13 +326,21 @@ Each request is served wholly from one version. Navigating between pages during 
 
 ### 8.5 GitHub activity (product 9)
 
-**Why not in the snapshot:** private counts must vanish on revoke without a republish, and refreshes must not require republishing. The snapshot therefore contains only the username, link, and placeholder markup; a small script loads `/_/github.json` and draws the graph.
+**Why counts are not in the snapshot:** private counts must vanish on revoke without a republish, and refreshes must not require republishing. Freeze the selected GitHub account identity/username, profile link, and `includePrivate` publication choice in the version's graph configuration, with placeholder markup. Counts and tokens remain outside snapshots. The public endpoint resolves this immutable configuration from the active published version rather than trusting draft choices or visitor query parameters; a small script loads `/_/github.json` and draws the graph.
 
-- **Endpoint:** `site` reads `github_activity` and returns public days, plus anonymized private counts only if `private_enabled` is true at that moment. `s-maxage` is about five minutes, with an explicit cache purge on revoke or disconnect.
+- **Endpoint:** `site` reads activity and the published graph configuration. Serve the safe public calendar, or the complete authorized calendar only when the published graph permits private activity and its selected account matches the currently valid private grant. Never sum calendars or infer private counts by subtraction. Onboarding/draft authorization does not expose private counts before Publish. `s-maxage` is about five minutes, with an explicit cache purge on revoke or disconnect.
 - **Refresh-on-visit:** if `fetched_at` is older than the confirmed six-hour TTL and no refresh was recently requested, `site` records `refresh_requested_at` and enqueues one refresh message with `ctx.waitUntil`. The visitor is served the last good data immediately.
 - **Daily scheduled sweep:** a cron handler enqueues one message per `private_enabled` connection. The consumer validates the token, refreshes, and on `401` marks `needs_reconnect` and strips private counts. This is how revocation made directly on GitHub is detected.
 - **Failure:** the last successful graph and its date stay published; the editor shows the failure with Retry or Reconnect. A fetch failure never blocks the rest of the page.
 - **Auth:** public data uses a platform-held GitHub token (GraphQL requires authentication). Private activity requires a separate, explicit `read:user` authorization stored in `github_connection`, valid only when the authorized account matches the selected username. Sign-in requests identity and email scope only. Disconnect revokes the grant with GitHub, deletes the token, and purges private data. Exact scopes and visibility behavior are verified against test accounts **[spike]**, per AC 9.10.
+
+S-6's [tested projection and remaining credential check](../specs/2026-10-15-github-permissions/results.md) supersede the former additive `private_counts` description. The production package is still empty, and current storage/refresh upserts need the explicit follow-up phase. Verify a separate platform-only public credential live before depending on public fetches; sign-in tokens are not a proven public-only fallback. Add connection generations and conditional writes for both successful refreshes and errors so an old job cannot repopulate removed private data or withdraw a newer grant.
+
+Both onboarding and editor explicitly add graphs and offer public/private setup. Google owners need no GitHub sign-in link for activity authorization. Use the separate activity app, `read:user`, one-use expiring owner/session-bound state, S256 PKCE, and matching stable GitHub ID plus case-insensitive username. Return only to the controlled pending step/settings flow. Cancelled/failed/wrong-account consent offers Retry, public-only setup, or later incomplete editor repair without silently replacing the username or adding another mandatory setup gate.
+
+Explicit graph removal confirms withdrawal, removes the draft graph, immediately disables private serving, advances the connection generation, clears active credentials/private data, purges cache, and performs durable retryable remote grant revocation. Any cleanup credential must be encrypted and unavailable to active graph refresh, then removed after cleanup. This activity cleanup is required before onboarding; Phase 47 reuses it for provider settings instead of implementing a second path. Graph removal leaves sign-in connected. Ordinary Skip preserves the graph and grant. Public-only/changed-username serving and revocation continue to follow the published-configuration and immediate-withdrawal rules.
+
+S-6 establishes that grant deletion can revoke all tokens for the same activity app/user. Generation checks on D1 writes alone do not protect fresh tokens against a delayed provider-side delete. Serialize grant-wide cleanup and new private consent for that app/account: do not start new consent while older cleanup is pending or in flight, and fence duplicate/stale cleanup tasks before provider calls. Surface cleanup/retry status while retaining public-only setup and optional editor entry. Verify remove, remote failure, attempted reconnect, old cleanup retry, and subsequent successful consent without the old task revoking the new grant.
 
 ### 8.6 Contact form (product 10)
 
@@ -388,7 +420,7 @@ Markup: an interactive `<button>` containing both images and the decoration over
 | **Published page CSP** | `default-src 'none'`; scripts only from our hashed `site.js` and Turnstile; images from `assets.hasaweb.site`; `frame-ancestors` restricted; `object-src` limited to same-origin PDF embedding on `/resume`. Styles allow inline (owner colors are generated by us, not supplied as CSS). Also `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`. |
 | **Cookies and origins** | Auth cookies are host-only (no `Domain` attribute) and set only by the apex app; where Better Auth permits, use the `__Host-` prefix **[spike]**. Portfolio pages run no owner scripts and receive no auth cookies. Submit `hasaweb.site` to the Public Suffix List after launch. Launch does not depend on acceptance of the submission. |
 | **CSRF** | Better Auth origin checks, `SameSite=Lax`, and strict `Origin` verification plus JSON content type on every mutating route handler. |
-| **Authorization** | Every repository function takes the session user and scopes by `user_id`. Draft previews and assets return `404` to anyone else (AC 16.5). |
+| **Authorization** | Every repository function takes the session user and scopes by `user_id`. Draft previews and assets return `404` to anyone else (AC 16.5). Planned first-editor routing validates persisted setup/milestone state; direct client routes cannot bypass it. Shared setup saves/uploads remain authorized before editor entry. |
 | **Account linking** | Auto-link only on a provider-verified email; never on missing or unverified email; linking a new provider requires proof of ownership (AC 2.2). Behavior verified against Better Auth configuration **[spike]**. |
 | **Secrets** | Wrangler secrets: `BETTER_AUTH_SECRET`, OAuth client IDs/secrets, `ENCRYPTION_KEY`, `RESEND_API_KEY`, `TURNSTILE_SECRET`, `GITHUB_SERVICE_TOKEN`, a zone-scoped cache-purge API token. Never in the repo. |
 | **GitHub tokens** | Encrypted at rest (AES-GCM); deleted and grant revoked on disconnect or account deletion. |
@@ -455,6 +487,8 @@ hasawebsite/
 | **Manual / usability** | Timed session with target users | The 15-minute publish target and the qualitative outcomes (cross-feature AC 1, 5) |
 
 Worker integration checks also cover permanent subdomain reservations after account deletion, immediate denial of cached sessions during deletion, retryable cleanup, case study slug collisions and reuse after a published deletion, atomic contact budget reservations, and operator email audit retention.
+
+Extend these layers with AC 2's ON checks: required setup/direct-route guards, two owners saving the same unclaimed candidate, one draft under repeated callbacks, progress/content conflicts, permanent handoff under stale setup tabs, private activity consent for both providers, generation races and non-additive calendar projection. End-to-end coverage includes completed and skipped optional paths, incomplete content, same-browser invalid-input recovery, private Review, crop cancellation/failure, authorization returns, and first-editor field parity. The profile-only timed journey includes required setup and Review while skipping optional content; the existing 15-minute target is unchanged.
 
 The following verification settings are **[confirmed]**. They resolve the corresponding prerequisites left open in `acceptance-criteria.md`.
 
@@ -546,7 +580,7 @@ The architecture interview resolved Q-1 through Q-6. The owner confirmed these d
 | Q-5 | Public Suffix List | Submit `hasaweb.site` after launch. Submission acceptance is not a launch prerequisite. |
 | Q-6 | Verification settings | Use the confirmed settings in section 13, including automated browser and viewport tests and provider fixtures. Exclude real-device and assistive technology checks. |
 
-There are no unanswered architecture interview questions. The visual catalog remains a design task. The technical spikes in section 15 still require verification.
+The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-13 through D-15 and the planned flows in section 8.0. No onboarding behavior decision remains open. The visual catalog remains a separate approval task; detailed migration/API/UI specs and the recorded technical follow-ups still require work and evidence before implementation can be considered complete.
 
 ---
 
@@ -568,6 +602,9 @@ There are no unanswered architecture interview questions. The visual catalog rem
 | ADR-12 | Client-side image crop and re-encode | Cloudflare Images transformations; server-side processing | No CPU or quota cost; strips EXIF; matches "saved crop equals published crop". |
 | ADR-13 | Better Auth with Drizzle (D-7) | Auth.js, custom Arctic | Your preference; first-class account linking rules; D1 support. |
 | ADR-14 | Local + production only (D-11) | Add staging | One wildcard TLS level on free; staging would need another domain. |
+| ADR-15 | Required initial setup, optional content, permanent first-editor milestone | Fully skippable onboarding; rerunning onboarding after editor entry | Owner's October 16 interview decision. Guide address/profile/links before editor access, then retain all later editing in the editor. |
+| ADR-16 | Shared canonical draft plus private progress and unreserved address candidate | Replay a separate answer document; save a candidate into the unique claimed-subdomain column | Preserve revisions/partial content, prevent duplicate preparation and accidental early reservations. |
+| ADR-17 | Store only finished crops | Retain original sources and durable crop settings | Owner confirmed existing cropped-asset approach. Reset uses local selection and later uncropping requires reselecting the source. |
 
 ---
 

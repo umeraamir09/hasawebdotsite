@@ -4,6 +4,16 @@ Use [hasaweb.site UI direction in Figma](https://www.figma.com/design/rjvDSCHPaj
 
 Use the file to guide layout, typography, colors, spacing, and component appearance during UI development. Follow [product.md](product.md) for feature scope and [acceptance-criteria.md](acceptance-criteria.md) for required behavior.
 
+## Initial setup direction
+
+The [confirmed initial-setup specification](onboarding.md) uses the existing warm neutral surfaces, lime accent, DM Sans typography, and control language. The supplied Linktree screenshots inspire focused forms, prominent headings, generous whitespace, visible progress, and consistent navigation. They do not define product requirements, copy, a bio character limit, brand colors, or subdomain guarantees.
+
+Use Address, one combined Profile step, Links, optional Skills/Projects/GitHub, then private Review. The Profile step includes both avatar and banner previews and shared crop dialogs with repositioning, zoom, Reset, Apply crop, and Cancel. Keep the original-file reselection limitation clear. Optional skip actions appear only after required setup. Review uses the actual shared portfolio renderer with desktop/mobile switching.
+
+The seven original screenshots and two subsequent profile/crop references were inspected on October 16, 2026. Figma MCP read-only inspection covered the brand board at `8:2` and authentication screen at `12:48`; the linked starting node `8:38` is a brand element. The existing Figma reference contains no newly approved onboarding screens from this interview. Detailed responsive composition and final copy remain implementation design work within the agreed behavior. The separate theme/font/decoration catalog still needs its existing approval.
+
+The seven original references use the filename pattern `Screenshot 2026-10-16 HHMMSS.png`, with timestamps `150350`, `150404`, `150421`, `150453`, `150519`, `150536`, and `150916`, under the owner's Pictures/Screenshots directory. Later attachments are `codex-clipboard-ca2ce52a-6749-4bb9-817f-c3cc4b87607a.png` and `codex-clipboard-7288e745-f153-4b6a-af49-ff30fa84510d.png`. Those machine-local references may need reattachment during implementation; they are not repository assets or instructions. No Figma file or linked FigJam journey map was modified by this planning task.
+
 ## Agent access through Figma MCP
 
 Use the connected Figma MCP to inspect the reference and retrieve design context, screenshots, and assets as needed for implementation.
