@@ -15,6 +15,7 @@ const wrangler = join(
 );
 const remote = process.argv.includes("--remote"),
   benchmark = process.argv.includes("--benchmark");
+const skipLarge = process.argv.includes("--skip-large");
 const count = Number(
     process.argv.find((a) => a.startsWith("--samples="))?.split("=")[1] ?? 100,
   ),
@@ -653,6 +654,26 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
         sequence: attempt.sequence,
       });
       attempt.sequence = row.sequence;
+      row = await request("string-start", {
+        id: attempt.id,
+        sequence: attempt.sequence,
+        path: ["profile", "location"],
+      });
+      attempt.sequence = row.sequence;
+      const cleared = await sql(
+        `SELECT count(*) AS pieces FROM owner_save_piece WHERE attempt_id='${attempt.id}';`,
+      );
+      assert.equal(cleared[0].results[0].pieces, 0);
+      row = await request("piece", {
+        id: attempt.id,
+        sequence: attempt.sequence,
+        text: "A location",
+      });
+      row = await request("string-finish", {
+        id: attempt.id,
+        sequence: row.sequence,
+      });
+      attempt.sequence = row.sequence;
       const before = await sql(
         "SELECT json_extract(draft,'$.profile.bio') AS bio FROM owner_runtime_fixture WHERE user_id='runtime-alice';",
       );
@@ -724,56 +745,60 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
   // assembly and commit remain separate measured request classes below.
   await prep("canonical", undefined, "full");
   let largeAttempt = await request("begin", { revision, progress });
-  let seq = (
-    await request("string-start", {
-      id: largeAttempt.id,
-      sequence: 0,
-      path: ["profile", "bio"],
-    })
-  ).sequence;
-  const lengthRows = await sql(
-    "SELECT length(json_extract(draft,'$.profile.bio')) AS n FROM owner_runtime_template WHERE name='full';",
-  );
-  let left = lengthRows[0].results[0].n;
-  const pieceStart = new Date().toISOString();
-  let pieceIndex = 0;
-  while (left) {
-    const size = Math.min(4000, left),
-      measured = pieceIndex >= warmups && pieceIndex < warmups + count;
-    const row = await request(
-      "piece",
-      { id: largeAttempt.id, sequence: seq, text: "x".repeat(size) },
-      {
-        name: measured
-          ? "piece"
-          : pieceIndex < warmups
-            ? "warmup-piece"
-            : "piece-remainder",
+  let seq = 0;
+  if (!skipLarge) {
+    seq = (
+      await request("string-start", {
+        id: largeAttempt.id,
+        sequence: 0,
+        path: ["profile", "bio"],
+      })
+    ).sequence;
+    const lengthRows = await sql(
+      "SELECT length(json_extract(draft,'$.profile.bio')) AS n FROM owner_runtime_template WHERE name='full';",
+    );
+    let left = lengthRows[0].results[0].n;
+    const pieceStart = new Date().toISOString();
+    let pieceIndex = 0;
+    while (left) {
+      const size = Math.min(4000, left),
+        measured = pieceIndex >= warmups && pieceIndex < warmups + count;
+      const row = await request(
+        "piece",
+        { id: largeAttempt.id, sequence: seq, text: "x".repeat(size) },
+        {
+          name: measured
+            ? "piece"
+            : pieceIndex < warmups
+              ? "warmup-piece"
+              : "piece-remainder",
+        },
+      );
+      seq = row.sequence;
+      left -= size;
+      pieceIndex++;
+    }
+    windows.push({
+      name: "piece",
+      from: pieceStart,
+      to: new Date().toISOString(),
+      clientCount: Math.min(count, pieceIndex - warmups),
+    });
+    seq = (
+      await request("string-finish", { id: largeAttempt.id, sequence: seq })
+    ).sequence;
+    largeAttempt.sequence = seq;
+    await check(
+      "maximum individual text is assembled in D1 and published to draft atomically",
+      async () => {
+        revision = (await request("commit", largeAttempt)).revision;
+        const sizes = await sql(
+          "SELECT length(CAST(draft AS BLOB)) AS bytes FROM owner_runtime_fixture WHERE user_id='runtime-alice';",
+        );
+        assert.equal(sizes[0].results[0].bytes, 1048576);
       },
     );
-    seq = row.sequence;
-    left -= size;
-    pieceIndex++;
   }
-  windows.push({
-    name: "piece",
-    from: pieceStart,
-    to: new Date().toISOString(),
-    clientCount: Math.min(count, pieceIndex - warmups),
-  });
-  seq = (await request("string-finish", { id: largeAttempt.id, sequence: seq }))
-    .sequence;
-  largeAttempt.sequence = seq;
-  await check(
-    "maximum individual text is assembled in D1 and published to draft atomically",
-    async () => {
-      revision = (await request("commit", largeAttempt)).revision;
-      const sizes = await sql(
-        "SELECT length(CAST(draft AS BLOB)) AS bytes FROM owner_runtime_fixture WHERE user_id='runtime-alice';",
-      );
-      assert.equal(sizes[0].results[0].bytes, 1048576);
-    },
-  );
   if (benchmark) {
     const run = async (name, prepare, work) => {
       if (selectedCases && !selectedCases.includes(name)) return;
@@ -874,6 +899,30 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
         { name },
       );
     });
+    await run(
+      "append",
+      () => prep("append"),
+      async (name) => {
+        await patch(
+          change("append", ["components"], {
+            values: Array.from({ length: 32 }, (_, i) => ({
+              id: `append-${i}`,
+              type: "text",
+              version: 1,
+              data: { title: "", body: { type: "doc", content: [] } },
+            })),
+          }),
+          { name },
+        );
+      },
+    );
+    await run(
+      "remove",
+      () => prep("canonical", undefined, "components"),
+      async (name) => {
+        await patch(change("remove", ["components", 2999]), { name });
+      },
+    );
     await run(
       "abort",
       () => prep("open", largeAttempt.id, "full"),

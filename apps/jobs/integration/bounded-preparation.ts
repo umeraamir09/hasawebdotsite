@@ -1,4 +1,4 @@
-// Fixed synthetic preparation operations, outside measured windows. This module
+// Fixed synthetic preparation operations for isolated measurements. This module
 // is imported only by the keyed experiment entry, never a product handler.
 import { privateJson } from "@hasaweb/db";
 export async function prepareBounded(request: Request, db: D1Database) {
@@ -14,6 +14,13 @@ export async function prepareBounded(request: Request, db: D1Database) {
     ? input.template
     : "full";
   switch (input.operation) {
+    case "append":
+      await db
+        .prepare(
+          "UPDATE owner_runtime_fixture SET draft=(SELECT json_set(draft,'$.profile.bio',substr(json_extract(draft,'$.profile.bio'),1,length(json_extract(draft,'$.profile.bio'))-4096)) FROM owner_runtime_template WHERE name='full') WHERE user_id='runtime-alice'",
+        )
+        .run();
+      break;
     case "canonical":
       await db
         .prepare(
