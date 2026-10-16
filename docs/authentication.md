@@ -1,6 +1,26 @@
 # Authentication
 
-Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Successful OAuth callbacks open `/editor`. The editor is a static client shell; `/api/owner` checks the current persisted session and deletion state before returning the owner's name and existing portfolio ID. No account tokens, email address, or draft content appear in that response. Sample provisioning and the full editor arrive in later roadmap phases.
+Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Currently, successful OAuth callbacks open `/editor`. The editor is a static client shell; `/api/owner` checks the current persisted session and deletion state before returning the owner's name and existing portfolio ID. No account tokens, email address, or draft content appear in that response. Portfolio provisioning, onboarding, and the full editor remain planned work.
+
+The following setup/verification instructions describe the implemented Phase 11 baseline. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey; it has not yet changed these routes or the runtime behavior.
+
+## Planned setup-aware entry and recovery
+
+New signups must complete Address, the combined Profile screen, and Links before first editor entry. Skills, Projects, and public/private GitHub activity follow as optional steps, then private Review and Open editor. There is no initial editor bypass. Before first handoff, returning sign-ins resume saved progress; after handoff, they open the saved editor directly. Later removal of required content blocks publication only and does not rerun onboarding.
+
+The roadmap adds explicit follow-up work to completed authentication rather than reopening Phase 11. It must update all three current entry decisions: the client OAuth success destination, its exact server allowlist, and the signed-in `/sign-in` redirect. Use a controlled internal resolver with persisted owner setup state, preserving the provider callback routes and origin/redirect restrictions. Do not accept arbitrary return URLs. Activate required routing only after the full guide and handoff are usable.
+
+Direct editor navigation must not bypass setup. Setup still needs authenticated access to its own/shared draft, upload, candidate-address, authorization, and private-preview capabilities. Check uncached session/deletion state and authoritative setup data on handoff. Provision exactly one private draft under retry/concurrency, and record a permanent revision-aware first-editor-entry milestone that stale tabs cannot clear.
+
+An authenticated private suggestion path may return the provider name/photo and an email suggestion for deliberate acceptance. This is new work, not permission to broaden the current public or `/api/owner` response accidentally. Provider photo use needs explicit acceptance, cropping, and validated private asset import. Account email never becomes a public link automatically.
+
+Onboarding uses the editor's planned autosave/conflict/session-recovery behavior. Preserve recoverable local input through reauthentication and isolate it by owner/portfolio. Restoring a session returns to the same pending setup or authorized editor flow without duplicate preparation.
+
+## Planned GitHub activity consent
+
+Both signup providers can add a graph and authorize private activity during onboarding or in the editor. Public activity uses the separately verified platform credential. Private consent uses a separate activity OAuth app/grant with `read:user`, one-use expiring owner/session-bound state, PKCE, and selected-account identity checks. It neither expands signup scopes nor links GitHub sign-in to a Google owner's account.
+
+Controlled consent returns resume the graph step. Cancelled, failed, or wrong-account consent preserves existing public setup and offers Retry, public-only setup, or later incomplete editor repair. It cannot gate editor entry after required setup. Explicit graph removal withdraws its separate private access with immediate local removal and retryable remote revocation; it leaves sign-in connected. See [architecture section 8.5](architecture.md#85-github-activity-product-9) for production dependencies and stale-refresh protection.
 
 ## Local setup
 
