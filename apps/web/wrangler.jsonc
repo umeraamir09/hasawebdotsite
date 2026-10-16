@@ -15,7 +15,7 @@
     }
   ],
   "name": "hasaweb-web-local",
-  "main": ".open-next/worker.js",
+  "main": "worker.ts",
   "r2_buckets": [
     {
       "binding": "SITES_BUCKET",
@@ -46,6 +46,11 @@
     {
       "binding": "WORKER_SELF_REFERENCE",
       "service": "hasaweb-web-local"
+    },
+    {
+      "binding": "OWNER_API",
+      "service": "hasaweb-jobs-local",
+      "entrypoint": "OwnerApi"
     }
   ],
   "workflows": [

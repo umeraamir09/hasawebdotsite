@@ -1,0 +1,276 @@
+{
+  "recordedAt": "2026-10-16T12:48:48.757Z",
+  "method": "Cloudflare real-time tail. Whitelisted fields only; request headers, cookies, tokens and console logs discarded. Tail can sample; compare counts with client requests. cpuTime/wallTime are provider measurements if present, never inferred.",
+  "events": [
+    {
+      "at": 1792154762827,
+      "outcome": "exception",
+      "cpuTime": 0,
+      "wallTime": 25,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/__fixture/drafts?case=check",
+      "status": 503,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154762066,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 714,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154877159,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 716,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154877961,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/__fixture/direct-owner?case=check",
+      "status": 404,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154878053,
+      "outcome": "ok",
+      "cpuTime": 1,
+      "wallTime": 561,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154878644,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 4,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154878675,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 566,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154879272,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 138,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154879437,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 570,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154880037,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154880105,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 4,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154880072,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 4,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154880135,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154884363,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 794,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154884328,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 821,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154884245,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 1006,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154884340,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 1119,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154890568,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=warmup-signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154890596,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=warmup-signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154890626,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=warmup-signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154892052,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 3,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154892995,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 4,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154898819,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 142,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154899036,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 404,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154899468,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 410,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner/runtime/save?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154907408,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 708,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner/runtime/save?case=check",
+      "status": 409,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    },
+    {
+      "at": 1792154910418,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 142,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-web",
+      "version": "a79ee5a3-54b6-46c8-8edc-f7629e29c83a"
+    }
+  ]
+}

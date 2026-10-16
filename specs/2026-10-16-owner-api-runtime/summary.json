@@ -1,0 +1,348 @@
+{
+  "recordedAt": "2026-10-16T12:49:21.439Z",
+  "decision": "Full-body validation/save rejected under the strict below-10-ms target. Bounded-save revision proposed; owner agreement and completion approval pending.",
+  "method": "Provider adaptive CPU quantiles per client-time workload window. Counts, sampling and clock/window boundaries differ from client responses. CPU is not client elapsed; quantiles across Workers are not additive. Tail retention is incomplete. First candidates are not guaranteed isolate-cold. The failed large-save distribution has fewer than 100 requests.",
+  "startupMs": {
+    "jobs": 98,
+    "web": 49
+  },
+  "localChecks": [
+    {
+      "name": "default jobs HTTP entry cannot invoke owner APIs",
+      "passed": true
+    },
+    {
+      "name": "real signed session and private owner response",
+      "passed": true
+    },
+    {
+      "name": "missing, tampered, expired, revoked and deleting sessions fail",
+      "passed": true
+    },
+    {
+      "name": "exact Origin, JSON type and method checks",
+      "passed": true
+    },
+    {
+      "name": "malformed, unsafe, unknown and oversized drafts do not write",
+      "passed": true
+    },
+    {
+      "name": "atomic content and private progress, stale revision and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "parallel identities and conflicting saves remain request scoped",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB draft saves with envelope overhead",
+      "passed": true
+    },
+    {
+      "name": "permanent fixture milestone cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "persisted revocation and deletion invalidate existing signed cookies",
+      "passed": true
+    },
+    {
+      "name": "revocation between validation and write blocks mutation",
+      "passed": true
+    },
+    {
+      "name": "D1 write failure returns private 503",
+      "passed": true
+    }
+  ],
+  "deployedChecks": [
+    {
+      "name": "default jobs HTTP entry cannot invoke owner APIs",
+      "passed": true
+    },
+    {
+      "name": "real signed session and private owner response",
+      "passed": true
+    },
+    {
+      "name": "missing, tampered, expired, revoked and deleting sessions fail",
+      "passed": true
+    },
+    {
+      "name": "exact Origin, JSON type and method checks",
+      "passed": true
+    },
+    {
+      "name": "malformed, unsafe, unknown and oversized drafts do not write",
+      "passed": true
+    },
+    {
+      "name": "atomic content and private progress, stale revision and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "parallel identities and conflicting saves remain request scoped",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB draft saves with envelope overhead",
+      "passed": true
+    },
+    {
+      "name": "permanent fixture milestone cannot be reset",
+      "passed": true
+    }
+  ],
+  "recoveryChecks": [
+    {
+      "name": "default jobs HTTP entry cannot invoke owner APIs",
+      "passed": true
+    },
+    {
+      "name": "real signed session and private owner response",
+      "passed": true
+    },
+    {
+      "name": "missing, tampered, expired, revoked and deleting sessions fail",
+      "passed": true
+    },
+    {
+      "name": "exact Origin, JSON type and method checks",
+      "passed": true
+    },
+    {
+      "name": "atomic content and private progress, stale revision and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "parallel identities and conflicting saves remain request scoped",
+      "passed": true
+    },
+    {
+      "name": "permanent fixture milestone cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "persisted revocation and deletion invalidate existing signed cookies",
+      "passed": true
+    },
+    {
+      "name": "revocation between validation and write blocks mutation",
+      "passed": true
+    }
+  ],
+  "cases": [
+    {
+      "name": "owner-read",
+      "reportCompleted": false,
+      "clientCount": 100,
+      "failures": 0,
+      "elapsedP50Ms": 582.056,
+      "elapsedP95Ms": 606.987,
+      "cpu": {
+        "jobs": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 104,
+            "errors": 0,
+            "sampleInterval": 1.0947368421052632,
+            "p50Ms": 3.883,
+            "p95Ms": 5.883,
+            "p99Ms": 7.274
+          }
+        ],
+        "web": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 95,
+            "errors": 0,
+            "sampleInterval": 1,
+            "p50Ms": 0.63,
+            "p95Ms": 0.989,
+            "p99Ms": 2.843
+          }
+        ]
+      }
+    },
+    {
+      "name": "validate-1m",
+      "reportCompleted": false,
+      "clientCount": 100,
+      "failures": 0,
+      "elapsedP50Ms": 637.068,
+      "elapsedP95Ms": 735.817,
+      "cpu": {
+        "jobs": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 96,
+            "errors": 0,
+            "sampleInterval": 1,
+            "p50Ms": 22.43,
+            "p95Ms": 44.337,
+            "p99Ms": 49.569
+          }
+        ],
+        "web": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 106,
+            "errors": 0,
+            "sampleInterval": 1.092783505154639,
+            "p50Ms": 0.631,
+            "p95Ms": 0.847,
+            "p99Ms": 3.392
+          }
+        ]
+      }
+    },
+    {
+      "name": "save-small",
+      "reportCompleted": false,
+      "clientCount": 100,
+      "failures": 0,
+      "elapsedP50Ms": 610.211,
+      "elapsedP95Ms": 633.253,
+      "cpu": {
+        "jobs": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 103,
+            "errors": 0,
+            "sampleInterval": 1.0957446808510638,
+            "p50Ms": 4.86,
+            "p95Ms": 6.867,
+            "p99Ms": 8.977
+          }
+        ],
+        "web": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 98,
+            "errors": 0,
+            "sampleInterval": 1,
+            "p50Ms": 0.649,
+            "p95Ms": 0.933,
+            "p99Ms": 3.964
+          }
+        ]
+      }
+    },
+    {
+      "name": "save-1m",
+      "reportCompleted": false,
+      "clientCount": 41,
+      "failures": 1,
+      "elapsedP50Ms": 1024.719,
+      "elapsedP95Ms": 1255.483,
+      "cpu": {
+        "jobs": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 38,
+            "errors": 0,
+            "sampleInterval": 1,
+            "p50Ms": 34.192,
+            "p95Ms": 59.874,
+            "p99Ms": 65.421
+          }
+        ],
+        "web": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 39,
+            "errors": 0,
+            "sampleInterval": 1,
+            "p50Ms": 0.687,
+            "p95Ms": 0.866,
+            "p99Ms": 0.868
+          }
+        ]
+      }
+    },
+    {
+      "name": "signed-out",
+      "reportCompleted": true,
+      "clientCount": 100,
+      "failures": 0,
+      "elapsedP50Ms": 29.811,
+      "elapsedP95Ms": 34.515,
+      "cpu": {
+        "jobs": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 19,
+            "errors": 0,
+            "sampleInterval": 2.7142857142857144,
+            "p50Ms": 0.495,
+            "p95Ms": 1.677,
+            "p99Ms": 1.677
+          }
+        ],
+        "web": [
+          {
+            "colo": "LHE",
+            "status": "success",
+            "requests": 42,
+            "errors": 0,
+            "sampleInterval": 2.8,
+            "p50Ms": 0.578,
+            "p95Ms": 0.738,
+            "p99Ms": 3.648
+          }
+        ]
+      }
+    }
+  ],
+  "firstCandidates": [
+    {
+      "at": 1792154309804,
+      "outcome": "ok",
+      "cpuTime": 29,
+      "wallTime": 758,
+      "url": "https://hasaweb.site/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154403171,
+      "outcome": "ok",
+      "cpuTime": 6,
+      "wallTime": 729,
+      "url": "https://hasaweb.site/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    }
+  ],
+  "exceeded": [
+    {
+      "at": 1792154688729,
+      "outcome": "exceededCpu",
+      "cpuTime": 11,
+      "wallTime": 436,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=save-1m",
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    }
+  ],
+  "tailRetained": {
+    "jobs": 290,
+    "web": 290
+  },
+  "versions": {
+    "jobs": ["a2594e2d-cf08-4724-9106-1cf50677e165"],
+    "web": ["a79ee5a3-54b6-46c8-8edc-f7629e29c83a"]
+  }
+}

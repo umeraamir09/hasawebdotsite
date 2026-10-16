@@ -114,6 +114,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 - Owners can test the reveal in preview. Toggle settings, images, and crops save as draft changes and become public only after Publish. The editor explains that the second photo becomes publicly accessible when Face Reveal is published, even before a visitor reveals it. Disabling the add-on and republishing excludes the second photo from public assets while retaining it in the private draft.
 
 - Owners add, edit, remove, and order social or contact links. Each link has an understandable label and a valid destination or email address.
+- Each URL supports up to 2,048 UTF-8 bytes; each email address supports up to 254 UTF-8 bytes. The owner approved these limits on October 16, 2026. Free-text content retains the overall 1 MiB draft limit.
 - Owners choose which links appear in the profile and which also appear in the separate social links component. They do not need to re-enter the same link to display it in both places.
 - Visitors can follow social links or open their email application through an email contact link. Displaying an email link makes that address public; contact-form recipient addresses stay private unless separately displayed.
 

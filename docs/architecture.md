@@ -123,7 +123,7 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
 
 Splitting these keeps the public path tiny, keeps Next.js CPU off visitor traffic, and means each Worker can scale or be upgraded independently. Cross-Worker calls use service bindings and Workflow bindings.
 
-S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. Keep the web shell and provider authentication in `web`, but route hot owner APIs such as draft save and publish trigger through an internal service binding to a thin Hono entry in `jobs`. Reuse auth configuration per isolate without retaining request identities, retain real Better Auth session/deletion checks, and retest on Cloudflare before dependent feature implementation. This is a required runtime revision, not a proven Free-tier replacement. See [S-2 evidence and limitations](../specs/2026-10-15-app-runtime/results.md).
+S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. Keep the web shell and provider authentication in `web`, but route hot owner APIs through an internal service binding to a thin Hono entry in `jobs`. Cache auth configuration per isolate without retaining request identities, and retain real Better Auth session/deletion checks. See [S-2 evidence](../specs/2026-10-15-app-runtime/results.md). Phase 11A's October 16 [full-body experiment](../specs/2026-10-16-owner-api-runtime/results.md) fails at 1 MiB and includes an `exceededCpu` outcome. The owner requested implementation/testing of the bounded follow-up and approved explicit URL/email limits. Use the [tested incremental repository and protocol](../specs/2026-10-16-free-owner-saves/protocol.md), with [CPU evidence and limitations](../specs/2026-10-16-free-owner-saves/results.md) and its separate quota model. Production progress mapping/migrations belong to 11B/13, and autosave orchestration to 14. The full-body route remains unsupported for Free saves. Warm p95 evidence cannot guarantee every cold invocation or establish publication/Queue feasibility.
 
 ### 5.3 Domains and routing
 
@@ -185,7 +185,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 
 ### 7.1 Principles
 
-1. **The draft is one JSON document** per portfolio, validated by a versioned Zod schema, saved with optimistic concurrency. One row write per autosave, trivially atomic, trivially snapshot-able.
+1. **The draft is one JSON document** per portfolio, validated by a versioned Zod schema and saved with optimistic concurrency. Small validated changes use one canonical row write. Large changes prepare private bounded operations/string pieces and commit canonical content plus private progress atomically. See the [bounded-save contract](../specs/2026-10-16-free-owner-saves/protocol.md); full-body 1 MiB validation is not a supported Free save route.
 2. **Published state is immutable and versioned.** Publishing never edits files in place; it writes a new version and moves a pointer.
 3. **Live data lives outside snapshots** (GitHub activity, contact outbox, counters).
 4. **Every query is scoped to the session's owner** inside a repository layer; handlers never build raw queries.
@@ -238,6 +238,7 @@ The planned next contract version adds `requestedSubdomain` for the non-reservin
 
 - **Sample tracking:** retain Phase 09's compatible markers and validation for existing fixtures/migrated drafts. New provisioning inserts no sample profile or project. Any existing sample values remain flagged in `samples` and clear on first edit; untouched optional samples are omitted and edited samples use normal validation.
 - **Size cap:** 1 MiB per draft (D1 rows max out at 2 MB). If real portfolios outgrow it, case studies can move to their own rows without changing the API.
+- **Approved destination limits:** URLs are at most 2,048 UTF-8 bytes and draft email addresses at most 254 UTF-8 bytes, approved by the owner October 16, 2026. Free text retains the whole-draft ceiling. Existing longer destinations require explicit correction, never silent truncation.
 - **Migrations:** each component type owns a version number and a migration function; `schemaVersion` migrates the envelope. Migrations run on read and are written back on next save.
 
 ### 7.4 R2 buckets and key layout
@@ -279,6 +280,8 @@ An availability check permits continuing from Address but confers no ownership. 
 The same recovery works during required setup and private activity consent. Resume confirmed progress across devices. Structurally invalid unfinished input, including partial URLs, is stored locally and never labeled cloud-saved. The first-editor handoff transfers applicable local recovery to the editor without fabricating a successful draft save. Owner/portfolio keys must prevent recovery into another account. Invalid input must not disable the optional Skip actions.
 
 At roughly 100 owners this is a handful of thousand D1 row writes per day, far below 100,000.
+
+That estimate applies to changed-field saves. The bounded-save follow-up adds staging/index/cleanup writes for large replacements. Its [measured quota model](../specs/2026-10-16-free-owner-saves/quotas.md) budgets about 37,000 writes/day with one near-1 MiB upload in each of 30 editing sessions, or about 68,000 with maximum piece counts. Clients must coalesce edits instead of restaging full documents after each keystroke.
 
 ### 8.2 Uploads (product 13)
 
@@ -524,6 +527,8 @@ Assumptions: 100 portfolios; 30 owner editing sessions per day averaging ~250 AP
 | Emails (Resend) | <20/day typical | 100/day, 3,000/month | ~5x |
 
 Deployed S-4 observations support Next.js build-file requests bypassing Worker invocation accounting under asset-first routing. Prerendered Next.js documents and missing build files still invoke the Worker. Adaptive analytics is approximate; [evidence and configuration limits](../specs/2026-10-15-host-routing/results.md) are recorded. This does not prove overall Free-tier feasibility.
+
+The October 16 [bounded-save quota model](../specs/2026-10-16-free-owner-saves/quotas.md) supersedes the save portion of these estimates. It includes 270,000 repository reads for 3,000 ordinary saves, staging/cleanup overhead, a 426.2 MB local storage stress result for 100 maximum drafts plus attempts/pieces, and the read-budget failure when all saves scan 3,000 components. Passing Worker CPU does not establish unlimited D1 throughput. Keep future publication/Queue validation separate and observe deployed row usage and storage before enabling broad autosave traffic.
 
 ### 14.2 What will break first
 

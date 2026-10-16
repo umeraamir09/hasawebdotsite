@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { boundedJsonSchema } from "./json";
+import { boundedJsonSchema, encodeJson } from "./json";
 import {
   checkUniqueIds,
   emailSchema,
@@ -8,7 +8,7 @@ import {
   webUrlSchema,
 } from "./primitives";
 import { profileDefinition, profileSchema } from "./profile";
-import { componentRegistry, componentSchema } from "./registry";
+import { componentContentSchema, componentRegistry } from "./registry";
 
 export const DRAFT_SCHEMA_VERSION = 1;
 export const linkSchema = z
@@ -61,7 +61,7 @@ export const draftFields = {
   schemaVersion: z.literal(DRAFT_SCHEMA_VERSION),
   profile: profileSchema,
   links: z.array(linkSchema),
-  components: z.array(componentSchema),
+  components: z.array(componentContentSchema),
   appearance: appearanceSchema,
   seo: seoSchema,
   samples: samplesSchema,
@@ -101,6 +101,16 @@ const currentDraftSchema = z
   });
 export const draftSchema = boundedJsonSchema.pipe(currentDraftSchema);
 export type DraftDoc = z.infer<typeof draftSchema>;
+
+// Serialize once for both the byte guard and storage. The content schemas have
+// no transforms/defaults, so accepted input and parsed output are JSON-equivalent.
+export function serializeDraft(input: unknown): {
+  draft: DraftDoc;
+  json: string;
+} {
+  const json = encodeJson(input);
+  return { draft: currentDraftSchema.parse(input), json };
+}
 export type SocialLink = z.infer<typeof linkSchema>;
 
 // Migration staging validates only identity/version wrappers. Final validation

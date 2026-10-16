@@ -1,0 +1,1425 @@
+{
+  "recordedAt": "2026-10-16T15:44:50.649Z",
+  "completed": true,
+  "remote": false,
+  "benchmark": true,
+  "count": 2,
+  "warmups": 10,
+  "method": "Real Better Auth, web adapter and named jobs binding. All supported data mutation calls process bounded input; SQL handles canonical JSON and atomic progress/revision updates. Client elapsed is not CPU. Fixed keyed benchmark preparation executes inside the measured invocation; its extra CPU is conservatively included. Template source sizes are 1 MiB.",
+  "checks": [
+    {
+      "name": "real sessions, missing/tampered/expired/deleting owners, Origin and type guards",
+      "passed": true
+    },
+    {
+      "name": "bounded transport rejects malformed, oversized and unsafe requests",
+      "passed": true
+    },
+    {
+      "name": "small atomic patches reject stale revisions and unsafe content",
+      "passed": true
+    },
+    {
+      "name": "nested cross-document refinements remain enforced",
+      "passed": true
+    },
+    {
+      "name": "parallel saves have one revision winner",
+      "passed": true
+    },
+    {
+      "name": "nested rich-text list paths use stored discriminators",
+      "passed": true
+    },
+    {
+      "name": "approved URL and email limits apply to bounded saves",
+      "passed": true
+    },
+    {
+      "name": "private attempts, sequence checks, immutable retries and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "pending saves survive lost responses and explicit session recovery",
+      "passed": true
+    },
+    {
+      "name": "UTF-8 text assembly, quote escaping and a single atomic commit",
+      "passed": true
+    },
+    {
+      "name": "stale staged commits and permanent progress cannot overwrite canonical state",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB canonical drafts and dense trees retain their contract",
+      "passed": true
+    },
+    {
+      "name": "expired attempts cannot commit and cleanup deletes at most 32 pieces",
+      "passed": true
+    },
+    {
+      "name": "a revoked creating session can be discarded without waiting for expiry",
+      "passed": true
+    },
+    {
+      "name": "revocation/deletion and expiry block staged/direct writes",
+      "passed": true
+    },
+    {
+      "name": "a real D1 failure returns private 503",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "case": "check",
+      "at": 1792165447017,
+      "elapsedMs": 44.45,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447062,
+      "elapsedMs": 74.594,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447136,
+      "elapsedMs": 35.324,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447172,
+      "elapsedMs": 13.234,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447185,
+      "elapsedMs": 10.739,
+      "status": 403,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447196,
+      "elapsedMs": 8.323,
+      "status": 415,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447206,
+      "elapsedMs": 33.201,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447239,
+      "elapsedMs": 24.282,
+      "status": 413,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447263,
+      "elapsedMs": 25.09,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447289,
+      "elapsedMs": 24.215,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447313,
+      "elapsedMs": 22.869,
+      "status": 404,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447336,
+      "elapsedMs": 23.365,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447360,
+      "elapsedMs": 43.764,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447404,
+      "elapsedMs": 40.276,
+      "status": 409,
+      "rowsRead": 14,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447444,
+      "elapsedMs": 32.39,
+      "status": 422,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447477,
+      "elapsedMs": 27.24,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447504,
+      "elapsedMs": 31.364,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447536,
+      "elapsedMs": 28.232,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447564,
+      "elapsedMs": 46.49,
+      "status": 409,
+      "rowsRead": 41,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447611,
+      "elapsedMs": 55.367,
+      "status": 409,
+      "rowsRead": 81,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447667,
+      "elapsedMs": 34.408,
+      "status": 409,
+      "rowsRead": 85,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447701,
+      "elapsedMs": 62.099,
+      "status": 409,
+      "rowsRead": 73,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447763,
+      "elapsedMs": 55.75,
+      "status": 409,
+      "rowsRead": 21,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447821,
+      "elapsedMs": 126.84,
+      "status": 409,
+      "rowsRead": 14,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447820,
+      "elapsedMs": 127.738,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447821,
+      "elapsedMs": 173.46,
+      "status": 409,
+      "rowsRead": 14,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165447822,
+      "elapsedMs": 216.199,
+      "status": 409,
+      "rowsRead": 14,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165448039,
+      "elapsedMs": 50.944,
+      "status": 200,
+      "rowsRead": 92,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165448090,
+      "elapsedMs": 42.555,
+      "status": 200,
+      "rowsRead": 105,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452079,
+      "elapsedMs": 212.339,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452292,
+      "elapsedMs": 133.608,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452426,
+      "elapsedMs": 57.309,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452483,
+      "elapsedMs": 120.177,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452603,
+      "elapsedMs": 119.79,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165452724,
+      "elapsedMs": 391.889,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165453116,
+      "elapsedMs": 223.658,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165453340,
+      "elapsedMs": 114.729,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165453455,
+      "elapsedMs": 193.33,
+      "status": 200,
+      "rowsRead": 93,
+      "rowsWritten": 1,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165453648,
+      "elapsedMs": 89.683,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165453738,
+      "elapsedMs": 59.946,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460590,
+      "elapsedMs": 25.936,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460616,
+      "elapsedMs": 22.602,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460639,
+      "elapsedMs": 21.524,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460660,
+      "elapsedMs": 25.199,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460686,
+      "elapsedMs": 27.374,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460713,
+      "elapsedMs": 25.333,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460739,
+      "elapsedMs": 26.626,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460765,
+      "elapsedMs": 24.731,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460791,
+      "elapsedMs": 29.082,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460820,
+      "elapsedMs": 26.238,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460846,
+      "elapsedMs": 24.621,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460871,
+      "elapsedMs": 24.346,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460895,
+      "elapsedMs": 26.602,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460922,
+      "elapsedMs": 22.716,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165460945,
+      "elapsedMs": 26.627,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165463520,
+      "elapsedMs": 26.921,
+      "status": 200,
+      "rowsRead": 12,
+      "rowsWritten": 2,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165463547,
+      "elapsedMs": 23.556,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466641,
+      "elapsedMs": 27.007,
+      "status": 200,
+      "rowsRead": 7,
+      "rowsWritten": 2,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466668,
+      "elapsedMs": 33.158,
+      "status": 200,
+      "rowsRead": 18,
+      "rowsWritten": 3,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466702,
+      "elapsedMs": 23.549,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466726,
+      "elapsedMs": 30.387,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466756,
+      "elapsedMs": 30.054,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466786,
+      "elapsedMs": 26.62,
+      "status": 409,
+      "rowsRead": 9,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466813,
+      "elapsedMs": 25.35,
+      "status": 200,
+      "rowsRead": 7,
+      "rowsWritten": 2,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466839,
+      "elapsedMs": 24.801,
+      "status": 200,
+      "rowsRead": 11,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466863,
+      "elapsedMs": 27.306,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165466891,
+      "elapsedMs": 28.708,
+      "status": 409,
+      "rowsRead": 57,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165473475,
+      "elapsedMs": 51.552,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165473542,
+      "elapsedMs": 100.71,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165473685,
+      "elapsedMs": 92.623,
+      "status": 200,
+      "rowsRead": 12029,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165473815,
+      "elapsedMs": 51.049,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165473981,
+      "elapsedMs": 62.929,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474045,
+      "elapsedMs": 103.606,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474149,
+      "elapsedMs": 62.048,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474211,
+      "elapsedMs": 76.624,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474288,
+      "elapsedMs": 54.102,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474342,
+      "elapsedMs": 61.994,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474405,
+      "elapsedMs": 65.174,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474470,
+      "elapsedMs": 93.745,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474564,
+      "elapsedMs": 66.896,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474631,
+      "elapsedMs": 79.776,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165474711,
+      "elapsedMs": 61.213,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "append",
+      "at": 1792165474772,
+      "elapsedMs": 81.836,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "append",
+      "at": 1792165474854,
+      "elapsedMs": 61.261,
+      "status": 200,
+      "rowsRead": 217,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165474916,
+      "elapsedMs": 101.682,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475018,
+      "elapsedMs": 94.715,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475113,
+      "elapsedMs": 119.588,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475232,
+      "elapsedMs": 99.75,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475332,
+      "elapsedMs": 110.331,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475443,
+      "elapsedMs": 83.986,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475527,
+      "elapsedMs": 119.4,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475646,
+      "elapsedMs": 99.465,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475746,
+      "elapsedMs": 94.96,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165475841,
+      "elapsedMs": 95.189,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "remove",
+      "at": 1792165475936,
+      "elapsedMs": 162.116,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "remove",
+      "at": 1792165476098,
+      "elapsedMs": 115.921,
+      "status": 200,
+      "rowsRead": 12023,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476214,
+      "elapsedMs": 35.023,
+      "status": 200,
+      "rowsRead": 11,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476300,
+      "elapsedMs": 23.93,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476324,
+      "elapsedMs": 23.063,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476347,
+      "elapsedMs": 24.307,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 33,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476371,
+      "elapsedMs": 29.861,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476401,
+      "elapsedMs": 30.929,
+      "status": 409,
+      "rowsRead": 14,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476444,
+      "elapsedMs": 28.654,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165476473,
+      "elapsedMs": 34.303,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165479953,
+      "elapsedMs": 64.855,
+      "status": 413,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165480018,
+      "elapsedMs": 94.524,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165485106,
+      "elapsedMs": 47.58,
+      "status": 200,
+      "rowsRead": 11,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165487905,
+      "elapsedMs": 20.597,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165487925,
+      "elapsedMs": 25.15,
+      "status": 409,
+      "rowsRead": 1,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165487951,
+      "elapsedMs": 14.347,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792165490563,
+      "elapsedMs": 21.841,
+      "status": 503,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    }
+  ],
+  "windows": [
+    {
+      "name": "append",
+      "from": "2026-10-16T15:44:34.044Z",
+      "to": "2026-10-16T15:44:34.915Z",
+      "clientCount": 2
+    },
+    {
+      "name": "remove",
+      "from": "2026-10-16T15:44:34.916Z",
+      "to": "2026-10-16T15:44:36.214Z",
+      "clientCount": 2
+    }
+  ],
+  "metrics": [
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 3
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 19
+    },
+    {
+      "duration": 4
+    },
+    {
+      "duration": 10
+    },
+    {
+      "duration": 2
+    },
+    {
+      "duration": 37
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 4
+    },
+    {
+      "duration": 5
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    }
+  ]
+}

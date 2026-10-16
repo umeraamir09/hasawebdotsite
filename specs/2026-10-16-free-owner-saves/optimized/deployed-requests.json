@@ -1,0 +1,780 @@
+{
+  "recordedAt": "2026-10-16T13:21:15.667Z",
+  "completed": true,
+  "recovery": false,
+  "sampleCount": 20,
+  "warmupCount": 5,
+  "method": "HTTPS to isolated web experiment using the actual web Worker adapter and named jobs service binding. Real Better Auth and persisted session/deletion checks. Elapsed is client wall time, never CPU. First candidate is not guaranteed isolate-cold. Ten warmups and 100 samples per workload.",
+  "fixtureBytes": {
+    "draft": 1048576
+  },
+  "checks": [
+    {
+      "name": "default jobs HTTP entry cannot invoke owner APIs",
+      "passed": true
+    },
+    {
+      "name": "real signed session and private owner response",
+      "passed": true
+    },
+    {
+      "name": "missing, tampered, expired, revoked and deleting sessions fail",
+      "passed": true
+    },
+    {
+      "name": "exact Origin, JSON type and method checks",
+      "passed": true
+    },
+    {
+      "name": "malformed, unsafe, unknown and oversized drafts do not write",
+      "passed": true
+    },
+    {
+      "name": "atomic content and private progress, stale revision and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "parallel identities and conflicting saves remain request scoped",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB draft saves with envelope overhead",
+      "passed": true
+    },
+    {
+      "name": "permanent fixture milestone cannot be reset",
+      "passed": true
+    },
+    {
+      "name": "persisted revocation and deletion invalidate existing signed cookies",
+      "passed": true
+    },
+    {
+      "name": "revocation between validation and write blocks mutation",
+      "passed": true
+    }
+  ],
+  "windows": [
+    {
+      "name": "validate-1m",
+      "from": "2026-10-16T13:20:09.877Z",
+      "to": "2026-10-16T13:20:25.002Z",
+      "clientCount": 25
+    },
+    {
+      "name": "save-1m",
+      "from": "2026-10-16T13:20:25.002Z",
+      "to": "2026-10-16T13:20:58.634Z",
+      "clientCount": 25
+    }
+  ],
+  "samples": [
+    {
+      "case": "first-candidate",
+      "at": 1792156785607,
+      "elapsedMs": 1363.44,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156787071,
+      "elapsedMs": 31.902,
+      "status": 404,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156787104,
+      "elapsedMs": 628.881,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156787733,
+      "elapsedMs": 34.859,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156787768,
+      "elapsedMs": 570.101,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156788338,
+      "elapsedMs": 156.225,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156788494,
+      "elapsedMs": 581.356,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789076,
+      "elapsedMs": 32.528,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789109,
+      "elapsedMs": 35.854,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789145,
+      "elapsedMs": 32.867,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789178,
+      "elapsedMs": 32.3,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789210,
+      "elapsedMs": 32.847,
+      "status": 403,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789243,
+      "elapsedMs": 32.693,
+      "status": 415,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789276,
+      "elapsedMs": 39.853,
+      "status": 405,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789316,
+      "elapsedMs": 437.647,
+      "status": 405,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156789754,
+      "elapsedMs": 435.46,
+      "status": 400,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156790190,
+      "elapsedMs": 435.63,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156790625,
+      "elapsedMs": 420.086,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156791046,
+      "elapsedMs": 426.456,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156791476,
+      "elapsedMs": 631.686,
+      "status": 422,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156792108,
+      "elapsedMs": 605.521,
+      "status": 413,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156795621,
+      "elapsedMs": 602.885,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156796224,
+      "elapsedMs": 1383.657,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799951,
+      "elapsedMs": 1425.532,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799969,
+      "elapsedMs": 1450.359,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799962,
+      "elapsedMs": 1500.539,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799955,
+      "elapsedMs": 1513.643,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799977,
+      "elapsedMs": 1564.274,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799972,
+      "elapsedMs": 1573.111,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799948,
+      "elapsedMs": 1596.834,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799963,
+      "elapsedMs": 1583.237,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799958,
+      "elapsedMs": 1594.973,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799970,
+      "elapsedMs": 1701.379,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799953,
+      "elapsedMs": 1728.586,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799967,
+      "elapsedMs": 1716.789,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799949,
+      "elapsedMs": 1736.494,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799949,
+      "elapsedMs": 1795.229,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799966,
+      "elapsedMs": 1780.289,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156799974,
+      "elapsedMs": 1909.474,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156801884,
+      "elapsedMs": 672.03,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156801884,
+      "elapsedMs": 671.922,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156801885,
+      "elapsedMs": 671.977,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156801885,
+      "elapsedMs": 818.548,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156802704,
+      "elapsedMs": 1469.531,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156804174,
+      "elapsedMs": 588.56,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156804762,
+      "elapsedMs": 569.171,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-validate-1m",
+      "at": 1792156809878,
+      "elapsedMs": 710.287,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-validate-1m",
+      "at": 1792156810588,
+      "elapsedMs": 662.577,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-validate-1m",
+      "at": 1792156811251,
+      "elapsedMs": 622.556,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-validate-1m",
+      "at": 1792156811874,
+      "elapsedMs": 579.189,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-validate-1m",
+      "at": 1792156812453,
+      "elapsedMs": 594.081,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156813047,
+      "elapsedMs": 579.467,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156813627,
+      "elapsedMs": 597.852,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156814225,
+      "elapsedMs": 584.966,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156814810,
+      "elapsedMs": 609.216,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156815419,
+      "elapsedMs": 606.789,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156816026,
+      "elapsedMs": 599.028,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156816625,
+      "elapsedMs": 623.141,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156817248,
+      "elapsedMs": 591.275,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156817840,
+      "elapsedMs": 572.179,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156818412,
+      "elapsedMs": 590.914,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156819003,
+      "elapsedMs": 582,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156819585,
+      "elapsedMs": 599.764,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156820185,
+      "elapsedMs": 587.516,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156820772,
+      "elapsedMs": 609.876,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156821382,
+      "elapsedMs": 589.898,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156821972,
+      "elapsedMs": 589.124,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156822561,
+      "elapsedMs": 644.916,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156823207,
+      "elapsedMs": 601.689,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156823808,
+      "elapsedMs": 588.011,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "validate-1m",
+      "at": 1792156824396,
+      "elapsedMs": 605.656,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-save-1m",
+      "at": 1792156825002,
+      "elapsedMs": 1405.208,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-save-1m",
+      "at": 1792156826408,
+      "elapsedMs": 1450.046,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-save-1m",
+      "at": 1792156827858,
+      "elapsedMs": 1401.515,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-save-1m",
+      "at": 1792156829259,
+      "elapsedMs": 1450.361,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-save-1m",
+      "at": 1792156830710,
+      "elapsedMs": 1470.033,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156832180,
+      "elapsedMs": 1426.153,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156833606,
+      "elapsedMs": 1486.812,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156835093,
+      "elapsedMs": 1042.43,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156836135,
+      "elapsedMs": 1431.568,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156837567,
+      "elapsedMs": 1382.794,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156838950,
+      "elapsedMs": 1367.905,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156840318,
+      "elapsedMs": 1364.899,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156841683,
+      "elapsedMs": 1393.25,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156843076,
+      "elapsedMs": 1004.549,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156844081,
+      "elapsedMs": 1374.831,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156845456,
+      "elapsedMs": 1373.029,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156846829,
+      "elapsedMs": 1455.509,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156848285,
+      "elapsedMs": 1402.554,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156849687,
+      "elapsedMs": 1374.186,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156851061,
+      "elapsedMs": 989.916,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156852051,
+      "elapsedMs": 1377.614,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156853429,
+      "elapsedMs": 1001.323,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156854431,
+      "elapsedMs": 1358.777,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156855789,
+      "elapsedMs": 1453.594,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "save-1m",
+      "at": 1792156857243,
+      "elapsedMs": 1390.333,
+      "status": 200,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156863985,
+      "elapsedMs": 221.996,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156864207,
+      "elapsedMs": 462.511,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156864669,
+      "elapsedMs": 417.898,
+      "status": 401,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156872574,
+      "elapsedMs": 745.687,
+      "status": 409,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792156875512,
+      "elapsedMs": 154.555,
+      "status": 401,
+      "colo": "LHE"
+    }
+  ]
+}

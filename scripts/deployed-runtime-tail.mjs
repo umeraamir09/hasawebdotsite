@@ -10,13 +10,24 @@ const child = spawn(
   [
     join(dirname(require.resolve("wrangler/package.json")), "bin/wrangler.js"),
     "tail",
-    "hasaweb-s2-spike",
+    process.argv[3] ?? "hasaweb-s2-spike",
     "--format",
     "json",
   ],
   { stdio: ["ignore", "pipe", "pipe"] },
 );
 const events = [];
+let saved = Promise.resolve();
+function snapshot() {
+  saved = saved.then(async () => {
+    await mkdir(dirname(output), { recursive: true });
+    await writeFile(
+      output,
+      `${JSON.stringify({ recordedAt: new Date().toISOString(), method: "Cloudflare real-time tail. Only measurement fields retained. Tail can sample; CPU and wall time come from the provider, never client timers.", events }, null, 2)}\n`,
+    );
+  });
+  return saved;
+}
 let buffer = "";
 let depth = 0;
 let quoted = false;
@@ -52,6 +63,7 @@ child.stdout.on("data", (data) => {
             version: event.scriptVersion?.id,
           };
           events.push(row);
+          if (events.length % 10 === 0) void snapshot();
           if (events.length === 1)
             console.log(
               JSON.stringify({
@@ -74,6 +86,7 @@ async function stop() {
   if (stopping) return;
   stopping = true;
   child.kill("SIGTERM");
+  await saved;
   await mkdir(dirname(output), { recursive: true });
   await writeFile(
     output,

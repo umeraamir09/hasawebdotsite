@@ -3,7 +3,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "vars": {
-    "APP_ENV": "local"
+    "APP_ENV": "local",
+    "APP_ORIGIN": "http://127.0.0.1:8787"
   },
   "d1_databases": [
     {

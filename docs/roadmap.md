@@ -105,7 +105,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: completed Phases 01, 03, 05, 10, 11 and the recorded S-2 revision.
 - Implement and measure the thin Hono/jobs owner-API approach through internal bindings with the real session/deletion checks, representative draft validation, and the 1 MiB boundary. Include the planned content/progress write path; keep source identities scoped to each request.
-- [ ] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
+- October 16, 2026: [thin owner API measurements](../specs/2026-10-16-owner-api-runtime/results.md) fail for full-body 1 MiB saves. The owner requested implementation/testing of the [bounded-save follow-up](../specs/2026-10-16-free-owner-saves/results.md) and approved URL/email byte limits. The reusable repository, isolated integration, CPU/quotas and rollback points are recorded there. Production mapping and autosave remain in their phases. The owner approved Phase 11A completion on October 16, 2026.
+- [x] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
 
 ### Phase 11B. Extend contracts and persistence for initial setup
 
@@ -141,12 +142,14 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 11A, 11B, 12.
 - Add validated reads/saves with stored revision and atomic compare-and-swap. Save content and private progress consistently, enforce the draft-size cap and ownership checks, and protect the permanent milestone against stale updates.
+- Integrate the [measured bounded-save repository](../specs/2026-10-16-free-owner-saves/protocol.md) with the permanent 11B progress contract and portfolio columns. Add staging tables through a production migration and strict product action schemas. Preserve changed-field saves, explicit recovery and bounded cleanup; do not expose the failed full-body save experiment.
 - [ ] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address.
 
 ### Phase 14. Add shared autosave and local recovery
 
 - Dependencies: 13.
 - Share autosave for onboarding/editor content, order, appearance, ready asset references, and setup progress. Show Saving, Saved, and Couldn't save with Retry. Preserve invalid unfinished input locally without claiming it is saved across devices; make applicable recovery available after handoff.
+- Coalesce changed-field updates and orchestrate the bounded protocol for large edits. Coordinate the single owner attempt across tabs/devices, recover lost start/commit replies, and offer explicit resume/discard after reauthentication. Respect the [measured request/read/write budgets](../specs/2026-10-16-free-owner-saves/quotas.md); a full upload after each keystroke is outside that model.
 - [ ] Complete when reopening after Saved restores exact valid values/progress across sessions, same-browser invalid input survives controlled interruption, recovery stays owner/portfolio-scoped, and failures never report false Saved.
 
 ### Phase 15. Handle conflicting edits and expired sessions

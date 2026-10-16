@@ -81,19 +81,21 @@ export type CaseStudyDocument = {
 };
 // All objects are strict. HTML, inline styles, src URLs, event handlers, embeds,
 // arbitrary marks and serializer-controlled attributes cannot enter the document.
-export const richTextSchema = boundedJsonSchema.pipe(
-  z.strictObject({
-    type: z.literal("doc"),
-    content: z.array(z.union([paragraphSchema, headingSchema, listSchema])),
-  }),
-);
+export const richTextContentSchema = z.strictObject({
+  type: z.literal("doc"),
+  content: z.array(z.union([paragraphSchema, headingSchema, listSchema])),
+});
+export const caseStudyRichTextContentSchema = z.strictObject({
+  type: z.literal("doc"),
+  content: z.array(
+    z.union([paragraphSchema, headingSchema, listSchema, imageNodeSchema]),
+  ),
+});
+// Standalone consumers still need the JSON depth/size/value guard. Draft parsing
+// uses the same content rules after checking the entire tree once.
+export const richTextSchema = boundedJsonSchema.pipe(richTextContentSchema);
 export const caseStudyRichTextSchema = boundedJsonSchema.pipe(
-  z.strictObject({
-    type: z.literal("doc"),
-    content: z.array(
-      z.union([paragraphSchema, headingSchema, listSchema, imageNodeSchema]),
-    ),
-  }),
+  caseStudyRichTextContentSchema,
 );
 
 export function emptyRichText(): RichTextDocument {

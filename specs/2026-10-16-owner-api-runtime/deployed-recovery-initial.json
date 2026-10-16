@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-10-16T12:46:01.691Z",
+  "completed": false,
+  "method": "HTTPS to isolated web experiment using the actual web Worker adapter and named jobs service binding. Real Better Auth and persisted session/deletion checks. Elapsed is client wall time, never CPU. First candidate is not guaranteed isolate-cold. Ten warmups and 100 samples per workload. This recovery attempt failed while generating the large fixture before correctness checks; retained separately. The successful recovery avoids large fixture generation.",
+  "fixtureBytes": null,
+  "checks": [],
+  "windows": [],
+  "samples": [
+    {
+      "case": "first-candidate",
+      "at": 1792154760705,
+      "elapsedMs": 927.936,
+      "status": 200,
+      "colo": "LHE"
+    }
+  ]
+}

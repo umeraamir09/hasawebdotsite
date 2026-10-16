@@ -45,7 +45,7 @@ The committed `wrangler.jsonc` files name only local resources. All commands her
 
 Do not deploy these local configurations. Production resource IDs, routes, secrets, and deployment approval are configured in Phase 52 with separate production config files. No production config is supplied until real resources exist. Runtime probe tables, fixtures, handlers, and the probe handlers for the contact/GitHub Queues and publish Workflow are development scaffolding, not publishing or delivery implementations.
 
-Put local secrets in ignored `apps/web/.dev.vars`, starting from `.dev.vars.example`. Use separate development OAuth apps when authentication arrives. Never commit credentials. The current skeleton needs none.
+Put local authentication secrets in ignored `apps/web/.dev.vars` and `apps/jobs/.dev.vars`, starting from their `.dev.vars.example` files. Both Workers must use the same `APP_ORIGIN`, Better Auth signing secret, and development OAuth credentials. The named jobs owner API verifies the original session cookie independently. Never commit credentials.
 
 The configuration follows [OpenNext setup](https://opennext.js.org/cloudflare/get-started) and [Cloudflare multi-Worker development](https://developers.cloudflare.com/workers/local-development/multi-workers/).
 
@@ -56,3 +56,5 @@ If your WSL `pnpm` command resolves to a Windows executable, run commands throug
 Run `pnpm spike:render` to benchmark synthetic near-limit portfolio, case-study, and resume pages with production React in local workerd. It writes timing samples and CPU profiles under `.wrangler/render-spike/` without deploying. See the [S-1 findings and revised approach](specs/2026-10-15-publish-render/results.md) before implementing publication.
 
 Run `pnpm spike:email` for the isolated S-7 provider and atomic D1 budget fixtures. See the [email delivery results](specs/2026-10-15-email-delivery/results.md) and [live setup](specs/2026-10-15-email-delivery/live-setup.md). `pnpm spike:email:live` reads domain/delivery status; `--send` is reserved for the three explicitly authorized tests and requires the ignored local env file.
+
+Run `pnpm test:owner-runtime` after building to verify the thin owner API through the web Worker adapter and named jobs binding. See the [Phase 11A measurement protocol](specs/2026-10-16-owner-api-runtime/protocol.md) for the isolated deployed CPU experiment and cleanup.

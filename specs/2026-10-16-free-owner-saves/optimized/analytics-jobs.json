@@ -1,0 +1,72 @@
+{
+  "recordedAt": "2026-10-16T13:21:34.214314+00:00",
+  "windows": [
+    {
+      "case": "validate-1m",
+      "from": "2026-10-16T13:20:13.047Z",
+      "to": "2026-10-16T13:20:25.001Z",
+      "clientCount": 20
+    },
+    {
+      "case": "save-1m",
+      "from": "2026-10-16T13:20:32.180Z",
+      "to": "2026-10-16T13:20:58.633Z",
+      "clientCount": 20
+    }
+  ],
+  "query": "query {viewer {accounts(filter:{accountTag:\"b6f9a87e6702c76c45a8d61744826e0f\"}) {c0:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:20:13.047Z\",datetime_lt:\"2026-10-16T13:20:25.001Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c1:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-jobs\",datetime_geq:\"2026-10-16T13:20:32.180Z\",datetime_lt:\"2026-10-16T13:20:58.633Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} }}}}",
+  "result": {
+    "data": {
+      "viewer": {
+        "accounts": [
+          {
+            "c0": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 21058,
+                  "cpuTimeP95": 27743,
+                  "cpuTimeP99": 27836
+                },
+                "sum": {
+                  "cpuTimeUs": 420643,
+                  "errors": 0,
+                  "requests": 20
+                }
+              }
+            ],
+            "c1": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 33187,
+                  "cpuTimeP95": 53415,
+                  "cpuTimeP99": 53415
+                },
+                "sum": {
+                  "cpuTimeUs": 649466,
+                  "errors": 0,
+                  "requests": 19
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "errors": null
+  },
+  "units": "cpuTimePXX and cpuTimeUs are microseconds. Divide by 1000 for milliseconds. Adaptive analytics and client-time window boundaries can change counts; this is not an unsampled request trace."
+}

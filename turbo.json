@@ -1,6 +1,13 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": ["AUTH_SPIKE_CHROMIUM"],
+  "globalPassThroughEnv": [
+    "AUTH_SPIKE_CHROMIUM",
+    "OWNER_RUNTIME_SAMPLES",
+    "OWNER_RUNTIME_WARMUPS",
+    "OWNER_RUNTIME_CASES",
+    "OWNER_RUNTIME_EVIDENCE",
+    "BOUNDED_SAVE_EVIDENCE"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

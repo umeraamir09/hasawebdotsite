@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { contactSchema } from "./components/contact";
 import { githubSchema } from "./components/github";
-import { projectsSchema } from "./components/projects";
+import { projectsContentSchema, projectsSchema } from "./components/projects";
 import { resumeSchema } from "./components/resume";
 import { skillsSchema } from "./components/skills";
 import { socialLinksSchema } from "./components/social-links";
-import { textSchema } from "./components/text";
+import { textContentSchema, textSchema } from "./components/text";
 import { workExperienceSchema } from "./components/work-experience";
 import type { MigrationStep } from "./migration-contract";
 import { idSchema } from "./primitives";
@@ -198,6 +198,18 @@ const instanceSchemas = Object.values(componentRegistry).map(
   (definition) => definition.instanceSchema,
 ) as [InstanceSchema, ...InstanceSchema[]];
 export const componentSchema = z.discriminatedUnion("type", instanceSchemas);
+// Only for a draft tree which has already passed its whole-tree JSON guard.
+export const componentContentSchema = z.discriminatedUnion("type", [
+  componentRegistry.projects.instanceSchema.extend({
+    data: projectsContentSchema,
+  }),
+  componentRegistry.text.instanceSchema.extend({ data: textContentSchema }),
+  ...instanceSchemas.filter(
+    (schema) =>
+      schema !== componentRegistry.projects.instanceSchema &&
+      schema !== componentRegistry.text.instanceSchema,
+  ),
+]);
 export type DraftComponent = z.infer<typeof componentSchema>;
 export type ComponentOf<T extends ComponentType> = Extract<
   DraftComponent,

@@ -1,0 +1,3439 @@
+{
+  "recordedAt": "2026-10-16T15:53:00.677Z",
+  "completed": true,
+  "remote": true,
+  "benchmark": true,
+  "count": 100,
+  "warmups": 10,
+  "method": "Real Better Auth, web adapter and named jobs binding. All supported data mutation calls process bounded input; SQL handles canonical JSON and atomic progress/revision updates. Client elapsed is not CPU. Fixed keyed benchmark preparation executes inside the measured invocation; its extra CPU is conservatively included. Template source sizes are 1 MiB.",
+  "checks": [
+    {
+      "name": "real sessions, missing/tampered/expired/deleting owners, Origin and type guards",
+      "passed": true
+    },
+    {
+      "name": "bounded transport rejects malformed, oversized and unsafe requests",
+      "passed": true
+    },
+    {
+      "name": "small atomic patches reject stale revisions and unsafe content",
+      "passed": true
+    },
+    {
+      "name": "nested cross-document refinements remain enforced",
+      "passed": true
+    },
+    {
+      "name": "parallel saves have one revision winner",
+      "passed": true
+    },
+    {
+      "name": "nested rich-text list paths use stored discriminators",
+      "passed": true
+    },
+    {
+      "name": "approved URL and email limits apply to bounded saves",
+      "passed": true
+    },
+    {
+      "name": "private attempts, sequence checks, immutable retries and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "pending saves survive lost responses and explicit session recovery",
+      "passed": true
+    },
+    {
+      "name": "UTF-8 text assembly, quote escaping and a single atomic commit",
+      "passed": true
+    },
+    {
+      "name": "stale staged commits and permanent progress cannot overwrite canonical state",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB canonical drafts and dense trees retain their contract",
+      "passed": true
+    },
+    {
+      "name": "expired attempts cannot commit and cleanup deletes at most 32 pieces",
+      "passed": true
+    },
+    {
+      "name": "a revoked creating session can be discarded without waiting for expiry",
+      "passed": true
+    },
+    {
+      "name": "revocation/deletion and expiry block staged/direct writes",
+      "passed": true
+    },
+    {
+      "name": "a real D1 failure returns private 503",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "case": "check",
+      "at": 1792165659394,
+      "elapsedMs": 458.703,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165659858,
+      "elapsedMs": 682.584,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165660541,
+      "elapsedMs": 584.333,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165661125,
+      "elapsedMs": 32.005,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165661158,
+      "elapsedMs": 32.248,
+      "status": 403,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165661190,
+      "elapsedMs": 31.301,
+      "status": 415,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165661223,
+      "elapsedMs": 586.484,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165661809,
+      "elapsedMs": 436.879,
+      "status": 413,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165662246,
+      "elapsedMs": 436.15,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165662683,
+      "elapsedMs": 431.586,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165663114,
+      "elapsedMs": 423.852,
+      "status": 404,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165663538,
+      "elapsedMs": 427.551,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165663967,
+      "elapsedMs": 703.795,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165664671,
+      "elapsedMs": 704.738,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165665375,
+      "elapsedMs": 554.146,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165665930,
+      "elapsedMs": 409.963,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165666340,
+      "elapsedMs": 570.056,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165666910,
+      "elapsedMs": 421.586,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165667332,
+      "elapsedMs": 718.802,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165668051,
+      "elapsedMs": 702.192,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165668753,
+      "elapsedMs": 709.867,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165669463,
+      "elapsedMs": 685.568,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165670149,
+      "elapsedMs": 690.545,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165670840,
+      "elapsedMs": 706.121,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165670841,
+      "elapsedMs": 742.695,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165670841,
+      "elapsedMs": 775.38,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165670842,
+      "elapsedMs": 888.674,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165671731,
+      "elapsedMs": 692.904,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165672424,
+      "elapsedMs": 728.587,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165676316,
+      "elapsedMs": 754.787,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165677071,
+      "elapsedMs": 565.571,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165677637,
+      "elapsedMs": 701.595,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165678338,
+      "elapsedMs": 555.501,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165678894,
+      "elapsedMs": 726.553,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165679621,
+      "elapsedMs": 717.716,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165680339,
+      "elapsedMs": 574.651,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165680913,
+      "elapsedMs": 697.762,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165681611,
+      "elapsedMs": 862.341,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165682474,
+      "elapsedMs": 612.266,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165683086,
+      "elapsedMs": 564.51,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165693151,
+      "elapsedMs": 625.423,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165693777,
+      "elapsedMs": 542.368,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165694319,
+      "elapsedMs": 626.444,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165694946,
+      "elapsedMs": 719.145,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165695665,
+      "elapsedMs": 716.081,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165696381,
+      "elapsedMs": 685.243,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165697067,
+      "elapsedMs": 539.004,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165697606,
+      "elapsedMs": 718.237,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165698325,
+      "elapsedMs": 833.855,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165699159,
+      "elapsedMs": 698.544,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165699858,
+      "elapsedMs": 561.067,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165700419,
+      "elapsedMs": 669.113,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165701088,
+      "elapsedMs": 562.581,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165701651,
+      "elapsedMs": 577.743,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165702229,
+      "elapsedMs": 710.318,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165702939,
+      "elapsedMs": 813.805,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165707160,
+      "elapsedMs": 759.09,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165707919,
+      "elapsedMs": 740.579,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165711907,
+      "elapsedMs": 694.426,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165712602,
+      "elapsedMs": 575.112,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165717215,
+      "elapsedMs": 895.279,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165718110,
+      "elapsedMs": 802.191,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165718913,
+      "elapsedMs": 681.501,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165719595,
+      "elapsedMs": 564.54,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165720159,
+      "elapsedMs": 704.394,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165720864,
+      "elapsedMs": 692.72,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165721557,
+      "elapsedMs": 693.629,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165722250,
+      "elapsedMs": 693.206,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165722944,
+      "elapsedMs": 695.6,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165723640,
+      "elapsedMs": 676.568,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165733687,
+      "elapsedMs": 817.942,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165734701,
+      "elapsedMs": 808.93,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165735700,
+      "elapsedMs": 755.181,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165736650,
+      "elapsedMs": 582.694,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165738343,
+      "elapsedMs": 716.67,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165739060,
+      "elapsedMs": 959.292,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165740020,
+      "elapsedMs": 918.363,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165740938,
+      "elapsedMs": 1055.476,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165741994,
+      "elapsedMs": 896.334,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165742890,
+      "elapsedMs": 924.877,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165743815,
+      "elapsedMs": 934.957,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165744750,
+      "elapsedMs": 921.814,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165745672,
+      "elapsedMs": 928.191,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165746601,
+      "elapsedMs": 928.76,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-append",
+      "at": 1792165747530,
+      "elapsedMs": 898.44,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165748428,
+      "elapsedMs": 945.143,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165749374,
+      "elapsedMs": 899.94,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165750274,
+      "elapsedMs": 945.258,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165751219,
+      "elapsedMs": 1113.322,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165752333,
+      "elapsedMs": 1141.477,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165753474,
+      "elapsedMs": 900.627,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165754375,
+      "elapsedMs": 907.878,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165755283,
+      "elapsedMs": 919.373,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165756202,
+      "elapsedMs": 951.3,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165757154,
+      "elapsedMs": 954.096,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165758108,
+      "elapsedMs": 939.308,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165759047,
+      "elapsedMs": 917.983,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165759965,
+      "elapsedMs": 911.506,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165760877,
+      "elapsedMs": 907.519,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165761784,
+      "elapsedMs": 934.54,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165762719,
+      "elapsedMs": 939.716,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165763659,
+      "elapsedMs": 934.371,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165764593,
+      "elapsedMs": 923.763,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165765517,
+      "elapsedMs": 923.038,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165766440,
+      "elapsedMs": 956.471,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165767397,
+      "elapsedMs": 924.043,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165768321,
+      "elapsedMs": 921.173,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165769242,
+      "elapsedMs": 928.995,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165770172,
+      "elapsedMs": 929.017,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165771101,
+      "elapsedMs": 932.165,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165772033,
+      "elapsedMs": 907.837,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165772941,
+      "elapsedMs": 948.906,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165773890,
+      "elapsedMs": 916.418,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165774806,
+      "elapsedMs": 950.687,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165775757,
+      "elapsedMs": 933.822,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165776691,
+      "elapsedMs": 954.971,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165777646,
+      "elapsedMs": 943.271,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165778590,
+      "elapsedMs": 903.298,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165779493,
+      "elapsedMs": 938.317,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165780432,
+      "elapsedMs": 907.131,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165781339,
+      "elapsedMs": 946.633,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165782286,
+      "elapsedMs": 917.556,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165783203,
+      "elapsedMs": 926.709,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165784130,
+      "elapsedMs": 891.204,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165785021,
+      "elapsedMs": 919.382,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165785941,
+      "elapsedMs": 929.029,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165786870,
+      "elapsedMs": 939.683,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165787810,
+      "elapsedMs": 937.036,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165788747,
+      "elapsedMs": 946.855,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165789694,
+      "elapsedMs": 946.607,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165790640,
+      "elapsedMs": 937.823,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165791578,
+      "elapsedMs": 936.01,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165792515,
+      "elapsedMs": 922.171,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165793437,
+      "elapsedMs": 925.784,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165794363,
+      "elapsedMs": 941.052,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165795304,
+      "elapsedMs": 935.242,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165796239,
+      "elapsedMs": 1096.62,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165797336,
+      "elapsedMs": 911.272,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165798247,
+      "elapsedMs": 939.087,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165799187,
+      "elapsedMs": 903.763,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165800090,
+      "elapsedMs": 930.783,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165801021,
+      "elapsedMs": 928.305,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165801950,
+      "elapsedMs": 952.89,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165802903,
+      "elapsedMs": 940.146,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165803843,
+      "elapsedMs": 943.789,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165804787,
+      "elapsedMs": 950.198,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165805737,
+      "elapsedMs": 928.733,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165806666,
+      "elapsedMs": 935.578,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165807602,
+      "elapsedMs": 993.777,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165808596,
+      "elapsedMs": 942.661,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165809538,
+      "elapsedMs": 1104.662,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165810643,
+      "elapsedMs": 950.634,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165811594,
+      "elapsedMs": 912.845,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165812507,
+      "elapsedMs": 925.386,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165813432,
+      "elapsedMs": 970.348,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165814403,
+      "elapsedMs": 934.107,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165815337,
+      "elapsedMs": 922.215,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165816259,
+      "elapsedMs": 1079.949,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165817339,
+      "elapsedMs": 967.132,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165818307,
+      "elapsedMs": 972.856,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165819280,
+      "elapsedMs": 907.519,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165820187,
+      "elapsedMs": 932.552,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165821120,
+      "elapsedMs": 927.445,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165822048,
+      "elapsedMs": 971.82,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165823019,
+      "elapsedMs": 924.23,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165823944,
+      "elapsedMs": 947.579,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165824891,
+      "elapsedMs": 939.188,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165825831,
+      "elapsedMs": 908.002,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165826739,
+      "elapsedMs": 900.37,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165827640,
+      "elapsedMs": 959.767,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165828599,
+      "elapsedMs": 924.015,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165829524,
+      "elapsedMs": 938.329,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165830462,
+      "elapsedMs": 921.471,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165831384,
+      "elapsedMs": 996.425,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165832380,
+      "elapsedMs": 972.52,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165833353,
+      "elapsedMs": 1019.075,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165834372,
+      "elapsedMs": 941.405,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165835313,
+      "elapsedMs": 933.386,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165836247,
+      "elapsedMs": 1006.084,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165837253,
+      "elapsedMs": 909.485,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165838163,
+      "elapsedMs": 931.669,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165839094,
+      "elapsedMs": 950.506,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165840045,
+      "elapsedMs": 958.957,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165841004,
+      "elapsedMs": 1055.53,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "append",
+      "at": 1792165842060,
+      "elapsedMs": 950.116,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165843010,
+      "elapsedMs": 974.15,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165843985,
+      "elapsedMs": 1015.662,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165845000,
+      "elapsedMs": 961.444,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165845962,
+      "elapsedMs": 985.451,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165846948,
+      "elapsedMs": 1004.435,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165847952,
+      "elapsedMs": 990.62,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165848943,
+      "elapsedMs": 1017.009,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165849960,
+      "elapsedMs": 996.6,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165850957,
+      "elapsedMs": 991.221,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "warmup-remove",
+      "at": 1792165851948,
+      "elapsedMs": 968.546,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165852916,
+      "elapsedMs": 959.916,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165853876,
+      "elapsedMs": 989.643,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165854866,
+      "elapsedMs": 946.048,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165855812,
+      "elapsedMs": 1506.031,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165857318,
+      "elapsedMs": 1054.675,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165858373,
+      "elapsedMs": 999.889,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165859373,
+      "elapsedMs": 988.604,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165860362,
+      "elapsedMs": 992.553,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165861354,
+      "elapsedMs": 1039.001,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165862393,
+      "elapsedMs": 970.154,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165863364,
+      "elapsedMs": 1016.709,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165864380,
+      "elapsedMs": 989.673,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165865370,
+      "elapsedMs": 975.686,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165866346,
+      "elapsedMs": 1016.687,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165867363,
+      "elapsedMs": 968.129,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165868331,
+      "elapsedMs": 1004.819,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165869336,
+      "elapsedMs": 968.914,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165870305,
+      "elapsedMs": 976.185,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165871281,
+      "elapsedMs": 1121.836,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165872403,
+      "elapsedMs": 988.997,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165873393,
+      "elapsedMs": 937.922,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165874331,
+      "elapsedMs": 915.68,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165875246,
+      "elapsedMs": 916.37,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165876163,
+      "elapsedMs": 957.148,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165877120,
+      "elapsedMs": 972.982,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165878093,
+      "elapsedMs": 936.48,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165879030,
+      "elapsedMs": 971.172,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165880001,
+      "elapsedMs": 973.33,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165880974,
+      "elapsedMs": 977.298,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165881952,
+      "elapsedMs": 949.847,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165882901,
+      "elapsedMs": 952.775,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165883854,
+      "elapsedMs": 988.955,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165884843,
+      "elapsedMs": 990.078,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165885833,
+      "elapsedMs": 927.678,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165886761,
+      "elapsedMs": 962.172,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165887724,
+      "elapsedMs": 933.527,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165888657,
+      "elapsedMs": 938.647,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165889596,
+      "elapsedMs": 960.437,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165890556,
+      "elapsedMs": 970.267,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165891527,
+      "elapsedMs": 973.503,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165892500,
+      "elapsedMs": 940.526,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165893441,
+      "elapsedMs": 970.165,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165894411,
+      "elapsedMs": 969.732,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165895381,
+      "elapsedMs": 966.449,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165896347,
+      "elapsedMs": 988.533,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165897336,
+      "elapsedMs": 981.01,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165898317,
+      "elapsedMs": 945.195,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165899262,
+      "elapsedMs": 1019.922,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165900282,
+      "elapsedMs": 963.182,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165901246,
+      "elapsedMs": 1230.129,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165902476,
+      "elapsedMs": 968.463,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165903444,
+      "elapsedMs": 980.364,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165904425,
+      "elapsedMs": 953.511,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165905378,
+      "elapsedMs": 935.185,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165906314,
+      "elapsedMs": 1123.529,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165907437,
+      "elapsedMs": 1032.139,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165908469,
+      "elapsedMs": 1157.283,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165909627,
+      "elapsedMs": 982.541,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165910609,
+      "elapsedMs": 985.973,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165911595,
+      "elapsedMs": 960.061,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165912556,
+      "elapsedMs": 971.179,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165913527,
+      "elapsedMs": 947.136,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165914474,
+      "elapsedMs": 958.98,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165915433,
+      "elapsedMs": 994.363,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165916428,
+      "elapsedMs": 1010.039,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165917438,
+      "elapsedMs": 985.904,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165918424,
+      "elapsedMs": 1040.544,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165919464,
+      "elapsedMs": 973.43,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165920438,
+      "elapsedMs": 978.36,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165921416,
+      "elapsedMs": 1009.875,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165922426,
+      "elapsedMs": 976.984,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165923403,
+      "elapsedMs": 1001.682,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165924405,
+      "elapsedMs": 971.372,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165925376,
+      "elapsedMs": 985.44,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165926362,
+      "elapsedMs": 1147.589,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165927509,
+      "elapsedMs": 981.296,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165928491,
+      "elapsedMs": 995.257,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165929486,
+      "elapsedMs": 977.996,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165930464,
+      "elapsedMs": 956.699,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165931421,
+      "elapsedMs": 963.564,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165932385,
+      "elapsedMs": 990.29,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165933375,
+      "elapsedMs": 990.011,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165934365,
+      "elapsedMs": 954.766,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165935320,
+      "elapsedMs": 961.316,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165936281,
+      "elapsedMs": 1087.178,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165937369,
+      "elapsedMs": 994.343,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165938363,
+      "elapsedMs": 1006.125,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165939369,
+      "elapsedMs": 1007.131,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165940377,
+      "elapsedMs": 994.691,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165941371,
+      "elapsedMs": 1005.165,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165942377,
+      "elapsedMs": 973.639,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165943350,
+      "elapsedMs": 959.038,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165944310,
+      "elapsedMs": 924.797,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165945234,
+      "elapsedMs": 1012.612,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165946247,
+      "elapsedMs": 1043.607,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165947291,
+      "elapsedMs": 1009.029,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165948300,
+      "elapsedMs": 993.192,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165949293,
+      "elapsedMs": 1502.454,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165950796,
+      "elapsedMs": 939.244,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "remove",
+      "at": 1792165951735,
+      "elapsedMs": 960.516,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165952696,
+      "elapsedMs": 684.442,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165953788,
+      "elapsedMs": 551.091,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165954339,
+      "elapsedMs": 708.555,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165955047,
+      "elapsedMs": 703.9,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165955751,
+      "elapsedMs": 668.596,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165956420,
+      "elapsedMs": 693.113,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165957285,
+      "elapsedMs": 637.981,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165957923,
+      "elapsedMs": 872.961,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165965699,
+      "elapsedMs": 669.757,
+      "status": 413,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165966369,
+      "elapsedMs": 815.958,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165970976,
+      "elapsedMs": 755.235,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165975423,
+      "elapsedMs": 438.384,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165975861,
+      "elapsedMs": 786.669,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165976648,
+      "elapsedMs": 160.632,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    },
+    {
+      "case": "check",
+      "at": 1792165980117,
+      "elapsedMs": 559.572,
+      "status": 503,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": "LHE"
+    }
+  ],
+  "windows": [
+    {
+      "name": "append",
+      "from": "2026-10-16T15:48:59.059Z",
+      "to": "2026-10-16T15:50:43.010Z",
+      "clientCount": 100
+    },
+    {
+      "name": "remove",
+      "from": "2026-10-16T15:50:43.010Z",
+      "to": "2026-10-16T15:52:32.696Z",
+      "clientCount": 100
+    }
+  ],
+  "metrics": [
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 2.7165
+      },
+      "duration": 2.7165,
+      "changes": 1,
+      "last_row_id": 0,
+      "changed_db": true,
+      "size_after": 3407872,
+      "rows_read": 0,
+      "rows_written": 0,
+      "num_tables": 18,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 118.5573
+      },
+      "duration": 118.5573,
+      "changes": 29,
+      "last_row_id": 3,
+      "changed_db": true,
+      "size_after": 3432448,
+      "rows_read": 3012,
+      "rows_written": 58,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3957
+      },
+      "duration": 0.3957,
+      "changes": 0,
+      "last_row_id": 3,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3411
+      },
+      "duration": 0.3411,
+      "changes": 0,
+      "last_row_id": 1,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 3.2102
+      },
+      "duration": 3.2102,
+      "changes": 2,
+      "last_row_id": 5,
+      "changed_db": true,
+      "size_after": 3432448,
+      "rows_read": 0,
+      "rows_written": 4,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.1964
+      },
+      "duration": 0.1964,
+      "changes": 0,
+      "last_row_id": 2,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 0,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.3872
+      },
+      "duration": 0.3872,
+      "changes": 0,
+      "last_row_id": 1,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.2627
+      },
+      "duration": 0.2627,
+      "changes": 0,
+      "last_row_id": 1,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 1,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 2.6832
+      },
+      "duration": 2.6832,
+      "changes": 2,
+      "last_row_id": 1,
+      "changed_db": true,
+      "size_after": 3432448,
+      "rows_read": 1,
+      "rows_written": 1,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 4.7836
+      },
+      "duration": 4.7836,
+      "changes": 0,
+      "last_row_id": 1,
+      "changed_db": false,
+      "size_after": 3432448,
+      "rows_read": 3,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 22.8274
+      },
+      "duration": 22.8274,
+      "changes": 2,
+      "last_row_id": 1,
+      "changed_db": true,
+      "size_after": 5529600,
+      "rows_read": 1,
+      "rows_written": 1,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 2.243
+      },
+      "duration": 2.243,
+      "changes": 2,
+      "last_row_id": 1,
+      "changed_db": true,
+      "size_after": 5529600,
+      "rows_read": 1,
+      "rows_written": 1,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 3.0615
+      },
+      "duration": 3.0615,
+      "changes": 2,
+      "last_row_id": 1,
+      "changed_db": true,
+      "size_after": 4481024,
+      "rows_read": 1,
+      "rows_written": 1,
+      "num_tables": 19,
+      "total_attempts": 1
+    },
+    {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "MRS",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 4.9138
+      },
+      "duration": 4.9138,
+      "changes": 2,
+      "last_row_id": 1,
+      "changed_db": true,
+      "size_after": 3407872,
+      "rows_read": 63,
+      "rows_written": 1,
+      "num_tables": 18,
+      "total_attempts": 1
+    }
+  ]
+}

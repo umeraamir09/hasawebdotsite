@@ -1,0 +1,7 @@
+# Copy the same authentication values configured for web. The named owner API
+# verifies the original signed cookie using the same database and signing key.
+BETTER_AUTH_SECRET=replace-with-the-same-web-signing-secret
+GITHUB_CLIENT_ID=replace-with-local-github-oauth-client-id
+GITHUB_CLIENT_SECRET=replace-with-local-github-oauth-client-secret
+GOOGLE_CLIENT_ID=replace-with-local-google-oauth-client-id
+GOOGLE_CLIENT_SECRET=replace-with-local-google-oauth-client-secret

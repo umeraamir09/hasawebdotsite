@@ -1,0 +1,21 @@
+# Proposed revision if full-body saves exceed the budget
+
+Status: proposed for owner agreement, not implemented or approved by implication.
+
+Keep the measured thin owner API, shared Better Auth configuration and named binding. Keep the 1 MiB content ceiling, one private canonical draft, separate private progress and atomic revision checks. Do not use a paid-plan assumption. Reject a single invocation which parses, validates and serializes the entire maximum draft as a supported Free-tier save implementation if its measured CPU exceeds the target.
+
+The next experiment should implement a bounded, revision-scoped save protocol before Phase 13:
+
+1. An authenticated start request creates a private save attempt tied to the persisted owner, session, expected draft revision and a random server-issued attempt ID. Store separate proposed progress and immutable input metadata for that attempt. Never change the canonical draft or progress during preparation.
+2. Upload immutable, sequential UTF-8 pieces into private staging rows. Start the experiment at 32 KiB per request, then choose a measured bound rather than treating this number as an approved product restriction. Enforce aggregate 1 MiB canonical draft bytes, a bounded envelope, sequence/digest checks and a short expiry. Repeated requests must be idempotent; content cannot change after validation begins. Every request repeats persisted session and deletion checks.
+3. Run server-owned validation in bounded continuations against immutable staged input. Preserve every existing version 1 allowlist, unique/singleton rule, rich-text depth limit, asset reference and sample-marker check. Large strings and nested structures must be processed across piece boundaries; a piece is not a component-size limit. The client cannot assert that validation passed. Record validation state and the content generation/digest it covers.
+4. Commit only a fully validated attempt. Assemble the final canonical JSON inside D1, or another measured mechanism which avoids loading the full draft back into Worker JavaScript for commit. In one D1 transaction, recheck the active owner/session, expected revision, permanent editor milestone and matching validated generation, then update canonical content, private progress and revision together. A stale/revoked/expired/invalid attempt changes nothing. Keep publication snapshots independent.
+5. Expire and delete abandoned staging rows with bounded cleanup. Test competing attempts, chunk reorder/duplication, partial multibyte characters, a large single field, altered input after validation, revocation/deletion during preparation and commit, failed validation, interrupted retries and stale revision conflicts. Re-measure provider CPU and startup for every request class, including commit and cleanup, and account for the additional D1/request quotas at autosave volume.
+
+This changes the save transport and preparation protocol. It does not add a second editable draft, publish partial content, lower the 1 MiB ceiling or move trust to the browser. Its feasibility remains unproven until measured. The existing bounded-preparation fallback in S-2 is the starting point; the immutable attempt, server validation generation, cross-piece strings and atomic canonical/progress commit are the concrete follow-up to measure.
+
+Phase 11A can use its alternative completion criterion only after the owner agrees to a compatible revision. Agreement to this document does not implement the staged protocol or establish its CPU/quotas. Dependent APIs must not silently ship the failed full-body path.
+
+## Implemented follow-up
+
+On October 16, 2026 the owner explicitly requested implementation/testing of the bounded approach with reversible Git changes, then approved 2,048-byte URL and 254-byte email limits. The [implemented protocol](../2026-10-16-free-owner-saves/protocol.md), [measurements](../2026-10-16-free-owner-saves/results.md) and [quota model](../2026-10-16-free-owner-saves/quotas.md) supersede the implementation-pending status above. The original failed measurements remain historical evidence. Agreement to implementation and field limits does not approve a phase checkbox; completion still requires the owner's post-implementation answer.

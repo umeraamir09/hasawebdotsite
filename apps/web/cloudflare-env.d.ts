@@ -15,6 +15,7 @@ interface CloudflareEnv {
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   SITE: Fetcher;
   JOBS: Fetcher;
+  OWNER_API: Fetcher;
   CONTACT_QUEUE: Queue;
   GITHUB_QUEUE: Queue;
   PUBLISH_WORKFLOW: Workflow;

@@ -17,7 +17,8 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "@hasaweb/db": "workspace:*",
-    "@hasaweb/schema": "workspace:*"
+    "@hasaweb/schema": "workspace:*",
+    "@hasaweb/auth": "workspace:*"
   },
   "devDependencies": {
     "@types/react": "19.3.0",

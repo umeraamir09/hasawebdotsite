@@ -5,7 +5,7 @@ export const JSON_MAX_DEPTH = 64;
 
 // Inspect before Zod's recursive schemas or JSON.stringify can exhaust the stack.
 // Reject values JSON would silently remove or change.
-export function assertJson(input: unknown, maxBytes = DRAFT_MAX_BYTES): void {
+export function encodeJson(input: unknown, maxBytes = DRAFT_MAX_BYTES): string {
   const ancestors = new Set<object>();
   function visit(value: unknown, depth: number): void {
     if (depth > JSON_MAX_DEPTH)
@@ -50,9 +50,15 @@ export function assertJson(input: unknown, maxBytes = DRAFT_MAX_BYTES): void {
     ancestors.delete(value);
   }
   visit(input, 0);
-  const bytes = new TextEncoder().encode(JSON.stringify(input)).byteLength;
+  const json = JSON.stringify(input);
+  const bytes = new TextEncoder().encode(json).byteLength;
   if (bytes > maxBytes)
     throw new Error(`Draft exceeds ${maxBytes} UTF-8 bytes`);
+  return json;
+}
+
+export function assertJson(input: unknown, maxBytes = DRAFT_MAX_BYTES): void {
+  encodeJson(input, maxBytes);
 }
 
 export const boundedJsonSchema = z.unknown().superRefine((input, ctx) => {

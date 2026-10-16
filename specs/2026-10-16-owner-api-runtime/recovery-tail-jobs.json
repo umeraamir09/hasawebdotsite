@@ -1,0 +1,265 @@
+{
+  "recordedAt": "2026-10-16T12:48:48.637Z",
+  "method": "Cloudflare real-time tail. Whitelisted fields only; request headers, cookies, tokens and console logs discarded. Tail can sample; compare counts with client requests. cpuTime/wallTime are provider measurements if present, never inferred.",
+  "events": [
+    {
+      "at": 1792154762828,
+      "outcome": "exceededCpu",
+      "cpuTime": 12,
+      "wallTime": 22,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/__fixture/drafts?case=check",
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154762069,
+      "outcome": "ok",
+      "cpuTime": 7,
+      "wallTime": 710,
+      "url": "https://hasaweb.site/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154877161,
+      "outcome": "ok",
+      "cpuTime": 8,
+      "wallTime": 713,
+      "url": "https://hasaweb.site/api/owner?case=first-candidate",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154877963,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev/__fixture/direct-owner?case=check",
+      "status": 404,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154878055,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 557,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154878646,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154878676,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 563,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154879274,
+      "outcome": "ok",
+      "cpuTime": 2,
+      "wallTime": 135,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154879438,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 567,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154880038,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154880074,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154880107,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154880137,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 403,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154884329,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 817,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154884364,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 792,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154884246,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 1003,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 200,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154886951,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 543,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 409,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154890569,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner?case=warmup-signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154890598,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner?case=warmup-signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154892025,
+      "outcome": "ok",
+      "cpuTime": 0,
+      "wallTime": 0,
+      "url": "https://hasaweb.site/api/owner?case=signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154893024,
+      "outcome": "ok",
+      "cpuTime": 2,
+      "wallTime": 3,
+      "url": "https://hasaweb.site/api/owner?case=signed-out",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154898821,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 139,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154899038,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 401,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154899470,
+      "outcome": "ok",
+      "cpuTime": 3,
+      "wallTime": 408,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154907412,
+      "outcome": "ok",
+      "cpuTime": 4,
+      "wallTime": 702,
+      "url": "https://hasaweb.site/api/owner/runtime/save?case=check",
+      "status": 409,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    },
+    {
+      "at": 1792154910420,
+      "outcome": "ok",
+      "cpuTime": 1,
+      "wallTime": 138,
+      "url": "https://hasaweb.site/api/owner?case=check",
+      "status": 401,
+      "script": "hasaweb-owner-runtime-jobs",
+      "version": "a2594e2d-cf08-4724-9106-1cf50677e165"
+    }
+  ]
+}

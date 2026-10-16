@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -33,6 +33,23 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
   );
   assert.equal(migrate.status, 0, migrate.stdout + migrate.stderr);
   const profile = await mkdtemp(join(tmpdir(), "hasaweb-auth-ui-"));
+  // The built Worker now routes owner requests through the named jobs entry.
+  const jobsConfig = join(root, ".wrangler/auth-ui/jobs.json");
+  const jobs = JSON.parse(
+    await readFile(join(root, "apps/jobs/wrangler.jsonc"), "utf8"),
+  );
+  jobs.main = join(root, "apps/jobs/src/index.ts");
+  jobs.d1_databases[0].migrations_dir = join(root, "packages/db/migrations");
+  jobs.vars = {
+    APP_ENV: "local",
+    APP_ORIGIN: `http://127.0.0.1:${port}`,
+    BETTER_AUTH_SECRET: "local-browser-fixture-secret-with-32-characters",
+    GITHUB_CLIENT_ID: "fixture-github",
+    GITHUB_CLIENT_SECRET: "fixture-secret",
+    GOOGLE_CLIENT_ID: "fixture-google",
+    GOOGLE_CLIENT_SECRET: "fixture-secret",
+  };
+  await writeFile(jobsConfig, JSON.stringify(jobs));
   const server = spawn(
     process.execPath,
     [
@@ -40,6 +57,8 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
       "dev",
       "--config",
       "apps/web/wrangler.jsonc",
+      "--config",
+      jobsConfig,
       "--persist-to",
       uiState,
       "--port",
@@ -94,7 +113,7 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
       } catch {}
       await setTimeout(100);
     }
-    // Exercise the actual Next route adapters and local-cookie configuration.
+    // Exercise the actual web/auth adapters, named owner binding and local cookies.
     const signedOut = await fetch(`http://127.0.0.1:${port}/api/owner`);
     assert.equal(signedOut.status, 401);
     assert.equal(signedOut.headers.get("cache-control"), "private, no-store");
@@ -125,7 +144,7 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
       `http://127.0.0.1:${port}/api/auth/callback/github`,
     );
     checks.push(
-      "built Next routes reach the real auth and owner handlers with local bindings",
+      "built web/auth adapters and named owner binding reach the real handlers",
     );
     browser = spawn(
       process.env.AUTH_SPIKE_CHROMIUM ?? "/opt/google/chrome/chrome",
