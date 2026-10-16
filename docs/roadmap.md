@@ -105,8 +105,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: completed Phases 01, 03, 05, 10, 11 and the recorded S-2 revision.
 - Implement and measure the thin Hono/jobs owner-API approach through internal bindings with the real session/deletion checks, representative draft validation, and the 1 MiB boundary. Include the planned content/progress write path; keep source identities scoped to each request.
-- October 16, 2026: [thin owner API measurements](../specs/2026-10-16-owner-api-runtime/results.md) fail for full-body 1 MiB saves. The owner requested implementation/testing of the [bounded-save follow-up](../specs/2026-10-16-free-owner-saves/results.md) and approved URL/email byte limits. The reusable repository, isolated integration, CPU/quotas and rollback points are recorded there. Production mapping and autosave remain in their phases. Phase completion approval is pending; this checkbox remains deliberately open until the owner answers the post-implementation question.
-- [ ] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
+- October 16, 2026: [thin owner API measurements](../specs/2026-10-16-owner-api-runtime/results.md) fail for full-body 1 MiB saves. The owner requested implementation/testing of the [bounded-save follow-up](../specs/2026-10-16-free-owner-saves/results.md) and approved URL/email byte limits. The reusable repository, isolated integration, CPU/quotas and rollback points are recorded there. Production mapping and autosave remain in their phases. The owner approved Phase 11A completion on October 16, 2026.
+- [x] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
 
 ### Phase 11B. Extend contracts and persistence for initial setup
 

@@ -1,6 +1,6 @@
 # Bounded owner-save results
 
-October 16, 2026. The thin jobs owner API plus incremental D1 saves meets the measured warm p95 CPU target for the bounded operations below while retaining the 1 MiB draft ceiling. This is the tested runtime foundation for Phase 11A. Production portfolio/progress mapping and migrations remain in Phases 11B/13, and browser autosave/recovery orchestration remains in 14. Phase 11A's checkbox still awaits the owner's post-implementation approval.
+October 16, 2026. The thin jobs owner API plus incremental D1 saves meets the measured warm p95 CPU target for the bounded operations below while retaining the 1 MiB draft ceiling. This is the tested runtime foundation for Phase 11A. Production portfolio/progress mapping and migrations remain in Phases 11B/13, and browser autosave/recovery orchestration remains in 14. The owner approved Phase 11A completion on October 16, 2026, and its roadmap checkbox is checked.
 
 The owner explicitly requested implementation/testing with reversible Git changes and approved the only field-limit changes: URLs at most 2,048 UTF-8 bytes and email addresses at most 254 UTF-8 bytes. Free text and all MVP component types remain supported. See the [protocol](protocol.md) for validation, recovery, expiry and integration details.
 
