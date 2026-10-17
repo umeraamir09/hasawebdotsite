@@ -7,6 +7,7 @@ import { ownerApi, privateJson } from "../src/owner-api";
 import { ownerRepositories, type SessionIdentity } from "../src/repositories";
 import { RESERVED_SUBDOMAINS } from "../src/reserved-subdomains";
 import * as schema from "../src/schema";
+import { runGitHubChecks, verifyGitHubRestart } from "./github";
 import { runSetupChecks } from "./setup";
 
 function equal(actual: unknown, expected: unknown) {
@@ -67,6 +68,7 @@ export default {
         asset: (await repositories.assets.get("asset-a"))?.status,
         counter: (await repositories.counters.get("edits", 0))?.count,
         claim: (await repositories.claims.current())?.name,
+        githubCleanup: await verifyGitHubRestart(env.DB),
       });
     }
     const checks: string[] = [];
@@ -456,19 +458,9 @@ export default {
         },
       );
       await check(
-        "connected GitHub data and recipient writes ignore injected portfolio IDs",
+        "GitHub selection and recipient writes ignore injected portfolio IDs",
         async () => {
-          await alice.github.saveConnection({
-            login: "alice",
-            githubUserId: "1",
-            status: "ok",
-            tokenEnc: "encrypted-fixture",
-            privateEnabled: true,
-          });
-          await alice.github.saveActivity({
-            publicDays: [{ count: 2 }],
-            privateCounts: [{ count: 3 }],
-          });
+          await alice.github.select({ id: "1", login: "alice" }, null);
           await alice.recipient.save({
             email: "private@hasaweb.invalid",
             verifiedAt: now,
@@ -476,25 +468,18 @@ export default {
           equal(await bob.github.getConnection(), undefined);
           equal(await bob.github.getActivity(), undefined);
           equal(await bob.recipient.get(), undefined);
-          const connection = {
+          const selected = {
+            id: "2",
             login: "bob",
-            githubUserId: "2",
-            status: "ok" as const,
             portfolioId: "portfolio-a",
           };
-          await bob.github.saveConnection(connection);
-          const activity = { publicDays: [], portfolioId: "portfolio-a" };
-          await bob.github.saveActivity(activity);
-          const recipient = {
+          await bob.github.select(selected, null);
+          await bob.recipient.save({
             email: "bob@hasaweb.invalid",
             portfolioId: "portfolio-a",
-          };
-          await bob.recipient.save(recipient);
-          await bob.github.disconnect();
-          equal((await alice.github.getConnection())?.login, "alice");
-          equal((await alice.github.getActivity())?.privateCounts, [
-            { count: 3 },
-          ]);
+          } as { email: string });
+          await bob.github.disconnect(1);
+          equal((await alice.github.getConnection())?.identity.login, "alice");
           equal(
             (await alice.recipient.get())?.email,
             "private@hasaweb.invalid",
@@ -502,13 +487,12 @@ export default {
         },
       );
       await check(
-        "GitHub disconnect atomically clears grant and private counts",
+        "GitHub disconnect advances generation and retains public selection",
         async () => {
-          await alice.github.disconnect();
-          equal((await alice.github.getConnection())?.tokenEnc, null);
+          await alice.github.disconnect(1);
+          equal((await alice.github.getConnection())?.generation, 2);
           equal((await alice.github.getConnection())?.privateEnabled, false);
-          equal((await alice.github.getActivity())?.privateCounts, null);
-          equal((await alice.github.getActivity())?.publicDays, [{ count: 2 }]);
+          equal((await alice.github.getConnection())?.identity.login, "alice");
         },
       );
       await check(
@@ -911,11 +895,7 @@ export default {
             }),
           );
           await rejects(() =>
-            held.github.saveConnection({
-              login: "held",
-              githubUserId: "3",
-              status: "ok",
-            }),
+            held.github.select({ id: "3", login: "held" }, null),
           );
           await rejects(() =>
             held.recipient.save({ email: "held@hasaweb.invalid" }),
@@ -1007,6 +987,7 @@ export default {
           );
         },
       );
+      await runGitHubChecks(env.DB, check);
       return privateJson({ passed: checks.length, checks });
     } catch (error) {
       return privateJson(

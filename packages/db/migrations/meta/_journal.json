@@ -29,6 +29,13 @@
       "when": 1792170334355,
       "tag": "0003_initial_setup",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792228499028,
+      "tag": "0004_github_refresh_contracts",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import type { Calendar } from "@hasaweb/github";
 import type { DraftDoc, SetupProgress } from "@hasaweb/schema";
 import { sql } from "drizzle-orm";
 import {
@@ -273,6 +274,10 @@ export const githubConnection = sqliteTable(
     portfolioId: portfolioId().primaryKey(),
     login: text("login").notNull(),
     githubUserId: text("github_user_id").notNull(),
+    generation: integer("generation").notNull().default(0),
+    appId: text("app_id"),
+    grantOperation: text("grant_operation"),
+    tokenBinding: text("token_binding"),
     tokenEnc: text("token_enc"),
     scopes: text("scopes").notNull().default(""),
     privateEnabled: integer("private_enabled", { mode: "boolean" })
@@ -298,6 +303,13 @@ export const githubActivity = sqliteTable(
       .$type<unknown[]>()
       .notNull(),
     privateCounts: text("private_counts", { mode: "json" }).$type<unknown[]>(),
+    generation: integer("generation").notNull().default(0),
+    publicCalendar: text("public_calendar", { mode: "json" }).$type<Calendar>(),
+    authorizedCalendar: text("authorized_calendar", {
+      mode: "json",
+    }).$type<Calendar>(),
+    publicError: text("public_error"),
+    authorizedError: text("authorized_error"),
     fetchedAt: integer("fetched_at", { mode: "timestamp_ms" }),
     lastError: text("last_error"),
     refreshRequestedAt: integer("refresh_requested_at", {
@@ -311,6 +323,47 @@ export const githubActivity = sqliteTable(
     ),
   ],
 );
+// Global app/account coordination intentionally outlives portfolio deletion.
+// Cleanup credentials are never returned by owner reads or refresh acquisition.
+export const githubGrant = sqliteTable(
+  "github_grant",
+  {
+    appId: text("app_id").notNull(),
+    githubUserId: text("github_user_id").notNull(),
+    portfolioId: text("portfolio_id").references(() => portfolio.id, {
+      onDelete: "set null",
+    }),
+    operationId: text("operation_id").notNull(),
+    generation: integer("generation").notNull(),
+    state: text("state", {
+      enum: ["consent", "active", "pending", "inflight", "uncertain", "idle"],
+    }).notNull(),
+    tokenEnc: text("token_enc"),
+    tokenBinding: text("token_binding"),
+    attemptId: text("attempt_id"),
+    attempts: integer("attempts").notNull().default(0),
+    retryAt: integer("retry_at").notNull().default(0),
+    lastError: text("last_error"),
+  },
+  (t) => [
+    primaryKey({ columns: [t.appId, t.githubUserId] }),
+    check(
+      "github_grant_state",
+      sql`${t.state} in ('consent','active','pending','inflight','uncertain','idle')`,
+    ),
+    check(
+      "github_grant_cleanup_token",
+      sql`(${t.state} not in ('pending','inflight','uncertain')) or (${t.tokenEnc} is not null and ${t.tokenBinding} is not null)`,
+    ),
+  ],
+);
+// Unknown pre-11D envelopes need operator reconciliation before graph rollout.
+export const githubLegacyCredential = sqliteTable("github_legacy_credential", {
+  portfolioId: portfolioId().primaryKey(),
+  githubUserId: text("github_user_id").notNull(),
+  tokenEnc: text("token_enc").notNull(),
+  scopes: text("scopes").notNull(),
+});
 export const contactRecipient = sqliteTable("contact_recipient", {
   portfolioId: portfolioId().primaryKey(),
   email: text("email").notNull(),
@@ -394,6 +447,8 @@ export const schema = {
   subdomainClaim,
   githubConnection,
   githubActivity,
+  githubGrant,
+  githubLegacyCredential,
   contactRecipient,
   contactOutbox,
   counter,
