@@ -5,6 +5,7 @@ import {
   consumePending,
   createPending,
   exchangeFailure,
+  scopeHeaderState,
 } from "./github-live-oauth.mjs";
 
 describe("S-6 local OAuth callback boundary", () => {
@@ -114,5 +115,13 @@ describe("S-6 local OAuth callback boundary", () => {
         "secret",
       ),
     ).toBe(false);
+  });
+  it("requires a present-and-empty scope header for the platform credential", () => {
+    expect(scopeHeaderState(null)).toBe("absent");
+    expect(scopeHeaderState(undefined)).toBe("absent");
+    expect(scopeHeaderState("")).toBe("present-empty");
+    expect(scopeHeaderState("  ")).toBe("present-empty");
+    expect(scopeHeaderState("repo")).toBe("nonempty");
+    expect(scopeHeaderState("user:email,read:user")).toBe("nonempty");
   });
 });
