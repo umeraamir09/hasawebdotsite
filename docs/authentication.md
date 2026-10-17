@@ -1,8 +1,16 @@
 # Authentication
 
-Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Currently, successful OAuth callbacks open `/editor`. The editor is a static client shell; `/api/owner` checks the current persisted session and deletion state before returning the owner's name and existing portfolio ID. No account tokens, email address, or draft content appear in that response. Portfolio provisioning, onboarding, and the full editor remain planned work.
+Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Currently, successful OAuth callbacks open `/editor`. The editor is a static client shell; `/api/owner` checks the current persisted session and deletion state before returning the owner's name and existing portfolio ID. No account tokens, email address, or draft content appear in that response. Phase 12 adds private portfolio initialization on account entry. Onboarding and the full editor remain planned work.
 
-The following setup/verification instructions describe the implemented Phase 11 baseline. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey; it has not yet changed these routes or the runtime behavior.
+The following setup/verification instructions describe the authentication baseline and Phase 12 initialization. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey. Required setup routing has not yet been activated.
+
+## Private portfolio initialization
+
+The account shell calls `POST /api/owner/portfolio` with `{}` before displaying its signed-in state. The existing Worker adapter forwards the original request to the jobs `OwnerApi` service binding. Authentication, persisted-session/deletion checks, exact Origin and JSON requirements apply. Only an empty JSON object is accepted, within a 1,024-byte streamed-body limit. Caller-supplied owner IDs, portfolio IDs, template choices, provider content and setup flags are rejected.
+
+Provisioning inserts one private portfolio using the approved Leaf/DM Sans/system defaults, empty owner fields, no decoration and Face Reveal off. Its revision starts at zero, private progress starts at Address, and the first-editor milestone remains unset. The application uses the single fixed `portfolio-v1` template. Provider name/email/photo stay in account identity for later deliberate acceptance. This operation creates no assets, public claim, publication or GitHub connection.
+
+Repeated, concurrent and retried requests return the existing portfolio ID without reading or rewriting its draft, progress or milestone. Initialization also preserves legacy validation markers and publication state. The response has the same small user/portfolio identifier shape as `/api/owner`, with private/no-store and noindex headers. Failed or interrupted requests use the shell's Retry action; expired sessions return to sign-in. `GET /api/owner` and session probes remain read-only. Required guide routing and the authoritative editor handoff remain later phases.
 
 ## Planned setup-aware entry and recovery
 
@@ -28,7 +36,7 @@ Controlled consent returns resume the graph step. Cancelled, failed, or wrong-ac
 2. Set `APP_ORIGIN` to the exact browser origin, without a trailing slash. Use `http://127.0.0.1:8787` for the three-Worker runtime or `http://127.0.0.1:3000` for `pnpm dev:web`.
 3. Apply the local D1 migrations with `pnpm db:migrate:local`.
 4. Configure provider callbacks at `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`. Local and production provider applications should have separate credentials.
-5. Start the runtime with `pnpm dev` or the Next development server with `pnpm dev:web`.
+5. Start the three-Worker runtime with `pnpm dev` for functional account entry and portfolio initialization. `pnpm dev:web` renders the Next.js screens alone; the owner initialization endpoint requires the web Worker adapter and jobs service binding.
 
 Do not use a portfolio hostname, a LAN address, or a URL path as the app origin. Only local loopback HTTP permits non-Secure `hasaweb-local` cookies. HTTPS uses `__Host-hasaweb` cookies, with Secure, HttpOnly, SameSite=Lax, Path=/, and no Domain attribute.
 
@@ -47,7 +55,7 @@ Session-cookie caching retains the proven 300-second setting, but account/editor
 
 ## Verification
 
-- `pnpm test:auth` runs local workerd/D1 product-table provider fixtures and Chromium cookie isolation checks.
+- `pnpm test:auth` runs local workerd/D1 product-table provider fixtures, private portfolio initialization/access checks and Chromium cookie isolation checks. Pass `--evidence-dir=specs/YYYY-MM-DD-feature-name` to keep a later run's evidence separate from the Phase 11 record.
 - After `pnpm build`, `pnpm test:auth:browser` also exercises the rendered app, pending/retry/cancellation, keyboard activation, editor entry and sign-out in Chromium. It uses isolated local databases and ports 8811/8812, inspector 9248, and Chromium debugging ports 9245/9246. Set `AUTH_SPIKE_CHROMIUM` if Chromium is installed elsewhere.
 - `pnpm check`, `pnpm test:persistence`, and `pnpm test:runtime` cover the shared contracts and local runtime. Run Wrangler suites sequentially because their default inspector ports overlap.
 

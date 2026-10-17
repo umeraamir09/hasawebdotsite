@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { type Owner, readOwner } from "../lib/auth-client";
+import { type Owner, openOwnerPortfolio } from "../lib/auth-client";
 import { Brand } from "./brand";
 
 export function EditorEntry() {
@@ -17,7 +17,7 @@ export function EditorEntry() {
     const controller = new AbortController();
     async function check() {
       try {
-        const current = await readOwner(controller.signal);
+        const current = await openOwnerPortfolio(controller.signal);
         if (controller.signal.aborted) return;
         if (!current) {
           setOwner(null);

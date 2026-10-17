@@ -2,15 +2,16 @@
 import "../spike/auth-provider-fixtures";
 import { ownerRepositories, privateJson } from "@hasaweb/db";
 import { createEmptyDraft } from "@hasaweb/schema";
+import { createOwnerRouter } from "../../jobs/src/owner-api";
 import {
   type AuthEnvironment,
   authResponse,
   createProductAuth,
   currentOwner,
-  ownerResponse,
 } from "../lib/auth";
 
 const origin = "https://hasaweb.site";
+const ownerRouter = createOwnerRouter();
 const instances = new WeakMap<
   D1Database,
   ReturnType<typeof createProductAuth>
@@ -66,6 +67,27 @@ export default {
         }),
       );
       return privateJson({ ok: true });
+    }
+    if (url.pathname === "/__fixture/portfolio-state") {
+      const owner = await currentOwner(settings, request.headers, auth);
+      if (!owner) return privateJson(null, 401);
+      return privateJson({
+        portfolio: await env.DB.prepare(
+          "SELECT * FROM portfolio WHERE user_id=?",
+        )
+          .bind(owner.identity.user.id)
+          .first(),
+        user: {
+          name: owner.identity.user.name,
+          email: owner.identity.user.email,
+          image: owner.identity.user.image,
+        },
+        related: await env.DB.prepare(`SELECT
+          (SELECT count(*) FROM asset) assets,
+          (SELECT count(*) FROM subdomain_claim) claims,
+          (SELECT count(*) FROM publish_version) publications,
+          (SELECT count(*) FROM github_connection) github`).first(),
+      });
     }
     if (url.pathname === "/__fixture/legacy-portfolio") {
       const owner = await currentOwner(settings, request.headers, auth);
@@ -124,8 +146,9 @@ export default {
     url.host = request.headers.get("X-Fixture-Host") ?? "hasaweb.site";
     const virtual = new Request(url, request);
     try {
-      return url.pathname === "/api/owner"
-        ? await ownerResponse(virtual, settings, auth)
+      return url.pathname === "/api/owner" ||
+        url.pathname.startsWith("/api/owner/")
+        ? await ownerRouter.fetch(virtual, settings)
         : await authResponse(virtual, settings, auth);
     } catch {
       return privateJson(null, 503);

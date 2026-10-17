@@ -3,11 +3,13 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { setTimeout } from "node:timers/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkBrowserCookies } from "./auth-cookie-browser.mjs";
 import { checkAuthUi } from "./auth-ui-browser.mjs";
+import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+import { checkPortfolioProvisioning } from "./portfolio-provisioning-checks.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const require = createRequire(import.meta.url);
@@ -16,6 +18,12 @@ const wrangler = join(
   "bin/wrangler.js",
 );
 const output = join(root, ".wrangler/auth-integration");
+const evidenceDirectory = resolve(
+  root,
+  process.argv
+    .find((argument) => argument.startsWith("--evidence-dir="))
+    ?.slice("--evidence-dir=".length) ?? "specs/2026-10-15-sign-in",
+);
 const state = join(output, "state");
 const configPath = join(output, "wrangler.json");
 const port = 8811;
@@ -137,7 +145,8 @@ async function check(name, run) {
   console.log(`PASS ${name}`);
 }
 await mkdir(output, { recursive: true });
-await rm(join(root, "specs/2026-10-15-sign-in/evidence.json"), {
+await mkdir(evidenceDirectory, { recursive: true });
+await rm(join(evidenceDirectory, "evidence.json"), {
   force: true,
 });
 await rm(state, { recursive: true, force: true });
@@ -546,6 +555,7 @@ try {
       );
     },
   );
+  await checkPortfolioProvisioning({ check, login, request, port, origin });
   await check(
     "Chromium enforces apex-only HTTPS cookies and rejects sibling injection",
     async () => {
@@ -553,28 +563,29 @@ try {
     },
   );
   if (process.argv.includes("--browser")) {
-    uiEvidence = await checkAuthUi({ root, wrangler, fixturePort: port });
+    uiEvidence = await checkAuthUi({
+      root,
+      wrangler,
+      fixturePort: port,
+      evidenceDirectory,
+    });
     console.log(`PASS ${uiEvidence.checks.length} browser journey checks`);
   }
-  await writeFile(
-    join(root, "specs/2026-10-15-sign-in/evidence.json"),
-    `${JSON.stringify(
-      {
-        runtime: "local workerd + D1",
-        betterAuth: "1.7.7",
-        checks: evidence,
-        cookieNames: [...cookieNames].sort(),
-        browserEvidence,
-        uiEvidence,
-        limitations: [
-          "Provider HTTP responses are fixtures",
-          "Browser cookie enforcement uses intercepted HTTPS responses; deployed TLS not verified",
-          "Cached session revocation requires disableCookieCache or independent owner/deletion checks",
-        ],
-      },
-      null,
-      2,
-    )}\n`,
+  await writeJsonEvidence(
+    pathToFileURL(join(evidenceDirectory, "evidence.json")),
+    {
+      runtime: "local workerd + D1",
+      betterAuth: "1.7.7",
+      checks: evidence,
+      cookieNames: [...cookieNames].sort(),
+      browserEvidence,
+      uiEvidence,
+      limitations: [
+        "Provider HTTP responses are fixtures",
+        "Browser cookie enforcement uses intercepted HTTPS responses; deployed TLS not verified",
+        "Cached session revocation requires disableCookieCache or independent owner/deletion checks",
+      ],
+    },
   );
   console.log(`${evidence.length} checks passed`);
 } catch (error) {

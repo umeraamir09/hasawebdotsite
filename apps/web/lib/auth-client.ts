@@ -14,6 +14,22 @@ export async function readOwner(signal?: AbortSignal): Promise<Owner | null> {
   if (!response.ok) throw new Error("Could not check your session");
   return response.json() as Promise<Owner>;
 }
+// Account entry is an explicit idempotent mutation. Sign-in/session probes
+// continue using readOwner without creating a portfolio as a side effect.
+export async function openOwnerPortfolio(
+  signal?: AbortSignal,
+): Promise<Owner | null> {
+  const response = await fetch("/api/owner/portfolio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    cache: "no-store",
+    signal: signal ?? null,
+  });
+  if (response.status === 401) return null;
+  if (!response.ok) throw new Error("Could not open your portfolio");
+  return response.json() as Promise<Owner>;
+}
 export async function startSignIn(provider: Provider) {
   const origin = window.location.origin;
   const response = await fetch("/api/auth/sign-in/social", {
