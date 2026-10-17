@@ -312,6 +312,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@hasaweb/github':
+        specifier: workspace:*
+        version: link:../github
       '@hasaweb/schema':
         specifier: workspace:*
         version: link:../schema
@@ -340,6 +343,9 @@ importers:
 
   packages/github:
     devDependencies:
+      '@cloudflare/workers-types':
+        specifier: 5.20261014.1
+        version: 5.20261014.1
       typescript:
         specifier: 7.0.2
         version: 7.0.2

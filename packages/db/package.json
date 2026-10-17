@@ -12,6 +12,7 @@
     "generate": "drizzle-kit generate --config drizzle.config.ts"
   },
   "dependencies": {
+    "@hasaweb/github": "workspace:*",
     "@hasaweb/schema": "workspace:*",
     "drizzle-orm": "0.45.4"
   },

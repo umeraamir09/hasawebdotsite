@@ -117,6 +117,8 @@ try {
     UPDATE portfolio SET draft=json_set(draft,'$.profile.name','Migration content','$.samples',json('{"profile.name":true}')) WHERE id='local-portfolio';
     INSERT INTO asset(id,portfolio_id,kind,content_type,bytes,status,created_at,updated_at) VALUES('migration-asset','local-portfolio','avatar','image/webp',10,'ready',1,1);
     INSERT INTO subdomain_claim(name,portfolio_id) VALUES('migration-site','local-portfolio');
+    INSERT INTO github_connection(portfolio_id,login,github_user_id,token_enc,scopes,private_enabled,status) VALUES('local-portfolio','legacy-fixture','legacy-id','legacy-encrypted-fixture','read:user',1,'ok');
+    INSERT INTO github_activity(portfolio_id,public_days,private_counts) VALUES('local-portfolio','[{"count":2}]','[{"count":8}]');
   `,
   ]);
   configuration.d1_databases[0].migrations_dir = join(
@@ -152,6 +154,12 @@ try {
     asset: "ready",
     counter: 8,
     claim: "alice-site",
+    githubCleanup: {
+      persisted: "pending",
+      ownerRemoved: true,
+      retried: true,
+      tokenCleared: true,
+    },
   });
   const evidence = {
     checkedAt: new Date().toISOString(),

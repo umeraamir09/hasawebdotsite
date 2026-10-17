@@ -7,6 +7,7 @@ import {
 import { type AnyColumn, and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { boundedSaves, SaveError } from "./bounded-save";
+import { ownerGithub } from "./github";
 import * as tables from "./schema";
 
 export type SessionIdentity = { user: { id: string }; session: { id: string } };
@@ -296,82 +297,7 @@ export async function ownerRepositories(
           .where(owned(tables.subdomainClaim.portfolioId))
           .get(),
     },
-    github: {
-      getConnection: () =>
-        db
-          .select()
-          .from(tables.githubConnection)
-          .where(owned(tables.githubConnection.portfolioId))
-          .get(),
-      getActivity: () =>
-        db
-          .select()
-          .from(tables.githubActivity)
-          .where(owned(tables.githubActivity.portfolioId))
-          .get(),
-      saveConnection(
-        input: Omit<typeof tables.githubConnection.$inferInsert, "portfolioId">,
-      ) {
-        const fields = {
-          login: input.login,
-          githubUserId: input.githubUserId,
-          tokenEnc: input.tokenEnc ?? null,
-          scopes: input.scopes ?? "",
-          privateEnabled: input.privateEnabled ?? false,
-          status: input.status,
-          lastCheckedAt: input.lastCheckedAt ?? null,
-        };
-        return db
-          .insert(tables.githubConnection)
-          .values({ ...fields, portfolioId: ownPortfolioId() })
-          .onConflictDoUpdate({
-            target: tables.githubConnection.portfolioId,
-            set: fields,
-            setWhere: owned(tables.githubConnection.portfolioId),
-          })
-          .returning()
-          .get();
-      },
-      saveActivity(
-        input: Omit<typeof tables.githubActivity.$inferInsert, "portfolioId">,
-      ) {
-        const fields = {
-          publicDays: input.publicDays,
-          privateCounts: input.privateCounts ?? null,
-          fetchedAt: input.fetchedAt ?? null,
-          lastError: input.lastError ?? null,
-          refreshRequestedAt: input.refreshRequestedAt ?? null,
-        };
-        return db
-          .insert(tables.githubActivity)
-          .values({ ...fields, portfolioId: ownPortfolioId() })
-          .onConflictDoUpdate({
-            target: tables.githubActivity.portfolioId,
-            set: fields,
-            setWhere: owned(tables.githubActivity.portfolioId),
-          })
-          .returning()
-          .get();
-      },
-      async disconnect() {
-        // One atomic batch removes private activity with the grant ciphertext.
-        return db.batch([
-          db
-            .update(tables.githubConnection)
-            .set({
-              tokenEnc: null,
-              scopes: "",
-              privateEnabled: false,
-              status: "disconnected",
-            })
-            .where(owned(tables.githubConnection.portfolioId)),
-          db
-            .update(tables.githubActivity)
-            .set({ privateCounts: null })
-            .where(owned(tables.githubActivity.portfolioId)),
-        ]);
-      },
-    },
+    github: ownerGithub(binding, identity),
     recipient: {
       get: () =>
         db
