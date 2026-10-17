@@ -1,7 +1,8 @@
 import {
+  activityCleanupKind,
   credentialBinding,
   decryptActivityToken,
-  deleteActivityGrant,
+  deleteActivityCredential,
   encryptActivityToken,
   type GitHubIdentity,
   type GrantTransport,
@@ -368,18 +369,18 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       verifiedIdentity: GitHubIdentity,
     ) {
       const portfolioId = await requirePortfolio();
-      if (
-        ticket.portfolioId !== portfolioId ||
-        scopes !== "read:user" ||
-        !sameIdentity(parseIdentity(verifiedIdentity), ticket.identity)
-      )
+      if (ticket.portfolioId !== portfolioId)
         throw new Error("Invalid activity consent");
       parseIdentity(ticket.identity);
+      const accepted =
+        scopes === "read:user" &&
+        sameIdentity(parseIdentity(verifiedIdentity), ticket.identity);
       const binding = credentialBinding(
         portfolioId,
         ticket.appId,
-        ticket.identity.id,
+        verifiedIdentity.id,
         ticket.operationId,
+        accepted ? "grant" : "token",
       );
       const envelope = await encryptActivityToken(key, token, binding);
       const valid = `${currentTicket} AND private_enabled=0 AND portfolio_id IN (${owned})`;
@@ -390,6 +391,20 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
         ticket.operationId,
         portfolioId,
       ];
+      if (!accepted) {
+        // Keep the selected-account reservation until only this issued token is revoked.
+        // Grant-wide deletion could revoke a different account's existing connection.
+        await query(
+          db,
+          `UPDATE github_grant SET state='pending',token_enc=?,token_binding=?,retry_at=0,last_error=NULL
+          WHERE ${matchGrant}`,
+          envelope,
+          binding,
+          ...grantValues,
+          ticket.generation,
+        ).run();
+        throw new Error("Invalid activity consent");
+      }
       const rows = await db.batch([
         query(
           db,
@@ -522,7 +537,12 @@ export async function runGitHubGrantCleanup(
       row.token_enc,
       row.token_binding,
     );
-    outcome = await deleteActivityGrant(transport, app, token);
+    outcome = await deleteActivityCredential(
+      transport,
+      app,
+      token,
+      activityCleanupKind(row.token_binding),
+    );
   } catch {
     outcome = "retry";
   }

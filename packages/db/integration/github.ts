@@ -96,7 +96,7 @@ export async function runGitHubChecks(
       colorMode: "system",
     }),
   );
-  for (const id of ["gh-a", "gh-b", "gh-legacy", "gh-durable"]) {
+  for (const id of ["gh-a", "gh-b", "gh-legacy", "gh-durable", "gh-rejected"]) {
     await db.batch([
       db
         .prepare(
@@ -272,6 +272,115 @@ export async function runGitHubChecks(
           state,
         )?.available,
         false,
+      );
+    },
+  );
+  await check(
+    "GitHub rejected issued tokens persist for retry without changing the selected graph",
+    async () => {
+      const owner = ownerGithub(db, {
+        user: { id: "gh-rejected" },
+        session: { id: "session-gh-rejected" },
+      });
+      const identity = {
+        id: "rejected-selection",
+        login: "rejected-selection",
+      };
+      required(await owner.select(identity, null));
+      const before = await a.getConnection();
+      for (const rejected of [
+        {
+          identity: selected,
+          scopes: "read:user",
+          token: "wrong-account-issued-token",
+        },
+        { identity, scopes: "repo", token: "wrong-scope-issued-token" },
+      ]) {
+        const lease = required(await owner.beginConsent(app.id, 1));
+        await rejects(() =>
+          owner.finishConsent(
+            lease,
+            key,
+            rejected.token,
+            rejected.scopes,
+            rejected.identity,
+          ),
+        );
+        const stored = required(
+          await db
+            .prepare(
+              "SELECT state,token_enc,token_binding FROM github_grant WHERE app_id=? AND github_user_id=?",
+            )
+            .bind(app.id, identity.id)
+            .first<{
+              state: string;
+              token_enc: string;
+              token_binding: string;
+            }>(),
+        );
+        equal(stored.state, "pending");
+        equal(stored.token_enc.includes(rejected.token), false);
+        equal(JSON.parse(stored.token_binding)[3], rejected.identity.id);
+        equal(
+          await decryptActivityToken(
+            key,
+            stored.token_enc,
+            stored.token_binding,
+          ),
+          rejected.token,
+        );
+        equal((await owner.getConnection())?.identity, identity);
+        equal((await owner.getConnection())?.generation, 1);
+        equal(await jobs.capture("portfolio-gh-rejected", "authorized"), null);
+        equal(await owner.beginConsent(app.id, 1), null);
+        const ticket = {
+          appId: app.id,
+          githubUserId: identity.id,
+          operationId: lease.operationId,
+        };
+        let calls = 0;
+        const transport = async (url: string, init: RequestInit) => {
+          calls++;
+          equal(url, `https://api.github.com/applications/${app.id}/token`);
+          equal(JSON.parse(String(init.body)).access_token, rejected.token);
+          return new Response(null, { status: calls === 1 ? 503 : 204 });
+        };
+        equal(
+          await runGitHubGrantCleanup(db, ticket, key, app, transport, 1000),
+          "retry",
+        );
+        equal(await owner.beginConsent(app.id, 1), null);
+        equal(
+          await runGitHubGrantCleanup(db, ticket, key, app, transport, 61_000),
+          "deleted",
+        );
+        equal(calls, 2);
+        equal(
+          (
+            await db
+              .prepare(
+                "SELECT token_enc FROM github_grant WHERE app_id=? AND github_user_id=?",
+              )
+              .bind(app.id, identity.id)
+              .first()
+          )?.token_enc,
+          null,
+        );
+        const next = required(await owner.beginConsent(app.id, 1));
+        equal(
+          await runGitHubGrantCleanup(db, ticket, key, app, transport, 100_000),
+          "skipped",
+        );
+        equal(calls, 2);
+        equal(await owner.cancelUnissuedConsent(next), true);
+      }
+      equal(await a.getConnection(), before);
+      equal(
+        projectPublishedActivity(
+          { ...selected, includePrivate: true },
+          await jobs.servingState("portfolio-gh-a"),
+        )?.days,
+        calendar(7).days,
       );
     },
   );

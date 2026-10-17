@@ -5,14 +5,25 @@ export function credentialBinding(
   appId: string,
   githubUserId: string,
   operationId: string,
+  cleanupKind: "grant" | "token" = "grant",
 ) {
   return JSON.stringify([
-    "hasaweb-activity-v1",
+    cleanupKind === "token"
+      ? "hasaweb-activity-token-cleanup-v1"
+      : "hasaweb-activity-v1",
     portfolioId,
     appId,
     githubUserId,
     operationId,
   ]);
+}
+
+// Read only after decryption authenticates this purpose through AES-GCM AAD.
+export function activityCleanupKind(binding: string): "grant" | "token" {
+  const [purpose] = JSON.parse(binding);
+  if (purpose === "hasaweb-activity-token-cleanup-v1") return "token";
+  if (purpose === "hasaweb-activity-v1") return "grant";
+  throw new Error("Invalid activity credential purpose");
 }
 
 export async function encryptActivityToken(
@@ -75,14 +86,15 @@ export type GrantTransport = (
   init: RequestInit,
 ) => Promise<Response>;
 
-export async function deleteActivityGrant(
+export async function deleteActivityCredential(
   transport: GrantTransport,
   app: { id: string; secret: string },
   token: string,
+  kind: "grant" | "token",
 ): Promise<GrantDeletion> {
   try {
     const response = await transport(
-      `https://api.github.com/applications/${encodeURIComponent(app.id)}/grant`,
+      `https://api.github.com/applications/${encodeURIComponent(app.id)}/${kind}`,
       {
         method: "DELETE",
         redirect: "error",
@@ -103,4 +115,12 @@ export async function deleteActivityGrant(
     // The provider may still be processing the request. No automatic lock expiry.
     return "uncertain";
   }
+}
+
+export function deleteActivityGrant(
+  transport: GrantTransport,
+  app: { id: string; secret: string },
+  token: string,
+) {
+  return deleteActivityCredential(transport, app, token, "grant");
 }

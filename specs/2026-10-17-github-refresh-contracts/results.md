@@ -10,7 +10,7 @@ Implemented October 17, 2026 on `feat/github-refresh-contracts`. The owner appro
 - AES-GCM ciphertext binds the portfolio, activity app, stable account, and consent operation. Withdrawal clears active credentials and authorized data atomically and moves encrypted credentials to separate durable cleanup storage. Graph operations leave sign-in provider rows intact.
 - Cleanup claims are global to the activity app/account. One persisted attempt may call GitHub. Failed HTTP responses retain ciphertext with a one-minute retry floor. Duplicate/old deliveries cannot obtain credentials or call the provider after a fresh consent. Interrupted/in-flight requests retain their lock for reconciliation, without clock-based lock stealing.
 
-## Validation
+## Initial validation
 
 | Check | Result and evidence |
 | --- | --- |
@@ -22,6 +22,14 @@ Implemented October 17, 2026 on `feat/github-refresh-contracts`. The owner appro
 | Runtime | `pnpm test:runtime` passes three Workers, D1, three R2 buckets, service bindings, Queue, Workflow and restart persistence. The first attempt encountered a local address collision while other test Workers were running; the separate retry passed. |
 
 Persistence fixtures cover public 2 versus authorized 7 counts, draft consent under a public-only publication, mismatched account/username, every stale error class after withdrawal, selection during consent, active username changes, concurrent consent reservations, remote failure, attempted cross-owner reconnect, one in-flight cleanup, delayed retries, fresh authorization, duplicate old cleanup delivery, and unknown legacy caches. An encrypted failed cleanup survives owner deletion and a Worker restart, decrypts on retry, finishes, and clears its ciphertext. Earlier phase evidence remains unchanged; regression artifacts are stored here.
+
+## PR review follow-up
+
+The [Codex P1 finding](https://github.com/umeraamir09/hasawebdotsite/pull/15#discussion_r4302296911) identified issued tokens discarded on identity/scope rejection. A new workerd/D1 regression reproduced it before the fix: the rejected callback left `consent` instead of the expected `pending` cleanup state.
+
+Rejected callbacks now encrypt and persist the issued credential before reporting failure. The AES-GCM binding authenticates the verified account and token-only cleanup purpose. Cleanup revokes that token through GitHub's single-token endpoint, preserving another account's active grant. The original selected-account reservation stays blocked through failed cleanup and releases after successful retry. Existing grant-wide cleanup bindings remain compatible, and no schema migration is needed.
+
+After the fix, `pnpm check` passes all 184 unit tests and all workspace lint/typechecks. `pnpm build` passes all 12 workspace builds. `pnpm test:persistence` passes 65 groups, including rejected scopes, a wrong account with an existing active grant, encrypted retention, failed cleanup/retry, reconnect blocking, unchanged graph selection/output, and duplicate cleanup delivery after a new consent reservation. See [review-fix persistence evidence](review-fix-persistence-evidence.json). The original phase evidence above remains unchanged.
 
 ## Remaining integration
 

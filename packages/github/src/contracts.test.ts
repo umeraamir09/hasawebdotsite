@@ -5,8 +5,10 @@ import {
   projectPublishedActivity,
 } from "./contracts";
 import {
+  activityCleanupKind,
   credentialBinding,
   decryptActivityToken,
+  deleteActivityCredential,
   deleteActivityGrant,
   encryptActivityToken,
 } from "./credentials";
@@ -176,6 +178,39 @@ describe("activity credentials and grant deletion", () => {
       );
       expect(outcome).toBe(status === 204 ? "deleted" : "retry");
     }
+  });
+  it("authenticates token-only cleanup purpose without changing existing grant bindings", async () => {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new Uint8Array(32).fill(17),
+      "AES-GCM",
+      false,
+      ["encrypt", "decrypt"],
+    );
+    const parts = ["portfolio", "app", "account", "operation"] as const;
+    const binding = credentialBinding(...parts, "token");
+    const envelope = await encryptActivityToken(key, "rejected-token", binding);
+    expect(activityCleanupKind(binding)).toBe("token");
+    expect(activityCleanupKind(credentialBinding(...parts))).toBe("grant");
+    expect(() => activityCleanupKind('["unknown-purpose"]')).toThrow();
+    await expect(
+      decryptActivityToken(key, envelope, credentialBinding(...parts)),
+    ).rejects.toThrow();
+    expect(
+      await deleteActivityCredential(
+        async (url, init) => {
+          expect(url).toBe("https://api.github.com/applications/app/token");
+          expect(init.method).toBe("DELETE");
+          expect(JSON.parse(String(init.body))).toEqual({
+            access_token: "rejected-token",
+          });
+          return new Response(null, { status: 204 });
+        },
+        { id: "app", secret: "secret" },
+        await decryptActivityToken(key, envelope, binding),
+        activityCleanupKind(binding),
+      ),
+    ).toBe("deleted");
   });
   it("keeps ambiguous network failures fenced instead of permitting consent", async () => {
     expect(
