@@ -28,7 +28,7 @@ New owners should receive guidance before learning the editor. Required initial 
 
 Users should be able to build a polished, readable portfolio without design knowledge. The MVP should provide a bio section at the top, followed by ready-made components that users can add, remove, configure, and reorder through drag and drop. Each component should guide users through adding the content, accounts, or links it needs.
 
-Users should be able to make the portfolio feel like their own through three preset themes, a single custom color that generates coordinated light and dark palettes, a curated font selection, uploaded banners and profile pictures, and optional avatar decorations. These settings should apply consistently across components. Extensive customization is deferred beyond the MVP. Custom image stickers are deferred beyond the MVP.
+Users should be able to make the portfolio feel like their own through six preset themes, a single custom color that generates coordinated light and dark palettes, a curated font selection, uploaded banners and profile pictures, and optional avatar decorations. These settings should apply consistently across components. Extensive customization is deferred beyond the MVP. Custom image stickers are deferred beyond the MVP.
 
 After publication, users should be able to keep their portfolio current without editing code or rebuilding the site. A lightweight CMS should let them create, edit, and publish project cards and optional linked case studies.
 
@@ -103,7 +103,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 | Banner | Required owner-selected banner image with upload and cropping controls. |
 | Social or contact link | At least one valid link or contact method is required. An email address, GitHub profile, another supported social profile, or website URL qualifies. A contact form alone does not replace this requirement. |
 | Location | Optional location text displayed with the profile. |
-| Avatar decoration | Optional overlay selected from a curated decoration gallery. Owners can change or remove it. Custom decoration uploads are deferred. |
+| Avatar decoration | Optional Ginger cat (`cat`) or Hands (`hands`) animation from the curated gallery. Owners can change or remove it. Both retain the imported artwork and choreography. Custom decoration uploads are deferred. |
 | Face Reveal | Optional avatar add-on. An editor toggle shows a second image upload input for a real-face photo, such as a selfie. Visitors toggle between the original avatar and that photo. |
 
 - Face Reveal is off by default. The original avatar is intended for an illustrated or graphical identity, and the second image for the owner's real face. Owners choose the images; the builder does not verify faces automatically.
@@ -185,13 +185,15 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 
 ### 12. Themes, custom color, fonts, and light/dark mode
 
-- Owners can choose among three preset visual themes. All use the single template; switching themes preserves content and component order.
+- Owners can choose among six preset visual themes: Leaf, Violet, Clay, Matcha, Strawberry and Coffee. Each has light and dark palettes. All use the single template; switching themes preserves content and component order. The [appearance catalog](appearance-catalog.md) records the approved IDs, colors, assets and defaults.
 - Owners can select a font from a curated list. Typography applies consistently to the portfolio, case studies, and resume page.
 - Custom color control accepts one owner-selected color. The builder automatically generates the other colors needed for both light and dark themes, including page backgrounds, raised surfaces, text, borders, links, buttons, and interactive states.
 - Generated palettes adjust colors for readable contrast. The builder explains automatic adjustments and previews both light and dark results immediately.
 - Owners can reset custom colors to a preset. Editing every generated color individually is deferred.
 - Owners choose light, dark, or the visitor's system preference as the initial mode. Visitors can switch between light and dark on public pages.
 - Shared settings apply across components and additional pages. Arbitrary positioning, custom CSS, per-component fonts, and extensive layout customization are deferred.
+
+Animated decorations autoplay unless the visitor requests reduced motion. A separate, keyboard-accessible pause/play control stops or resumes the decoration without toggling Face Reveal. A paused or reduced-motion cat uses the cleaned still; hands remain stationary with their original art. Changing motion preference takes effect immediately. Decoration selection works with Face Reveal off and remains above both images when it is on. These are trusted platform assets, not additional owner upload formats.
 
 ### 13. Upload handling
 
@@ -263,4 +265,4 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 - AI content generation, collaboration, visitor accounts, multilingual editing, version history, and visitor analytics or cookie-based tracking.
 - Repeat onboarding, an editor bypass before required initial setup, goal/persona surveys, automatic content discovery, and retained original image sources for later uncropping. Additional onboarding steps for capabilities designated editor-only in [onboarding.md](onboarding.md) are outside the initial onboarding scope; those capabilities remain required in the full MVP editor.
 
-The feature scope is agreed; implementation still needs to choose theme and font names, decoration assets, provider configuration, operational refresh and retry intervals, and submission limits. These choices must support the behavior above without introducing additional MVP capabilities.
+The feature scope is agreed; the six-theme/two-decoration catalog, fonts, defaults and playback policy were approved in Phase 11E, including the documented generator exception. Implementation also needs the recorded provider configuration, operational refresh and retry intervals, and submission limits. These choices must support the behavior above without introducing additional MVP capabilities.

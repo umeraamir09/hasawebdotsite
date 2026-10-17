@@ -1,0 +1,36 @@
+.envelope {
+  --surface: var(--avatar-surface, var(--bg-surface, #eff2eb));
+  --border: var(--avatar-border, var(--border-control, #7a856e));
+  --raised: var(--avatar-raised, var(--bg-raised, #fcfdf9));
+  --profile-avatar-size: 124px;
+  --profile-avatar-radius: 30px;
+  --profile-avatar-envelope: calc(
+    (var(--profile-avatar-size) - 12px) *
+    1.50485
+  );
+  --profile-avatar-gap: 24px;
+  --profile-gutter: 32px;
+  position: relative;
+  width: calc(
+    var(--profile-avatar-envelope) +
+    var(--profile-gutter) *
+    2 +
+    32px
+  );
+  max-width: 100%;
+  padding: calc(var(--profile-avatar-envelope) / 2 + 16px) 16px 16px;
+  overflow: visible;
+}
+
+.slot {
+  position: relative;
+  height: calc(var(--profile-avatar-envelope) / 2 + var(--profile-avatar-gap));
+}
+
+@media (max-width: 760px) {
+  .envelope {
+    --profile-avatar-size: 104px;
+    --profile-avatar-radius: 26px;
+    --profile-gutter: 20px;
+  }
+}

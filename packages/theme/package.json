@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@hasaweb/schema": "workspace:*",
+    "@types/node": "22.20.5",
     "typescript": "7.0.2"
   }
 }

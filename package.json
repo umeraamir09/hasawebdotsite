@@ -9,6 +9,8 @@
     "dev": "pnpm build && pnpm dev:runtime",
     "dev:runtime": "wrangler dev -c apps/web/wrangler.jsonc -c apps/site/wrangler.jsonc -c apps/jobs/wrangler.jsonc --persist-to .wrangler/state --port 8787 --ip 127.0.0.1",
     "dev:web": "pnpm --filter @hasaweb/web dev",
+    "generate:avatar": "node apps/web/scripts/regenerate-avatar-safe.mjs",
+    "test:avatar:browser": "node scripts/avatar-decoration-browser.mjs",
     "local:seed": "node scripts/seed.mjs",
     "db:migrate:local": "wrangler d1 migrations apply hasaweb-local --local --config apps/web/wrangler.jsonc --persist-to .wrangler/state",
     "build": "turbo run build",

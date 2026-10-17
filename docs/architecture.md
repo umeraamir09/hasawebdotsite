@@ -3,7 +3,7 @@
 | | |
 | --- | --- |
 | **Status** | Draft v0.3, confirmed initial-setup plan; implementation follow-ups pending |
-| **Date** | October 16, 2026; original architecture decisions October 13, 2026 |
+| **Date** | October 17, 2026; initial-setup agreement October 16; original architecture decisions October 13 |
 | **Inputs** | [product.md](product.md), [acceptance-criteria.md](acceptance-criteria.md), [rough-idea.md](rough-idea.md), architecture interview, [confirmed onboarding interview](onboarding.md) |
 | **Cloudflare limits verified** | October 12-13, 2026 against official documentation (see [Sources](#18-sources)). Limits change; re-verify before launch. |
 
@@ -13,7 +13,7 @@
 
 This document defines the technical architecture for the hasawebsite MVP: the technologies used, how the system is split across Cloudflare services, how data flows, and how the design stays inside Cloudflare's free tier while keeping a one-step upgrade path to Workers Paid ($5/month).
 
-It covers the MVP as scoped in `product.md`. It does not redesign features, add capabilities, or choose visual design details (theme names, fonts, decoration art), which `product.md` leaves open. Section 16 records the confirmed decisions and the remaining design task.
+It covers the MVP as scoped in `product.md`. It does not redesign features, add capabilities, or approve visual design details by implication. The [appearance catalog](appearance-catalog.md) records the approved six-theme/two-decoration catalog and font/default choices. Section 16 records the confirmed decisions and catalog approval.
 
 The October 16 onboarding specification adds required first-user setup and optional content collection. It changes the target architecture described below, not the current code. The implementation still stops at the authenticated account shell; completed Phases 09–11 need the explicit contract, persistence, and routing follow-ups in the roadmap. See [onboarding baseline](onboarding.md#current-implementation-and-changes-to-prior-plans).
 
@@ -40,6 +40,7 @@ The October 16 onboarding specification adds required first-user setup and optio
 | D-13 | First portfolio setup | Required Address, combined Profile, and Links before first editor entry; optional Skills, Projects, GitHub public/private setup; Review then editor | confirmed October 16 |
 | D-14 | Setup data and exit | One canonical private draft, separate private progress and permanent editor-entry milestone; retain partial optional content and normal publication validation | confirmed October 16 |
 | D-15 | Address and crops | Select an unreserved candidate first, claim only on Publish; retain only finished cropped images | confirmed October 16 |
+| D-16 | Appearance catalog scope | Add Matcha, Strawberry and Coffee to Leaf/Violet/Clay and replace static decorations with the original Ginger cat/Hands pair. Preserve one template and the approved defaults | approved October 17, including the playback policy and generator exception |
 
 ---
 
@@ -155,7 +156,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | App framework | Next.js 16, App Router, React 19 | Editor, auth, API, marketing |
 | Cloudflare adapter | `@opennextjs/cloudflare`, Wrangler | Run Next.js on Workers; deploy all Workers |
 | UI | Tailwind CSS v4, shadcn/ui (Radix primitives) | Editor UI and portfolio styling |
-| Animation | GSAP | UI and portfolio animations, with reduced-motion support |
+| Animation | GSAP for other effects; native CSS keyframes and animated WebP for imported avatar decorations | Preserve the cat/hands source choreography and reduced-motion states; Phase 38 adds independent playback controls |
 | Drag and drop | dnd-kit (pointer + keyboard sensors) | Component and entry reordering, with Move up/down fallback buttons |
 | Rich text | Tiptap (ProseMirror), client-side only | Text sections and case studies |
 | Image cropping | `react-easy-crop` + Canvas re-encode **[default]** | Avatar, banner, project, and case-study images |
@@ -169,7 +170,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | Email | Resend (REST via `fetch`) behind `EmailProvider` | Contact delivery, recipient verification, owner notices |
 | Spam protection | Cloudflare Turnstile | Contact form |
 | Color math | `culori` (OKLCH) **[default]** | Palette generation and contrast checks |
-| Fonts | Self-hosted variable fonts (`@fontsource` subsets) **[default]** | Curated font list, no third-party font requests |
+| Fonts | Self-hosted variable TTF fonts from Google Fonts' repository | Catalog-pinned DM Sans, Manrope and Lora files with SIL OFL notices; production delivery through `hasaweb-assets` and no third-party font requests. Any later conversion/subsetting must record its new bytes and preserve licenses |
 | Local recovery | IndexedDB via `idb-keyval` **[default]** | Unsaved-edit recovery |
 | Lint/format | Biome **[default]** | Consistent code style |
 | Unit/integration tests | Vitest, `@cloudflare/vitest-pool-workers` **[default]** | Pure logic and Worker integration |
@@ -401,22 +402,28 @@ MVP registry: profile (fixed), projects, skills, work experience, text sections 
 ### 9.2 Rendering model
 
 - **One renderer, two hosts.** `Render` components are markup-only React. They run (a) in the editor preview in the browser and (b) in the publish Workflow via `react-dom/server`.
-- **Zero React on published pages.** Interactivity comes from a single small vanilla script (`site.js`, content-hashed): theme toggle, Face Reveal, GitHub graph draw, contact form, resume embed fallback. The same script runs in the preview, so behavior matches.
+- **Zero React on published pages.** Interactivity comes from one content-hashed vanilla `site.js`: theme switching, Face Reveal, independent decoration pause/play and motion-preference handling, GitHub graph drawing, contact forms and resume embed fallback. The same behavior runs in preview. Decoration playback integration remains Phase 38.
 - **Preview is client-rendered.** The live preview and the full-page preview render the draft in the browser (no server rendering, so no CPU risk on free). Desktop and mobile preview modes use an **iframe** of the renderer at 390 px or full width, so CSS media queries respond correctly. The draft reaches the iframe through `postMessage`. Full-page preview routes (`/preview/...`) are authenticated, `noindex`, and `no-store`.
 - **Renderer versioning.** Each snapshot records `renderer_version`. Platform CSS/JS are content-hashed and retained, so old snapshots keep working after a deploy. A `rerender-all` Workflow re-renders every live site (for security fixes or new markup) and uses the same pointer flip.
 
 ### 9.3 Appearance system
 
-- `packages/theme` exports a pure `generatePalette(seedColor | preset)` that returns light and dark token sets (page background, surfaces, text, borders, links, buttons, interactive states) and a list of automatic adjustments for the editor to explain.
-- Theme names, curated font choices, and decoration artwork are a separate design task. Approve the catalog before appearance testing and launch. It must contain exactly three themes and preserve the agreed single-template behavior.
-- Palette math uses OKLCH. Lightness is adjusted until each text/background pair meets the confirmed WCAG 2.2 AA contrast standard, 4.5:1 for normal text and 3:1 for large text and control indicators. Unit tests assert this for every preset and for a sweep of seed colors.
+- `packages/theme` currently exports only `appearanceCatalog` for later provisioning, rendering, validation and review. Phase 36 will add the pure custom-color generator, returning paired light/dark palettes and editor adjustment explanations.
+- Phase 11E approved exactly six presets: `leaf`, `violet`, `clay`, `matcha`, `strawberry` and `coffee`, each with paired light/dark tokens, plus three curated fonts and two optional animated decorations (`cat`, `hands`). Use the [approved versioned catalog](appearance-catalog.md) for provisioning and production appearance validation. Keep the single template and approved defaults. Opaque draft IDs already support these additions; no schema migration is required. Publication must check approved catalog membership in Phase 23.
+- Phase 36 will use OKLCH and adjust generated colors to the confirmed WCAG 2.2 AA thresholds, 4.5:1 for normal text and 3:1 for large text and control indicators. Current catalog checks cover all declared preset pairs; custom-color generation and seed-color sweeps remain pending.
 - Tokens are emitted as CSS custom properties. Tailwind v4 maps its theme to those variables, so the same utilities style the editor preview and published pages.
 - Fonts are self-hosted variable fonts from `hasaweb-assets`, with real fallback stacks. No third-party font requests.
 - Initial mode (`light`/`dark`/`system`) is baked into the page; the visitor toggle is stored in `localStorage` (no cookies, no tracking). A single static inline script prevents theme flash and is allowed in the CSP by hash.
 
 ### 9.4 Face Reveal and avatar decoration
 
-Markup: an interactive `<button>` containing both images and the decoration overlay. The reveal is a CSS `clip-path` diagonal wipe (top-left to bottom-right); `prefers-reduced-motion` switches instantly; the accessible name toggles between "Reveal face" and "Show avatar"; Enter and Space work natively on a `<button>`. When the add-on is off, plain markup with no button, cue, or second image is rendered.
+Markup: a positioned avatar slot containing a portrait and decorative overlay. With Face Reveal enabled, the portrait is an interactive `<button>` containing both images. The reveal is a CSS `clip-path` diagonal wipe (top-left to bottom-right); `prefers-reduced-motion` switches instantly; the accessible name toggles between "Reveal face" and "Show avatar"; Enter and Space work natively on a `<button>`. When the add-on is off, plain portrait markup with no reveal button, cue, or second image is rendered; a selected decoration can still animate.
+
+The [faithful React import](avatar-decorations.md) is the visual and animation reference. Its Umer portraits and fixed label are review fixtures, not defaults for owner sites. Keep those source files unchanged. The production renderer uses owner assets and the product labels above through shared markup, source-equivalent CSS and trusted decoration assets. It must preserve the cleaned 212 × 220, 32-frame cat loop and still, the six-second inline SVG/CSS hand choreography, responsive 124/104 px portrait sizing and envelope, and stable image loading. Published pages retain zero React hydration. The two decoration implementations do not require rewriting CSS animations as GSAP.
+
+Autoplay yields to `prefers-reduced-motion`; use the cleaned still cat or stationary hands, and skip the reveal wipe. Phase 38 adds a separate native pause/play button and shared preview/public `site.js` behavior, independent of Face Reveal. Pausing selects the cat still or stops the hand animation without changing portrait state; playing resumes the original sequence only when reduced motion is not active. Motion preference changes apply immediately. Treat decorative SVGs/images as hidden from assistive technology. The source review demonstrates original behavior and reduced motion; it does not yet implement production pause/play.
+
+Publish and retain content-hashed clean cat loop/still and hands CSS/SVG with each renderer version through the platform asset host. Raw cat inputs, generator and source portrait fixtures are tooling/review dependencies, not assets to add to every owner publication. This adds no custom upload permission or owner-provided SVG/CSS. The generator environment exception is recorded in the import guide; the source-verified clean assets can be approved without changing the generator guard.
 
 ---
 
@@ -491,7 +498,7 @@ hasawebsite/
 | --- | --- | --- |
 | **Unit** | Vitest | Palette generation and contrast (AC 12.3-12.5), `validateDraft` (AC 2.5, 4.1-4.3, 15.4-15.6), subdomain rules (AC 15.1), rich-text allowlist and XSS payloads (AC 8.3), link validation, date validation (AC 7.3), renderer snapshot tests |
 | **Worker integration** | `@cloudflare/vitest-pool-workers` with local D1/R2/Queues/Workflows | `site` routing and states (AC 16.5-16.6, 17.4-17.5), publish atomicity and injected failures (AC 15.7-15.8), **concurrent subdomain claim race** (AC 15.2), autosave CAS and conflicts (AC 14.4), outbox retries and exhaustion notification (AC 10.5-10.6), GitHub refresh, failure, and revoke (AC 9.4, 9.8-9.9), draft-asset access control (AC 13.7), Face Reveal asset publication and removal (AC 4.14) |
-| **End-to-end** | Playwright, axe-core, three viewport sizes | Full journeys (cross-feature AC 2), editor on desktop and mobile (AC 3.6), keyboard and focus (AC 16.4), reduced motion and Face Reveal (AC 4.11-4.12), theme switching (AC 12.6), upload limits and failures (AC 13) |
+| **End-to-end** | Playwright, axe-core, three viewport sizes | Full journeys (cross-feature AC 2), editor on desktop and mobile (AC 3.6), keyboard and focus (AC 16.4), reduced motion, Face Reveal and independent decoration playback (AC 4.11–4.12, 4.15), theme switching (AC 12.6), upload limits and failures (AC 13) |
 | **Manual / usability** | Timed session with target users | The 15-minute publish target and the qualitative outcomes (cross-feature AC 1, 5) |
 
 Worker integration checks also cover permanent subdomain reservations after account deletion, immediate denial of cached sessions during deletion, retryable cleanup, case study slug collisions and reuse after a published deletion, atomic contact budget reservations, and operator email audit retention.
@@ -585,12 +592,12 @@ The architecture interview resolved Q-1 through Q-6. The owner confirmed these d
 | --- | --- | --- |
 | Q-1 | Subdomain after account deletion | Reserve every previously claimed subdomain permanently. Retain only its name after cleanup. Block public and owner access immediately and retry cleanup until complete. See section 8.7. |
 | Q-2 | Case study URLs | Use `/projects/{slug}` with the generation rules in section 8.3.1. Freeze each slug on first publication. A published deletion frees it for reuse within the portfolio. |
-| Q-3 | Themes, fonts, and decorations | Choose names, fonts, and artwork in a later design task. Approve the catalog before appearance testing and launch. |
+| Q-3 | Themes, fonts, and decorations | The owner approved six named presets, three fonts, the imported cat/hands pair, defaults and playback policy on October 17, accepting the documented generator exception. See the [catalog decision](appearance-catalog.md). |
 | Q-4 | Operator account email access | Allow access through an authenticated operator script for abuse follow-up. Require a case reference and record each lookup without the email. Retain audits for 90 days or until account deletion. See section 11. |
 | Q-5 | Public Suffix List | Submit `hasaweb.site` after launch. Submission acceptance is not a launch prerequisite. |
 | Q-6 | Verification settings | Use the confirmed settings in section 13, including automated browser and viewport tests and provider fixtures. Exclude real-device and assistive technology checks. |
 
-The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-13 through D-15 and the planned flows in section 8.0. No onboarding behavior decision remains open. The visual catalog remains a separate approval task; detailed migration/API/UI specs and the recorded technical follow-ups still require work and evidence before implementation can be considered complete.
+The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-13 through D-15 and the planned flows in section 8.0. No onboarding behavior decision remains open. The visual catalog was separately approved in Phase 11E; detailed migration/API/UI specs and the recorded technical follow-ups still require work and evidence before implementation can be considered complete.
 
 ---
 
