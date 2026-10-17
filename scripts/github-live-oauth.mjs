@@ -488,10 +488,20 @@ export async function startLiveServer() {
       });
     await platformEvidence({ check: "platform_baseline", ...observation });
     session.platformSummary = observation;
-    session.message =
-      result.status === "available"
-        ? "Platform public baseline accepted. Compare the total with known public contributions."
-        : `Platform baseline classification ${classification(result)}. Compare with the known visibility case.`;
+    if (result.status === "available")
+      session.message =
+        "Platform public baseline accepted. Compare the total with known public contributions.";
+    else if (result.status === "invalid" && result.reason === "identity")
+      session.message =
+        "The platform credential belongs to the same GitHub account as GITHUB_TEST_USERNAME. Keep GITHUB_TEST_USERNAME as the contribution account under observation and generate GITHUB_PLATFORM_TOKEN while signed in to the separate platform account, then restart the harness and fetch again.";
+    else if (result.status === "invalid" && result.reason === "scope")
+      session.message =
+        "The platform credential sent scopes or no scope header. Generate a classic PAT with no scopes on the separate platform account and fetch again.";
+    else if (result.status === "retry" && result.reason === "credential")
+      session.message =
+        "The platform credential was rejected. Generate a fresh zero-scope classic PAT on the separate platform account and fetch again.";
+    else
+      session.message = `Platform baseline classification ${classification(result)}. Compare with the known visibility case.`;
   }
   async function platformFailureProbe(session) {
     if (!platformToken) throw new Error("platform_credential_missing");

@@ -31,3 +31,10 @@ Sanitized events are written to [live-evidence.json](live-evidence.json). No use
 - The invalid-credential path classifies as platform retry, never an owner reconnect.
 
 Stop the harness with `Ctrl+C`. Do not weaken any production cookie setting for this isolated HTTP harness, and do not modify Phase 06 historical evidence files.
+
+## Troubleshooting
+
+- **`invalid/identity` on a baseline fetch (`viewerSeparate: false`)** — the credential's GitHub account is the same as `GITHUB_TEST_USERNAME`. `GITHUB_TEST_USERNAME` must stay the contribution account under observation, and the PAT must be generated while signed in to the separate platform account (use a private browser window so an existing session cannot win). Fix `.env.github-spike.local`, restart the harness — the file is read only at startup — and fetch again.
+- **`invalid/scope`** — the token carries scopes or GitHub sent no scope header. Regenerate a classic token with no scopes.
+- **`retry/credential` on a baseline fetch** — the PAT is expired, revoked, or mistyped. Generate a fresh zero-scope token.
+- **`unavailable/restricted` with a confirmed separate credential** — stop and record the observation; bring it to the owner decision instead of loosening the policy.
