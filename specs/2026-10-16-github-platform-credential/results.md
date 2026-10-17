@@ -1,8 +1,8 @@
 # Phase 11C implementation and verification evidence
 
-October 16, 2026, on `feat/github-platform-credential`. This is the S-6 follow-up that verifies the separate public GitHub credential. Phase 06's historical completion and its original limitations are preserved unchanged; this directory contains the separate follow-up evidence.
+October 16, 2026, on `feat/github-platform-credential`. The owner live protocol ran October 17, 2026. This is the S-6 follow-up that verifies the separate public GitHub credential. Phase 06's historical completion and its original limitations are preserved unchanged; this directory contains the separate follow-up evidence.
 
-Status: implementation and automated verification complete. The owner live protocol in [live-setup.md](live-setup.md) has not run yet; [live-evidence.json](live-evidence.json) will be produced by that run. The roadmap checkbox stays unchanged until the owner approves completion with live evidence.
+Status: implementation, automated verification, and the owner live protocol are complete. The roadmap checkbox stays unchanged until the owner approves completion with the recorded live evidence.
 
 ## Delivered behavior
 
@@ -45,13 +45,29 @@ Phases 11D and 40 through 42 must implement this mapping; they must not reinterp
 
 The platform fetch is independent of owner OAuth. A platform failure never changes private grant state, and vice versa. Scheduling and cache behavior remain the confirmed six-hour visit TTL and daily private sweep from architecture section 13; they are implemented in later phases.
 
-## Live protocol status
+Live coverage from this phase: `available`, `unavailable/restricted`, and `retry/credential` are exercised end to end by the owner run; `invalid/identity` by the first misconfigured attempt; the remaining reasons rest on the unit matrix and the local smoke run.
 
-Pending the owner run. The expected outcomes, credential preparation, and stopping conditions are in [live-setup.md](live-setup.md). Automated evidence cannot establish the live provider baseline; only the owner session can.
+## Live evidence (owner protocol)
+
+The owner ran the platform protocol on October 17, 2026 with a dedicated zero-scope classic PAT from a separate GitHub account. No sign-in or activity token participated. All events are in [live-evidence.json](live-evidence.json); the key observations:
+
+| Case | Owner visibility | Classification | Scope header | Viewer separate | Observation |
+| --- | --- | --- | --- | --- | --- |
+| A | private contributions hidden | `available` | `present-empty` | yes | 425 contributions across 366 days, restricted 0, calendar hash `f3ad9141…`, fetched `2026-10-17T08:38:35Z` |
+| B | private contributions shown | `unavailable/restricted` | `present-empty` | yes | restricted count 432; no calendar served |
+| Failure | fixed fake credential | `retry/credential` | `absent` | n/a | HTTP 401; no owner reconnect |
+
+- The hidden-visibility total (425, restricted 0) reproduces the Phase 06 public-only observation (425) from the owner's sign-in token. Two independent credentials agree on the same public baseline, and the platform path needed no owner OAuth.
+- With private contributions shown, the platform credential received restricted count 432 and the baseline became unavailable. Nothing in the run added, subtracted, or served a mixed calendar; dependent graph work must show the unavailable state in that condition.
+- The first live attempt used a credential belonging to the same account as the observed profile; every fetch was classified `invalid/identity` before any baseline was served. Those events are kept as live evidence of the identity guard failing closed.
+- A few transitional fetches taken immediately after toggling still observed restricted 432 (two of them labeled hidden); the following fetch returned 425/0. GitHub's profile setting appears to propagate with a short delay, and the policy fails closed throughout, so no transitional state ever produced a served baseline.
+- The evidence records no username, stable ID, token, or provider payload.
+- Owner confirmation that the accepted total matches the live public profile is requested with the completion decision.
 
 ## Limits
 
 - This increment is verification infrastructure, not product graph work. `packages/github/src/index.ts` remains empty; production token storage/rotation, refresh queues, serving, and cache purge belong to Phases 11D and 40 through 42.
 - The local harness is an isolated HTTP process; it does not exercise production Better Auth cookies, callbacks, or scheduling.
 - The candidate policy expects a classic no-scope PAT (present-and-empty `X-OAuth-Scopes`). If the live credential behaves differently, the policy, fixtures, and this document are revised as a recorded finding.
+- Visibility labels are owner-attested; GitHub's profile setting propagated with a short delay during the live run, which the transitional fetches record. The policy fails closed during such transitions.
 - Figma was not modified; this phase changes no UI.
