@@ -1,0 +1,56 @@
+.review {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 64px 32px;
+}
+
+.review h1 {
+  margin: 16px 0 24px;
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -1.6px;
+}
+
+.intro {
+  max-width: 720px;
+  color: var(--text-secondary);
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin: 40px 0 24px;
+}
+
+.card {
+  min-width: 0;
+  padding: 32px;
+  border: 1px solid var(--border-control);
+  border-radius: 24px;
+  background: var(--bg-raised);
+}
+
+.card h2 {
+  font-size: 24px;
+  line-height: 30px;
+}
+
+.card p,
+.note {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 760px) {
+  .review {
+    padding: 32px 20px;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 24px;
+  }
+}

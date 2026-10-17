@@ -41,7 +41,7 @@ Evidence includes the [Phase 11 scope](../specs/2026-10-15-sign-in/requirements.
 
 The profile remains at the top. Initially include optional sections in Skills, Projects, GitHub order, omitting sections with no entered content. Partially entered optional content is retained as described below. The editor can subsequently change component and entry order through its normal controls.
 
-The default appearance comes from the product's single template and approved appearance catalog. There is no appearance-selection step in this release. Do not invent theme/font identifiers to settle the outstanding catalog task.
+The default appearance comes from the single template and catalog approved in Phase 11E. There is no appearance-selection step in onboarding. Reuse the approved theme/font identifiers.
 
 ## Required setup and navigation
 
@@ -130,8 +130,8 @@ The roadmap retains stable existing phase IDs and keeps shared optional-content/
 
 The interview leaves no unresolved onboarding behavior decision. The following existing design and technical work still needs evidence or approval; it is not completed by this proposal:
 
-- The theme/font/decoration catalog still needs its separate design task and owner approval. Final onboarding copy, crop geometry matching the actual portfolio, and detailed responsive composition belong to UI implementation using the existing Figma reference. This proposal does not approve a new catalog or modify Figma.
-- The thin hot-API runtime, safe platform-only public GitHub credential, publication batching, and asset withdrawal/cache policies still need their recorded measurements and verification. A failed prerequisite must be resolved before dependent work, without silently dropping private activity or changing the confirmed setup flow.
+- The [six-theme/two-decoration catalog](appearance-catalog.md) was approved in Phase 11E on October 17, 2026. Leaf/DM Sans/system, no decoration and Face Reveal off are the approved starting defaults; provisioning remains Phase 12. There is no additional onboarding appearance screen. Final onboarding copy, crop geometry matching the actual portfolio, and detailed responsive composition belong to UI implementation using the existing Figma reference. This proposal does not approve a new catalog or modify Figma.
+- Phases 11A–11D have recorded prerequisite evidence and completion decisions for bounded owner saves, setup storage, the separate public GitHub credential and refresh/cleanup contracts. Production save/autosave and GitHub integration remain in their scheduled phases. Publication batching and withdrawal/cache feasibility still require the recorded follow-up checks before Phases 24–26. A failed prerequisite must be resolved before dependent work, without silently dropping private activity or changing the confirmed setup flow.
 - Per-phase implementation specs and migration/API details must be written before implementation. They must preserve these behaviors and the current owner/security boundaries.
 
-Repeat onboarding, an initial editor bypass, extra goal/persona questions, AI generation, automatic content discovery/imports, retained original image sources, and additional onboarding screens for the remaining editor capabilities are outside this initial scope. Existing broader MVP exclusions continue to apply. The feature is planned, and every new or revised implementation phase remains unchecked until implemented, verified, and explicitly approved as complete by the owner.
+Repeat onboarding, an initial editor bypass, extra goal/persona questions, AI generation, automatic content discovery/imports, retained original image sources, and additional onboarding screens for the remaining editor capabilities are outside this initial scope. Existing broader MVP exclusions continue to apply. Remaining onboarding implementation phases stay unchecked until implemented, verified and explicitly approved; completed prerequisite phases retain their recorded status.

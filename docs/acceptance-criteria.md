@@ -75,7 +75,7 @@ Source: [Required profile, images, and social identity](product.md#4-required-pr
 3. An email address, GitHub profile, supported social profile, or website URL satisfies the link requirement when valid. Invalid destinations fail validation. A configured contact form with no qualifying link does not satisfy it.
 4. Owners can add, edit, remove, and order links. Each published link has an understandable label and opens its configured destination; email links open an email application with the configured address.
 5. Owners can select profile visibility and separate social-component visibility for a single stored link. Editing that link updates both chosen placements after Publish without duplicate entry.
-6. Owners can select, change, and remove an avatar decoration from the curated gallery. The selected overlay appears on the avatar; custom decoration upload is unavailable.
+6. Owners can select, change, and remove Ginger cat (`cat`) or Hands (`hands`) from the curated gallery. The selected overlay appears on the avatar with Face Reveal on or off. There are no Leaf/Orbit/Frame static choices or custom decoration uploads. Preserve the imported art, placement and complete choreography; see criterion 4.15 for playback.
 7. An explicitly displayed email link exposes that address. A contact-form recipient address does not appear in the public form or its public responses unless the owner separately displays it.
 8. Face Reveal is off by default. Turning its editor toggle on shows a second image upload input; turning it off hides that input. Owners choose an original avatar and a real-face photo without automated face verification.
 9. The second image supports upload, crop, replacement, and removal under the image format, size, failure recovery, and description requirements in section 13. Preview and published output match each image's saved crop. A failed replacement preserves the previous successful image.
@@ -84,6 +84,8 @@ Source: [Required profile, images, and social identity](product.md#4-required-pr
 12. The interactive avatar has a subtle visual reveal cue, visible keyboard focus, and Enter and Space activation. Its accessible label is "Reveal face" while the original avatar is shown and "Show avatar" while the second photo is shown. With reduced motion enabled, activation switches images immediately without the wipe. A selected decoration remains visible over both images. With the add-on disabled, the avatar has no reveal cue or reveal interaction.
 13. Owners can exercise the reveal in preview. Changing the toggle, either image, or its crop autosaves the draft without changing the public portfolio before Publish. After Publish, visitors see the saved configuration and images.
 14. The editor explains that publishing Face Reveal makes the second photo publicly accessible before any reveal interaction. After publication, that photo can be fetched without activating the avatar. Disabling the add-on and republishing removes public access to the second photo while preserving it in the private draft. Signed-out visitors and other owners cannot fetch that retained draft photo through public asset routes.
+
+15. The selected decoration autoplays the cleaned 32-frame cat loop or six-second hands sequence. A separate keyboard-accessible pause/play control stops/resumes playback without switching the portrait, including with Face Reveal off. Pausing or requesting reduced motion shows the cleaned cat still or stationary hands. Reduced motion takes priority over play, and changing motion preference applies immediately. Phase 38 implements these production controls.
 
 ## 5. Projects and case studies
 
@@ -167,7 +169,7 @@ Source: [Resume download and public resume page](product.md#11-resume-download-a
 
 Source: [Themes, custom color, fonts, and light/dark mode](product.md#12-themes-custom-color-fonts-and-lightdark-mode).
 
-1. Exactly three preset themes are selectable. Switching among them preserves profile content, component entries, component order, and the single template.
+1. Exactly six preset themes are selectable: Leaf, Violet, Clay, Matcha, Strawberry and Coffee, each with light and dark palettes matching the approved catalog. Switching among them preserves profile content, component entries, component order, and the single template.
 2. Selecting any curated font applies it consistently to the portfolio, case studies, and resume page in preview and after Publish.
 3. Selecting one custom color generates light and dark values for page backgrounds, raised surfaces, text, borders, links, buttons, and interactive states. Both modes update in preview without a refresh.
 4. The interface explains automatic color adjustments. Measure generated text/background pairs and control indicators in both modes against the recorded contrast standard in the verification prerequisites below. Every supported preset and generated palette passes.
@@ -260,16 +262,16 @@ Source: [Desired outcomes](product.md#desired-outcomes), [User journey](product.
 
 ## Verification prerequisites
 
-The product leaves the following implementation choices open. Record them before running dependent checks; an unspecified value cannot produce an objective pass.
+The catalog was approved in Phase 11E. Provider/deployment evidence remains a prerequisite. The numeric verification settings are already confirmed in architecture section 13; use those values rather than reopening them.
 
 | Choice | Required test input or evidence |
 | --- | --- |
-| Theme, font, and decoration catalog | Names and assets for the three themes, curated fonts, and decorations. Test every supported choice. |
+| Theme, font, and decoration catalog | Use the six theme IDs and twelve palettes, three curated fonts, Ginger cat and Hands assets/geometry/playback policy, and draft defaults approved in Phase 11E from the [catalog](appearance-catalog.md). Test every supported choice, reduced motion and independent pause/play in the later production integration. |
 | Provider configuration | Test accounts for GitHub and Google, verified/shared/missing/unverified email cases, and private-contribution authorization. |
-| GitHub refresh and revocation handling | Configured refresh interval and how revocation is detected. Exercise refresh and revocation without Publish and record when public data changes. |
-| Delivery retries and submission limits | Retry schedule, exhaustion condition, spam test cases, and exact submission threshold/window. Test below, at, and above the limit. |
-| Upload limit units | Exact byte values used for 5 MB and 10 MB. Test at the limit and one byte above. |
-| Contrast verification | Record the chosen measurable standard and tool before palette checks. A proposed baseline is WCAG AA contrast: 4.5:1 for normal text, 3:1 for large text, and 3:1 for required control indicators against adjacent colors. This numeric baseline is a verification proposal, not an existing numeric commitment in product.md. |
-| Browser and viewport coverage | Record supported browsers, phone/tablet/desktop widths, mobile editing devices, and assistive technology used for verification. |
+| GitHub refresh and revocation handling | Use the confirmed six-hour on-visit TTL and daily private-activity sweep. Verify external revocation on the next refresh/sweep and explicit withdrawal immediately, without Publish. |
+| Delivery retries and submission limits | Use architecture section 13's confirmed thresholds, UTC budgets and five-attempt, 24-hour retry schedule. Test boundaries, exhaustion and longer provider retry delays within that deadline. |
+| Upload limit units | Use 5 MiB = 5,242,880 bytes and 10 MiB = 10,485,760 bytes. Test each limit and limit + 1. |
+| Contrast verification | Use the confirmed WCAG 2.2 AA standard: 4.5:1 for normal text and 3:1 for large text and required control indicators. Verify declared pairs with unit checks and rendered interfaces with axe. |
+| Browser and viewport coverage | Use the last two stable versions of Chrome, Firefox, Safari and Edge, plus iOS Safari and Android Chrome, at 360, 768 and 1280 px. Use automated browser/viewport checks and provider fixtures. Real-device and assistive-technology checks are excluded from the confirmed MVP verification scope. |
 
 If a prerequisite is unresolved, mark the dependent check as pending with the missing decision. Do not mark it passed or silently invent a refresh deadline, retry count, submission limit, or usability success-rate target.

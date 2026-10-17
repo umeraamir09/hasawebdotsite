@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Phase 11E catalog review</title>
+    <style>
+      @font-face {font-family: 'DM Sans'; font-weight: 100 1000; font-style: normal; font-display: swap; src: url('../../packages/theme/assets/fonts/dm-sans/dm-sans-variable.ttf') format('truetype');}
+@font-face {font-family: 'Manrope'; font-weight: 200 800; font-style: normal; font-display: swap; src: url('../../packages/theme/assets/fonts/manrope/manrope-variable.ttf') format('truetype');}
+@font-face {font-family: 'Lora'; font-weight: 400 700; font-style: normal; font-display: swap; src: url('../../packages/theme/assets/fonts/lora/lora-variable.ttf') format('truetype');}
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #f7f8f5;
+        color: #20241e;
+        font:
+          16px/1.5 "DM Sans",
+          Arial,
+          sans-serif;
+      }
+      main {
+        max-width: 1280px;
+        margin: auto;
+        padding: 48px 32px;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: clamp(32px, 5vw, 54px);
+        line-height: 1.1;
+        letter-spacing: -1.6px;
+        margin: 16px 0;
+      }
+      h2 {
+        font-size: 28px;
+        line-height: 1.2;
+        margin: 40px 0 16px;
+      }
+      header > p {
+        max-width: 740px;
+        color: #596053;
+      }
+      .status {
+        display: inline-block;
+        border: 1px solid #7a856e;
+        border-radius: 99px;
+        padding: 6px 16px;
+        font-size: 14px;
+      }
+      code {
+        font-size: 13px;
+        overflow-wrap: anywhere;
+      }
+      .defaults {
+        padding: 20px 24px;
+        margin: 24px 0;
+        background: #e7f2d7;
+        border-radius: 16px;
+      }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin: 28px 0;
+      }
+      .controls label {
+        display: grid;
+        gap: 6px;
+        flex: 1 1 180px;
+        font-size: 14px;
+      }
+      .controls select {
+        width: 100%;
+        min-height: 48px;
+        padding: 10px 14px;
+        border: 1px solid #7a856e;
+        border-radius: 12px;
+        background: #fcfdf9;
+        color: #20241e;
+        font: inherit;
+      }
+      .controls input {
+        width: 20px;
+        height: 20px;
+      }
+      select:focus-visible,
+      input:focus-visible,
+      button:focus-visible,
+      a:focus-visible {
+        outline: 2px solid var(--focus, #365414);
+        outline-offset: 4px;
+      }
+      .stage {
+        border: 1px solid #7a856e;
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .portfolio {
+        background: var(--page);
+        color: var(--text);
+        padding: 32px;
+        font-family: var(--font);
+        font-optical-sizing: none;
+      }
+      .cover {
+        height: 150px;
+        background: var(--surface);
+        border-radius: 20px;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 24px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .profile {
+        max-width: 840px;
+        margin: auto;
+      }
+      .avatar {
+        width: 160px;
+        height: 160px;
+        position: relative;
+        margin: -64px 0 0 8px;
+      }
+      .avatar-base {
+        position: absolute;
+        left: 24px;
+        top: 24px;
+        width: 112px;
+        height: 112px;
+        border-radius: 24px;
+        background: var(--accent);
+        color: var(--onAccent);
+        display: grid;
+        place-items: center;
+        font-size: 34px;
+        font-weight: 700;
+      }
+      .overlay {
+        position: absolute;
+        inset: 0;
+        width: 160px;
+        height: 160px;
+        pointer-events: none;
+      }
+      .profile h3 {
+        font-size: 32px;
+        letter-spacing: -0.8px;
+        line-height: 1.25;
+        margin-top: 12px;
+      }
+      .bio {
+        color: var(--muted);
+        max-width: 560px;
+        margin: 12px 0 20px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .sample-button {
+        border: 1px solid var(--control);
+        border-radius: 99px;
+        min-height: 48px;
+        padding: 12px 24px;
+        font: inherit;
+        font-size: 14px;
+        color: var(--onAccent);
+        background: var(--accent);
+        cursor: pointer;
+      }
+      .sample-button:hover {
+        background: var(--hover);
+      }
+      .sample-button:active {
+        background: var(--pressed);
+      }
+      .sample-link {
+        display: inline-flex;
+        align-items: center;
+        color: var(--link);
+        text-decoration: underline;
+        min-height: 48px;
+        padding: 8px;
+      }
+      .section {
+        border-top: 1px solid var(--border);
+        padding-top: 24px;
+        margin-top: 28px;
+      }
+      .section h4 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+      .project {
+        background: var(--raised);
+        border: 1px solid var(--border);
+        padding: 20px;
+        border-radius: 16px;
+      }
+      .project p {
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      .mode-label {
+        font:
+          12px/1.5 "DM Sans",
+          Arial,
+          sans-serif;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+      .matrix {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .mini {
+        background: var(--page);
+        color: var(--text);
+        border: 1px solid var(--control);
+        border-radius: 20px;
+        padding: 24px;
+        font-family: var(--font);
+        overflow-wrap: anywhere;
+      }
+      .mini h3 {
+        font-size: 24px;
+        line-height: 1.25;
+        margin: 12px 0;
+      }
+      .mini .avatar {
+        margin: 12px 0;
+      }
+      .mini p {
+        color: var(--muted);
+        margin: 12px 0;
+      }
+      .swatches {
+        display: flex;
+        gap: 8px;
+        margin: 16px 0;
+      }
+      .swatches span {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1px solid var(--control);
+      }
+      .font-list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .font-card,
+      .decoration-card {
+        padding: 24px;
+        border: 1px solid #7a856e;
+        border-radius: 20px;
+        background: #fcfdf9;
+      }
+      .font-card .specimen {
+        font-size: 28px;
+        line-height: 1.25;
+        margin: 16px 0;
+      }
+      .font-card p {
+        margin: 12px 0;
+      }
+      .gallery {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .decoration-card .avatar {
+        margin: 8px auto;
+      }
+      .decoration-card {
+        background: var(--page);
+        color: var(--text);
+      }
+      .note {
+        font-size: 14px;
+        color: #596053;
+        margin: 16px 0;
+      }
+      .meta {
+        font-size: 12px;
+        color: #596053;
+        margin-top: 12px;
+      }
+      .error-sample {
+        color: var(--error);
+        margin-top: 16px;
+        font-size: 14px;
+      }
+      a {
+        color: inherit;
+      }
+      footer {
+        margin: 40px 0 0;
+        padding-top: 24px;
+        border-top: 1px solid #dce2d5;
+      }
+      output {
+        display: block;
+        margin: 16px 0;
+        color: #596053;
+        font-size: 14px;
+      }
+      @media (max-width: 800px) {
+        .matrix,
+        .font-list,
+        .gallery {
+          grid-template-columns: 1fr;
+        }
+        main {
+          padding: 28px 20px;
+        }
+        .portfolio {
+          padding: 20px;
+        }
+        .cover {
+          height: 124px;
+        }
+        .profile h3 {
+          font-size: 28px;
+        }
+        .avatar {
+          margin-left: 0;
+        }
+        h2 {
+          font-size: 24px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="status"
+          >Phase 11E · Approved by owner</span
+        >
+        <h1>One portfolio.<br />Room to make it yours.</h1>
+        <p>
+          Review the colors, type and avatar details below. Every choice uses
+          the same example and structure. These are catalog specimens, not the
+          production renderer.
+        </p>
+      </header>
+      <p class="defaults">
+        Approved starting appearance: <strong>Leaf · DM Sans · System</strong
+        ><br />No decoration, custom color or Face Reveal photo. Owner fields
+        stay empty in new drafts.
+      </p>
+      <div class="controls">
+        <label for="theme">Theme<select id="theme"></select></label>
+        <label for="font">Font<select id="font"></select></label>
+        <label for="mode"
+          >Mode<select id="mode">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select></label
+        >
+      </div>
+      <output id="selection" aria-live="polite"></output>
+      <div class="stage">
+        <article class="portfolio" id="preview">
+          <div class="profile">
+            <p class="mode-label" id="resolved-mode"></p>
+            <div class="cover">Example banner area</div>
+            <div class="avatar">
+              <div class="avatar-base" id="avatar-initials">AM</div>
+
+            </div>
+            <h3>Alex Morgan</h3>
+            <p class="bio">
+              I build thoughtful websites and small tools for everyday life.
+              Currently exploring accessible design.
+            </p>
+            <div class="actions">
+              <button class="sample-button" id="sample-action" type="button">
+                Say hello</button
+              ><a class="sample-link" href="#example-project">View project</a>
+            </div>
+            <section class="section" id="example-project">
+              <h4>Selected project</h4>
+              <div class="project">
+                <strong>A small reading companion</strong>
+                <p>
+                  A place to collect notes and find your next book. This example
+                  lets you compare the same content in every appearance.
+                </p>
+              </div>
+            </section>
+            <section class="section">
+              <h4>Case study and resume typography</h4>
+              <p class="bio">
+                The selected family also applies to longer reading and
+                supporting pages. <em>Italic emphasis</em> and
+                <strong>bold text</strong> remain readable.
+              </p>
+              <p class="error-sample">
+                Example validation message: enter a valid URL.
+              </p>
+            </section>
+          </div>
+        </article>
+      </div>
+      <label class="note"
+        ><input type="checkbox" id="alternate" /> Show an alternate avatar
+        specimen</label
+      >
+      <output id="action-feedback" aria-live="polite"></output>
+      <h2 id="palette-heading">The preset palettes</h2>
+      <p class="note">
+        <span id="theme-count"></span> themes, each in light and dark. These keep the same content, font
+        and section order. Font selections also update these
+        specimens.
+      </p>
+      <div class="matrix" id="matrix"></div>
+      <h2>The font selection</h2>
+      <p class="note">
+        Three locally served variable font families. The selected family applies
+        to the whole portfolio. Fallbacks remain available while fonts load.
+      </p>
+      <div class="font-list" id="font-list"></div>
+      <h2>The decoration selection</h2>
+      <p class="note">
+        Ginger cat and hands are imported as their actual React component. Open the
+        live review to inspect both original animations and the portrait toggle.
+        Run the web development server on port 3000 for this review.
+        The production integration will add a separate pause/play control;
+        reduced motion already shows the still cat and stationary hands.
+      </p>
+      <div class="gallery" id="gallery"></div>
+      <footer>
+        <p>Review only. No account, draft, upload or Figma file is changed.</p>
+        <p class="meta">
+          The owner approved the catalog and defaults. Phase 12 will provision
+          them into new private drafts. Controls, custom-color generation, the shared renderer and
+          Face Reveal remain in their planned implementation phases.
+        </p>
+      </footer>
+    </main>
+    <script type="application/json" id="catalog-data">{"version":1,"status":"approved","approval":{"approvedAt":"2026-10-17","approvedBy":"owner","phase":"11E","scope":["themes","fonts","decorations","defaults","playback-policy"],"generatorExceptionAccepted":true,"evidence":"specs/2026-10-17-appearance-catalog/results.md#owner-approval"},"template":{"id":"portfolio-v1","name":"Portfolio","description":"One fixed profile followed by stacked optional sections. No layout picker."},"defaults":{"templateId":"portfolio-v1","appearance":{"themeId":"leaf","fontId":"dm-sans","colorMode":"system"},"faceRevealEnabled":false},"themes":[{"id":"leaf","name":"Leaf","description":"Warm paper, green-gray ink and a lime accent. The default follows Direction A.","sourceNodes":["8:2","8:159"],"light":{"page":"#f7f8f5","surface":"#eff2eb","raised":"#fcfdf9","text":"#20241e","muted":"#596053","accent":"#bdeb70","onAccent":"#20241e","link":"#365414","control":"#7a856e","border":"#dce2d5","hover":"#acd95f","pressed":"#9ac64e","focus":"#365414","error":"#9d302b"},"dark":{"page":"#171c16","surface":"#222a1e","raised":"#2c3528","text":"#eef3e9","muted":"#b1bbaa","accent":"#bdeb70","onAccent":"#20241e","link":"#bdeb70","control":"#829477","border":"#3d4937","hover":"#acd95f","pressed":"#9ac64e","focus":"#bdeb70","error":"#ffb4ab"}},{"id":"violet","name":"Violet","description":"Lilac surfaces and a plum accent, drawn from the geometric profile example.","sourceNodes":["74:377"],"light":{"page":"#eadcfa","surface":"#dfc8f5","raised":"#f7edff","text":"#382b49","muted":"#60516f","accent":"#7934ad","onAccent":"#fff8ff","link":"#68368e","control":"#796185","border":"#ceb0e9","hover":"#6c2b9c","pressed":"#60218d","focus":"#68368e","error":"#9d302b"},"dark":{"page":"#2d1a3d","surface":"#402551","raised":"#563366","text":"#f7edf9","muted":"#e0cde8","accent":"#d19af4","onAccent":"#2d1e3a","link":"#e4b8ff","control":"#c3a2ce","border":"#734787","hover":"#dfb1fa","pressed":"#edceff","focus":"#e4b8ff","error":"#ffc0b8"}},{"id":"clay","name":"Clay","description":"Warm cream and terracotta, drawn from the illustrator profile example.","sourceNodes":["74:236"],"light":{"page":"#fff0d6","surface":"#fbe1b7","raised":"#fff6e4","text":"#382622","muted":"#67524b","accent":"#c83b20","onAccent":"#fff9ef","link":"#a52d19","control":"#987970","border":"#edcdac","hover":"#b4311c","pressed":"#a32a16","focus":"#a52d19","error":"#9d302b"},"dark":{"page":"#34211b","surface":"#472b20","raised":"#5a3325","text":"#fff3df","muted":"#dec7b7","accent":"#ffa56b","onAccent":"#322219","link":"#ffba8c","control":"#c29a87","border":"#714431","hover":"#ffb984","pressed":"#ffcc9f","focus":"#ffba8c","error":"#ffc0b8"}},{"id":"matcha","name":"Matcha","description":"Olive matcha, soft milk foam and deep tea greens.","sourceNodes":["269:4"],"sourceCollection":"VariableCollectionId:268:30","referenceImage":"codex-clipboard-b2bc90f8-7e57-4c65-a0a4-040f7996607e.jpg","referenceColors":{"Milk foam":"#f2efd4","Soft sage":"#acb591","Whisked matcha":"#879530","Tea powder":"#6b770e","Teapot green":"#394523"},"light":{"page":"#f9f9e6","surface":"#f2efd4","raised":"#fffdf0","text":"#263217","muted":"#53613c","accent":"#6b770e","onAccent":"#fffdef","link":"#4c5509","control":"#7a8355","border":"#d6d9b5","hover":"#5a670c","pressed":"#4c5509","focus":"#4c5509","error":"#9d302b"},"dark":{"page":"#171d10","surface":"#242d18","raised":"#323d22","text":"#f2efd4","muted":"#c0c9a2","accent":"#bdca6a","onAccent":"#1c2511","link":"#c4d183","control":"#909e68","border":"#46532e","hover":"#c8d584","pressed":"#d5df9c","focus":"#c4d183","error":"#ffb4ab"}},{"id":"strawberry","name":"Strawberry","description":"Strawberry red, gingham blush and vanilla cream.","sourceNodes":["269:223"],"sourceCollection":"VariableCollectionId:268:73","referenceImage":"codex-clipboard-fe8224d1-c874-414e-8dd7-2dd260b610aa.jpg","referenceColors":{"Vanilla cream":"#f7e9c9","Cake crumb":"#f3d1b4","Gingham blush":"#f5b8a6","Strawberry red":"#ce0c0e","Leaf detail":"#b0ae52"},"light":{"page":"#fff5e0","surface":"#f3d8c7","raised":"#fffaf0","text":"#431d1c","muted":"#79504c","accent":"#b10a09","onAccent":"#fffaf0","link":"#a3151a","control":"#986c64","border":"#e8bab0","hover":"#970c0d","pressed":"#7e0e12","focus":"#a3151a","error":"#a3151a"},"dark":{"page":"#281315","surface":"#3a1d21","raised":"#4d282d","text":"#fff0db","muted":"#e7bcb3","accent":"#f5b8a6","onAccent":"#421a21","link":"#ffb5a5","control":"#b98582","border":"#724249","hover":"#facabd","pressed":"#ffdfd4","focus":"#ffb5a5","error":"#ffc0b8"}},{"id":"coffee","name":"Coffee","description":"Espresso shadows, golden crema and warm milk.","sourceNodes":["269:442"],"sourceCollection":"VariableCollectionId:268:112","referenceImage":"codex-clipboard-0cf8c3ce-0cca-4005-959a-867e9529ea74.jpg","referenceColors":{"Milk foam":"#faf5ea","Warm milk":"#f9e9cf","Crema":"#efc793","Caramel":"#d19350","Espresso":"#4e2d0e"},"light":{"page":"#faf5ea","surface":"#f9e9cf","raised":"#fffcf5","text":"#341305","muted":"#6b4d30","accent":"#6d3b17","onAccent":"#fff5e3","link":"#69370e","control":"#9a7955","border":"#dfc6a4","hover":"#5c2f10","pressed":"#4e2d0e","focus":"#69370e","error":"#9d302b"},"dark":{"page":"#1c100b","surface":"#2c1c12","raised":"#3e291b","text":"#f9e9cf","muted":"#dfbb91","accent":"#e7b272","onAccent":"#341305","link":"#efc793","control":"#a48666","border":"#65452c","hover":"#efc793","pressed":"#f3d4ac","focus":"#efc793","error":"#ffb4ab"}}],"fonts":[{"id":"dm-sans","name":"DM Sans","family":"DM Sans","fallback":"Arial, sans-serif","weight":[100,1000],"style":"normal","asset":"assets/fonts/dm-sans/dm-sans-variable.ttf","license":"assets/fonts/dm-sans/OFL.txt","source":"https://raw.githubusercontent.com/google/fonts/main/ofl/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf","sha256":"8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d"},{"id":"manrope","name":"Manrope","family":"Manrope","fallback":"Arial, sans-serif","weight":[200,800],"style":"normal","asset":"assets/fonts/manrope/manrope-variable.ttf","license":"assets/fonts/manrope/OFL.txt","source":"https://raw.githubusercontent.com/google/fonts/main/ofl/manrope/Manrope%5Bwght%5D.ttf","sha256":"3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6"},{"id":"lora","name":"Lora","family":"Lora","fallback":"Georgia, \"Times New Roman\", serif","weight":[400,700],"style":"normal","asset":"assets/fonts/lora/lora-variable.ttf","license":"assets/fonts/lora/OFL.txt","source":"https://raw.githubusercontent.com/google/fonts/main/ofl/lora/Lora%5Bwght%5D.ttf","sha256":"822a6621ccbe8d97d20ac88c1c41f5615c9c2c202eaa75f272cd452aac6475a7"}],"decorationGeometry":{"component":"ProfileAvatarSlot","desktopPortraitSize":124,"mobilePortraitSize":104,"desktopRadius":30,"mobileRadius":26,"mobileBreakpoint":760,"sourceStyles":"apps/web/components/profile-avatar.module.css","envelope":"calc((var(--profile-avatar-size) - 12px) * 1.50485)"},"decorations":[{"id":"cat","name":"Ginger cat","implementation":"animated-webp","asset":"apps/web/public/assets/avatar-ginger-cat-clean-loop.webp","stillAsset":"apps/web/public/assets/avatar-ginger-cat-clean-still.webp","publicPath":"/assets/avatar-ginger-cat-clean-loop.webp","stillPublicPath":"/assets/avatar-ginger-cat-clean-still.webp","sha256":"a0dcfa2c6229a936773f3a05b63feae27bdda0b46627d430b1a244f2fe0dbd90","stillSha256":"e19f65588e6b268442948240b5729df1d5c0c3ff74258060d9ca19f4f17e94a3","width":212,"height":220,"frames":32,"durationMs":3920,"loop":0,"component":"ProfileAvatar","variant":"cat","reviewPath":"/catalog/avatar-decorations#cat","source":"umers-portfolio-website, source-manifest.json"},{"id":"hands","name":"Hands","implementation":"svg-css","component":"ProfileAvatar","variant":"hands","componentAsset":"apps/web/components/profile-avatar.tsx","styleAsset":"apps/web/components/profile-avatar.module.css","componentSha256":"5388b03b89331e2e48bad0361d82b224ecf7a6d7f048ec70bdbdc1ebb4fb85e4","styleSha256":"ea4870b25be5c8bc486b4af454ceacc6c46278918db0bc71ca9d18d1dfc5f997","durationMs":6000,"reviewPath":"/catalog/avatar-decorations#hands","source":"umers-portfolio-website, source-manifest.json"}],"decorationPlayback":{"autoplay":true,"reducedMotion":"static","pauseControl":"independent-of-face-reveal","implementationPhase":38,"reviewImplementation":"original-source-with-reduced-motion; production pause/play remains scheduled"}}</script>
+    <script>
+      const catalog = JSON.parse(
+        document.getElementById("catalog-data").textContent,
+      );
+      const byId = (id) => document.getElementById(id);
+      const system = matchMedia("(prefers-color-scheme: dark)");
+      byId("palette-heading").textContent = `The ${catalog.themes.length * 2} preset palettes`;
+      byId("theme-count").textContent = catalog.themes.length;
+      for (const key of ["theme", "font"]) {
+        const entries = catalog[key === "theme" ? "themes" : "fonts"];
+        for (const entry of entries) {
+          const option = document.createElement("option");
+          option.value = entry.id;
+          option.textContent = entry.name;
+          byId(key).append(option);
+        }
+      }
+      byId("theme").value = catalog.defaults.appearance.themeId;
+      byId("font").value = catalog.defaults.appearance.fontId;
+      byId("mode").value = catalog.defaults.appearance.colorMode;
+      function apply(element, theme, mode, font) {
+        for (const [key, value] of Object.entries(theme[mode]))
+          element.style.setProperty(`--${key}`, value);
+        element.style.setProperty(
+          "--font",
+          `"${font.family}", ${font.fallback}`,
+        );
+        element.style.colorScheme = mode;
+      }
+      function avatar(alternate) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "avatar";
+        const base = document.createElement("div");
+        base.className = "avatar-base";
+        base.textContent = alternate ? "A" : "AM";
+        wrapper.append(base);
+        return wrapper;
+      }
+      for (const font of catalog.fonts) {
+        const card = document.createElement("article");
+        card.className = "font-card";
+        const title = document.createElement("h3");
+        title.textContent = font.name;
+        const specimen = document.createElement("p");
+        specimen.className = "specimen";
+        specimen.textContent = "A place for your work.";
+        specimen.style.fontFamily = `"${font.family}", ${font.fallback}`;
+        const body = document.createElement("p");
+        body.textContent = "Readable words. 0123456789";
+        body.style.fontFamily = specimen.style.fontFamily;
+        const meta = document.createElement("p");
+        meta.className = "meta";
+        meta.textContent = `${font.id} · ${font.weight.join("–")} · SIL OFL 1.1`;
+        card.append(title, specimen, body, meta);
+        byId("font-list").append(card);
+      }
+      function render() {
+        const theme = catalog.themes.find((x) => x.id === byId("theme").value);
+        const font = catalog.fonts.find((x) => x.id === byId("font").value);
+        const requested = byId("mode").value;
+        const mode =
+          requested === "system"
+            ? system.matches
+              ? "dark"
+              : "light"
+            : requested;
+        const alternate = byId("alternate").checked;
+        apply(byId("preview"), theme, mode, font);
+        byId("resolved-mode").textContent =
+          `${theme.name} / ${mode} / ${font.name}`;
+        byId("selection").textContent =
+          `Selected IDs: ${theme.id} / ${font.id} / ${requested}`;
+        byId("avatar-initials").textContent = alternate ? "A" : "AM";
+        byId("matrix").replaceChildren();
+        for (const preset of catalog.themes)
+          for (const tone of ["light", "dark"]) {
+            const card = document.createElement("article");
+            card.className = "mini";
+            apply(card, preset, tone, font);
+            const label = document.createElement("div");
+            label.className = "mode-label";
+            label.textContent = `${preset.name} / ${tone}`;
+            const title = document.createElement("h3");
+            title.textContent = "Alex Morgan";
+            const body = document.createElement("p");
+            body.textContent =
+              "Thoughtful websites and small tools for everyday life.";
+            const swatches = document.createElement("div");
+            swatches.className = "swatches";
+            for (const key of ["page", "surface", "raised", "text", "accent"]) {
+              const dot = document.createElement("span");
+              dot.style.background = preset[tone][key];
+              dot.title = `${key} ${preset[tone][key]}`;
+              swatches.append(dot);
+            }
+            const button = document.createElement("button");
+            button.className = "sample-button";
+            button.type = "button";
+            button.textContent = "Say hello";
+            button.addEventListener("click", () => {
+              byId("action-feedback").textContent =
+                `${preset.name} ${tone} action specimen. No message is sent.`;
+            });
+            card.append(
+              label,
+              avatar(alternate),
+              title,
+              body,
+              swatches,
+              button,
+            );
+            byId("matrix").append(card);
+          }
+        byId("gallery").replaceChildren();
+        for (const entry of catalog.decorations) {
+          const card = document.createElement("article");
+          card.className = "decoration-card";
+          apply(card, theme, mode, font);
+          const title = document.createElement("h3");
+          title.textContent = entry.name;
+          const description = document.createElement("p");
+          description.textContent = entry.id === "cat" ? "Cleaned animated WebP with a reduced-motion still." : "Original SVG/CSS hand poses, hearts and sparkles.";
+          const link = document.createElement("a");
+          link.className = "sample-link";
+          link.href = `http://127.0.0.1:3000${entry.reviewPath}`;
+          link.textContent = "Open live component review";
+          card.append(title, description, link);
+          byId("gallery").append(card);
+        }
+      }
+      for (const id of ["theme", "font", "mode", "alternate"])
+        byId(id).addEventListener("change", render);
+      system.addEventListener("change", render);
+      byId("sample-action").addEventListener("click", () => {
+        byId("action-feedback").textContent =
+          "Action specimen only. No message is sent.";
+      });
+      render();
+    </script>
+  </body>
+</html>

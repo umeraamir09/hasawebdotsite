@@ -1,0 +1,83 @@
+{
+  "sourceRepository": "umers-portfolio-website",
+  "sourceCommit": "88a9dc7d5128d361164243932e8bacb7cdf52730",
+  "importedAt": "2026-10-17",
+  "files": [
+    {
+      "source": "src/components/profile-avatar.tsx",
+      "destination": "apps/web/components/profile-avatar.tsx",
+      "sourceSha256": "5445b88043c6cfe95f432dea2ea41c338be346792cb8276d3d2638c45af64699",
+      "sha256": "5388b03b89331e2e48bad0361d82b224ecf7a6d7f048ec70bdbdc1ebb4fb85e4",
+      "change": "asset-map import only"
+    },
+    {
+      "source": "src/components/profile-avatar.module.css",
+      "destination": "apps/web/components/profile-avatar.module.css",
+      "sourceSha256": "ea4870b25be5c8bc486b4af454ceacc6c46278918db0bc71ca9d18d1dfc5f997",
+      "sha256": "ea4870b25be5c8bc486b4af454ceacc6c46278918db0bc71ca9d18d1dfc5f997",
+      "change": "verbatim"
+    },
+    {
+      "source": "src/components/image-with-skeleton.tsx",
+      "destination": "apps/web/components/image-with-skeleton.tsx",
+      "sourceSha256": "6579affe56fa421f4dd3612ad0a89eb1b3ade22b17636b63e92dd3cbf35eff88",
+      "sha256": "6579affe56fa421f4dd3612ad0a89eb1b3ade22b17636b63e92dd3cbf35eff88",
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/ed716e56-02ad-4f30-a9e8-803c79346a83.png",
+      "destination": "apps/web/public/assets/ed716e56-02ad-4f30-a9e8-803c79346a83.png",
+      "sha256": "f409404c17b7b5962b0144b871d3a89e383c3d2556ad1433ba0654fda6783a56",
+      "bytes": 1616790,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/umer-avatar-photo.webp",
+      "destination": "apps/web/public/assets/umer-avatar-photo.webp",
+      "sha256": "694c7a400849e23ace860efd2c3ea433a7924b1dbfb1dbab3afa26d68abe4bda",
+      "bytes": 43524,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/avatar-ginger-cat-clean-loop.webp",
+      "destination": "apps/web/public/assets/avatar-ginger-cat-clean-loop.webp",
+      "sha256": "a0dcfa2c6229a936773f3a05b63feae27bdda0b46627d430b1a244f2fe0dbd90",
+      "bytes": 490928,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/avatar-ginger-cat-clean-still.webp",
+      "destination": "apps/web/public/assets/avatar-ginger-cat-clean-still.webp",
+      "sha256": "e19f65588e6b268442948240b5729df1d5c0c3ff74258060d9ca19f4f17e94a3",
+      "bytes": 21650,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/avatar-ginger-cat-loop.webp",
+      "destination": "apps/web/public/assets/avatar-ginger-cat-loop.webp",
+      "sha256": "3eef5de989b2ffba406d2fa84f5a56e7e5dbd2825e80a750349205495199c31a",
+      "bytes": 162068,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/avatar-ginger-cat-still.webp",
+      "destination": "apps/web/public/assets/avatar-ginger-cat-still.webp",
+      "sha256": "1aa325956d068fda98ec92c7b7a9d0d64bb57d0e254a87126a0167d0fcfd4a79",
+      "bytes": 9224,
+      "change": "verbatim"
+    },
+    {
+      "source": "public/assets/avatar-cat-mouth-mask.svg",
+      "destination": "apps/web/public/assets/avatar-cat-mouth-mask.svg",
+      "sha256": "ca00e9a6eb67bfc2e324fe0292f1aaf1083d8a913e7dfedefa6d2320ef1f0c76",
+      "bytes": 141,
+      "change": "verbatim"
+    },
+    {
+      "source": "scripts/generate-avatar-decoration.mjs",
+      "destination": "apps/web/scripts/generate-avatar-decoration.mjs",
+      "sha256": "74d689a8442939aee6cd0a316efdf9cb4bfc128a9fc3bcfa18ba26782278c65f",
+      "change": "verbatim"
+    }
+  ]
+}

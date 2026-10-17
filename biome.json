@@ -27,6 +27,22 @@
   },
   "overrides": [
     {
+      "includes": ["apps/web/app/globals.css"],
+      "linter": { "rules": { "complexity": { "noImportantStyles": "off" } } }
+    },
+    {
+      "includes": [
+        "apps/web/components/profile-avatar.tsx",
+        "apps/web/components/profile-avatar.module.css",
+        "apps/web/components/image-with-skeleton.tsx",
+        "apps/web/scripts/generate-avatar-decoration.mjs",
+        "apps/web/public/assets/avatar-cat-mouth-mask.svg"
+      ],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
+    },
+    {
       "includes": ["apps/web/public/auth/*.svg"],
       "linter": {
         "rules": {

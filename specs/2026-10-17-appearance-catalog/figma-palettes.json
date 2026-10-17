@@ -1,0 +1,118 @@
+{
+  "fileKey": "rjvDSCHPajF3Lpe8qNxX5U",
+  "readAt": "2026-10-17",
+  "method": "Read-only connected Figma MCP, resolved collection variable aliases to sRGB hex",
+  "themes": [
+    {
+      "id": "matcha",
+      "nodeId": "269:4",
+      "collectionId": "VariableCollectionId:268:30",
+      "light": {
+        "page": "#f9f9e6",
+        "surface": "#f2efd4",
+        "raised": "#fffdf0",
+        "text": "#263217",
+        "muted": "#53613c",
+        "accent": "#6b770e",
+        "onAccent": "#fffdef",
+        "link": "#4c5509",
+        "control": "#7a8355",
+        "border": "#d6d9b5",
+        "hover": "#5a670c",
+        "pressed": "#4c5509",
+        "focus": "#4c5509",
+        "error": "#9d302b"
+      },
+      "dark": {
+        "page": "#171d10",
+        "surface": "#242d18",
+        "raised": "#323d22",
+        "text": "#f2efd4",
+        "muted": "#c0c9a2",
+        "accent": "#bdca6a",
+        "onAccent": "#1c2511",
+        "link": "#c4d183",
+        "control": "#909e68",
+        "border": "#46532e",
+        "hover": "#c8d584",
+        "pressed": "#d5df9c",
+        "focus": "#c4d183",
+        "error": "#ffb4ab"
+      }
+    },
+    {
+      "id": "strawberry",
+      "nodeId": "269:223",
+      "collectionId": "VariableCollectionId:268:73",
+      "light": {
+        "page": "#fff5e0",
+        "surface": "#f3d8c7",
+        "raised": "#fffaf0",
+        "text": "#431d1c",
+        "muted": "#79504c",
+        "accent": "#b10a09",
+        "onAccent": "#fffaf0",
+        "link": "#a3151a",
+        "control": "#986c64",
+        "border": "#e8bab0",
+        "hover": "#970c0d",
+        "pressed": "#7e0e12",
+        "focus": "#a3151a",
+        "error": "#a3151a"
+      },
+      "dark": {
+        "page": "#281315",
+        "surface": "#3a1d21",
+        "raised": "#4d282d",
+        "text": "#fff0db",
+        "muted": "#e7bcb3",
+        "accent": "#f5b8a6",
+        "onAccent": "#421a21",
+        "link": "#ffb5a5",
+        "control": "#b98582",
+        "border": "#724249",
+        "hover": "#facabd",
+        "pressed": "#ffdfd4",
+        "focus": "#ffb5a5",
+        "error": "#ffc0b8"
+      }
+    },
+    {
+      "id": "coffee",
+      "nodeId": "269:442",
+      "collectionId": "VariableCollectionId:268:112",
+      "light": {
+        "page": "#faf5ea",
+        "surface": "#f9e9cf",
+        "raised": "#fffcf5",
+        "text": "#341305",
+        "muted": "#6b4d30",
+        "accent": "#6d3b17",
+        "onAccent": "#fff5e3",
+        "link": "#69370e",
+        "control": "#9a7955",
+        "border": "#dfc6a4",
+        "hover": "#5c2f10",
+        "pressed": "#4e2d0e",
+        "focus": "#69370e",
+        "error": "#9d302b"
+      },
+      "dark": {
+        "page": "#1c100b",
+        "surface": "#2c1c12",
+        "raised": "#3e291b",
+        "text": "#f9e9cf",
+        "muted": "#dfbb91",
+        "accent": "#e7b272",
+        "onAccent": "#341305",
+        "link": "#efc793",
+        "control": "#a48666",
+        "border": "#65452c",
+        "hover": "#efc793",
+        "pressed": "#f3d4ac",
+        "focus": "#efc793",
+        "error": "#ffb4ab"
+      }
+    }
+  ]
+}

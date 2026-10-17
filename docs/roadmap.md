@@ -28,7 +28,7 @@ Create a directory at `specs/YYYY-MM-DD-feature-name/` for that work, using the 
 
 Work sequentially unless a phase explicitly identifies an independent dependency. Read the relevant source sections before implementing; the short scopes below do not replace their detailed requirements. Complete the phase's check and record evidence against the acceptance criteria, then ask the owner whether to check it off. Check it only after explicit owner approval of implementation completion. Approval of this planning update does not complete any implementation phase. Run relevant failure and access-control checks as each capability arrives, then run the complete acceptance review before launch.
 
-Use the confirmed settings in [architecture section 13](architecture.md#13-testing-strategy-mapped-to-acceptance-criteriamd), including upload byte limits, contrast standard, browser/viewport coverage, GitHub refresh intervals, contact budgets, retry deadlines, and provider fixtures. Do not invent replacement values. The theme/font/decoration catalog still needs its separate design decision and approval. Phase 11E extracts that existing decision from pending appearance work so draft defaults are approved before provisioning and dependent validation. It does not add an onboarding appearance step.
+Use the confirmed settings in [architecture section 13](architecture.md#13-testing-strategy-mapped-to-acceptance-criteriamd), including upload byte limits, contrast standard, browser/viewport coverage, GitHub refresh intervals, contact budgets, retry deadlines, and provider fixtures. Do not invent replacement values. The theme/font/decoration catalog was approved in Phase 11E, including the configured defaults and documented generator exception. That phase extracted the existing catalog decision from pending appearance work so provisioning and dependent validation can reuse it. It does not add an onboarding appearance step.
 
 ## Foundation and feasibility
 
@@ -131,9 +131,12 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 ### Phase 11E. Approve catalog identifiers and portfolio defaults
 
-- Dependencies: architecture Q-3, the existing read-only Figma direction, and the product's single-template/three-theme scope.
+- Dependencies: architecture Q-3, the existing read-only Figma direction, and the product's single-template/six-theme scope.
 - Perform the existing catalog decision previously grouped into Phases 35 and 37: obtain approval of themes, curated fonts, decoration assets, and the configured default theme/font/mode used by new drafts. Record identifiers/assets for later controls and verification. This is an extracted prerequisite, not a new theme picker or an approved catalog by implication.
-- [ ] Complete when the owner has approved the catalog and the default identifiers can be used by provisioning, the basic renderer, and validation. Phases 35 and 37 implement their respective controls using this decision.
+- October 17, 2026: the [catalog proposal and local visual review](appearance-catalog.md) are prepared, with [implementation and verification evidence](../specs/2026-10-17-appearance-catalog/results.md). The proposed defaults are Leaf, DM Sans and system mode, with no decoration and Face Reveal off. The owner subsequently approved the catalog and completion on October 17; provisioning remains Phase 12.
+- October 17, 2026: the owner requested replacement of the three static decoration proposals with their original ginger cat and hands. The [faithful component import and verification](../specs/2026-10-17-avatar-decoration-import/results.md) records both variants and the unchanged generator's environment limitation. The code catalog now includes the exact Matcha, Strawberry and Coffee Figma palettes, bringing it to six themes and twelve mode palettes. Static decoration files/choices are removed. The catalog decision specifies autoplay, reduced-motion stills and separate visitor pause/play in Phase 38. The owner approved the catalog, defaults, playback policy, documented generator exception and phase completion on October 17, 2026.
+- October 17, 2026: final technical verification is complete. Both browser scripts now write Biome-formatted evidence; all 162 catalog combinations, eight avatar scenario groups, 218 unit tests, workspace checks and 12 build tasks pass. The generator reproduces its documented failure and restores the original assets with matching digests. The owner approved Phase 11E completion after reviewing the generator exception and requested a pull request. No provisioning or later appearance controls are implemented by this approval.
+- [x] Complete when the owner has approved all six paired palettes, three fonts, the two imported decorations and their geometry/playback policy, and draft defaults. Record the approval so provisioning, the basic renderer and validation can use the identifiers. The documented generator environment exception preserves the source clean assets and does not claim regeneration passed. Phases 35 and 37 implement owner controls; Phase 38 implements public playback and reveal behavior.
 
 ### Phase 12. Provision the single private starting portfolio
 
@@ -169,6 +172,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 09, 11E, 12 and the recorded rendering constraints.
 - Render the fixed profile and component order through shared markup-only components with the approved default styling/font. Establish responsive styling, security headers, and the small public interaction script used by previews and snapshots. Permit honest private rendering of incomplete drafts.
+- Preserve the imported cat/hands art, source-equivalent CSS, responsive envelope and loading geometry in reusable owner-data markup. Keep the React source reference intact and public output free of React hydration. Source portraits/labels are review fixtures. Later appearance/decorations phases activate catalog selections and playback controls.
 - [ ] Complete when the same fixture renders consistently in private browser preview and publish output with safe links, readable layout, keyboard controls, and unavailable/incomplete states. Onboarding Review later reuses this renderer.
 
 ### Phase 17. Build the editor and live preview
@@ -216,13 +220,13 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 23. Build publication validation and checklist
 
 - Dependencies: 11E, 13, 18–22A and the current component contracts.
-- Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, catalog membership, compatible sample omission, selected address/claim rules, and included components. Resolve a taken onboarding candidate in the editor rather than restarting setup.
+- Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, approved six-theme/three-font/two-decoration catalog membership, compatible sample omission, selected address/claim rules, and included components. Resolve a taken onboarding candidate in the editor rather than restarting setup.
 - [ ] Complete when each issue opens its control, untouched compatible samples are omitted, and owner-edited/incomplete optional content uses normal validation. Extend checks during later component phases. Setup completion alone must never count as publication readiness.
 
 ### Phase 24. Prepare immutable publication versions
 
 - Dependencies: 02, 08, 11A, 16, 18, 23 and successful measurement of the S-8 Queue/D1 batching fallback with the full shared quota/CPU model. Also validate the S-9 browser/query cache requirements before dependent withdrawal behavior.
-- Flush autosave and capture the exact saved revision. Snapshot only public portfolio content, exclude private setup/progress metadata, copy only reachable assets, and render using the measured bounded task dispatch. Retain content-hashed platform assets.
+- Flush autosave and capture the exact saved revision. Snapshot only public portfolio content, exclude private setup/progress metadata, copy only reachable assets, and render using the measured bounded task dispatch. Retain content-hashed platform assets, including each selected decoration's clean animation/still or hands CSS/SVG. Keep raw regeneration inputs, tooling and example source portraits out of owner publication manifests.
 - [ ] Complete when a candidate version has a complete manifest without changing the live pointer, and injected failures preserve the old public version and clean uncommitted public assets. Old recorded fallback decisions alone do not prove the implementation feasible.
 
 ### Phase 25. Commit and serve a complete version
@@ -289,7 +293,7 @@ Add each capability through the shared registry, draft saving, validation, previ
 ### Phase 35. Add preset appearance controls across pages
 
 - Dependencies: the approved catalog/defaults from 11E, renderer 16, and completed portfolio/case-study/resume capabilities through 34.
-- Reuse the catalog decision rather than repeat it. Add exactly three preset-theme controls, curated self-hosted fonts, and initial light/dark/system mode across page types. The existing default styles support setup without adding an appearance step.
+- Reuse the catalog decision rather than repeat it. Add exactly six preset-theme choices (Leaf, Violet, Clay, Matcha, Strawberry and Coffee), curated self-hosted fonts, and initial light/dark/system mode across page types. The existing default styles support setup without adding an appearance step.
 - [ ] Complete when approved presets/fonts apply across all pages without changing content, order, or template, and visitor mode switching works on each page type.
 
 ### Phase 36. Generate coordinated custom colors
@@ -300,13 +304,13 @@ Add each capability through the shared registry, draft saving, validation, previ
 ### Phase 37. Add decorations and Face Reveal setup
 
 - Dependencies: 11E, 19, 35–36 and the existing Face Reveal publication rules.
-- Reuse the approved decoration gallery and add editor controls plus the optional Face Reveal second-image toggle/upload/crop/replace/remove/description. Explain public accessibility of the published photo. Keep these controls out of onboarding.
-- [ ] Complete when Face Reveal defaults off, enabled incomplete uploads block publication, disabling retains a ready second photo privately, and custom decoration uploads remain absent.
+- Reuse only the approved Ginger cat and Hands gallery, with an unselected initial state and change/remove controls. Keep original art/choreography, geometry and reduced-motion specimens in previews. Add the optional Face Reveal second-image toggle/upload/crop/replace/remove/description. Explain public accessibility of the published photo. Keep these controls out of onboarding.
+- [ ] Complete when owners can select, change and remove both cat and hands, saved selections match preview, and removal omits `decorationId`. New drafts have no decoration and Face Reveal off. Enabled incomplete Face Reveal uploads block publication; disabling retains a ready second photo privately. Custom decoration uploads remain absent. Public pause/play behavior is verified in Phase 38.
 
 ### Phase 38. Add Face Reveal interaction and withdrawal
 
-- Implement the reversible diagonal wipe, stable image dimensions, decoration overlay, keyboard controls, changing accessible label, visual cue, and reduced-motion switch.
-- [ ] Complete when every page load starts with the original avatar and preview matches public behavior. Disabling and republishing removes the second photo from public storage/cache while preserving the private draft asset.
+- Implement the reversible diagonal wipe, stable image dimensions, original cat/hands overlays, keyboard controls, changing accessible label, visual cue and reduced-motion switch using owner images. Preserve both full animation sequences. Add an independent keyboard-accessible visitor pause/play control, even with Face Reveal off. Pause uses the cleaned cat still or stationary hands without toggling the portrait. Reduced motion takes priority and changing preference applies immediately. Share this behavior between editor preview and the markup-only public renderer; keep the faithful React reference unchanged.
+- [ ] Complete when every page load starts with the original avatar, both decorations and independent playback controls work with Face Reveal on/off, reduced motion uses the correct still states, and preview matches public behavior. Disabling and republishing removes the second photo from public storage/cache while preserving the private draft asset.
 
 ### Phase 39. Finish full-page draft preview
 
@@ -439,7 +443,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 
 - Dependencies: all preceding implementation and operational phases.
 - Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Cover all optional completion paths, publication/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
-- [ ] Complete when checks pass with recorded evidence across the confirmed browser/viewport matrix, including keyboard/focus, contrast, crop dialogs, recovery, private consent, reduced motion, and deferred-scope exclusions. Do not add real-device/assistive-technology verification requirements beyond the confirmed scope.
+- [ ] Complete when checks pass with recorded evidence across the confirmed browser/viewport matrix, including keyboard/focus, contrast across all twelve preset palettes, crop dialogs, recovery, private consent, reduced motion, both decoration loops and pause/play independent of Face Reveal, flashing limits, and deferred-scope exclusions. Do not add real-device/assistive-technology verification requirements beyond the confirmed scope.
 
 ### Phase 54. Validate the journey and release the MVP
 
@@ -466,7 +470,7 @@ The phase checks are incremental. Phase 53 verifies each acceptance section in f
 | 9. GitHub activity | 06, 11C–11D, 40–42, 42D, 47 |
 | 10. Contact and delivery | 07, 43 through 45 |
 | 11. Resume | 18, 19, 34, 39 |
-| 12. Appearance | 11E, 16, 35–36 |
+| 12. Appearance | 11E, 16, 35–38 |
 | 13. Upload handling | 08, 18–19, 24, 26, 34, 37–38, 42B |
 | 14. Draft saving and recovery | 11A–11B, 13–15, 22A, 42A–42F |
 | 15. Subdomains and publication | 11B, 22–26, 42A, 42E–42F |

@@ -314,3 +314,41 @@ button:disabled {
     line-height: 42px;
   }
 }
+
+/* Verbatim global contract for the imported avatar and image loader. */
+.image-frame {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 12px;
+}
+img[data-image-state="loading"],
+img[data-image-state="error"] {
+  opacity: 0 !important;
+}
+.image-skeleton {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--raised);
+  overflow: hidden;
+}
+.image-skeleton[data-image-state="loading"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  transform: translateX(-100%);
+  animation: image-shimmer 1.5s ease-in-out infinite;
+}
+@keyframes image-shimmer {
+  to {
+    transform: translateX(100%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .image-skeleton[data-image-state="loading"]::after {
+    animation: none;
+  }
+}
