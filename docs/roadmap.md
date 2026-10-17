@@ -142,7 +142,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 11B, 11E and completed authentication.
 - Provision the preselected template and approved defaults once, with empty owner fields, no inserted sample profile/project, and recoverable private setup metadata. Keep provider identity separate until reviewed/accepted. Initialization must never overwrite an existing draft.
-- [ ] Complete when new/repeated/concurrent authenticated setup returns exactly one recoverable private draft, no template picker or invented content, and explicit provider-avatar acceptance remains required.
+- October 17, 2026: [implementation and verification evidence](../specs/2026-10-17-private-portfolio/results.md) records authenticated, insert-only provisioning with approved defaults and empty owner content. All 221 unit tests, 73 persistence/access groups, 29 auth/provisioning groups, 10 browser journey checks, 17 bounded-save groups, workspace checks, builds and the three-Worker smoke test pass. Concurrent first requests, provider separation, existing/legacy draft preservation, revoked sessions, lost-response retry and restart recovery are covered. The owner approved Phase 12 completion on October 17, 2026.
+- [x] Complete when new/repeated/concurrent authenticated setup returns exactly one recoverable private draft, no template picker or invented content, and explicit provider-avatar acceptance remains required.
 
 ### Phase 13. Implement revision-aware draft and progress APIs
 

@@ -7,6 +7,41 @@ import { OwnerAccessError, privateJson } from "@hasaweb/db";
 import { Hono } from "hono";
 
 type Owner = NonNullable<Awaited<ReturnType<typeof currentOwner>>>;
+
+// Initialization takes no owner input. Count streamed bytes even if a caller
+// supplies a false Content-Length; never buffer a full draft at this endpoint.
+async function initializationBody(request: Request): Promise<400 | 413 | null> {
+  if (!request.body) return 400;
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
+  let bytes = 0;
+  let body = "";
+  try {
+    while (true) {
+      const chunk = await reader.read();
+      if (chunk.done) break;
+      bytes += chunk.value.byteLength;
+      if (bytes > 1024) {
+        void reader.cancel().catch(() => {});
+        return 413;
+      }
+      body += decoder.decode(chunk.value, { stream: true });
+    }
+    body += decoder.decode();
+    const value: unknown = JSON.parse(body);
+    return value !== null &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      Object.keys(value).length === 0
+      ? null
+      : 400;
+  } catch {
+    void reader.cancel().catch(() => {});
+    return 400;
+  } finally {
+    reader.releaseLock();
+  }
+}
 export type OwnerBindings = {
   Bindings: AuthEnvironment;
   Variables: { owner: Owner };
@@ -83,6 +118,17 @@ export function createOwnerRouter() {
     });
   });
   app.all("/api/owner", () => privateJson(null, 405));
+  app.post("/api/owner/portfolio", async (c) => {
+    const invalid = await initializationBody(c.req.raw);
+    if (invalid) return privateJson(null, invalid);
+    const owner = c.get("owner");
+    const portfolio = await owner.repositories.portfolio.provision();
+    return privateJson({
+      user: { id: owner.identity.user.id, name: owner.identity.user.name },
+      portfolio,
+    });
+  });
+  app.all("/api/owner/portfolio", () => privateJson(null, 405));
   return app;
 }
 

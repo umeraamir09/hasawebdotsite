@@ -160,6 +160,14 @@ try {
       retried: true,
       tokenCleared: true,
     },
+    provision: {
+      status: "draft",
+      revision: 1,
+      step: "profile",
+      name: "Resume after restart",
+      firstEditorEnteredAt: null,
+      noClaim: true,
+    },
   });
   const evidence = {
     checkedAt: new Date().toISOString(),

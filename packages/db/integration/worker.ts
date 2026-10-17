@@ -8,6 +8,7 @@ import { ownerRepositories, type SessionIdentity } from "../src/repositories";
 import { RESERVED_SUBDOMAINS } from "../src/reserved-subdomains";
 import * as schema from "../src/schema";
 import { runGitHubChecks, verifyGitHubRestart } from "./github";
+import { runProvisionChecks, verifyProvisionRestart } from "./provision";
 import { runSetupChecks } from "./setup";
 
 function equal(actual: unknown, expected: unknown) {
@@ -69,6 +70,7 @@ export default {
         counter: (await repositories.counters.get("edits", 0))?.count,
         claim: (await repositories.claims.current())?.name,
         githubCleanup: await verifyGitHubRestart(env.DB),
+        provision: await verifyProvisionRestart(env.DB),
       });
     }
     const checks: string[] = [];
@@ -988,6 +990,7 @@ export default {
         },
       );
       await runGitHubChecks(env.DB, check);
+      await runProvisionChecks(env.DB, check);
       return privateJson({ passed: checks.length, checks });
     } catch (error) {
       return privateJson(

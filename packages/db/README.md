@@ -15,7 +15,7 @@ pnpm test:persistence
 
 `db:generate` runs drizzle-kit against the checked-in schema and snapshots. Review every generated SQL file before applying it. `0002_counter_owner.sql` explicitly retains `ON DELETE CASCADE`, which drizzle-kit's generated ADD COLUMN omitted. Keep future changes compatible with the previous deployed application. The three local Wrangler configurations share `packages/db/migrations`; migration application uses Wrangler's `d1_migrations` tracking. Production configuration and migration deployment arrive in Phase 52.
 
-The seed creates two deterministic development users and private empty drafts. It adds no sessions, credentials, or public claims. It preserves existing drafts on reruns. Template and sample provisioning belongs to Phase 12. The fixture appearance IDs are private placeholders until the approved catalog exists.
+The seed creates two deterministic development users and private empty drafts. It adds no sessions, credentials, or public claims. It preserves existing drafts on reruns. Its placeholder appearance IDs are private fixtures. Product initialization uses the approved catalog through `repositories.portfolio.provision()`.
 
 ## Owner access
 
@@ -40,6 +40,8 @@ The guard checks the request URL against the exact application origin. POST, PUT
 `ownerRepositories` accepts only an identity resolved by the authentication library. Never construct it from a request body, path, query, or owner-ID header. Each operation includes its own persisted session and owner predicates. A previously created repository therefore cannot keep accessing data after session revocation or deletion. Inserts derive the portfolio ID from the active session; supplied extra ownership fields cannot redirect inserts or upserts. Missing and cross-owner record IDs both return no record. Map those results to 404 in future handlers.
 
 The repositories provide portfolio creation/reads, asset metadata, candidate publication versions, current claims, connected GitHub records, contact recipients and outbox, owner counters, and provider identity listings. Provider listings exclude grants. GitHub withdrawal atomically clears active credentials and authorized data while preserving encrypted remote cleanup separately. Outbox finalization clears visitor payloads, also enforced by a database constraint. These persistence helpers are internal methods; handlers must select permitted fields and run the relevant feature validation before calling them.
+
+`repositories.portfolio.provision()` takes no content or identity arguments. It conditionally inserts an empty private draft from the approved appearance catalog under the active-session predicate, with initial Address progress. A conflict on the account's unique portfolio leaves every existing column untouched. It returns only the active owner's portfolio ID and never parses existing draft content. A revoked/expired/deleting session cannot insert or recover a portfolio, including through a repository obtained before revocation. `portfolio.create(id, draft)` remains an internal fixture/maintenance helper; the initialization API does not expose its arguments.
 
 Owner counters use an encoded namespace and a cascading user reference. Owners cannot access shared email budget keys through this repository. Shared budgets and operator audits require trusted service repositories when their flows arrive. The schema exports support those services; raw queries do not belong in request handlers.
 

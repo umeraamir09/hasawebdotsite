@@ -14,6 +14,7 @@
   "dependencies": {
     "@hasaweb/github": "workspace:*",
     "@hasaweb/schema": "workspace:*",
+    "@hasaweb/theme": "workspace:*",
     "drizzle-orm": "0.45.4"
   },
   "devDependencies": {

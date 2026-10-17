@@ -1,6 +1,23 @@
 // Local integration HTTP fixtures only. Never import from product routes.
-type Profile = { id: string; email?: string; verified: boolean };
+type Profile = {
+  id: string;
+  email?: string;
+  verified: boolean;
+  image?: string;
+};
 const profiles: Record<string, Profile> = {
+  provisionGithub: {
+    id: "provision-github",
+    email: "provision-github@example.invalid",
+    verified: true,
+    image: "https://example.invalid/github-avatar.jpg",
+  },
+  provisionGoogle: {
+    id: "provision-google",
+    email: "provision-google@example.invalid",
+    verified: true,
+    image: "https://example.invalid/google-avatar.jpg",
+  },
   explicit: {
     id: "explicit",
     email: "explicit@example.invalid",
@@ -62,6 +79,7 @@ globalThis.fetch = async (input, init) => {
       id_token: `${base64({ alg: "RS256", typ: "JWT" })}.${base64({
         sub: profile.id,
         name: "Fixture owner",
+        picture: profile.image,
         email: profile.email,
         email_verified: profile.verified,
         aud: "fixture-google",
@@ -75,7 +93,12 @@ globalThis.fetch = async (input, init) => {
     const profile = profiles[token ?? ""];
     if (!profile) return json({ message: "Bad credentials" }, 401);
     if (url.pathname === "/user")
-      return json({ id: profile.id, login: profile.id, email: profile.email });
+      return json({
+        id: profile.id,
+        login: profile.id,
+        email: profile.email,
+        avatar_url: profile.image,
+      });
     if (url.pathname === "/user/emails")
       return json(
         profile.email

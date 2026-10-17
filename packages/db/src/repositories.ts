@@ -1,9 +1,13 @@
 import {
+  appearanceSchema,
+  createEmptyDraft,
   type DraftDoc,
   draftSchema,
+  initialSetupProgress,
   readDraft,
   setupProgressSchema,
 } from "@hasaweb/schema";
+import { appearanceCatalog } from "@hasaweb/theme";
 import { type AnyColumn, and, eq, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { boundedSaves, SaveError } from "./bounded-save";
@@ -74,16 +78,38 @@ export async function ownerRepositories(
       .get();
     return row ? { ...row, draft: readDraft(row.draft) } : undefined;
   };
+  const portfolioSummary = () =>
+    db
+      .select({ id: tables.portfolio.id })
+      .from(tables.portfolio)
+      .where(activeOwner())
+      .get();
 
   return {
     portfolio: {
       get: getPortfolio,
-      summary: () =>
-        db
-          .select({ id: tables.portfolio.id })
-          .from(tables.portfolio)
-          .where(activeOwner())
-          .get(),
+      summary: portfolioSummary,
+      async provision() {
+        // portfolio-v1 is the application's single fixed template. There is no
+        // owner-selected layout field. Never copy account/provider identity here.
+        const draft = createEmptyDraft(
+          appearanceSchema.parse(appearanceCatalog.defaults.appearance),
+        );
+        const now = Date.now();
+        await db.run(sql`
+          insert into ${tables.portfolio}
+            (id, user_id, draft, draft_validation_version, setup_progress, created_at, updated_at)
+          select ${crypto.randomUUID()}, ${identity.user.id}, ${JSON.stringify(draft)},
+            2, ${JSON.stringify(initialSetupProgress())}, ${now}, ${now}
+          where ${activeSession()}
+          on conflict(user_id) do nothing
+        `);
+        // Avoid reading, parsing or migrating existing content on this hot path.
+        // A concurrent initializer returns the winning row. Revocation fails closed.
+        const portfolio = await portfolioSummary();
+        if (!portfolio) throw new OwnerAccessError();
+        return portfolio;
+      },
       async create(id: string, draft: DraftDoc) {
         const parsed = draftSchema.parse(draft);
         const now = new Date();

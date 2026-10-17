@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
+import { createHmac } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,7 +8,12 @@ import { setTimeout } from "node:timers/promises";
 
 // Render the built app in Chromium. Only provider HTTP and consent are fixtures.
 // Browser requests to the auth API execute the product handler in workerd/D1.
-export async function checkAuthUi({ root, wrangler, fixturePort }) {
+export async function checkAuthUi({
+  root,
+  wrangler,
+  fixturePort,
+  evidenceDirectory = join(root, "specs/2026-10-15-sign-in"),
+}) {
   const port = 8812;
   const uiState = join(root, ".wrangler/auth-ui/state");
   await rm(uiState, { recursive: true, force: true });
@@ -32,6 +38,31 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
     },
   );
   assert.equal(migrate.status, 0, migrate.stdout + migrate.stderr);
+  const seedSession = spawnSync(
+    process.execPath,
+    [
+      wrangler,
+      "d1",
+      "execute",
+      "DB",
+      "--local",
+      "--config",
+      "apps/web/wrangler.jsonc",
+      "--persist-to",
+      uiState,
+      "--command",
+      `
+    INSERT INTO user(id,name,email,created_at,updated_at) VALUES('entry-binding-owner','Local binding owner','entry-binding@example.invalid',1,1);
+    INSERT INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES('entry-binding-session','entry-binding-token','entry-binding-owner',${Date.now() + 3600000},1,1);
+  `,
+    ],
+    {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, WRANGLER_SEND_METRICS: "false" },
+    },
+  );
+  assert.equal(seedSession.status, 0, seedSession.stdout + seedSession.stderr);
   const profile = await mkdtemp(join(tmpdir(), "hasaweb-auth-ui-"));
   // The built Worker now routes owner requests through the named jobs entry.
   const jobsConfig = join(root, ".wrangler/auth-ui/jobs.json");
@@ -100,6 +131,7 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
   let interceptError;
   let providerMode = "success";
   let nextFailure = false;
+  let loseInitializationResponse = false;
   let held;
   let holdSignIn = false;
   let signInCalls = 0;
@@ -117,6 +149,45 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
     const signedOut = await fetch(`http://127.0.0.1:${port}/api/owner`);
     assert.equal(signedOut.status, 401);
     assert.equal(signedOut.headers.get("cache-control"), "private, no-store");
+    const bindingOrigin = `http://127.0.0.1:${port}`;
+    const signature = createHmac(
+      "sha256",
+      "local-browser-fixture-secret-with-32-characters",
+    )
+      .update("entry-binding-token")
+      .digest("base64");
+    const bindingCookie = `hasaweb-local.session_token=${encodeURIComponent(`entry-binding-token.${signature}`)}`;
+    const bindingOwner = async () =>
+      (
+        await fetch(`${bindingOrigin}/api/owner`, {
+          headers: { Cookie: bindingCookie },
+        })
+      ).json();
+    assert.equal((await bindingOwner()).portfolio, null);
+    const bindingResponse = await fetch(
+      `${bindingOrigin}/api/owner/portfolio`,
+      {
+        method: "POST",
+        headers: {
+          Cookie: bindingCookie,
+          Origin: bindingOrigin,
+          "Content-Type": "application/json",
+        },
+        body: "{}",
+      },
+    );
+    assert.equal(bindingResponse.status, 200);
+    assert.equal(
+      bindingResponse.headers.get("cache-control"),
+      "private, no-store",
+    );
+    const bindingResult = await bindingResponse.json();
+    assert.equal(bindingResult.user.id, "entry-binding-owner");
+    assert.ok(bindingResult.portfolio.id);
+    assert.deepEqual(await bindingOwner(), bindingResult);
+    checks.push(
+      "built web Worker forwards authenticated initialization through the named jobs binding and persists the same portfolio in D1",
+    );
     const signIn = await fetch(
       `http://127.0.0.1:${port}/api/auth/sign-in/social`,
       {
@@ -239,7 +310,9 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
         }
       }
       const api =
-        url.pathname.startsWith("/api/auth/") || url.pathname === "/api/owner";
+        url.pathname.startsWith("/api/auth/") ||
+        url.pathname === "/api/owner" ||
+        url.pathname.startsWith("/api/owner/");
       const headers = new Headers(request.headers);
       // CDP's paused-request headers may omit Cookie. Read Chromium's scoped
       // jar rather than manufacturing cookies or accepting a caller's user ID.
@@ -263,6 +336,20 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
           redirect: "manual",
         },
       );
+      if (
+        url.pathname === "/api/owner/portfolio" &&
+        loseInitializationResponse
+      ) {
+        loseInitializationResponse = false;
+        assert.equal(response.status, 200);
+        await response.text();
+        return fulfill(
+          requestId,
+          503,
+          [{ name: "Content-Type", value: "application/json" }],
+          "null",
+        );
+      }
       const returned = [];
       response.headers.forEach((value, name) => {
         if (
@@ -332,7 +419,7 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
         captureBeyondViewport: true,
       });
       await writeFile(
-        join(root, `specs/2026-10-15-sign-in/${name}.png`),
+        join(evidenceDirectory, `${name}.png`),
         Buffer.from(result.data, "base64"),
       );
     }
@@ -458,16 +545,23 @@ export async function checkAuthUi({ root, wrangler, fixturePort }) {
       "keyboard provider activation and cancelled provider consent return to retry",
     );
     providerMode = "success";
+    loseInitializationResponse = true;
     await evaluate("document.querySelector('.provider-button').click()");
+    await until(
+      "location.pathname === '/editor' && document.querySelector('[role=alert]')?.textContent.includes('retry')",
+    );
+    assert.equal(await evaluate("!!document.querySelector('h1')"), false);
+    await evaluate("document.querySelector('.auth-error button').click()");
     await until(
       "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
     );
     checks.push(
-      "GitHub OAuth callback opens the authenticated editor for the existing owner",
+      "account entry retries a lost successful initialization response before displaying the authenticated owner",
     );
     const githubOwner = await evaluate(
       "fetch('/api/owner', {cache:'no-store'}).then(r=>r.json())",
     );
+    assert.ok(githubOwner.portfolio.id);
     await screenshot("editor-entry");
     await evaluate("document.querySelector('button').click()");
     await until(
