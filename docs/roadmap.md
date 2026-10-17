@@ -119,7 +119,8 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 06 and its recorded outstanding platform-credential check.
 - Close S-6's untested live public baseline using a separate platform-only credential and controlled accounts with public/private visibility cases. Do not substitute a sign-in token that can expose authorized activity.
-- [ ] Complete when live evidence establishes the safe public contribution baseline and a documented failure/retry setup for dependent graph work. Preserve Phase 06's historical completion and its original limitations.
+- October 17, 2026: [platform-credential classification and live public baseline evidence](../specs/2026-10-16-github-platform-credential/results.md) is recorded. All 173 unit tests, 40 workerd/D1/Web Crypto groups, the Chromium harness regression and local smoke runs pass, and Phase 06's evidence reproduces byte-identical. A separate zero-scope classic PAT with no owner sign-in accepted the public baseline at 425/0 (matching the Phase 06 visibility-off observation), returned unavailable/restricted while private contributions were shown, classified invalid credentials as retry/credential, and failed closed as invalid/identity for a same-account credential. Production token storage and refresh remain in Phases 11D and 40 through 42. The owner approved Phase 11C completion on October 17, 2026.
+- [x] Complete when live evidence establishes the safe public contribution baseline and a documented failure/retry setup for dependent graph work. Preserve Phase 06's historical completion and its original limitations.
 
 ### Phase 11D. Reconcile GitHub storage and refresh contracts
 
