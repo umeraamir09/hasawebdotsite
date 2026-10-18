@@ -2,9 +2,11 @@ import {
   type AuthEnvironment,
   authSettings,
   currentOwner,
+  currentSessionIdentity,
 } from "@hasaweb/auth";
-import { OwnerAccessError, privateJson } from "@hasaweb/db";
+import { OwnerAccessError, privateJson, SaveError } from "@hasaweb/db";
 import { Hono } from "hono";
+import { addDraftRoutes } from "./draft-routes";
 
 type Owner = NonNullable<Awaited<ReturnType<typeof currentOwner>>>;
 
@@ -44,14 +46,25 @@ async function initializationBody(request: Request): Promise<400 | 413 | null> {
 }
 export type OwnerBindings = {
   Bindings: AuthEnvironment;
-  Variables: { owner: Owner };
+  Variables: { owner: Owner; identity: Owner["identity"] };
 };
 
 export function createOwnerRouter() {
   const app = new Hono<OwnerBindings>();
-  app.onError((error) =>
-    privateJson(null, error instanceof OwnerAccessError ? 401 : 503),
-  );
+  app.onError((error, c) => {
+    if (error instanceof SaveError)
+      return privateJson({ error: error.code }, error.status);
+    const draftApi =
+      c.req.path.startsWith("/api/owner/draft") ||
+      c.req.path === "/api/owner/progress";
+    const unauthorized = error instanceof OwnerAccessError;
+    return privateJson(
+      draftApi
+        ? { error: unauthorized ? "unauthorized" : "storage_unavailable" }
+        : null,
+      unauthorized ? 401 : 503,
+    );
+  });
   app.notFound(() => privateJson(null, 404));
   app.use("*", async (c, next) => {
     try {
@@ -101,9 +114,23 @@ export function createOwnerRouter() {
       )
         return privateJson(null, 415);
     }
-    const owner = await currentOwner(c.env, request.headers);
-    if (!owner) return privateJson(null, 401);
-    c.set("owner", owner);
+    if (
+      request.method === "GET" &&
+      ["/api/owner/draft", "/api/owner/draft/recovery"].includes(c.req.path)
+    ) {
+      // The consistent draft read checks persisted access itself. Avoid a
+      // duplicate authorization query before transferring a maximum draft.
+      const identity = await currentSessionIdentity(c.env, request.headers, {
+        refresh: false,
+      });
+      if (!identity) return privateJson(null, 401);
+      c.set("identity", identity);
+    } else {
+      const owner = await currentOwner(c.env, request.headers);
+      if (!owner) return privateJson(null, 401);
+      c.set("owner", owner);
+      c.set("identity", owner.identity);
+    }
     await next();
     c.header("Cache-Control", "private, no-store");
     c.header("X-Robots-Tag", "noindex");
@@ -129,6 +156,7 @@ export function createOwnerRouter() {
     });
   });
   app.all("/api/owner/portfolio", () => privateJson(null, 405));
+  addDraftRoutes(app);
   return app;
 }
 

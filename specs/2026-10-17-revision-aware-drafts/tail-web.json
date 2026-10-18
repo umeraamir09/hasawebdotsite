@@ -1,0 +1,19 @@
+{
+  "recordedAt": "2026-10-17T18:58:14.281Z",
+  "method": "Cloudflare real-time tail. Whitelisted fields only; request headers, cookies, tokens and console logs discarded. Tail can sample; compare counts with client requests. cpuTime/wallTime are provider measurements if present, never inferred.",
+  "eventCount": 3320,
+  "parts": [
+    {
+      "file": "tail-web-1.json",
+      "eventCount": 1200
+    },
+    {
+      "file": "tail-web-2.json",
+      "eventCount": 1200
+    },
+    {
+      "file": "tail-web-3.json",
+      "eventCount": 920
+    }
+  ]
+}

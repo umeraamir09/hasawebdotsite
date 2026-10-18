@@ -1,0 +1,20 @@
+
+ ⛅️ wrangler 4.151.0 (update available 4.151.1)
+───────────────────────────────────────────────
+Total Upload: 2943.85 KiB / gzip: 503.12 KiB
+Worker Startup Time: 60 ms
+Your Worker has access to the following bindings:
+Binding                                                     Resource                  
+env.DB (hasaweb-owner-runtime-spike)                        D1 Database               
+env.APP_ENV ("test")                                        Environment Variable      
+env.APP_ORIGIN ("https://hasaweb.site")                     Environment Variable      
+env.RUNTIME_ENABLED ("true")                                Environment Variable      
+env.GITHUB_CLIENT_ID ("fixture")                            Environment Variable      
+env.GITHUB_CLIENT_SECRET ("fixture")                        Environment Variable      
+env.GOOGLE_CLIENT_ID ("fixture")                            Environment Variable      
+env.GOOGLE_CLIENT_SECRET ("fixture")                        Environment Variable      
+
+Uploaded hasaweb-owner-runtime-jobs (10.30 sec)
+Deployed hasaweb-owner-runtime-jobs triggers (2.09 sec)
+  https://hasaweb-owner-runtime-jobs.umerthepro2009.workers.dev
+Current Version ID: 05c03871-f0f0-43cc-b8f6-b7b8c7e3b7ee

@@ -6,7 +6,7 @@ export const SAVE_PIECE_BYTES = 4096;
 export const SAVE_MAX_PIECES = 512;
 export type DraftPath = (string | number)[];
 const root = z.strictObject(draftFields);
-type Definition = {
+export type SchemaDefinition = {
   type: string;
   innerType?: z.ZodType;
   in?: z.ZodType;
@@ -24,15 +24,28 @@ type Definition = {
     _zod: { def: { check: string; minimum?: number; maximum?: number } };
   }[];
 };
-const definition = (schema: z.ZodType) => schema.def as unknown as Definition;
-function unwrap(schema: z.ZodType): z.ZodType {
+export const schemaDefinition = (schema: z.ZodType) =>
+  schema.def as unknown as SchemaDefinition;
+const definition = schemaDefinition;
+// These shared schemas are immutable. Resolve lazy definitions once rather
+// than reconstructing the recursive rich-text schema for every path segment.
+// This cache contains schema objects only, never draft or session data.
+const unwrapped = new WeakMap<z.ZodType, z.ZodType>();
+export function unwrapSchema(schema: z.ZodType): z.ZodType {
+  const cached = unwrapped.get(schema);
+  if (cached) return cached;
   const def = definition(schema);
-  if (def.type === "optional") return unwrap(def.innerType as z.ZodType);
-  if (def.type === "lazy") return unwrap((def.getter as () => z.ZodType)());
+  let result = schema;
+  if (def.type === "optional")
+    result = unwrapSchema(def.innerType as z.ZodType);
+  else if (def.type === "lazy")
+    result = unwrapSchema((def.getter as () => z.ZodType)());
   // Content in a checked JSON pipe is validated by its output schema.
-  if (def.type === "pipe") return unwrap(def.out as z.ZodType);
-  return schema;
+  else if (def.type === "pipe") result = unwrapSchema(def.out as z.ZodType);
+  unwrapped.set(schema, result);
+  return result;
 }
+const unwrap = unwrapSchema;
 const pathKeys = new Set<string>();
 const seen = new Set<z.ZodType>();
 function collectKeys(schema: z.ZodType): void {
@@ -90,6 +103,7 @@ export function sqlJsonPath(path: DraftPath): string {
 export function resolveDraftPath(
   path: DraftPath,
   types: Record<string, unknown>,
+  inspection = false,
 ): z.ZodType {
   sqlJsonPath(path);
   let schema: z.ZodType = root;
@@ -119,6 +133,7 @@ export function resolveDraftPath(
     }
     if (def.type === "object" && typeof part === "string") {
       if (
+        !inspection &&
         prefix[0] === "links" &&
         prefix.length === 2 &&
         ["kind", "value"].includes(part)

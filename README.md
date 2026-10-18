@@ -58,3 +58,5 @@ Run `pnpm spike:render` to benchmark synthetic near-limit portfolio, case-study,
 Run `pnpm spike:email` for the isolated S-7 provider and atomic D1 budget fixtures. See the [email delivery results](specs/2026-10-15-email-delivery/results.md) and [live setup](specs/2026-10-15-email-delivery/live-setup.md). `pnpm spike:email:live` reads domain/delivery status; `--send` is reserved for the three explicitly authorized tests and requires the ignored local env file.
 
 Run `pnpm test:owner-runtime` after building to verify the thin owner API through the web Worker adapter and named jobs binding. See the [Phase 11A measurement protocol](specs/2026-10-16-owner-api-runtime/protocol.md) for the isolated deployed CPU experiment and cleanup.
+
+Run `pnpm test:draft-api` after building to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). Autosave and recovery UI remain later phases.

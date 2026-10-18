@@ -1033,7 +1033,7 @@ UPDATE owner_runtime_template SET draft=json_set(draft,'$.profile.bio',replace(h
           progress,
           change: change("set", ["profile", "name"], { value: "revoked" }),
         },
-        { headers: { "X-Runtime-Revoke-At-Write": "true" }, status: 409 },
+        { headers: { "X-Runtime-Revoke-At-Write": "true" }, status: 401 },
       );
       await request("begin", { revision, progress }, { status: 401 });
     },

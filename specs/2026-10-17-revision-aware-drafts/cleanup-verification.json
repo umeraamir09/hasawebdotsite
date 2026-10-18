@@ -1,0 +1,17 @@
+{
+  "recordedAt": "2026-10-18T03:13:19.054100+00:00",
+  "testDatabaseAbsent": true,
+  "testWorkersAbsent": true,
+  "localTestSecretsAbsent": true,
+  "preexistingDatabasesPreserved": [
+    {
+      "uuid": "85c415f6-d0cd-4ad9-8160-915c69786648",
+      "name": "hasaweb-s8-spike"
+    },
+    {
+      "uuid": "0dd517e2-c99a-40ea-a25d-a299b2c31e59",
+      "name": "hasaweb-s2-spike"
+    }
+  ],
+  "productionDeploymentPerformed": false
+}
