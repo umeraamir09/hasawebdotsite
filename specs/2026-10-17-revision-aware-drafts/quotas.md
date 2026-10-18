@@ -1,5 +1,7 @@
 # Phase 13 request and D1 budgets
 
+October 18 compatibility note: these tables preserve the original Phase 13 implementation and measurements. Phase 14 changes the required owner header, removes unused general repository construction from action authorization, and uses 65,536-code-point response chunks. Consult its [CPU investigation](../2026-10-18-shared-autosave-recovery/performance.md) and [current client costs](../2026-10-18-shared-autosave-recovery/quotas.md) before reusing these as current budgets.
+
 These local workerd measurements include uncached Better Auth lookup and product authorization, unlike the earlier repository-only model. They exclude keyed fixture preparation. The wrapper records D1 row/query metadata and also accounts for Drizzle raw reads. Each row is the maximum observed across two fresh commands after ten warmups.
 
 | Handler case | Rows read | Rows written | Queries |

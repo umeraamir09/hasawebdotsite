@@ -4,7 +4,12 @@ import {
   currentOwner,
   currentSessionIdentity,
 } from "@hasaweb/auth";
-import { OwnerAccessError, privateJson, SaveError } from "@hasaweb/db";
+import {
+  assertSaveSession,
+  OwnerAccessError,
+  privateJson,
+  SaveError,
+} from "@hasaweb/db";
 import { Hono } from "hono";
 import { addDraftRoutes } from "./draft-routes";
 
@@ -114,22 +119,36 @@ export function createOwnerRouter() {
       )
         return privateJson(null, 415);
     }
-    if (
-      request.method === "GET" &&
-      ["/api/owner/draft", "/api/owner/draft/recovery"].includes(c.req.path)
-    ) {
-      // The consistent draft read checks persisted access itself. Avoid a
-      // duplicate authorization query before transferring a maximum draft.
+    const draftRequest =
+      c.req.path === "/api/owner/progress" ||
+      c.req.path === "/api/owner/draft" ||
+      c.req.path.startsWith("/api/owner/draft/");
+    if (draftRequest) {
+      // Draft handlers do not use the general owner repositories. Keep their
+      // persisted access precheck without constructing those repositories.
+      // Streamed reads already check access in their consistent SQL snapshot.
+      // Preserve the existing session refresh policy on every route.
+      const streamedRead =
+        request.method === "GET" &&
+        ["/api/owner/draft", "/api/owner/draft/recovery"].includes(c.req.path);
       const identity = await currentSessionIdentity(c.env, request.headers, {
-        refresh: false,
+        refresh: !streamedRead,
       });
       if (!identity) return privateJson(null, 401);
+      if (!streamedRead) await assertSaveSession(c.env.DB, identity);
       c.set("identity", identity);
     } else {
       const owner = await currentOwner(c.env, request.headers);
       if (!owner) return privateJson(null, 401);
       c.set("owner", owner);
       c.set("identity", owner.identity);
+    }
+    if (draftRequest) {
+      // This is a stale-account precondition, never an authorization source.
+      const expected = request.headers.get("X-Expected-Owner-Id");
+      if (!expected) return privateJson({ error: "invalid_input" }, 400);
+      if (expected !== c.get("identity").user.id)
+        return privateJson({ error: "owner_changed" }, 409);
     }
     await next();
     c.header("Cache-Control", "private, no-store");

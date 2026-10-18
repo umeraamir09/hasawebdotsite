@@ -80,3 +80,7 @@ Version 1 is the first production contract. Its envelope migration changes only 
 ## Production API validation boundary
 
 The full reader/serializer examples above are browser/offline helpers, not a Free hot-API recipe. Phase 13 streams consistent validated reads from D1, projecting the known version 1 envelope upgrade without whole-document Worker parsing. Unvalidated supported content uses bounded staged validation; unsupported content remains available through owner recovery. Schema version alone does not prove the current validation generation. Future schema/refinement changes must update the incremental validator, generation policy and equivalence fixtures together. See the [production protocol](../../specs/2026-10-17-revision-aware-drafts/protocol.md).
+
+## Browser save integration
+
+The [Phase 14 client](../../apps/web/lib/draft/README.md) uses the shared action/path/value schemas and limits. `SaveErrorCode` includes `owner_changed` for the expected-owner HTTP precondition. Future schema changes must update the bounded server validator, browser skeleton/diff planner and equivalence/production API fixtures together. No schema version or validation generation changes in Phase 14.

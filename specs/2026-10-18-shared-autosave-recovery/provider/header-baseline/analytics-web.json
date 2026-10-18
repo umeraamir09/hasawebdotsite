@@ -1,0 +1,180 @@
+{
+  "recordedAt": "2026-10-18T13:00:29.794957+00:00",
+  "windows": [
+    {
+      "case": "read-max",
+      "from": "2026-10-18T12:50:25.343Z",
+      "to": "2026-10-18T12:51:25.908Z",
+      "clientCount": 100
+    },
+    {
+      "case": "patch-max",
+      "from": "2026-10-18T12:51:33.275Z",
+      "to": "2026-10-18T12:52:46.247Z",
+      "clientCount": 100
+    },
+    {
+      "case": "begin",
+      "from": "2026-10-18T12:52:54.343Z",
+      "to": "2026-10-18T12:54:09.886Z",
+      "clientCount": 100
+    },
+    {
+      "case": "string-start",
+      "from": "2026-10-18T12:54:22.319Z",
+      "to": "2026-10-18T12:56:18.680Z",
+      "clientCount": 100
+    },
+    {
+      "case": "piece",
+      "from": "2026-10-18T12:56:27.525Z",
+      "to": "2026-10-18T12:57:51.632Z",
+      "clientCount": 100
+    },
+    {
+      "case": "validation-deep",
+      "from": "2026-10-18T12:58:10.496Z",
+      "to": "2026-10-18T13:00:05.244Z",
+      "clientCount": 100
+    }
+  ],
+  "query": "query {viewer {accounts(filter:{accountTag:\"b6f9a87e6702c76c45a8d61744826e0f\"}) {c0:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:50:25.343Z\",datetime_lt:\"2026-10-18T12:51:25.908Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c1:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:51:33.275Z\",datetime_lt:\"2026-10-18T12:52:46.247Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c2:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:52:54.343Z\",datetime_lt:\"2026-10-18T12:54:09.886Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c3:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:54:22.319Z\",datetime_lt:\"2026-10-18T12:56:18.680Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c4:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:56:27.525Z\",datetime_lt:\"2026-10-18T12:57:51.632Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} } c5:workersInvocationsAdaptive(limit:100,filter:{scriptName:\"hasaweb-owner-runtime-web\",datetime_geq:\"2026-10-18T12:58:10.496Z\",datetime_lt:\"2026-10-18T13:00:05.244Z\"}) { dimensions {status coloCode} avg {sampleInterval} sum {requests errors cpuTimeUs} quantiles {cpuTimeP50 cpuTimeP95 cpuTimeP99} }}}}",
+  "result": {
+    "data": {
+      "viewer": {
+        "accounts": [
+          {
+            "c0": [
+              {
+                "avg": {
+                  "sampleInterval": 1.0208333333333333
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 674,
+                  "cpuTimeP95": 956,
+                  "cpuTimeP99": 3706
+                },
+                "sum": {
+                  "cpuTimeUs": 73287,
+                  "errors": 0,
+                  "requests": 98
+                }
+              }
+            ],
+            "c1": [
+              {
+                "avg": {
+                  "sampleInterval": 1.092783505154639
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 689,
+                  "cpuTimeP95": 993,
+                  "cpuTimeP99": 3929
+                },
+                "sum": {
+                  "cpuTimeUs": 82553,
+                  "errors": 0,
+                  "requests": 106
+                }
+              }
+            ],
+            "c2": [
+              {
+                "avg": {
+                  "sampleInterval": 1.0206185567010309
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 693,
+                  "cpuTimeP95": 905,
+                  "cpuTimeP99": 4408
+                },
+                "sum": {
+                  "cpuTimeUs": 78436,
+                  "errors": 0,
+                  "requests": 99
+                }
+              }
+            ],
+            "c3": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 667,
+                  "cpuTimeP95": 946,
+                  "cpuTimeP99": 3825
+                },
+                "sum": {
+                  "cpuTimeUs": 70530,
+                  "errors": 0,
+                  "requests": 93
+                }
+              }
+            ],
+            "c4": [
+              {
+                "avg": {
+                  "sampleInterval": 1.0206185567010309
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 667,
+                  "cpuTimeP95": 1239,
+                  "cpuTimeP99": 3178
+                },
+                "sum": {
+                  "cpuTimeUs": 75825,
+                  "errors": 0,
+                  "requests": 99
+                }
+              }
+            ],
+            "c5": [
+              {
+                "avg": {
+                  "sampleInterval": 1
+                },
+                "dimensions": {
+                  "coloCode": "LHE",
+                  "status": "success"
+                },
+                "quantiles": {
+                  "cpuTimeP50": 681,
+                  "cpuTimeP95": 894,
+                  "cpuTimeP99": 3943
+                },
+                "sum": {
+                  "cpuTimeUs": 67659,
+                  "errors": 0,
+                  "requests": 89
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "errors": null
+  },
+  "units": "cpuTimePXX and cpuTimeUs are microseconds. Divide by 1000 for milliseconds. Adaptive analytics and client-time window boundaries can change counts; this is not an unsampled request trace."
+}

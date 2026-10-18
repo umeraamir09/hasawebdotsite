@@ -22,7 +22,7 @@ Direct editor navigation must not bypass setup. Setup still needs authenticated 
 
 An authenticated private suggestion path may return the provider name/photo and an email suggestion for deliberate acceptance. This is new work, not permission to broaden the current public or `/api/owner` response accidentally. Provider photo use needs explicit acceptance, cropping, and validated private asset import. Account email never becomes a public link automatically.
 
-Onboarding uses the editor's planned autosave/conflict/session-recovery behavior. Preserve recoverable local input through reauthentication and isolate it by owner/portfolio. Restoring a session returns to the same pending setup or authorized editor flow without duplicate preparation.
+Onboarding/editor adapters reuse the [Phase 14 client](../apps/web/lib/draft/README.md); full conflict/sign-in interaction remains Phase 15. Send the expected-owner precondition on draft/progress requests and stop on `owner_changed` before loading recovery into another account. Preserve recoverable local input through reauthentication and isolate it by owner/portfolio. Restoring a session returns to the same pending setup or authorized editor flow without duplicate preparation.
 
 ## Planned GitHub activity consent
 
@@ -54,7 +54,7 @@ The HTTP entry accepts only social sign-in, sign-out, session lookup, and GitHub
 
 Session-cookie caching retains the proven 300-second setting, but account/editor authorization always performs an uncached lookup and repository access checks. Sign-out invalidates the D1 session; copied cache cookies cannot reopen the editor. Deleting accounts cannot create new sessions or enter through an existing session.
 
-The Phase 13 draft download resolves the uncached Better Auth identity with read-only session lookup, then checks persisted session expiry, ownership and account deletion in its single consistent D1 read. It omits the duplicate repository-construction check and unused cookie-refresh work. Authentication/status endpoints retain session refresh. Draft mutations and recovery commands retain their separate repository checks, and every write checks persisted access again. See the [draft API protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md).
+The Phase 13 draft download resolves the uncached Better Auth identity with read-only session lookup, then checks persisted session expiry, ownership and account deletion in its single consistent D1 read. It omits the duplicate repository-construction check and unused cookie-refresh work. Authentication/status endpoints retain session refresh. Draft mutations, progress and recovery commands use a direct persisted-session precheck in the database package without constructing unused general owner repositories; they retain session refresh and each operation checks persisted access again. See the [draft API protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md).
 
 ## Verification
 

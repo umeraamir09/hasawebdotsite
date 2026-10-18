@@ -1,5 +1,7 @@
 # Phase 13 provider performance
 
+October 18 compatibility note: these tables preserve the original Phase 13 implementation and measurements. Phase 14 changes the required owner header, removes unused general repository construction from action authorization, and uses 65,536-code-point response chunks. Consult its [CPU investigation](../2026-10-18-shared-autosave-recovery/performance.md) and [current client costs](../2026-10-18-shared-autosave-recovery/quotas.md) before reusing these as current budgets.
+
 CPU measurements ran October 17 UTC. Instrumented provider quotas and completion review finished October 18, 2026. The temporary web Worker forwards to the named jobs entry through a real service binding. Requests use signed provider-fixture sessions and a dedicated D1 database. The fixture imports the production owner router; production does not import fixture SQL or measurement code.
 
 ## CPU and startup

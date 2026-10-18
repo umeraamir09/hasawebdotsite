@@ -1,0 +1,269 @@
+{
+  "recordedAt": "2026-10-18T15:40:20.489Z",
+  "remote": false,
+  "checks": [
+    {
+      "name": "real session guards and unchanged provisioning/status contracts",
+      "passed": true
+    },
+    {
+      "name": "real session missing portfolios return not_found on reads and writes",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "case": "check",
+      "at": 1792337898037,
+      "elapsedMs": 31.937,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": false,
+      "sameDatabase": false
+    },
+    {
+      "case": "check",
+      "at": 1792337898070,
+      "elapsedMs": 40.794,
+      "status": 401,
+      "rowsRead": 4,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898111,
+      "elapsedMs": 30.51,
+      "status": 401,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898142,
+      "elapsedMs": 56.199,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898200,
+      "elapsedMs": 29.101,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898230,
+      "elapsedMs": 40.93,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898271,
+      "elapsedMs": 27.471,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898298,
+      "elapsedMs": 39.23,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898338,
+      "elapsedMs": 34.314,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898373,
+      "elapsedMs": 10.277,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898383,
+      "elapsedMs": 10.868,
+      "status": 403,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898394,
+      "elapsedMs": 8.614,
+      "status": 415,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898403,
+      "elapsedMs": 28.585,
+      "status": 405,
+      "rowsRead": 4,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898432,
+      "elapsedMs": 21.073,
+      "status": 400,
+      "rowsRead": 2,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898453,
+      "elapsedMs": 26.133,
+      "status": 409,
+      "rowsRead": 4,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898480,
+      "elapsedMs": 33.215,
+      "status": 200,
+      "rowsRead": 7,
+      "rowsWritten": 1,
+      "queries": 5,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898513,
+      "elapsedMs": 26.769,
+      "status": 404,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898540,
+      "elapsedMs": 30.691,
+      "status": 404,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 5,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898571,
+      "elapsedMs": 44.332,
+      "status": 404,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898616,
+      "elapsedMs": 37.273,
+      "status": 404,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792337898653,
+      "elapsedMs": 37.963,
+      "status": 404,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    }
+  ],
+  "windows": []
+}

@@ -1,0 +1,4603 @@
+{
+  "recordedAt": "2026-10-18T05:24:09.203Z",
+  "checks": [
+    {
+      "name": "all component types and exact one-MiB staging with bounded cleanup",
+      "passed": true,
+      "requests": 276,
+      "rowsRead": 6389,
+      "rowsWritten": 1040
+    },
+    {
+      "name": "exact profile/order/appearance/ready-reference saves and ordinary request cost",
+      "passed": true,
+      "requests": 18,
+      "rowsRead": 823,
+      "rowsWritten": 18
+    },
+    {
+      "name": "same-browser invalid recovery remains unsaved and explicit",
+      "passed": true,
+      "requests": 3,
+      "rowsRead": 25,
+      "rowsWritten": 0
+    },
+    {
+      "name": "lost patch reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 9,
+      "rowsRead": 175,
+      "rowsWritten": 5
+    },
+    {
+      "name": "lost begin reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 21,
+      "rowsRead": 498,
+      "rowsWritten": 38
+    },
+    {
+      "name": "lost change reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 21,
+      "rowsRead": 498,
+      "rowsWritten": 38
+    },
+    {
+      "name": "lost piece reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 21,
+      "rowsRead": 498,
+      "rowsWritten": 38
+    },
+    {
+      "name": "lost string-finish reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 21,
+      "rowsRead": 498,
+      "rowsWritten": 38
+    },
+    {
+      "name": "lost commit reply, reload and explicit recovery",
+      "passed": true,
+      "requests": 22,
+      "rowsRead": 509,
+      "rowsWritten": 38
+    },
+    {
+      "name": "offline outgoing failure retains input and retries",
+      "passed": true,
+      "requests": 6,
+      "rowsRead": 150,
+      "rowsWritten": 5
+    },
+    {
+      "name": "two tabs preserve stale edits and cannot silently overwrite",
+      "passed": true,
+      "requests": 8,
+      "rowsRead": 163,
+      "rowsWritten": 5
+    },
+    {
+      "name": "account switch at the same revision blocks stale-tab writes",
+      "passed": true,
+      "requests": 8,
+      "rowsRead": 66,
+      "rowsWritten": 4
+    },
+    {
+      "name": "another session requires explicit resume of the original journal",
+      "passed": true,
+      "requests": 19,
+      "rowsRead": 345,
+      "rowsWritten": 27
+    },
+    {
+      "name": "unfinished staging without a journal requires explicit discard",
+      "passed": true,
+      "requests": 12,
+      "rowsRead": 139,
+      "rowsWritten": 12
+    },
+    {
+      "name": "expired attempts retain input for explicit recovery",
+      "passed": true,
+      "requests": 22,
+      "rowsRead": 398,
+      "rowsWritten": 31
+    },
+    {
+      "name": "dense collections keep changed-leaf transport bounded and expose read cost",
+      "passed": true,
+      "requests": 5,
+      "rowsRead": 12149,
+      "rowsWritten": 5
+    }
+  ],
+  "requests": [
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4163,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4164,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 1665,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 60,
+      "reads": 288,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 380,
+      "reads": 41,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2261,
+      "reads": 98,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 60,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 32,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 143,
+      "writes": 33,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 155,
+      "reads": 102,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 79,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 110,
+      "reads": 98,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 141,
+      "reads": 100,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 130,
+      "reads": 100,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2259,
+      "reads": 98,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 129,
+      "reads": 99,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 132,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 16,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 156,
+      "reads": 102,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 608,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 105,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 39,
+      "writes": 7,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 608,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 105,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 39,
+      "writes": 7,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 608,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 105,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 39,
+      "writes": 7,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 608,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 105,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 39,
+      "writes": 7,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 134,
+      "reads": 105,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4160,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 608,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 105,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 11,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 39,
+      "writes": 7,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 152,
+      "reads": 102,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 148,
+      "reads": 102,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "bob",
+      "status": 409,
+      "requestBytes": 159,
+      "reads": 5,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner",
+      "session": "bob",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "bob",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "bob",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 10,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/resume",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 45,
+      "reads": 11,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 3880,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 102,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 27,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice-other",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/abort",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 45,
+      "reads": 13,
+      "writes": 2,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 16,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 16,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 80,
+      "reads": 13,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/string-start",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 83,
+      "reads": 25,
+      "writes": 1,
+      "queries": 8
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 4162,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/piece",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 3880,
+      "reads": 18,
+      "writes": 3,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/string-finish",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 102,
+      "writes": 1,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 23,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 27,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 8,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 84,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 172,
+      "reads": 12041,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 5,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 401,
+      "requestBytes": 160,
+      "reads": 4,
+      "writes": 1,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 401,
+      "requestBytes": 0,
+      "reads": 0,
+      "writes": 0,
+      "queries": 1
+    }
+  ],
+  "errors": [],
+  "failure": "page.evaluate: DraftFailure: unauthorized\n    at request (http://127.0.0.1:8825/fixture.js:35830:13)\n    at async Object.read (http://127.0.0.1:8825/fixture.js:35840:31)\n    at async reconcileDirect (http://127.0.0.1:8825/fixture.js:36223:38)\n    at async http://127.0.0.1:8825/fixture.js:36302:89"
+}
