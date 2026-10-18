@@ -1,6 +1,6 @@
 # hasaweb.site
 
-Phase 01 establishes the local runtime. Product requirements and later phases are in [docs/roadmap.md](docs/roadmap.md).
+Phases 01–13, including 11A–11E, are implemented and marked complete in the [roadmap](docs/roadmap.md). Phase 14, shared autosave and local recovery, is next. Start with [current implementation and decision changes](docs/implementation-status.md) before implementing a phase.
 
 ## Setup
 
@@ -33,11 +33,12 @@ pnpm test:persistence
 
 - `apps/web` holds Next.js App Router and OpenNext.
 - `apps/site` is the thin public serving Worker.
-- `apps/jobs` hosts Workflow, Queue, and scheduled handlers.
-- `packages/schema`, `db`, `components`, `theme`, `render`, `email`, and `github` reserve the agreed module boundaries. The schema and database packages provide draft contracts, persistence, and owner access checks. Other feature implementations arrive in their scheduled phases.
+- `apps/jobs` hosts the named Hono `OwnerApi` entry for initialization and bounded draft/progress APIs. Its Workflow, Queue and scheduled handlers are local probes.
+- `packages/schema` and `db` implement versioned drafts, setup/progress, persistence, provisioning, bounded saves and legacy validation. `auth` implements shared Better Auth/session checks. `github` implements calendar/credential contracts and `theme` exports the approved catalog. `email` supplies tested provider adapters/templates. These packages still need their scheduled product integrations.
+- `packages/components` currently re-exports the data registry; `packages/render/src` is empty. The shared portfolio renderer remains Phase 16.
 - `packages/config` supplies shared strict TypeScript settings and runtime utilities.
 
-The plain web development page is a runtime placeholder. UI implementation must read the Figma reference described in [docs/ui-direction.md](docs/ui-direction.md).
+Web has a minimal entry page, GitHub/Google sign-in, an authenticated welcome shell that provisions the private portfolio, and an avatar reference review. The full editor, autosave UI, onboarding and public portfolio serving remain pending. UI implementation must read the Figma reference described in [docs/ui-direction.md](docs/ui-direction.md).
 
 ## Local and production separation
 
@@ -59,4 +60,4 @@ Run `pnpm spike:email` for the isolated S-7 provider and atomic D1 budget fixtur
 
 Run `pnpm test:owner-runtime` after building to verify the thin owner API through the web Worker adapter and named jobs binding. See the [Phase 11A measurement protocol](specs/2026-10-16-owner-api-runtime/protocol.md) for the isolated deployed CPU experiment and cleanup.
 
-Run `pnpm test:draft-api` after building to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). Autosave and recovery UI remain later phases.
+After building, run `DRAFT_API_EVIDENCE=.wrangler/draft-api-review pnpm test:draft-api` to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. The evidence override preserves the historical Phase 13 receipts; use a new phase-specific directory when retaining a later run. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). Autosave and recovery UI remain later phases.

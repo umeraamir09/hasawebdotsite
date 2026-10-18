@@ -26,7 +26,10 @@ const handler = ownerApi(
   {
     db: env.DB,
     origin: applicationOrigin,
-    readSession: (headers) => auth.api.getSession({ headers }),
+    readSession: (headers) => auth.api.getSession({
+      headers,
+      query: { disableCookieCache: true },
+    }),
   },
   async (_request, repositories) => {
     const portfolio = await repositories.portfolio.get();
@@ -34,6 +37,8 @@ const handler = ownerApi(
   },
 );
 ```
+
+This generic boundary example is for internal/fixture use. Current product routes use the named Hono/jobs owner API and `currentOwner` checks; draft reads use the specialized consistent streaming query. Do not replace those hot handlers with `portfolio.get()` and whole-document decoding. See the [Phase 13 protocol](../../specs/2026-10-17-revision-aware-drafts/protocol.md).
 
 The guard checks the request URL against the exact application origin. POST, PUT, PATCH, DELETE, and any other unsafe method also require that exact Origin header and the application/json media type. It resolves the session on every request, then verifies the session ID, user ID, expiry, and account deletion state against D1. Authentication or D1 failures deny access. Responses always use private/no-store and noindex headers.
 
@@ -45,7 +50,7 @@ The repositories provide portfolio creation/reads, asset metadata, candidate pub
 
 Owner counters use an encoded namespace and a cascading user reference. Owners cannot access shared email budget keys through this repository. Shared budgets and operator audits require trusted service repositories when their flows arrive. The schema exports support those services; raw queries do not belong in request handlers.
 
-Existing claims are read-only through the owner repository. Database triggers prevent name changes, transfer, deletion, and insertion of platform-reserved names. Deleting a portfolio clears its claim's owner while retaining the name permanently. First publication must create a claim and change the live pointer in the same transaction in Phase 25. No standalone owner claim mutation is exposed here. Public draft-save endpoints, public contact acceptance with atomic budgets, delivery retries and provider grant verification remain in their scheduled phases.
+Existing claims are read-only through the owner repository. Database triggers prevent name changes, transfer, deletion, and insertion of platform-reserved names. Deleting a portfolio clears its claim's owner while retaining the name permanently. First publication must create a claim and change the live pointer in the same transaction in Phase 25. No standalone owner claim mutation is exposed here. Authenticated draft-save HTTP endpoints exist through the Phase 13 named owner API. Contact acceptance with atomic budgets, delivery retries and provider grant verification remain in their scheduled phases.
 
 ## Initial setup storage
 

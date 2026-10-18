@@ -2,8 +2,8 @@
 
 | | |
 | --- | --- |
-| **Status** | Draft v0.3, confirmed initial-setup plan; implementation follow-ups pending |
-| **Date** | October 17, 2026; initial-setup agreement October 16; original architecture decisions October 13 |
+| **Status** | Foundation implemented through Phase 13; target flows beyond that remain planned |
+| **Date** | Reviewed October 18, 2026; initial-setup agreement October 16; original architecture decisions October 13 |
 | **Inputs** | [product.md](product.md), [acceptance-criteria.md](acceptance-criteria.md), [rough-idea.md](rough-idea.md), architecture interview, [confirmed onboarding interview](onboarding.md) |
 | **Cloudflare limits verified** | October 12-13, 2026 against official documentation (see [Sources](#18-sources)). Limits change; re-verify before launch. |
 
@@ -15,7 +15,7 @@ This document defines the technical architecture for the hasawebsite MVP: the te
 
 It covers the MVP as scoped in `product.md`. It does not redesign features, add capabilities, or approve visual design details by implication. The [appearance catalog](appearance-catalog.md) records the approved six-theme/two-decoration catalog and font/default choices. Section 16 records the confirmed decisions and catalog approval.
 
-The October 16 onboarding specification adds required first-user setup and optional content collection. It changes the target architecture described below, not the current code. The implementation still stops at the authenticated account shell; completed Phases 09–11 need the explicit contract, persistence, and routing follow-ups in the roadmap. See [onboarding baseline](onboarding.md#current-implementation-and-changes-to-prior-plans).
+The October 16 onboarding specification adds required first-user setup and optional content collection. Contracts, private setup storage, provisioning and draft APIs are now implemented through Phase 13. The visible account entry remains a welcome shell; the guide, editor, authoritative handoff and public publication are still pending. See the [current implementation and decision changes](implementation-status.md) before using the target flows below. Historical spikes do not override later production protocols.
 
 **Conventions.** Items marked **[confirmed]** were decided by you in the interview. Items marked **[default]** are architect defaults you did not discuss and may override. Items marked **[spike]** rest on an assumption that must be verified early (see [section 15](#15-risks-and-spikes)).
 
@@ -70,10 +70,10 @@ Verified against Cloudflare's published limits (Workers limits page last updated
 | --- | --- | --- |
 | **Workers** | 100,000 requests/day (account-wide); **10 ms CPU per request**; 50 subrequests/request; 5 Cron Triggers; 64 MiB uncompressed script (no compressed limit); 1 s startup | Visitor traffic must be near-zero CPU, so pre-render. Next.js on the free plan is workable but SSR is risky (Cloudflare notes SSR commonly uses 10-20 ms), so **avoid per-request SSR**. Keep bundle startup under 1 s. |
 | **Workers Static Assets** | 20,000 files/version; 25 MiB/file | Fine for the Next.js build output. |
-| **D1** | 5 GB total, **500 MB per database**, 10 databases; 5M rows read/day; **100K rows written/day**; 50 queries per invocation; Time Travel 7 days | Single database. Keep autosave to one row write. Avoid indexes on frequently updated columns (each indexed write counts as an extra row). |
+| **D1** | 5 GB total, **500 MB per database**, 10 databases; 5M rows read/day; **100K rows written/day**; 50 queries per invocation; Time Travel 7 days | Single database. Ordinary patches write one canonical row; staging, pieces, indexes and cleanup add writes. Use measured handler/capacity budgets. Avoid indexes on frequently updated columns. |
 | **R2** | 10 GB-month; 1M Class A ops/month; 10M Class B ops/month; zero egress | Three buckets (draft, sites, public assets). Serve public assets from an R2 custom domain so image traffic does not consume Worker requests. |
 | **KV** | 1 GB; 100K reads/day; **1,000 writes/day** | **Not used** for publish state or caching. |
-| **Queues** | 10,000 operations/day (a message typically costs about three operations) | Use only for contact delivery and GitHub refresh. D1 outbox is the source of truth. |
+| **Queues** | 10,000 operations/day (a message typically costs about three operations) | Budget contact/GitHub jobs together with the required publication fallback. Publication batching remains unvalidated. D1 holds durable task/outbox state. |
 | **Workflows** | 100K requests/day shared with Workers; 10 ms CPU per invocation on pricing page; 3,000 steps/day; 1,024 steps/instance; 100 concurrent instances | S-8 rejects the unbatched fragment pipeline at the planned daily volume. See the required revision below. |
 | **Workers Logs** | 200K events/day | Structured, sparse logging. |
 | **Cloudflare Email Service** | Sending to arbitrary recipients **requires Workers Paid**; free plan can only send to verified addresses in your own account | Cannot be used for owner or visitor email on the free plan, hence Resend. |
@@ -88,6 +88,8 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
 
 ### 5.1 Topology
 
+This diagram shows the target responsibilities. Owner APIs already use the named jobs binding before OpenNext. Publication dispatch requires the Queue/D1 validation in section 8.3; no production publish dispatcher exists yet.
+
 ```
             Visitors                                   Owners
                |                                          |
@@ -99,13 +101,13 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
   | ~1-2 ms CPU per request  |            | editor, auth, API, preview     |
   +---+---------+--------+---+            +---+-----+-------+--------+-----+
       |         |        |                    |     |       |        |
-     D1        R2       D1 (outbox,          D1    R2     R2      Workflow
-  (pointer)  (sites)   github, counters)           draft  sites   trigger
+     D1        R2       D1 (outbox,          D1    R2     R2      jobs API /
+  (pointer)  (sites)   github, counters)           draft  sites   dispatch
                                                     |       ^        |
    assets.hasaweb.site                              |       |        v
         |                                +----------+-------+--------+---------+
         v                                | Worker: jobs                        |
-   R2 public bucket                      | Workflows (publish, delete)         |
+   R2 public bucket                      | OwnerApi, bounded publication jobs  |
    (images, fonts,                       | Queues (contact, github refresh)    |
     platform CSS/JS)                     | Cron (daily sweep, outbox, GC)      |
                                          +-----------------+-------------------+
@@ -118,9 +120,9 @@ Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
 
 | Worker | Responsibility | CPU profile |
 | --- | --- | --- |
-| **`web`** | Next.js app: marketing page (statically prerendered), sign-in, onboarding, editor shell (client-rendered), private review/full-page preview (client-rendered), settings, REST route adapters (`/api/*`), authenticated draft-asset streaming, publish trigger, subdomain checks. Never serves user portfolios. | Light per request. No ISR, no data cache, no Node middleware (unsupported by OpenNext); owner checks and setup gates are enforced server-side at the relevant entry/API boundaries. |
-| **`site`** | Serves `*.hasaweb.site`: resolves subdomain to the live version, streams pre-rendered HTML and the resume PDF from R2, and hosts two small public endpoints (`/_/github.json`, `/_/contact`). | Near-zero. No rendering, no framework. |
-| **`jobs`** | Hosts Workflows (publish, unpublish/delete, re-render-all), Queue consumers (contact delivery, GitHub refresh), and Cron handlers (daily sweep, outbox sweeper, garbage collection). | Each step bounded to fit 10 ms on free. |
+| **`web`** | Next.js app and authentication. `/api/owner/*` already forwards through the Worker adapter to jobs before OpenNext buffers bodies. Target UI adds onboarding, editor, private previews and settings; upload/publish/address APIs remain pending. Never serves user portfolios. | No hot full-draft validation in OpenNext. No ISR or data cache. Setup gates remain planned; current owner APIs enforce session/deletion checks. |
+| **`site`** | Currently health/local probes and an unavailable response. Target serving resolves `*.hasaweb.site` to a live version, streams HTML/PDF from R2 and exposes `/_/github.json` and `/_/contact`. | Target is near-zero CPU, with no rendering or framework. |
+| **`jobs`** | Named Hono `OwnerApi` already handles provisioning and draft/progress/recovery actions. Target background work includes publication, lifecycle cleanup, rerender, contact/GitHub consumers and sweeps. Default HTTP entry exposes no owner routes. | Bound and measure actual invocations. Workflows are not the approved publication dispatcher; Queue/D1 batching remains to validate. |
 
 Splitting these keeps the public path tiny, keeps Next.js CPU off visitor traffic, and means each Worker can scale or be upgraded independently. Cross-Worker calls use service bindings and Workflow bindings.
 
@@ -147,7 +149,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 
 ## 6. Technology inventory
 
-**[confirmed]** unless marked **[default]**. Versions: use the latest stable at project start and pin exact versions in `package.json`.
+This is the target stack, not a list of installed capabilities. **[confirmed]** unless marked **[default]**. Keep the exact pinned versions in the manifests/lockfile; dependency updates need their own compatibility checks. Phase 01 pinned Next.js 16.3.8 after 16.4.0 failed the OpenNext workerd smoke test. Later editor libraries and product integrations remain in their roadmap phases.
 
 | Layer | Technology | Purpose |
 | --- | --- | --- |
@@ -208,7 +210,7 @@ Local development and production only **[confirmed]**. Because free Universal SS
 | `github_legacy_credential` | Portfolio, stable GitHub account, unknown legacy ciphertext/scopes | Quarantined for explicit app-binding reconciliation. Blocks private reconsent for the account until safe retirement. |
 | `contact_recipient` | `portfolio_id`, `email`, `verified_at`, `pending_token_hash`, `token_expires_at` | Initially the account's verified provider email. |
 | `contact_outbox` | `id`, `portfolio_id`, `payload` (JSON), `status` (`queued`/`sending`/`sent`/`failed`), `attempts`, `next_attempt_at`, `last_error`, `is_test`, `accepted_at`, `deadline_at`, `budget_window_start` | The budget reservation uses the UTC acceptance day. Payload is deleted on success and after final failure (data minimization). |
-| `owner_save_attempt` | One expiring private preparation per owner, bound to the creating/resuming session, base revision, sequence, staged draft/progress and retry digest | Bounded saves commit canonical content/progress together. Legacy rows need a current validation generation before preparation or writes. |
+| `owner_save_attempt` | One expiring private preparation per owner, bound to the creating/resuming session, base revision, sequence, persisted setup/content/validation context, staged draft/progress, validation cursor and retry digest | Bounded saves commit canonical content/progress together. Legacy content uses staged validation before ordinary saves. Expiry denies writes; it does not physically reclaim rows. Preserve committed receipts until reconciliation. |
 | `owner_save_piece` | Ordered bounded JSON string pieces, cascading from the attempt | Private staging only; owner/session checks and bounded cleanup apply. |
 | `counter` | `key`, `window_start`, `count` | Fixed-window rate limits and the daily email budget. |
 
@@ -228,12 +230,12 @@ type DraftDoc = {
     faceReveal: { enabled: boolean; image?: { assetId: string; alt?: string } };
   };
   links: Array<{                       // single source for profile + social component
-    id: string; label: string; kind: 'email' | 'github' | 'linkedin' | 'x' | 'website' | string;
+    id: string; label: string; kind: string; // 'email' validates an address; other IDs use HTTP(S)
     value: string; showInProfile: boolean; showInSocialComponent: boolean;
   }>;
   components: Array<{ id: string; type: string; version: number; data: unknown }>; // array order = page order
   appearance: { themeId: string; customColor?: string; fontId: string; colorMode: 'light' | 'dark' | 'system' };
-  seo: { title?: string; description?: string; ogImageAssetId?: string };
+  seo: { title?: string; description?: string; ogImage?: { assetId: string } };
   samples: Record<string, true>;       // fields still holding untouched sample content
 };
 ```
@@ -245,7 +247,7 @@ Version 2 validates candidate format and leaves invalid in-progress text to loca
 - **Sample tracking:** retain Phase 09's compatible markers and validation for existing fixtures/migrated drafts. New provisioning inserts no sample profile or project. Any existing sample values remain flagged in `samples` and clear on first edit; untouched optional samples are omitted and edited samples use normal validation.
 - **Size cap:** 1 MiB per draft (D1 rows max out at 2 MB). If real portfolios outgrow it, case studies can move to their own rows without changing the API.
 - **Approved destination limits:** URLs are at most 2,048 UTF-8 bytes and draft email addresses at most 254 UTF-8 bytes, approved by the owner October 16, 2026. Free text retains the whole-draft ceiling. Existing longer destinations require explicit correction, never silent truncation.
-- **Migrations:** each component type owns a version number and a migration function; `schemaVersion` migrates the envelope. Migrations run on read and are written back on next save.
+- **Migrations:** each component owns a version and migration function; `schemaVersion` migrates the envelope. Offline readers use the full shared reader. Validated HTTP reads project the known version 1 upgrade in D1; unvalidated supported drafts require bounded staged validation, and unsupported drafts remain available through raw recovery. Successful saves persist the upgrade. Future schema changes must update incremental validation, validation-generation checks and equivalence fixtures together.
 
 ### 7.4 R2 buckets and key layout
 
@@ -263,7 +265,7 @@ Asset IDs are never reused, so published image URLs are immutable and replaced i
 
 ### 8.0 Initial setup and first editor entry
 
-The agreed sequence and content mappings are in [onboarding.md](onboarding.md#screen-sequence-and-content-mapping). These are planned additions to completed authentication/persistence, not implemented routes.
+The agreed sequence and content mappings are in [onboarding.md](onboarding.md#screen-sequence-and-content-mapping). Private provisioning, storage and save routes exist through Phase 13. The setup screens, entry resolver and authoritative handoff below remain pending in 22A and 42A–42F.
 
 1. Resolve the authenticated owner through the existing uncached session/deletion checks. Idempotently provision the single empty private draft with the configured template/default appearance and explicit setup metadata. Do not infer completion from `portfolio !== null` or automatically copy provider identity into public content.
 2. Use a fixed internal post-auth entry resolver for both OAuth callbacks and signed-in `/sign-in` visits. Owners without the permanent editor-entry milestone resume onboarding; owners with it enter the editor. Preserve the exact callback allowlist and approved-origin checks rather than accepting arbitrary redirect URLs. The final resolver route is specified in the implementation spec and activated only when the complete guide works.
@@ -276,18 +278,18 @@ An availability check permits continuing from Address but confers no ownership. 
 
 ### 8.1 Autosave and conflict handling (product 14)
 
-1. Onboarding and the editor share the draft store. After a ~2 s debounce it sends `PUT /api/draft` with the document and `baseRev`; planned private progress updates participate in the same concurrency boundary.
-2. The server validates with Zod and runs `UPDATE portfolio SET draft=?, draft_rev=draft_rev+1 WHERE id=? AND user_id=? AND draft_rev=?`.
-3. **One row changed:** return the new `rev`; UI shows **Saved**. **Zero rows:** return `409` with the newer document; UI offers **Load newer version** or **Keep my edits for review**. Nothing is overwritten silently.
-4. While a save is in flight the UI shows **Saving**; on failure it shows **Couldn't save** with Retry.
-5. Unsaved edits are mirrored to IndexedDB (keyed by portfolio and base revision) and removed after a confirmed save, so a crash or temporary failure loses nothing.
-6. On `401` (expired session) a sign-in popup restores the session without discarding editor state, then the save retries.
+The server contract is implemented in Phase 13; the shared client and conflict interaction remain Phases 14–15. Use the [production protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md), not the rejected full-body experiment.
+
+1. Load `GET /api/owner/draft` for a consistent draft/revision/progress snapshot. Use `GET /api/owner/progress` when content is unnecessary. The large response streams D1-produced JSON without whole-document Worker decoding or reserialization.
+2. Coalesce valid changed fields after a ~2 s debounce. Send `POST /api/owner/draft/patch` with `revision`, `change` and `context`. Setup includes progress; content writes preserve frozen progress and the milestone. Progress-only saves use the `progress` action under the same revision CAS.
+3. Large edits use begin/change/string-piece/commit actions within the protocol's byte, piece and expiry limits. Coordinate the single owner attempt across tabs/devices. Context persists in the attempt; first editor entry closes setup writes, including earlier prepared attempts.
+4. A confirmed canonical write returns `{ revision }`. Only then show Saved. A staged change is not a canonical save. Conflicts return 409 with an error code, without a newer document; fetch and reconcile separately before offering Load newer version or Keep my edits for review. Do not add whole-draft payloads to conflict responses.
+5. While saving show Saving; on failure show Couldn't save with Retry. Reconcile lost direct-patch responses through a canonical read. Recover lost staged replies through pending/status and sequence/commit receipts. Preserve a committed receipt until its confirmed revision is recorded. Explicit resume/discard must follow the protocol rather than silently dropping another tab's attempt.
+6. Mirror unsaved and structurally invalid input to IndexedDB scoped by owner, portfolio and base revision. Remove only confirmed saved input. On 401 preserve work, reauthenticate through the controlled flow and reconcile the pending attempt before further writes. Local recovery cannot promise cross-device recovery of invalid or unuploaded input.
 
 The same recovery works during required setup and private activity consent. Resume confirmed progress across devices. Structurally invalid unfinished input, including partial URLs, is stored locally and never labeled cloud-saved. The first-editor handoff transfers applicable local recovery to the editor without fabricating a successful draft save. Owner/portfolio keys must prevent recovery into another account. Invalid input must not disable the optional Skip actions.
 
-At roughly 100 owners this is a handful of thousand D1 row writes per day, far below 100,000.
-
-That estimate applies to changed-field saves. The bounded-save follow-up adds staging/index/cleanup writes for large replacements. Its [measured quota model](../specs/2026-10-16-free-owner-saves/quotas.md) budgets about 37,000 writes/day with one near-1 MiB upload in each of 30 editing sessions, or about 68,000 with maximum piece counts. Clients must coalesce edits instead of restaging full documents after each keystroke.
+The [capacity model](../specs/2026-10-16-free-owner-saves/quotas.md) budgets about 37,000 writes/day with one near-1 MiB upload in each of 30 editing sessions, or about 68,000 with maximum piece counts. The [Phase 13 handler budgets](../specs/2026-10-17-revision-aware-drafts/quotas.md) include authentication and the streamed read's 268-row cost. Clients must coalesce edits, avoid unnecessary complete reads and account for retries/validation/cleanup. Passing CPU percentiles does not prove sufficient D1 capacity for every document shape.
 
 ### 8.2 Uploads (product 13)
 
@@ -301,19 +303,19 @@ Onboarding's combined profile step and editor share reposition/zoom/reset/apply/
 
 ### 8.3 Publish (product 15), the core flow
 
-Publish is a **Workflow** in `jobs` with durable, individually retried steps:
+Publication is pending. Implement durable, replay-safe tasks in `jobs` only after measuring the required Queue/D1 fallback; the former fragment-per-step Workflow design was rejected.
 
 S-8 measured the bounded fragment approach on October 15, 2026. The deployed three-page stress experiment also failed the per-invocation API request limit while retaining the old pointer. Even one near-limit portfolio needs 141 durable steps, or 4,230 steps at the planning estimate of 30 publishes/day, before preparation and cleanup. This exceeds the Free daily allowance. Treat the sequence below as logical publication operations, not an approved Free Workflow implementation. Record Queue plus D1 task dispatch as the required fallback to validate before Phase 24. A naive one-message-per-fragment replacement also exceeds the Queue allowance, so measured batching and a complete shared quota model are required. CPU feasibility remains unproven. See [S-8/S-9 results](../specs/2026-10-15-workflow-assets/results.md).
 
-1. **Request.** `POST /api/publish` carries `draftRev`. `web` rejects it unless `draftRev` equals the stored revision (so exactly what the owner saw is published) and the editor has flushed autosave.
-2. **Validate.** One pure function, `validateDraft(draft, context)`, is shared by the editor checklist (client) and the server (authoritative). It checks required profile fields, link validity, asset readiness, GitHub fetch state, verified contact recipient, resume PDF, and subdomain format/availability. Issues carry a field path so each checklist item deep-links to its control.
+1. **Request.** The planned publish endpoint carries `draftRev`. Route its hot handler through the thin owner API, with uncached session/deletion checks. Reject unless `draftRev` equals the saved revision and autosave has flushed. Specify its final route and bounded validation protocol before implementation.
+2. **Validate.** Share validation rules between the editor checklist and authoritative server checks for profile fields, links, ready assets, GitHub fetch state, verified recipient, resume PDF, catalog membership and address/claims. Issues carry field paths. Publication needs its own measured bounded validation/snapshot preparation; a pure whole-document helper does not prove a 1 MiB hot invocation fits the CPU budget.
 3. **Snapshot.** Write `snapshot.json` for version `n` to `hasaweb-sites`. Omit untouched samples and include only assets reachable from included components (Face Reveal's second image is included only when enabled).
-4. **Promote assets.** Server-side copy referenced images from `hasaweb-draft` to `hasaweb-assets/s/{siteId}/...`.
-5. **Render.** One step per page (portfolio, each case study, `/resume`, `404`), plus `robots.txt` and `sitemap.xml`, each written under `sites/{siteId}/v{n}/`. S-1 local measurements reject one whole-page render per step near the 1 MiB draft ceiling. Use the bounded preparation/render/assembly approach recorded in [the S-1 results](../specs/2026-10-15-publish-render/results.md); verify its Workflow and storage feasibility in S-8 before publication implementation.
+4. **Promote assets.** Copy only referenced ready owned images from `hasaweb-draft` to `hasaweb-assets/s/{siteId}/...`. The draft bucket is currently bound only to web; jobs cannot read it directly. Phase 24 must specify and measure the authorized transfer boundary before implementing promotion. Do not infer draft-bucket access from the jobs binding or the spike's synthetic input setup.
+5. **Render.** Produce the portfolio, each case study, `/resume`, `404`, `robots.txt` and `sitemap.xml` under `sites/{siteId}/v{n}/`. S-1 rejects whole-page render steps near the 1 MiB ceiling. Use bounded preparation/render/assembly from [S-1](../specs/2026-10-15-publish-render/results.md), with measured batching and per-invocation budgets addressing S-8's failures. Do not repeat one whole page per step or one Queue message per fragment.
 6. **Flip.** A single D1 batch: insert the unique `subdomain_claim` on first publish, checking platform-reserved names and permanent reservations, set `portfolio.published_version = n`, mark the version `live` and the previous `superseded`. If the claim conflicts, the version is marked `failed`, no site is reported live, and the owner is told the name is unavailable.
 7. **Clean up.** Delete public objects no longer referenced by the manifest (this is how a disabled Face Reveal photo disappears), purge those URLs from the CDN cache, and delete old versions beyond a short retention window.
 
-Failure at any step leaves `published_version` untouched, so visitors continue to see the previous complete version; the UI offers **Retry** (AC 15.8). The UI polls the version status until `live`.
+Failure before the pointer flip leaves `published_version` untouched. After a successful commit, cleanup failures retain retryable work while the new complete version remains live; do not claim the old pointer survives a post-commit failure. Keep withdrawal pending until origin deletion and observed cache absence succeed under the verified browser/query/edge policy. The UI offers Retry for failed publication and polls until `live` without treating pending cleanup as completed withdrawal.
 
 ### 8.3.1 Case study URLs
 
@@ -367,7 +369,7 @@ S-7 confirms the Resend adapter and all three live email types. [Evidence and im
 ### 8.7 Unpublish and delete (product 18)
 
 - **Unpublish:** set `status = unpublished` (the `site` Worker stops serving immediately because it checks D1 on every request), delete public objects, purge cache URLs. The draft and subdomain are retained.
-- **Delete account:** after explicit confirmation, atomically mark the account as deleting, set its portfolio to `deleting`, invalidate sessions, and convert its published subdomain claim to a permanent ownerless reservation. Authenticated routes must deny access to a deleting account, including through cached sessions. Public endpoints must also reject it immediately. A Workflow revokes connected-account access, deletes all R2 prefixes for the portfolio, purges manifest URLs from the CDN, and deletes account-related D1 rows, including operator email audit records. Retry failed cleanup steps until they complete. The only surviving account reservation contains the published subdomain name, with no email, user ID, or portfolio content. An account that never claimed a subdomain leaves no reservation.
+- **Delete account:** after explicit confirmation, atomically mark the account as deleting, set its portfolio to `deleting`, invalidate sessions, and convert its published subdomain claim to a permanent ownerless reservation. Owner and public endpoints deny access immediately, including through cached sessions. Durable bounded cleanup revokes connected access, removes portfolio R2 prefixes, verifies CDN withdrawal and deletes account-related D1 rows, including email audits. Reuse the measured dispatcher and GitHub grant coordinator; temporary encrypted cleanup state may survive owner deletion until remote revocation is resolved. Retry failures. After cleanup only the published subdomain's ownerless reservation survives, without identity or content. An account that never claimed a subdomain leaves no reservation.
 - **Suspend (abuse kill-switch):** `suspended_at` set by an operator script (`pnpm ops suspend <subdomain> --reason ...`) that updates D1 and purges the cache; `site` serves the generic unavailable page. No admin UI in the MVP.
 
 ---
@@ -401,10 +403,10 @@ MVP registry: profile (fixed), projects, skills, work experience, text sections 
 
 ### 9.2 Rendering model
 
-- **One renderer, two hosts.** `Render` components are markup-only React. They run (a) in the editor preview in the browser and (b) in the publish Workflow via `react-dom/server`.
+- **One renderer, two hosts.** Planned `Render` components are markup-only React, used in browser preview and bounded publish tasks via `react-dom/server`. The shared product renderer remains Phase 16; spike renderers are experimental fixtures.
 - **Zero React on published pages.** Interactivity comes from one content-hashed vanilla `site.js`: theme switching, Face Reveal, independent decoration pause/play and motion-preference handling, GitHub graph drawing, contact forms and resume embed fallback. The same behavior runs in preview. Decoration playback integration remains Phase 38.
 - **Preview is client-rendered.** The live preview and the full-page preview render the draft in the browser (no server rendering, so no CPU risk on free). Desktop and mobile preview modes use an **iframe** of the renderer at 390 px or full width, so CSS media queries respond correctly. The draft reaches the iframe through `postMessage`. Full-page preview routes (`/preview/...`) are authenticated, `noindex`, and `no-store`.
-- **Renderer versioning.** Each snapshot records `renderer_version`. Platform CSS/JS are content-hashed and retained, so old snapshots keep working after a deploy. A `rerender-all` Workflow re-renders every live site (for security fixes or new markup) and uses the same pointer flip.
+- **Renderer versioning.** Each snapshot records `renderer_version`. Retain content-hashed platform CSS/JS so old snapshots keep working after deploy. A future `rerender-all` job must use the same measured bounded dispatcher and pointer flip, including a shared quota budget for a bulk run.
 
 ### 9.3 Appearance system
 
@@ -482,12 +484,12 @@ hasawebsite/
 
 ### 12.2 Local development
 
-`opennextjs-cloudflare preview` and `wrangler dev` with local D1, R2, Queues, and Workflow simulators persisted on disk. Separate **dev** GitHub and Google OAuth apps with localhost callbacks. A console `EmailProvider` prints emails locally. A seed script creates a user, a draft, and the example portfolio.
+Use the [README commands](../README.md): `pnpm dev` builds and starts all three Workers in workerd with local D1/R2/Queue/Workflow state under `.wrangler/state`. `pnpm dev:runtime` restarts the build; `pnpm dev:web` provides Next.js-only hot reload and cannot exercise the Worker owner-API adapter. Separate development OAuth apps use the exact loopback callbacks. The seed creates two fixture users with empty private drafts, no usable sessions/credentials/claims, and runtime probe files. It creates no published example. `ConsoleProvider` exists for later email integration; the product delivery path is not wired yet.
 
 ### 12.3 CI/CD (GitHub Actions)
 
-- **Pull request:** typecheck, Biome, unit and integration tests, `next build` and OpenNext build, Playwright smoke and axe checks against the preview.
-- **Main to production** (manual approval via a GitHub Environment): apply D1 migrations (always backward compatible with the previous deploy), then deploy `jobs`, then `site`, then `web`. Report the Wrangler `startup_time_ms` and fail the build if a Worker approaches the 1 s startup limit.
+- **Current CI:** the [foundation workflow](../.github/workflows/ci.yml) runs `pnpm check`, the full build, auth/Chromium fixtures, persistence, production draft API integration, runtime smoke and local runtime/routing spikes. It runs on pull requests and pushes to main, with no deployment credentials. Full Playwright/axe coverage remains pending.
+- **Planned production release, Phase 52:** manual GitHub Environment approval, backward-compatible migrations, then deploy `jobs`, `site`, `web`. Report Wrangler startup measurements and enforce the one-second limit. There is no current automatic main-to-production deployment.
 - **No staging:** mitigate with gradual deployments and instant rollback where Wrangler supports them, feature flags in D1 for risky changes, D1 Time Travel, and the `rerender-all` job for renderer rollouts.
 
 ---
@@ -497,7 +499,7 @@ hasawebsite/
 | Layer | Tooling | Covers |
 | --- | --- | --- |
 | **Unit** | Vitest | Palette generation and contrast (AC 12.3-12.5), `validateDraft` (AC 2.5, 4.1-4.3, 15.4-15.6), subdomain rules (AC 15.1), rich-text allowlist and XSS payloads (AC 8.3), link validation, date validation (AC 7.3), renderer snapshot tests |
-| **Worker integration** | `@cloudflare/vitest-pool-workers` with local D1/R2/Queues/Workflows | `site` routing and states (AC 16.5-16.6, 17.4-17.5), publish atomicity and injected failures (AC 15.7-15.8), **concurrent subdomain claim race** (AC 15.2), autosave CAS and conflicts (AC 14.4), outbox retries and exhaustion notification (AC 10.5-10.6), GitHub refresh, failure, and revoke (AC 9.4, 9.8-9.9), draft-asset access control (AC 13.7), Face Reveal asset publication and removal (AC 4.14) |
+| **Worker integration** | Existing scripts start isolated Wrangler/workerd Workers with local D1/R2/Queues/Workflows; fixtures are separate integration builds | Extend this approach to `site` routing and states (AC 16.5-16.6, 17.4-17.5), publish atomicity and failures (AC 15.7-15.8), concurrent claims (AC 15.2), autosave conflicts (AC 14.4), delivery/GitHub jobs (AC 10.5-10.6, 9.4, 9.8-9.9), asset access (AC 13.7) and Face Reveal removal (AC 4.14). The workers Vitest pool is not installed or required by the current harnesses. |
 | **End-to-end** | Playwright, axe-core, three viewport sizes | Full journeys (cross-feature AC 2), editor on desktop and mobile (AC 3.6), keyboard and focus (AC 16.4), reduced motion, Face Reveal and independent decoration playback (AC 4.11–4.12, 4.15), theme switching (AC 12.6), upload limits and failures (AC 13) |
 | **Manual / usability** | Timed session with target users | The 15-minute publish target and the qualitative outcomes (cross-feature AC 1, 5) |
 
@@ -529,28 +531,29 @@ Assumptions: 100 portfolios; 30 owner editing sessions per day averaging ~250 AP
 
 | Resource | Estimated use | Free limit | Headroom |
 | --- | --- | --- | --- |
-| Worker requests (all Workers) | ~20,000/day | 100,000/day | ~5x |
-| D1 rows written | ~5,000/day | 100,000/day | ~20x |
-| D1 rows read | ~50,000/day | 5,000,000/day | ~100x |
+| Worker requests (all Workers) | Original baseline ~20,000/day; maximum-piece save model ~52,400 before final publication costs | 100,000/day | Recalculate with final dispatcher and recovery frequency |
+| D1 rows written | ~37,000–68,000/day with 30 large field uploads, before final publication/other-job costs | 100,000/day | See bounded-save model; not the original ~20x |
+| D1 rows read | Shape-dependent; ordinary 3,000-save fixture alone costs 270,000 repository reads; add actual handler/read/recovery costs | 5,000,000/day | No general headroom claim; dense-component stress exceeds Free |
 | R2 Class A | ~15,000/month | 1,000,000/month | ~60x |
 | R2 Class B | ~200,000/month | 10,000,000/month | ~50x |
 | R2 storage | ~1-2 GB | 10 GB | ~5x |
-| Queue operations | ~1,000/day | 10,000/day | ~10x |
+| Queue operations | Original contact/GitHub estimate ~1,000/day; publication batching/retries not budgeted yet | 10,000/day | Unknown until S-8 fallback measurement |
 | Emails (Resend) | <20/day typical | 100/day, 3,000/month | ~5x |
 
 Deployed S-4 observations support Next.js build-file requests bypassing Worker invocation accounting under asset-first routing. Prerendered Next.js documents and missing build files still invoke the Worker. Adaptive analytics is approximate; [evidence and configuration limits](../specs/2026-10-15-host-routing/results.md) are recorded. This does not prove overall Free-tier feasibility.
 
-The October 16 [bounded-save quota model](../specs/2026-10-16-free-owner-saves/quotas.md) supersedes the save portion of these estimates. It includes 270,000 repository reads for 3,000 ordinary saves, staging/cleanup overhead, a 426.2 MB local storage stress result for 100 maximum drafts plus attempts/pieces, and the read-budget failure when all saves scan 3,000 components. Passing Worker CPU does not establish unlimited D1 throughput. Keep future publication/Queue validation separate and observe deployed row usage and storage before enabling broad autosave traffic.
+The October 16 [bounded-save quota model](../specs/2026-10-16-free-owner-saves/quotas.md) supersedes the save portion of the original estimates. It models about 52,400 conservatively counted web/jobs invocations with maximum-piece uploads, versus the table's original 20,000 baseline, and a 426.2 MB local storage stress result for 100 maximum drafts plus attempts/pieces. Phase 13 adds [measured handler costs](../specs/2026-10-17-revision-aware-drafts/quotas.md), including 268 rows per maximum streamed draft read. Neither the old request/R2 estimates nor warm CPU percentiles prove total capacity. Recalculate the shared budget with publication batching, retries and actual read frequency; observe deployed counters and size before broad autosave traffic.
 
-### 14.2 What will break first
+### 14.2 Capacity risks to measure
 
-1. **Worker requests**, from a single viral portfolio (roughly 40,000 page views/day would exhaust the daily cap, since each view may cost two requests).
-2. **Resend's 100 emails/day**, from a burst of contact messages or verification emails.
-3. **10 ms CPU**, in the publish render step or an auth/API route.
+1. Worker requests from visitor bursts plus web/jobs autosave and staging traffic. The final publication request budget remains unknown.
+2. D1 reads for dense collections, writes for string pieces/cleanup, and storage for retained staging. Existing stress evidence can exceed Free even when CPU passes.
+3. Resend's daily email allowance and shared Queue operations for publication, contact and GitHub work.
+4. Invocation CPU and API-call limits in the final dispatcher, renderer and new owner handlers. Completed spikes do not establish these later budgets.
 
 ### 14.3 Alert thresholds
 
-Alert (log plus operator email) at 60% of daily Worker requests, any `exceededCpu` outcome, 80 emails/day, 50% of daily D1 writes, and any failed publish.
+Planned alerts log and notify the operator at 60% of daily Worker requests, any `exceededCpu` outcome, 80 emails/day, 50% of daily D1 writes, any failed publish, and before D1 reaches 350 MB per the bounded-save storage model. Observe D1 row reads as well as writes. These operational alerts are not implemented yet.
 
 ### 14.4 One-step upgrade to Workers Paid ($5/month)
 
@@ -571,8 +574,8 @@ Do these first, in this order, because each can change a decision above.
 
 | # | Risk or assumption | Spike | Fallback |
 | --- | --- | --- | --- |
-| S-1 | Publish render steps fit in **10 ms CPU** on free | Benchmark `react-dom/server` for a worst-case portfolio and each page in workerd, measuring CPU per step | Local S-1 rejects whole-page steps; [results and revised bounded approach](../specs/2026-10-15-publish-render/results.md) recorded October 15, 2026. Incremental preparation/render/assembly still needs S-8 verification |
-| S-2 | Next.js on the free plan: startup under 1 s, and auth/API route CPU p95 under 10 ms | Deployed S-2 reports 25 ms startup but authenticated CPU window p95 13.717–18.461 ms for small requests, with sampled/window limitations; exact-limit writes also fail the assumed budget. See [results](../specs/2026-10-15-app-runtime/results.md) | Decide hot draft-save/publish-trigger endpoints in thin `jobs`/Hono with per-isolate auth configuration and real session/deletion checks. Retest before dependent APIs; replacement Free-tier feasibility remains unproven. Paid requires owner approval |
+| S-1 | Publish render work fits the CPU budget on Free | Whole-page local rendering failed; bounded rendering/storage were tested in S-8 | [S-1 revision](../specs/2026-10-15-publish-render/results.md) remains required. S-8 rejected the unbatched dispatcher; measure the final renderer with Queue/D1 batching before Phase 24. |
+| S-2 | Next.js hot APIs fit the CPU target | Original OpenNext and later thin full-body saves failed. Phase 11A introduced bounded operations; [Phase 13](../specs/2026-10-17-revision-aware-drafts/results.md) implements and measures the production handlers. | Keep the named Hono/jobs entry and current bounded/streamed protocol. All 22 Phase 13 provider cases meet warm p95 below 10 ms, with recorded tail/cold and D1-cost limits. New publish/owner handlers still need measurement; no paid-plan assumption. |
 | S-3 | Wildcard Worker route coexists with the R2 custom domain and the apex | [Deployed October 15 evidence](../specs/2026-10-15-host-routing/results.md) passes apex/www, wildcard/reserved/invalid hosts, private R2 fixture boundaries and TLS. Explicit assets no-script exception works | Serving assets through `site` would add Worker requests and require a revised budget |
 | S-4 | Static asset requests do not count toward the Workers request limit | [Deployed asset-first measurements](../specs/2026-10-15-host-routing/results.md) report no Worker invocations for existing build files or R2 asset hits/misses. Next.js documents and missing build files invoke Workers. Adaptive counts are approximate | Preserve asset-first handling; remeasure worker-first changes. Paid requires owner approval |
 | S-5 | Better Auth on workerd/D1: per-request init, cookie cache, `__Host-` cookies, account-linking behavior vs AC 2.2 | [October 15 local evidence](../specs/2026-10-15-auth-behavior/results.md): 26 provider-fixture/Chromium checks pass. Adopt exact apex/Origin guards, verified-only linking, and the documented cookie configuration. Copied cache cookies survive D1 sign-out for up to 300 seconds; require uncached checks where immediate revocation matters. Live provider applications and deployed callbacks remain to verify | Custom Arctic-based auth (already evaluated as the alternative) |
@@ -597,7 +600,7 @@ The architecture interview resolved Q-1 through Q-6. The owner confirmed these d
 | Q-5 | Public Suffix List | Submit `hasaweb.site` after launch. Submission acceptance is not a launch prerequisite. |
 | Q-6 | Verification settings | Use the confirmed settings in section 13, including automated browser and viewport tests and provider fixtures. Exclude real-device and assistive technology checks. |
 
-The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-13 through D-15 and the planned flows in section 8.0. No onboarding behavior decision remains open. The visual catalog was separately approved in Phase 11E; detailed migration/API/UI specs and the recorded technical follow-ups still require work and evidence before implementation can be considered complete.
+The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-13 through D-15 and the flows in section 8.0. No onboarding behavior decision remains open. The catalog, prerequisite migrations, provisioning and draft APIs are implemented through Phase 13. Remaining client/UI, handoff/routing and publication integrations require their phase specs and evidence; foundation completion does not complete the guided journey.
 
 ---
 
@@ -608,7 +611,7 @@ The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-
 | ADR-1 | Next.js via OpenNext on Workers (D-4) | Cloudflare's `vinext` (Wrangler's current auto-configuration target), Astro, React Router | Your preference; OpenNext supports Next.js 16. Revisit if the adapter lags. |
 | ADR-2 | Pre-render at publish, thin serve Worker (D-5) | Per-request SSR; client-side render from JSON | 10 ms CPU makes SSR risky; pre-render gives real SEO and social metadata (AC 17.2) and makes atomic publish a pointer flip. |
 | ADR-3 | D1 for publish pointer and live state; KV unused | KV pointer | KV allows only 1,000 writes/day on free. |
-| ADR-4 | Draft as a single JSON document with CAS | Normalized tables per component | Atomic save and publish snapshot, one row write per autosave, trivial conflict detection. |
+| ADR-4 | Canonical JSON draft with revision CAS and bounded change/staging protocol | Normalized component tables; rejected full-body hot saves | Atomic canonical content/progress, one row write for ordinary patches; large changes add private preparation, pieces and cleanup. Phase 13 is the current HTTP contract. |
 | ADR-5 | Original Workflows publish choice requires S-8 revision; validate Queue/D1 dispatch before publication | Unbatched Workflows; naive per-fragment Queues | Bounded steps work locally, but daily step allowance fails the planned worst-case volume. Do not infer fresh CPU budgets from durable step boundaries. Queue batching still needs measurement. |
 | ADR-6 | Three R2 buckets (draft private, sites private, assets public) | One bucket with prefixes | Hard isolation of drafts (AC 13.7); public bucket needs no Worker, saving requests. |
 | ADR-7 | Markup-only components plus one vanilla `site.js` | Hydrate React on published pages | Zero React on visitor devices; faster pages; same behavior in preview. |
