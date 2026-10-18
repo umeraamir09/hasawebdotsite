@@ -48,9 +48,15 @@ const secrets = remote
       BETTER_AUTH_SECRET: randomBytes(32).toString("hex"),
     };
 const tokens = Object.fromEntries(
-  ["alice", "alice-other", "bob", "revoked", "expired", "deleting"].map(
-    (id) => [id, randomBytes(24).toString("hex")],
-  ),
+  [
+    "alice",
+    "alice-other",
+    "bob",
+    "revoked",
+    "expired",
+    "deleting",
+    "fresh",
+  ].map((id) => [id, randomBytes(24).toString("hex")]),
 );
 const checks = [],
   samples = [],
@@ -435,6 +441,36 @@ try {
         { headers: { "Content-Type": "text/plain" }, status: 415 },
       );
       await request("/api/owner/draft", {}, { method: "DELETE", status: 405 });
+    },
+  );
+  await check(
+    "real session missing portfolios return not_found on reads and writes",
+    async () => {
+      assert.equal(
+        (await request("/api/owner", {}, { owner: "fresh" })).portfolio,
+        null,
+      );
+      for (const path of ["/api/owner/draft", "/api/owner/progress"])
+        assert.deepEqual(
+          await request(path, {}, { owner: "fresh", status: 404 }),
+          { error: "not_found" },
+        );
+      for (const [action, body] of [
+        ["begin", { revision: 0, context: "content" }],
+        [
+          "patch",
+          {
+            context: "content",
+            revision: 0,
+            change: { op: "set", path: ["profile", "name"], value: "x" },
+          },
+        ],
+        ["progress", { revision: 0, progress }],
+      ])
+        assert.deepEqual(
+          await request(action, body, { owner: "fresh", status: 404 }),
+          { error: "not_found" },
+        );
     },
   );
   await check(

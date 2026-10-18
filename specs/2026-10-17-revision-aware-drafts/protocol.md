@@ -8,7 +8,7 @@ All routes use the existing web Worker forwarding adapter and named jobs `OwnerA
 - `GET /api/owner/progress` returns the same metadata without `draft`, loading no content. The progress contract is `{ schemaVersion: 1, step }`; navigation never proves required completion.
 - `GET /api/owner/draft/recovery` returns an attachment with the original canonical draft and its metadata, including unvalidated or unsupported content. This is an owner recovery download, not a validated content read. It does not expose staging.
 
-Missing portfolios return 404. Normal draft reads return 409 `validation_required` for unvalidated content and 409 `unsupported_version` for unsupported envelopes. Neither read provisions a portfolio. The existing owner-status and initialization contracts remain unchanged.
+Missing portfolios return 404 on reads and writes. Normal draft reads return 409 `validation_required` for unvalidated content and 409 `unsupported_version` for unsupported envelopes. Neither read provisions a portfolio. The existing owner-status and initialization contracts remain unchanged.
 
 ## Writes and recovery
 

@@ -228,7 +228,20 @@ export function boundedSaves(
         version: number;
         versionType: string;
       }>();
-    if (!row) throw new SaveError(401, "Owner unavailable", "unauthorized");
+    if (!row) {
+      // A live session with no portfolio row is a normal pre-provisioning
+      // state, not an authentication failure. Only this failure path needs the
+      // extra read, matching the consistent draft read.
+      const sessionParams: unknown[] = [];
+      const sessionArg = condition(sessionParams);
+      const session = await db
+        .prepare(`SELECT ${authenticated(sessionArg)} AS active`)
+        .bind(...sessionParams)
+        .first<{ active: number }>();
+      if (!session?.active)
+        throw new SaveError(401, "Owner unavailable", "unauthorized");
+      throw new SaveError(404, "Portfolio unavailable", "not_found");
+    }
     if (
       !["integer", "real"].includes(row.versionType) ||
       ![1, 2].includes(row.version)
