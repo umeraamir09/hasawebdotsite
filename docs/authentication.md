@@ -1,6 +1,6 @@
 # Authentication
 
-Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Currently, successful OAuth callbacks open `/editor`. The editor is a static client shell; `/api/owner` checks the current persisted session and deletion state before returning the owner's name and existing portfolio ID. No account tokens, email address, or draft content appear in that response. Phase 12 adds private portfolio initialization on account entry. Onboarding and the full editor remain planned work.
+Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Currently, successful OAuth callbacks open `/editor`, a static client shell that initializes the private portfolio through the Phase 12 API. `/api/owner` remains a read-only session/deletion check returning the owner's name and existing portfolio ID, without tokens, email or draft content. Phase 13 adds separate private draft/progress APIs. Onboarding and the full editor remain planned work. See [current status](implementation-status.md).
 
 The following setup/verification instructions describe the authentication baseline and Phase 12 initialization. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey. Required setup routing has not yet been activated.
 
@@ -33,6 +33,7 @@ Controlled consent returns resume the graph step. Cancelled, failed, or wrong-ac
 ## Local setup
 
 1. Copy `apps/web/.dev.vars.example` to `apps/web/.dev.vars` and replace the signing secret and both providers' client credentials.
+   Also copy `apps/jobs/.dev.vars.example` to `apps/jobs/.dev.vars`. The named owner API independently verifies sessions, so both Workers need the same `APP_ORIGIN`, signing secret and development OAuth credentials.
 2. Set `APP_ORIGIN` to the exact browser origin, without a trailing slash. Use `http://127.0.0.1:8787` for the three-Worker runtime or `http://127.0.0.1:3000` for `pnpm dev:web`.
 3. Apply the local D1 migrations with `pnpm db:migrate:local`.
 4. Configure provider callbacks at `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`. Local and production provider applications should have separate credentials.
@@ -42,7 +43,7 @@ Do not use a portfolio hostname, a LAN address, or a URL path as the app origin.
 
 ## Production configuration
 
-Set `APP_ORIGIN=https://hasaweb.site` in the production web Worker and provide `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID`, and `GOOGLE_CLIENT_SECRET` through deployment secrets. The signing secret must contain at least 32 characters. Missing configuration returns a controlled 503 and the screen provides retry. Provider applications must allow exactly these callback URLs:
+For the future production release, set `APP_ORIGIN=https://hasaweb.site` in both web and jobs and provide matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` through deployment secrets. The signing secret must contain at least 32 characters. Missing configuration returns a controlled 503 and the screen provides retry. Provider applications must allow exactly these callback URLs:
 
 - `https://hasaweb.site/api/auth/callback/github`
 - `https://hasaweb.site/api/auth/callback/google`

@@ -1,0 +1,70 @@
+{
+  "recordedAt": "2026-10-18T04:35:52.488Z",
+  "command": "DRAFT_API_EVIDENCE=specs/2026-10-18-foundation-review/draft-api pnpm test:draft-api",
+  "remote": false,
+  "passedGroups": 15,
+  "checks": [
+    {
+      "name": "real session guards and unchanged provisioning/status contracts",
+      "passed": true
+    },
+    {
+      "name": "real session missing portfolios return not_found on reads and writes",
+      "passed": true
+    },
+    {
+      "name": "strict bounded request parsing and unsafe path rejection",
+      "passed": true
+    },
+    {
+      "name": "consistent reads and atomic content/progress races",
+      "passed": true
+    },
+    {
+      "name": "approved destination boundaries and cross-document invariants",
+      "passed": true
+    },
+    {
+      "name": "attempt ownership, retries, transfer, stale commits and commit receipts",
+      "passed": true
+    },
+    {
+      "name": "large free text, encoded pieces and exact document ceiling",
+      "passed": true
+    },
+    {
+      "name": "bounded validation agrees with full reference schemas",
+      "passed": true
+    },
+    {
+      "name": "explicit legacy corrections stay staged and restart validation",
+      "passed": true
+    },
+    {
+      "name": "unsupported versions and stale legacy commits fail closed",
+      "passed": true
+    },
+    {
+      "name": "permanent handoff freezes setup while content and cleanup remain usable",
+      "passed": true
+    },
+    {
+      "name": "revocation at write, storage failures, expiry and owner-scoped cleanup",
+      "passed": true
+    },
+    {
+      "name": "candidate saves do not publish or reserve names",
+      "passed": true
+    },
+    {
+      "name": "saves preserve existing publications, assets and services",
+      "passed": true
+    },
+    {
+      "name": "confirmed values and progress survive runtime restart",
+      "passed": true
+    }
+  ],
+  "rawEvidence": ".wrangler/foundation-review/draft-api/local-results.json",
+  "note": "Full synthetic response samples are retained locally in the ignored raw evidence file. This receipt retains the complete group outcomes."
+}

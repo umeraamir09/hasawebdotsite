@@ -1,6 +1,6 @@
 # MVP implementation roadmap
 
-Build the full MVP in the written order below. Existing phase IDs remain stable for references; lettered phases are explicit additions. Phases 01 through 11 retain their historical completion and evidence. All new and revised pending work remains unchecked. Each phase is a small, reviewable increment with a concrete completion check; split it further if it cannot be reviewed as one focused change.
+Build the full MVP in the written order below. Existing phase IDs remain stable; lettered phases are explicit additions. Phases 01–13, including 11A–11E, are checked. Phase 14 is next. Each phase is a small, reviewable increment with a concrete completion check; split it further if it cannot be reviewed as one focused change. Dated summaries retain historical test counts and scope; consult [current implementation and decision changes](implementation-status.md) and later production protocols before reusing older experiment instructions.
 
 ## Sources and scope
 
@@ -8,6 +8,7 @@ Build the full MVP in the written order below. Existing phase IDs remain stable 
 - [onboarding.md](onboarding.md) records the October 16, 2026 agreement: mandatory Address/Profile/Links, optional Skills/Projects/GitHub public/private setup, private Review, and permanent first editor handoff.
 - [acceptance-criteria.md](acceptance-criteria.md) defines pass/fail checks. References such as AC 15 refer to its matching feature section.
 - [architecture.md](architecture.md) defines the implementation approach and confirmed decisions. Its section 13 resolves verification settings that the acceptance document originally left open.
+- [implementation-status.md](implementation-status.md) maps implemented code, superseded approaches and the constraints later phases must preserve. Phase 13's protocol is the current draft API contract.
 - [rough-idea.md](rough-idea.md) explains the original concept. Use it for context; the agreed product scope controls what ships.
 
 The release is free. Each account has one portfolio, one preselected template, and one fixed public subdomain after first publication. Implement the fixed profile and every optional MVP component. A component being optional for owners does not make its implementation optional for the release.
@@ -26,13 +27,15 @@ Create a directory at `specs/YYYY-MM-DD-feature-name/` for that work, using the 
 - `requirements.md` records the scope, decisions, and context.
 - `acceptance-criteria.md` defines how to verify that the implementation succeeded and is ready to merge.
 
+Include the [required documentation impact check](../AGENTS.md#required-documentation-impact-check) in every phase plan and completion review. When implementation changes a prior assumption, update affected current documents and dependent future phases in the same change. Record the impact, superseding decision, updated documents and remaining prerequisites in a Documentation impact section of that phase's `results.md`. A phase is not ready for completion review while known misleading guidance remains.
+
 Work sequentially unless a phase explicitly identifies an independent dependency. Read the relevant source sections before implementing; the short scopes below do not replace their detailed requirements. Complete the phase's check and record evidence against the acceptance criteria, then ask the owner whether to check it off. Check it only after explicit owner approval of implementation completion. Approval of this planning update does not complete any implementation phase. Run relevant failure and access-control checks as each capability arrives, then run the complete acceptance review before launch.
 
 Use the confirmed settings in [architecture section 13](architecture.md#13-testing-strategy-mapped-to-acceptance-criteriamd), including upload byte limits, contrast standard, browser/viewport coverage, GitHub refresh intervals, contact budgets, retry deadlines, and provider fixtures. Do not invent replacement values. The theme/font/decoration catalog was approved in Phase 11E, including the configured defaults and documented generator exception. That phase extracted the existing catalog decision from pending appearance work so provisioning and dependent validation can reuse it. It does not add an onboarding appearance step.
 
 ## Foundation and feasibility
 
-Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before depending on their assumptions. Record measurements and decisions. If a spike fails, choose a compatible implementation or revisit the architecture before continuing. Deferring private GitHub activity, as one architecture fallback suggests, would change the agreed MVP and cannot count as completing this roadmap.
+Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before depending on their assumptions. Record measurements and decisions. If a spike fails, choose a compatible implementation or revisit the architecture before continuing. Deferring private GitHub activity would change the agreed MVP and cannot count as completing this roadmap.
 
 ### Phase 01. Establish the repository and local runtime
 
@@ -48,7 +51,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 03. Measure the app and API runtime
 
 - Run S-2 with an OpenNext skeleton, Better Auth session check, and D1 write. Measure startup and request CPU.
-- October 15, 2026: [deployed/local evidence and the required hot-API runtime revision](../specs/2026-10-15-app-runtime/results.md) are recorded. Startup passes; the original request CPU assumption fails. The replacement still needs measurement. The owner approved completion on October 15, 2026 under the criterion that the required endpoint/runtime changes have been decided.
+- October 15, 2026: [deployed/local evidence and the required hot-API runtime revision](../specs/2026-10-15-app-runtime/results.md) are recorded. Startup passes; the original request CPU assumption fails. Replacement measurements followed in 11A and 13; use the bounded/streamed production protocol rather than the failed full-body path. The owner approved Phase 03 completion on October 15 under the criterion that required endpoint/runtime changes had been decided.
 - [x] Complete when the framework and API approach meets the architecture's limits, or the required endpoint/runtime changes have been decided.
 
 ### Phase 04. Prove hostname and asset routing
@@ -60,7 +63,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 ### Phase 05. Prove authentication behavior
 
 - Run S-5 with GitHub and Google fixtures, workerd/D1 sessions, cookie isolation, verified-email linking, and proof of ownership.
-- October 15, 2026: [26 local provider-fixture and Chromium cookie checks](../specs/2026-10-15-auth-behavior/results.md) pass. The tested configuration includes strict apex/Origin guards and verified-only linking. Live provider applications and deployed callbacks remain unverified; owner approval to check off the phase is pending.
+- October 15, 2026: [26 local provider-fixture and Chromium cookie checks](../specs/2026-10-15-auth-behavior/results.md) pass. The tested configuration includes strict apex/Origin guards and verified-only linking. This phase remains recorded as complete. Phase 11 subsequently records real-provider local sign-in checks; deployed callback/TLS checks remain release work. The spike itself does not provide live-provider evidence.
 - [x] Complete when both providers work and missing or unverified emails cannot merge accounts. Record the supported cookie and account-linking configuration.
 
 ### Phase 06. Prove GitHub permissions
@@ -133,7 +136,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: architecture Q-3, the existing read-only Figma direction, and the product's single-template/six-theme scope.
 - Perform the existing catalog decision previously grouped into Phases 35 and 37: obtain approval of themes, curated fonts, decoration assets, and the configured default theme/font/mode used by new drafts. Record identifiers/assets for later controls and verification. This is an extracted prerequisite, not a new theme picker or an approved catalog by implication.
-- October 17, 2026: the [catalog proposal and local visual review](appearance-catalog.md) are prepared, with [implementation and verification evidence](../specs/2026-10-17-appearance-catalog/results.md). The proposed defaults are Leaf, DM Sans and system mode, with no decoration and Face Reveal off. The owner subsequently approved the catalog and completion on October 17; provisioning remains Phase 12.
+- October 17, 2026: the [catalog proposal and local visual review](appearance-catalog.md) are prepared, with [implementation and verification evidence](../specs/2026-10-17-appearance-catalog/results.md). The proposed defaults are Leaf, DM Sans and system mode, with no decoration and Face Reveal off. The owner subsequently approved the catalog and completion on October 17. Provisioning was completed separately in Phase 12.
 - October 17, 2026: the owner requested replacement of the three static decoration proposals with their original ginger cat and hands. The [faithful component import and verification](../specs/2026-10-17-avatar-decoration-import/results.md) records both variants and the unchanged generator's environment limitation. The code catalog now includes the exact Matcha, Strawberry and Coffee Figma palettes, bringing it to six themes and twelve mode palettes. Static decoration files/choices are removed. The catalog decision specifies autoplay, reduced-motion stills and separate visitor pause/play in Phase 38. The owner approved the catalog, defaults, playback policy, documented generator exception and phase completion on October 17, 2026.
 - October 17, 2026: final technical verification is complete. Both browser scripts now write Biome-formatted evidence; all 162 catalog combinations, eight avatar scenario groups, 218 unit tests, workspace checks and 12 build tasks pass. The generator reproduces its documented failure and restores the original assets with matching digests. The owner approved Phase 11E completion after reviewing the generator exception and requested a pull request. No provisioning or later appearance controls are implemented by this approval.
 - [x] Complete when the owner has approved all six paired palettes, three fonts, the two imported decorations and their geometry/playback policy, and draft defaults. Record the approval so provisioning, the basic renderer and validation can use the identifiers. The documented generator environment exception preserves the source clean assets and does not claim regeneration passed. Phases 35 and 37 implement owner controls; Phase 38 implements public playback and reveal behavior.
@@ -157,13 +160,15 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 13.
 - Share autosave for onboarding/editor content, order, appearance, ready asset references, and setup progress. Show Saving, Saved, and Couldn't save with Retry. Preserve invalid unfinished input locally without claiming it is saved across devices; make applicable recovery available after handoff.
-- Coalesce changed-field updates and orchestrate the bounded protocol for large edits. Coordinate the single owner attempt across tabs/devices, recover lost start/commit replies, and offer explicit resume/discard after reauthentication. Respect the [measured request/read/write budgets](../specs/2026-10-16-free-owner-saves/quotas.md); a full upload after each keystroke is outside that model.
+- Coalesce changed-field updates against the [Phase 13 production protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md) and orchestrate bounded staging for large edits. Preserve setup/content contexts and the frozen handoff milestone. Coordinate the single owner attempt across tabs/devices, reconcile lost direct-patch replies and recover staged sequence/commit receipts before cleanup. Offer explicit resume/discard after reauthentication; never discard an attempt automatically.
+- Respect both the [handler budgets including authentication and streamed reads](../specs/2026-10-17-revision-aware-drafts/quotas.md) and the [capacity model](../specs/2026-10-16-free-owner-saves/quotas.md). A full upload after each keystroke or full draft read after each successful action is outside that model. Handle `validation_required` through bounded validation/recovery without exposing the offline validator or silently correcting legacy content.
 - [ ] Complete when reopening after Saved restores exact valid values/progress across sessions, same-browser invalid input survives controlled interruption, recovery stays owner/portfolio-scoped, and failures never report false Saved.
 
 ### Phase 15. Handle conflicting edits and expired sessions
 
 - Dependencies: 14 and existing auth recovery.
 - Offer Load newer version or Keep my edits for review for setup/editor conflicts. Reauthenticate without discarding recoverable input and return to the controlled pending flow. Prevent a stale setup tab from resetting a later editor-entry milestone.
+- Phase 13 conflicts return error codes without a newer draft. Fetch/reconcile separately, distinguish revision/attempt conflicts from `setup_closed`, and preserve canonical/staged/local input until the owner chooses the appropriate recovery. A successful staged command alone does not mean Saved.
 - [ ] Complete when two tabs/devices cannot silently overwrite content/progress, reauthentication saves the preserved draft, and post-handoff setup tabs cannot reinitialize the portfolio.
 
 ## Shared editor and publication foundations
@@ -228,6 +233,8 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 24. Prepare immutable publication versions
 
 - Dependencies: 02, 08, 11A, 16, 18, 23 and successful measurement of the S-8 Queue/D1 batching fallback with the full shared quota/CPU model. Also validate the S-9 browser/query cache requirements before dependent withdrawal behavior.
+- Record the dispatcher measurements before building the pipeline, including bounded validation/snapshot preparation, retries, invocation API calls and shared contact/GitHub Queue costs. The existing `RuntimeWorkflow` is a local probe. Durable steps do not establish fresh CPU budgets, and one Queue message per fragment repeats a rejected approach.
+- Specify the authorized source-asset transfer boundary: the private draft bucket is currently bound only to web, so jobs cannot copy its objects directly. Include that boundary in CPU/operation measurements and ownership checks.
 - Flush autosave and capture the exact saved revision. Snapshot only public portfolio content, exclude private setup/progress metadata, copy only reachable assets, and render using the measured bounded task dispatch. Retain content-hashed platform assets, including each selected decoration's clean animation/still or hands CSS/SVG. Keep raw regeneration inputs, tooling and example source portraits out of owner publication manifests.
 - [ ] Complete when a candidate version has a complete manifest without changing the live pointer, and injected failures preserve the old public version and clean uncommitted public assets. Old recorded fallback decisions alone do not prove the implementation feasible.
 
@@ -433,6 +440,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 
 - Dependencies: shared publication/lifecycle/GitHub/email capabilities and setup persistence from 11B.
 - Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, audited operator lookup, bounded garbage collection, and audit cleanup. Protect assets referenced by unfinished setup/partial drafts and delete abandoned unreachable uploads under the existing GC policy. Keep operator controls out of the product UI.
+- Add dormant-owner staging collection beyond Phase 13's explicit owner cleanup. Expiry blocks writes but does not delete rows. Bound piece deletion, protect active attempts and unreconciled commit receipts, and observe D1 size before the recorded 350 MB alert threshold. Preserve global GitHub cleanup state until remote revocation is resolved.
 - [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup cannot delete active setup assets or retain deleted-account setup data. No source-image retention is introduced.
 
 ### Phase 52. Prepare production delivery and recovery

@@ -2,7 +2,7 @@
 
 This document defines how to verify each MVP feature in [product.md](product.md). Section numbers match the product's feature map. Each numbered criterion is a pass/fail requirement, not a claim that the current implementation passes it.
 
-The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. The ON checks in section 2 are additional MVP acceptance requirements, all pending implementation.
+The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. The ON checks in section 2 still require the guided UI and integrated journey; passing prerequisite fixtures does not pass a whole ON check. See [current status](implementation-status.md).
 
 Verify owner behavior with a new account and a returning account. Verify public behavior as a signed-out visitor and, for access boundaries, as another signed-in owner. Use known test content and compare the saved draft and published output against it. Exercise failures with controlled authentication, network, upload, save, and delivery failures. Record the observed result for each criterion.
 
@@ -181,7 +181,7 @@ Source: [Themes, custom color, fonts, and light/dark mode](product.md#12-themes-
 
 Source: [Upload handling](product.md#13-upload-handling).
 
-1. JPEG, PNG, and WebP images at or below 5 MB are accepted. Images over 5 MB and unsupported formats are rejected. PDFs at or below 10 MB are accepted as resumes; larger files and non-PDF files are rejected. Test exact limits using the recorded byte definition.
+1. JPEG, PNG and WebP images at or below 5 MiB, exactly 5,242,880 bytes, are accepted. Larger images and unsupported formats are rejected. PDFs at or below 10 MiB, exactly 10,485,760 bytes, are accepted as resumes; larger files and non-PDF files are rejected. Test each limit and limit + 1.
 2. Avatar and banner controls upload, replace, crop, and remove images. The saved and published result matches the chosen crop. Project and case-study images support upload, replacement, and removal.
 3. Uploads show progress, completion, and actionable errors for unsupported formats, oversize files, interrupted transfers, and server failures. Retrying a failed upload can succeed.
 4. A failed replacement leaves the previous successful asset intact in both draft and published use. A successful draft replacement does not change the published file before Publish.

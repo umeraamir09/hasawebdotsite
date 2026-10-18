@@ -5,7 +5,7 @@
 ```ts
 import { createComponent, createEmptyDraft, draftSchema, readDraft } from "@hasaweb/schema";
 
-// Obtain IDs from the approved catalog when it is implemented.
+// Obtain themeId/fontId from the approved @hasaweb/theme catalog.
 const draft = createEmptyDraft({ themeId, fontId, colorMode: "system" });
 draft.components.push(createComponent("text", "about-me"));
 const validated = draftSchema.parse(draft);
@@ -45,7 +45,7 @@ URLs are limited to 2,048 UTF-8 bytes and email addresses to 254 UTF-8 bytes, ex
 
 Project case studies store an at-most-80-character lowercase ASCII slug and rich-text body. Duplicate slugs fail. Slug generation and freezing at first publication belong to the case-study/publication phases. Skill category references must resolve. Entry IDs are unique within each collection. Work dates use `YYYY-MM`, permit unfinished dates and reject an end date before the start date.
 
-`appearance` stores opaque theme/font IDs, an optional single `#RRGGBB` seed and `light`, `dark` or `system` initial mode. Decoration IDs are also opaque. This phase does not select or approve the deferred catalog. `seo` stores optional title, description and `ogImage.assetId` overrides.
+`appearance` stores opaque theme/font IDs, an optional single `#RRGGBB` seed and `light`, `dark` or `system` initial mode. Decoration IDs are also opaque. The [catalog was approved in Phase 11E](../../docs/appearance-catalog.md) and Phase 12 uses its defaults. Structural parsing remains catalog-independent for compatibility; publication membership checks belong to Phase 23. `seo` stores optional title, description and `ogImage.assetId` overrides.
 
 ## Samples and incomplete drafts
 
@@ -76,3 +76,7 @@ Each optional definition has an independent `version`, current schema and migrat
 `createDraftReader` first migrates the envelope one version at a time, then migrates each component, then validates the complete current document. Envelope callbacks must increment `schemaVersion` exactly once. Component versions are advanced by the runner. All callbacks receive cloned data. Missing steps, future versions, invalid source/intermediate/final values, unsafe output and thrown errors stop the read without modifying the caller or stored content. Migration functions must remain pure, with no external writes.
 
 Version 1 is the first production contract. Its envelope migration changes only schemaVersion to 2, preserving all content, stable IDs and sample markers without increasing a maximum-size document. Component versions remain unchanged. Unknown v1 root fields and invalid final relationships fail. Reads upgrade in memory; validated bounded saves upgrade the stored envelope on the next successful save. Tests exercise multi-step component migrations, combined envelope/component upgrades, unchanged-envelope upgrades, repeated reads and injected failures using fixture-only contracts.
+
+## Production API validation boundary
+
+The full reader/serializer examples above are browser/offline helpers, not a Free hot-API recipe. Phase 13 streams consistent validated reads from D1, projecting the known version 1 envelope upgrade without whole-document Worker parsing. Unvalidated supported content uses bounded staged validation; unsupported content remains available through owner recovery. Schema version alone does not prove the current validation generation. Future schema/refinement changes must update the incremental validator, generation policy and equivalence fixtures together. See the [production protocol](../../specs/2026-10-17-revision-aware-drafts/protocol.md).

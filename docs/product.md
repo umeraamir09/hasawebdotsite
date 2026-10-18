@@ -197,7 +197,7 @@ Animated decorations autoplay unless the visitor requests reduced motion. A sepa
 
 ### 13. Upload handling
 
-- Image uploads accept JPEG, PNG, and WebP files up to 5 MB each. Resume uploads accept PDF files up to 10 MB.
+- Image uploads accept JPEG, PNG and WebP files up to 5 MiB each, exactly 5,242,880 bytes. Resume uploads accept PDFs up to 10 MiB, exactly 10,485,760 bytes. These are the confirmed architecture section 13 limits.
 - Avatar and banner controls support uploading, replacing, cropping, and removing images. Project cards and case studies support image uploads, replacement, and removal.
 - The combined onboarding profile screen and editor share crop dialogs with repositioning, zoom, Reset, Apply crop, and Cancel. Imported provider photos use the same controls. Save only the finished cropped image; Reset uses the current local selection, and recovering excluded areas after returning requires selecting the original file again. Required profile setup waits for ready uploads and accepted crops.
 - Owners see upload progress, completion, and errors for unsupported formats, oversized files, interrupted transfers, or failed uploads. Failed uploads offer a retry path and do not replace the previous successful asset.
