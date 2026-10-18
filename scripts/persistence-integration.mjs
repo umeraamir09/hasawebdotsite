@@ -23,6 +23,7 @@ let logs = "";
 const env = { ...process.env, WRANGLER_SEND_METRICS: "false", BROWSER: "none" };
 await mkdir(output, { recursive: true });
 await rm(state, { recursive: true, force: true });
+await rm(legacyMigrations, { recursive: true, force: true });
 await mkdir(legacyMigrations, { recursive: true });
 for (const name of await readdir(join(root, "packages/db/migrations")))
   if (/^000[0-2]_.*\.sql$/.test(name))
@@ -121,12 +122,48 @@ try {
     INSERT INTO github_activity(portfolio_id,public_days,private_counts) VALUES('local-portfolio','[{"count":2}]','[{"count":8}]');
   `,
   ]);
+  // Upgrade an existing 11B/11D database with a retained staged draft/piece.
+  for (const name of await readdir(join(root, "packages/db/migrations")))
+    if (/^000[3-4]_.*\.sql$/.test(name))
+      await copyFile(
+        join(root, "packages/db/migrations", name),
+        join(legacyMigrations, name),
+      );
+  command(["d1", "migrations", "apply", "persistence-integration"]);
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    `INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,draft,progress,expires_at) SELECT 'migration-attempt',user_id,'migration-session',draft_rev,draft,setup_progress,9999999999999 FROM portfolio WHERE id='local-portfolio'; INSERT INTO owner_save_piece(attempt_id,n,data) VALUES('migration-attempt',0,'"retained piece"');`,
+  ]);
   configuration.d1_databases[0].migrations_dir = join(
     root,
     "packages/db/migrations",
   );
   await writeFile(config, JSON.stringify(configuration));
   command(["d1", "migrations", "apply", "persistence-integration"]);
+  const staged = command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    "SELECT context,validation_complete,(SELECT data FROM owner_save_piece WHERE attempt_id='migration-attempt') AS piece FROM owner_save_attempt WHERE id='migration-attempt'",
+    "--json",
+  ]);
+  const preserved = JSON.parse(staged.slice(staged.indexOf("[")))[0].results[0];
+  assert.deepEqual(preserved, {
+    context: "setup",
+    validation_complete: 0,
+    piece: '"retained piece"',
+  });
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    "DELETE FROM owner_save_attempt WHERE id='migration-attempt'",
+  ]);
   const reapplied = command([
     "d1",
     "migrations",
@@ -173,6 +210,7 @@ try {
     checkedAt: new Date().toISOString(),
     runtime: "local workerd / D1",
     migrationsReapplied: true,
+    migrationAttemptPreserved: true,
     fixturesReapplied: true,
     ...result,
     restartPersistence: persisted,

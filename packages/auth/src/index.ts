@@ -145,15 +145,31 @@ export function productAuth(env: AuthEnvironment) {
   return auth;
 }
 
+// Callers must check persisted access in their own database operation. This
+// resolves only the library-verified identity, with cookie caching disabled.
+export async function currentSessionIdentity(
+  env: AuthEnvironment,
+  headers: Headers,
+  {
+    auth = productAuth(env),
+    refresh = true,
+  }: { auth?: ProductAuth; refresh?: boolean } = {},
+) {
+  return auth.api.getSession({
+    headers,
+    query: {
+      disableCookieCache: true,
+      ...(!refresh ? { disableRefresh: true } : {}),
+    },
+  });
+}
+
 export async function currentOwner(
   env: AuthEnvironment,
   headers: Headers,
   auth = productAuth(env),
 ) {
-  const identity = await auth.api.getSession({
-    headers,
-    query: { disableCookieCache: true },
-  });
+  const identity = await currentSessionIdentity(env, headers, { auth });
   if (!identity) return null;
   // Independently checks persisted session expiry, revocation and deletion.
   const repositories = await ownerRepositories(env.DB, identity);

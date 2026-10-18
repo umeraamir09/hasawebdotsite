@@ -5,6 +5,8 @@ import {
   freeStringMinimum,
   SAVE_MAX_PIECES,
   SAVE_PIECE_BYTES,
+  type SaveContext,
+  type SaveErrorCode,
   setupProgressSchema,
   sqlJsonPath,
   validateAppend,
@@ -17,11 +19,17 @@ export class SaveError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code: SaveErrorCode = status === 413
+      ? "byte_limit"
+      : status === 422
+        ? "invalid_input"
+        : "save_rejected",
   ) {
     super(message);
   }
 }
 export type SaveTarget = {
+  context?: Exclude<SaveContext, "validation">;
   table: string;
   owner: string;
   revision: string;
@@ -36,7 +44,11 @@ export type SaveChange =
   | { op: "set"; path: DraftPath; value: unknown }
   | { op: "append"; path: DraftPath; values: unknown[] }
   | { op: "remove"; path: DraftPath };
-type Attempt = {
+export type Attempt = {
+  validation_complete: number;
+  validation_issue: string | null;
+  context: SaveContext;
+  expires_at: number;
   id: string;
   base_revision: number;
   sequence: number;
@@ -57,7 +69,7 @@ const identifier = (value: string) => {
 };
 // Cross-document refinements which a small replacement cannot establish alone.
 // All scalar/shape rules are enforced by the shared schemas before SQL receives a change.
-function invariants(doc: string) {
+export function draftInvariants(doc: string) {
   const unique = (array: string, field: string) =>
     `(SELECT count(*) FROM json_each(${array})) = (SELECT count(DISTINCT json_extract(value,'$.${field}')) FROM json_each(${array}))`;
   return `
@@ -75,7 +87,7 @@ function invariants(doc: string) {
       OR (json_extract(c.value,'$.type') = 'skills' AND EXISTS (SELECT 1 FROM json_each(c.value,'$.data.entries') e WHERE json_type(e.value,'$.categoryId') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM json_each(c.value,'$.data.categories') cat WHERE json_extract(cat.value,'$.id') = json_extract(e.value,'$.categoryId'))))
       OR (json_extract(c.value,'$.type') = 'work-experience' AND EXISTS (SELECT 1 FROM json_each(c.value,'$.data.entries') e WHERE json_extract(e.value,'$.startDate') != '' AND json_extract(e.value,'$.endDate') != '' AND json_extract(e.value,'$.endDate') < json_extract(e.value,'$.startDate'))))`;
 }
-async function digest(value: unknown) {
+export async function saveDigest(value: unknown) {
   const bytes = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(JSON.stringify(value)),
@@ -84,6 +96,7 @@ async function digest(value: unknown) {
     byte.toString(16).padStart(2, "0"),
   ).join("");
 }
+const digest = saveDigest;
 function condition(params: unknown[]) {
   return (value: unknown) => {
     params.push(value);
@@ -107,14 +120,17 @@ export function boundedSaves(
     rev = identifier(target.revision),
     draft = identifier(target.draft),
     progress = identifier(target.progress);
+  const context = target.context ?? "setup";
+  const authenticated = (arg: ReturnType<typeof condition>) =>
+    `EXISTS (SELECT 1 FROM session s JOIN user u ON u.id=s.user_id WHERE s.id=${arg(identity.session.id)} AND s.user_id=${arg(identity.user.id)} AND s.expires_at>${arg(Date.now())} AND u.deleting_at IS NULL)`;
   const active = (arg: ReturnType<typeof condition>) =>
-    `EXISTS (SELECT 1 FROM session s JOIN user u ON u.id=s.user_id WHERE s.id=${arg(identity.session.id)} AND s.user_id=${arg(identity.user.id)} AND s.expires_at>${arg(Date.now())} AND u.deleting_at IS NULL)` +
-    (target.setupMilestone
+    authenticated(arg) +
+    (target.setupMilestone && context === "setup"
       ? ` AND EXISTS (SELECT 1 FROM ${table} p WHERE p.${owner}=${arg(identity.user.id)} AND p.${identifier(target.setupMilestone)} IS NULL)`
       : "");
   const canonicalReady = (arg: ReturnType<typeof condition>) =>
     target.validationVersion
-      ? ` AND EXISTS (SELECT 1 FROM ${table} p WHERE p.${owner}=${arg(identity.user.id)} AND p.${identifier(target.validationVersion)}=2 AND json_extract(p.${draft},'$.schemaVersion') IN (1,2))`
+      ? ` AND EXISTS (SELECT 1 FROM ${table} p WHERE p.${owner}=${arg(identity.user.id)} AND p.${identifier(target.validationVersion)}=2 AND json_type(p.${draft},'$.schemaVersion') IN ('integer','real') AND json_extract(p.${draft},'$.schemaVersion') IN (1,2))`
       : "";
   const encodeProgress = (value: unknown) => {
     encodeJson(value, SAVE_PIECE_BYTES);
@@ -131,17 +147,25 @@ export function boundedSaves(
     )
       throw new SaveError(422, "Invalid revision");
   };
-  async function attempt(id: string): Promise<Attempt> {
+  async function attempt(id: string, writing = false): Promise<Attempt> {
     const params: unknown[] = [];
     const arg = condition(params);
     const row = await db
       .prepare(
-        `SELECT id,base_revision,sequence,last_hash,state,piece_count,string_path,string_minimum,string_chars,string_bytes,last_code_unit FROM owner_save_attempt WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND expires_at>${arg(Date.now())} AND ${active(arg)}`,
+        `SELECT id,context,expires_at,base_revision,sequence,last_hash,state,piece_count,string_path,string_minimum,string_chars,string_bytes,last_code_unit,validation_complete,validation_issue FROM owner_save_attempt WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND expires_at>${arg(Date.now())} AND ${writing ? `${active(arg)} AND context=${arg(context)}` : authenticated(arg)}`,
       )
       .bind(...params)
       .first<Attempt>();
+    if (!row && writing && target.setupMilestone && context === "setup") {
+      const held = await attempt(id);
+      if (held.context === "setup") return rejectSave(held.base_revision);
+    }
     if (!row)
-      throw new SaveError(409, "Attempt unavailable, expired or revoked");
+      throw new SaveError(
+        409,
+        "Attempt unavailable, expired or revoked",
+        "attempt_unavailable",
+      );
     return row;
   }
   async function pending() {
@@ -149,7 +173,7 @@ export function boundedSaves(
     const arg = condition(params);
     return db
       .prepare(
-        `SELECT id,base_revision,sequence,state,piece_count,string_path,expires_at,session_id!=${arg(identity.session.id)} AS requiresResume FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND expires_at>${arg(Date.now())} AND ${active(arg)}`,
+        `SELECT id,context,base_revision,sequence,state,piece_count,string_path,expires_at,validation_complete,validation_issue,session_id!=${arg(identity.session.id)} AS requiresResume FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND expires_at>${arg(Date.now())} AND ${authenticated(arg)}`,
       )
       .bind(...params)
       .first<Record<string, unknown>>();
@@ -159,7 +183,7 @@ export function boundedSaves(
     const arg = condition(params);
     await db
       .prepare(
-        `UPDATE owner_save_attempt SET session_id=${arg(identity.session.id)},sequence=sequence+1,last_hash=NULL WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id!=${arg(identity.session.id)} AND expires_at>${arg(Date.now())} AND state IN ('open','string') AND ${active(arg)}`,
+        `UPDATE owner_save_attempt SET session_id=${arg(identity.session.id)},sequence=sequence+1,last_hash=NULL WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id!=${arg(identity.session.id)} AND expires_at>${arg(Date.now())} AND state IN ('open','string') AND ${authenticated(arg)}`,
       )
       .bind(...params)
       .run();
@@ -167,32 +191,95 @@ export function boundedSaves(
   }
   async function begin(revision: number, proposedProgress: unknown) {
     checkRevision(revision);
-    const encoded = encodeProgress(proposedProgress);
+    const encoded =
+      context === "content" ? null : encodeProgress(proposedProgress);
     const id = crypto.randomUUID();
     const params: unknown[] = [];
     const arg = condition(params);
     const result = await db
-      .prepare(`INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,draft,progress,expires_at)
-      SELECT ${arg(id)},${arg(identity.user.id)},${arg(identity.session.id)},${arg(revision)},${sourceDraft()},${arg(encoded)},${arg(Date.now() + TTL)} FROM ${table}
+      .prepare(`INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,draft,progress,expires_at,context)
+      SELECT ${arg(id)},${arg(identity.user.id)},${arg(identity.session.id)},${arg(revision)},${sourceDraft()},${context === "content" ? progress : arg(encoded)},${arg(Date.now() + TTL)},${arg(context)} FROM ${table}
       WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)} AND ${active(arg)}${canonicalReady(arg)}
       ON CONFLICT(user_id) DO NOTHING RETURNING id,sequence`)
       .bind(...params)
       .first<{ id: string; sequence: number }>();
-    if (!result)
-      throw new SaveError(
-        409,
-        "Stale revision or an existing attempt must be resumed/cleaned",
-      );
+    if (!result) return rejectSave(revision);
     return result;
   }
   function sourceDraft() {
     // v1 -> v2 only changes the single-digit envelope version. D1 performs the
     // upgrade without reading a large body into Worker JS or growing its size.
-    return target.setupMilestone
+    return target.setupMilestone || target.validationVersion
       ? `CASE WHEN json_extract(${draft},'$.schemaVersion')=1 THEN json_set(${draft},'$.schemaVersion',2) ELSE ${draft} END`
       : draft;
   }
-  async function metadata(path: DraftPath, id?: string) {
+  async function rejectSave(revision: number): Promise<never> {
+    const params: unknown[] = [];
+    const arg = condition(params);
+    const row = await db
+      .prepare(
+        `SELECT ${rev} AS revision,${target.setupMilestone ? identifier(target.setupMilestone) : "NULL"} AS milestone,${target.validationVersion ? identifier(target.validationVersion) : "2"} AS generation,json_extract(${draft},'$.schemaVersion') AS version,json_type(${draft},'$.schemaVersion') AS versionType FROM ${table} WHERE ${owner}=${arg(identity.user.id)} AND ${authenticated(arg)}`,
+      )
+      .bind(...params)
+      .first<{
+        revision: number;
+        milestone: number | null;
+        generation: number;
+        version: number;
+        versionType: string;
+      }>();
+    if (!row) {
+      // A live session with no portfolio row is a normal pre-provisioning
+      // state, not an authentication failure. Only this failure path needs the
+      // extra read, matching the consistent draft read.
+      const sessionParams: unknown[] = [];
+      const sessionArg = condition(sessionParams);
+      const session = await db
+        .prepare(`SELECT ${authenticated(sessionArg)} AS active`)
+        .bind(...sessionParams)
+        .first<{ active: number }>();
+      if (!session?.active)
+        throw new SaveError(401, "Owner unavailable", "unauthorized");
+      throw new SaveError(404, "Portfolio unavailable", "not_found");
+    }
+    if (
+      !["integer", "real"].includes(row.versionType) ||
+      ![1, 2].includes(row.version)
+    )
+      throw new SaveError(409, "Unsupported draft", "unsupported_version");
+    if (context === "setup" && row.milestone !== null)
+      throw new SaveError(409, "Setup is closed", "setup_closed");
+    if (row.revision !== revision)
+      throw new SaveError(409, "Draft changed", "revision_conflict");
+    if (row.generation !== 2)
+      throw new SaveError(
+        409,
+        "Validate the stored draft first",
+        "validation_required",
+      );
+    throw new SaveError(
+      409,
+      "Save rejected or existing attempt requires recovery",
+      "save_rejected",
+    );
+  }
+  async function saveProgress(revision: number, proposedProgress: unknown) {
+    checkRevision(revision);
+    if (context !== "setup")
+      throw new SaveError(422, "Content saves cannot set progress");
+    const encoded = encodeProgress(proposedProgress);
+    const params: unknown[] = [];
+    const arg = condition(params);
+    const row = await db
+      .prepare(
+        `UPDATE ${table} SET ${draft}=${sourceDraft()},${progress}=${arg(encoded)},${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""} WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)} AND ${active(arg)}${canonicalReady(arg)} RETURNING ${rev} AS revision`,
+      )
+      .bind(...params)
+      .first<{ revision: number }>();
+    if (!row) return rejectSave(revision);
+    return row;
+  }
+  async function metadata(path: DraftPath, id?: string, revision = 0) {
     const params: unknown[] = [];
     const arg = condition(params);
     const pathSql = sqlJsonPath(path);
@@ -210,7 +297,7 @@ export function boundedSaves(
       json_type(s.${sourceDraft},${arg(sqlJsonPath(path.slice(0, -1)))}) AS parent_type,
       json_array_length(s.${sourceDraft},${arg(pathSql)}) AS array_length,
       json_array_length(s.${sourceDraft},${arg(sqlJsonPath(path.slice(0, -1)))}) AS parent_length
-      FROM ${source} s WHERE ${where} AND ${active(arg)}`)
+      FROM ${source} s WHERE ${where} AND ${active(arg)}${id ? ` AND context=${arg(context)}` : canonicalReady(arg)}`)
       .bind(...params)
       .first<{
         types: string;
@@ -219,7 +306,10 @@ export function boundedSaves(
         array_length: number | null;
         parent_length: number | null;
       }>();
-    if (!row) throw new SaveError(409, "Missing draft or active attempt");
+    if (!row) {
+      if (!id) return rejectSave(revision);
+      throw new SaveError(409, "Missing active attempt", "attempt_unavailable");
+    }
     return { ...row, types: JSON.parse(row.types) as Record<string, unknown> };
   }
   async function change(
@@ -234,13 +324,13 @@ export function boundedSaves(
     encodeJson(change, SAVE_PIECE_BYTES + 1024);
     const hash = await digest(change);
     if (id) {
-      const state = await attempt(id);
+      const state = await attempt(id, true);
       if (sequence === state.sequence - 1 && state.last_hash === hash)
         return { sequence: state.sequence, replayed: true };
       if (state.state !== "open" || sequence !== state.sequence)
         throw new SaveError(409, "Wrong attempt sequence/state");
     }
-    const meta = await metadata(change.path, id);
+    const meta = await metadata(change.path, id, revision);
     if (
       change.path.length &&
       meta.parent_type !== "object" &&
@@ -282,29 +372,33 @@ export function boundedSaves(
       ? `id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='open' AND expires_at>${arg(Date.now())}`
       : `${owner}=${arg(identity.user.id)} AND ${rev}=${arg(revision)}`;
     const access = active(arg) + (id ? "" : canonicalReady(arg));
-    const encodedProgress = id ? "{}" : encodeProgress(proposedProgress);
+    const encodedProgress =
+      id || context === "content" ? "{}" : encodeProgress(proposedProgress);
     const assignments = id
       ? `draft=(SELECT doc FROM candidate),sequence=sequence+1,last_hash=${arg(hash)}`
-      : `${draft}=(SELECT doc FROM candidate),${progress}=${arg(encodedProgress)},${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}`;
+      : `${draft}=(SELECT doc FROM candidate),${context === "content" ? "" : `${progress}=${arg(encodedProgress)},`}${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}`;
     const milestone =
-      id || target.setupMilestone
+      id || target.setupMilestone || target.validationVersion
         ? "1"
         : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract(${arg(encodedProgress)},'$.enteredEditor')=1)`;
     const result = await db
       .prepare(`WITH candidate(doc) AS MATERIALIZED (SELECT ${expression} FROM ${source} WHERE ${expected} AND ${access})
-      UPDATE ${source} SET ${assignments} WHERE ${expected} AND ${access} AND ${milestone} AND ${invariants("(SELECT doc FROM candidate)")}
+      UPDATE ${source} SET ${assignments} WHERE ${expected} AND ${access} AND ${milestone} AND ${draftInvariants("(SELECT doc FROM candidate)")}
       RETURNING ${id ? "sequence" : `${rev} AS revision`}`)
       .bind(...params)
       .first<Record<string, number>>();
-    if (!result)
+    if (!result) {
+      if (!id) return rejectSave(revision);
       throw new SaveError(
         409,
-        "Stale, oversized, invalid references, milestone reset or revoked save",
+        "Stale attempt or invalid references",
+        "attempt_conflict",
       );
+    }
     return result;
   }
   async function stringStart(id: string, sequence: number, path: DraftPath) {
-    const state = await attempt(id),
+    const state = await attempt(id, true),
       hash = await digest({ op: "string-start", path });
     if (sequence === state.sequence - 1 && state.last_hash === hash)
       return { sequence: state.sequence, replayed: true };
@@ -323,7 +417,7 @@ export function boundedSaves(
     const arg = condition(params);
     const update = db
       .prepare(
-        `UPDATE owner_save_attempt SET state='string',string_path=${arg(sqlJsonPath(path))},string_minimum=${arg(minimum)},piece_count=0,string_chars=0,string_bytes=2,last_code_unit=NULL,sequence=sequence+1,last_hash=${arg(hash)} WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='open' AND expires_at>${arg(Date.now())} AND ${active(arg)} RETURNING sequence`,
+        `UPDATE owner_save_attempt SET state='string',string_path=${arg(sqlJsonPath(path))},string_minimum=${arg(minimum)},piece_count=0,string_chars=0,string_bytes=2,last_code_unit=NULL,sequence=sequence+1,last_hash=${arg(hash)} WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='open' AND expires_at>${arg(Date.now())} AND ${active(arg)} AND context=${arg(context)} RETURNING sequence`,
       )
       .bind(...params);
     const clear = db
@@ -339,7 +433,7 @@ export function boundedSaves(
   async function stringPiece(id: string, sequence: number, text: string) {
     const json = encodeJson(text, SAVE_PIECE_BYTES),
       hash = await digest({ op: "piece", text });
-    const state = await attempt(id);
+    const state = await attempt(id, true);
     if (sequence === state.sequence - 1 && state.last_hash === hash)
       return { sequence: state.sequence, replayed: true };
     if (state.state !== "string" || state.sequence !== sequence || !text.length)
@@ -360,7 +454,7 @@ export function boundedSaves(
       throw new SaveError(413, "String exceeds draft ceiling");
     const params: unknown[] = [];
     const arg = condition(params);
-    const where = `id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='string' AND expires_at>${arg(Date.now())} AND ${active(arg)}`;
+    const where = `id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${arg(sequence)} AND state='string' AND expires_at>${arg(Date.now())} AND ${active(arg)} AND context=${arg(context)}`;
     const insert = db
       .prepare(
         `INSERT INTO owner_save_piece(attempt_id,n,data) SELECT id,piece_count,${arg(json)} FROM owner_save_attempt WHERE ${where}`,
@@ -379,7 +473,7 @@ export function boundedSaves(
     return row;
   }
   async function stringFinish(id: string, sequence: number) {
-    const state = await attempt(id),
+    const state = await attempt(id, true),
       hash = await digest({ op: "string-finish" });
     if (sequence === state.sequence - 1 && state.last_hash === hash)
       return { sequence: state.sequence, replayed: true };
@@ -393,13 +487,13 @@ export function boundedSaves(
     const arg = condition(params);
     const attemptId = arg(id),
       seq = arg(sequence),
-      where = `id=${attemptId} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${seq} AND state='string' AND expires_at>${arg(Date.now())} AND ${active(arg)}`;
+      where = `id=${attemptId} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND sequence=${seq} AND state='string' AND expires_at>${arg(Date.now())} AND ${active(arg)} AND context=${arg(context)}`;
     // Concatenate canonical JSON string interiors in D1. Worker JS never reads
     // the assembled value. Ordering and the sequence/digest lock are server-owned.
     const assembled = `'"' || coalesce((SELECT group_concat(substr(data,2,length(data)-2),'') FROM (SELECT data FROM owner_save_piece WHERE attempt_id=${attemptId} ORDER BY n)),'') || '"'`;
     const update = db
       .prepare(`WITH candidate(doc) AS MATERIALIZED (SELECT json_set(draft,string_path,json(${assembled})) FROM owner_save_attempt WHERE ${where})
-      UPDATE owner_save_attempt SET draft=(SELECT doc FROM candidate),state='open',sequence=sequence+1,last_hash=${arg(hash)} WHERE ${where} AND ${invariants("(SELECT doc FROM candidate)")} RETURNING sequence`)
+      UPDATE owner_save_attempt SET draft=(SELECT doc FROM candidate),state='open',sequence=sequence+1,last_hash=${arg(hash)} WHERE ${where} AND ${draftInvariants("(SELECT doc FROM candidate)")} RETURNING sequence`)
       .bind(...params);
     // Keep immutable pieces for retries until the next string starts or bounded
     // cleanup removes the attempt. Storage remains capped at one string/owner.
@@ -408,7 +502,11 @@ export function boundedSaves(
     return row;
   }
   async function commit(id: string, sequence: number) {
+    // A saved receipt remains readable after setup closes. The canonical
+    // UPDATE below separately enforces the setup-write and session guards.
     const state = await attempt(id);
+    if (state.sequence !== sequence)
+      throw new SaveError(409, "Wrong attempt sequence", "attempt_conflict");
     if (state.state === "committed")
       return { revision: state.base_revision + 1, replayed: true };
     if (state.state !== "open" || state.sequence !== sequence)
@@ -416,11 +514,11 @@ export function boundedSaves(
     const params: unknown[] = [];
     const arg = condition(params);
     const attemptId = arg(id);
-    const selection = `SELECT a.draft FROM owner_save_attempt a WHERE a.id=${attemptId} AND a.user_id=${arg(identity.user.id)} AND a.session_id=${arg(identity.session.id)} AND a.sequence=${arg(sequence)} AND a.state='open' AND a.expires_at>${arg(Date.now())}`;
+    const selection = `SELECT a.draft FROM owner_save_attempt a WHERE a.id=${attemptId} AND a.user_id=${arg(identity.user.id)} AND a.session_id=${arg(identity.session.id)} AND a.sequence=${arg(sequence)} AND a.context=${arg(context)} AND a.state='open' AND a.expires_at>${arg(Date.now())}`;
     const update = db
-      .prepare(`UPDATE ${table} SET ${draft}=(${selection}),${progress}=(SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}
+      .prepare(`UPDATE ${table} SET ${draft}=(${selection}),${context === "content" ? "" : `${progress}=(SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),`}${rev}=${rev}+1${target.updatedAt ? `,${identifier(target.updatedAt)}=${arg(Date.now())}` : ""}
       WHERE ${owner}=${arg(identity.user.id)} AND ${rev}=${arg(state.base_revision)} AND (${selection}) IS NOT NULL AND ${active(arg)}${canonicalReady(arg)}
-      AND ${target.setupMilestone ? "1" : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract((SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),'$.enteredEditor')=1)`} RETURNING ${rev} AS revision`)
+      AND ${target.setupMilestone || target.validationVersion ? "1" : `(json_extract(${progress},'$.enteredEditor')=0 OR json_extract((SELECT a.progress FROM owner_save_attempt a WHERE a.id=${attemptId}),'$.enteredEditor')=1)`} RETURNING ${rev} AS revision`)
       .bind(...params);
     const mark = db
       .prepare(
@@ -429,29 +527,27 @@ export function boundedSaves(
       .bind(id);
     const result = await db.batch([update, mark]);
     const row = result[0]?.results[0];
-    if (!row)
-      throw new SaveError(
-        409,
-        "Stale revision, revoked session or milestone reset",
-      );
+    if (!row) return rejectSave(state.base_revision);
     return row;
   }
   async function abort(id: string) {
     await attempt(id);
     const params: unknown[] = [];
     const arg = condition(params);
-    await db
+    const discarded = await db
       .prepare(
-        `UPDATE owner_save_attempt SET state='aborted',draft=NULL,expires_at=${arg(Date.now() - 1)} WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND ${active(arg)}`,
+        `UPDATE owner_save_attempt SET state='aborted',draft=NULL,expires_at=${arg(Date.now() - 1)} WHERE id=${arg(id)} AND user_id=${arg(identity.user.id)} AND session_id=${arg(identity.session.id)} AND ${authenticated(arg)} RETURNING id`,
       )
       .bind(...params)
-      .run();
+      .first();
+    if (!discarded)
+      throw new SaveError(409, "Attempt unavailable", "attempt_unavailable");
     return { aborted: true };
   }
   async function cleanup() {
     const params: unknown[] = [];
     const arg = condition(params);
-    const expired = `SELECT id FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND (expires_at<=${arg(Date.now())} OR state IN ('committed','aborted') OR NOT EXISTS(SELECT 1 FROM session old WHERE old.id=owner_save_attempt.session_id AND old.user_id=owner_save_attempt.user_id AND old.expires_at>${arg(Date.now())})) AND ${active(arg)}`;
+    const expired = `SELECT id FROM owner_save_attempt WHERE user_id=${arg(identity.user.id)} AND (expires_at<=${arg(Date.now())} OR state IN ('committed','aborted') OR NOT EXISTS(SELECT 1 FROM session old WHERE old.id=owner_save_attempt.session_id AND old.user_id=owner_save_attempt.user_id AND old.expires_at>${arg(Date.now())})) AND ${authenticated(arg)}`;
     const pieces = await db
       .prepare(
         `DELETE FROM owner_save_piece WHERE rowid IN (SELECT rowid FROM owner_save_piece WHERE attempt_id IN (${expired}) LIMIT 32)`,
@@ -467,6 +563,7 @@ export function boundedSaves(
     return { pieces: pieces.meta.changes, attempts: attempts.meta.changes };
   }
   return {
+    saveProgress,
     pending,
     resume,
     begin,

@@ -53,6 +53,8 @@ The HTTP entry accepts only social sign-in, sign-out, session lookup, and GitHub
 
 Session-cookie caching retains the proven 300-second setting, but account/editor authorization always performs an uncached lookup and repository access checks. Sign-out invalidates the D1 session; copied cache cookies cannot reopen the editor. Deleting accounts cannot create new sessions or enter through an existing session.
 
+The Phase 13 draft download resolves the uncached Better Auth identity with read-only session lookup, then checks persisted session expiry, ownership and account deletion in its single consistent D1 read. It omits the duplicate repository-construction check and unused cookie-refresh work. Authentication/status endpoints retain session refresh. Draft mutations and recovery commands retain their separate repository checks, and every write checks persisted access again. See the [draft API protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md).
+
 ## Verification
 
 - `pnpm test:auth` runs local workerd/D1 product-table provider fixtures, private portfolio initialization/access checks and Chromium cookie isolation checks. Pass `--evidence-dir=specs/YYYY-MM-DD-feature-name` to keep a later run's evidence separate from the Phase 11 record.

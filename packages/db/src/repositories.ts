@@ -56,6 +56,7 @@ export async function ownerRepositories(
     .get();
   if (!authorized) throw new OwnerAccessError();
   const setupSaves = boundedSaves(binding, identity, {
+    context: "setup",
     table: "portfolio",
     owner: "user_id",
     revision: "draft_rev",
@@ -161,11 +162,7 @@ export async function ownerRepositories(
           .get(),
       saves: setupSaves,
       saveProgress: (revision: number, progress: unknown) =>
-        setupSaves.change(
-          { op: "set", path: ["schemaVersion"], value: 2 },
-          revision,
-          setupProgressSchema.parse(progress),
-        ),
+        setupSaves.saveProgress(revision, setupProgressSchema.parse(progress)),
       // Internal persistence operation ONLY. The authoritative handoff service
       // must validate saved required content and ready owned assets at this
       // exact revision before calling it. Never map a client milestone flag here.

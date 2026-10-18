@@ -23,6 +23,7 @@ jobs:
       - run: pnpm build
       - run: pnpm test:auth:browser
       - run: pnpm test:persistence
+      - run: pnpm test:draft-api
       - run: pnpm test:runtime
       - run: pnpm spike:runtime
       - run: pnpm spike:routing

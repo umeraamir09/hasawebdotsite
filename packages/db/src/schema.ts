@@ -137,6 +137,12 @@ export const ownerSaveAttempt = sqliteTable(
   "owner_save_attempt",
   {
     id: text("id").primaryKey(),
+    context: text("context", { enum: ["setup", "content", "validation"] })
+      .notNull()
+      .default("setup"),
+    validationCursor: text("validation_cursor"),
+    validationComplete: integer("validation_complete").notNull().default(0),
+    validationIssue: text("validation_issue"),
     userId: text("user_id")
       .notNull()
       .unique()

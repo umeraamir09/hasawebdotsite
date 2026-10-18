@@ -1,0 +1,4012 @@
+{
+  "recordedAt": "2026-10-17T18:03:13.444Z",
+  "completed": true,
+  "remote": false,
+  "benchmark": false,
+  "count": 100,
+  "warmups": 10,
+  "method": "Real Better Auth, web adapter and named jobs binding. All supported data mutation calls process bounded input; SQL handles canonical JSON and atomic progress/revision updates. Client elapsed is not CPU. Fixed keyed benchmark preparation executes inside the measured invocation; its extra CPU is conservatively included. Template source sizes are 1 MiB.",
+  "checks": [
+    {
+      "name": "real sessions, missing/tampered/expired/deleting owners, Origin and type guards",
+      "passed": true
+    },
+    {
+      "name": "bounded transport rejects malformed, oversized and unsafe requests",
+      "passed": true
+    },
+    {
+      "name": "small atomic patches reject stale revisions and unsafe content",
+      "passed": true
+    },
+    {
+      "name": "nested cross-document refinements remain enforced",
+      "passed": true
+    },
+    {
+      "name": "parallel saves have one revision winner",
+      "passed": true
+    },
+    {
+      "name": "nested rich-text list paths use stored discriminators",
+      "passed": true
+    },
+    {
+      "name": "approved URL and email limits apply to bounded saves",
+      "passed": true
+    },
+    {
+      "name": "private attempts, sequence checks, immutable retries and owner isolation",
+      "passed": true
+    },
+    {
+      "name": "pending saves survive lost responses and explicit session recovery",
+      "passed": true
+    },
+    {
+      "name": "UTF-8 text assembly, quote escaping and a single atomic commit",
+      "passed": true
+    },
+    {
+      "name": "stale staged commits and permanent progress cannot overwrite canonical state",
+      "passed": true
+    },
+    {
+      "name": "exact 1 MiB canonical drafts and dense trees retain their contract",
+      "passed": true
+    },
+    {
+      "name": "maximum individual text is assembled in D1 and published to draft atomically",
+      "passed": true
+    },
+    {
+      "name": "expired attempts cannot commit and cleanup deletes at most 32 pieces",
+      "passed": true
+    },
+    {
+      "name": "a revoked creating session can be discarded without waiting for expiry",
+      "passed": true
+    },
+    {
+      "name": "revocation/deletion and expiry block staged/direct writes",
+      "passed": true
+    },
+    {
+      "name": "a real D1 failure returns private 503",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "case": "check",
+      "at": 1792260106840,
+      "elapsedMs": 104.381,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260106944,
+      "elapsedMs": 164.74,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107109,
+      "elapsedMs": 113.456,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107223,
+      "elapsedMs": 62.794,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107286,
+      "elapsedMs": 49.932,
+      "status": 403,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107336,
+      "elapsedMs": 31.955,
+      "status": 415,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107369,
+      "elapsedMs": 76.981,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107446,
+      "elapsedMs": 112.821,
+      "status": 413,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107559,
+      "elapsedMs": 115.497,
+      "status": 400,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107675,
+      "elapsedMs": 91.056,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107766,
+      "elapsedMs": 61.677,
+      "status": 404,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107828,
+      "elapsedMs": 58.427,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107888,
+      "elapsedMs": 70.047,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260107958,
+      "elapsedMs": 99.474,
+      "status": 409,
+      "rowsRead": 17,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108058,
+      "elapsedMs": 63.991,
+      "status": 422,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108122,
+      "elapsedMs": 105.723,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108228,
+      "elapsedMs": 42.325,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108270,
+      "elapsedMs": 43.554,
+      "status": 422,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108314,
+      "elapsedMs": 56.798,
+      "status": 409,
+      "rowsRead": 44,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108371,
+      "elapsedMs": 62.191,
+      "status": 409,
+      "rowsRead": 84,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108434,
+      "elapsedMs": 48.596,
+      "status": 409,
+      "rowsRead": 88,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108482,
+      "elapsedMs": 55.434,
+      "status": 409,
+      "rowsRead": 76,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108538,
+      "elapsedMs": 46.263,
+      "status": 409,
+      "rowsRead": 24,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108585,
+      "elapsedMs": 50.448,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108587,
+      "elapsedMs": 181.014,
+      "status": 409,
+      "rowsRead": 17,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108588,
+      "elapsedMs": 180.081,
+      "status": 409,
+      "rowsRead": 17,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108589,
+      "elapsedMs": 225.85,
+      "status": 409,
+      "rowsRead": 17,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108816,
+      "elapsedMs": 42.159,
+      "status": 200,
+      "rowsRead": 92,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260108858,
+      "elapsedMs": 51.447,
+      "status": 200,
+      "rowsRead": 105,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120505,
+      "elapsedMs": 103.787,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120609,
+      "elapsedMs": 126.178,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120735,
+      "elapsedMs": 118.349,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120854,
+      "elapsedMs": 54.358,
+      "status": 422,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120908,
+      "elapsedMs": 73.19,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260120982,
+      "elapsedMs": 96.634,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260121079,
+      "elapsedMs": 63.945,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260121144,
+      "elapsedMs": 65.432,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260121209,
+      "elapsedMs": 55.83,
+      "status": 200,
+      "rowsRead": 93,
+      "rowsWritten": 1,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260121265,
+      "elapsedMs": 54.134,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260121319,
+      "elapsedMs": 55.656,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131655,
+      "elapsedMs": 53.421,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131708,
+      "elapsedMs": 43.774,
+      "status": 200,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131752,
+      "elapsedMs": 48.237,
+      "status": 409,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131800,
+      "elapsedMs": 66.582,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131867,
+      "elapsedMs": 85.465,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131953,
+      "elapsedMs": 41.013,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260131994,
+      "elapsedMs": 36.931,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132031,
+      "elapsedMs": 55.386,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132089,
+      "elapsedMs": 56.674,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132146,
+      "elapsedMs": 55.787,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132202,
+      "elapsedMs": 47.409,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132249,
+      "elapsedMs": 62.063,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132312,
+      "elapsedMs": 36.466,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132348,
+      "elapsedMs": 43.925,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132392,
+      "elapsedMs": 50.086,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260132442,
+      "elapsedMs": 57.05,
+      "status": 200,
+      "rowsRead": 19,
+      "rowsWritten": 3,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260137098,
+      "elapsedMs": 47.566,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260137145,
+      "elapsedMs": 69.954,
+      "status": 200,
+      "rowsRead": 89,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260141144,
+      "elapsedMs": 42.831,
+      "status": 200,
+      "rowsRead": 12,
+      "rowsWritten": 2,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260141187,
+      "elapsedMs": 32.687,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260144790,
+      "elapsedMs": 39.514,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 2,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260144829,
+      "elapsedMs": 47.884,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 2,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260144877,
+      "elapsedMs": 46.908,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260144925,
+      "elapsedMs": 36.921,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260144962,
+      "elapsedMs": 40.493,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260145002,
+      "elapsedMs": 63.966,
+      "status": 409,
+      "rowsRead": 12,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260145067,
+      "elapsedMs": 42.277,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 2,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260145109,
+      "elapsedMs": 45.606,
+      "status": 200,
+      "rowsRead": 11,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260145155,
+      "elapsedMs": 40.202,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260145195,
+      "elapsedMs": 47.009,
+      "status": 409,
+      "rowsRead": 60,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260152609,
+      "elapsedMs": 100.523,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260152742,
+      "elapsedMs": 177.725,
+      "status": 200,
+      "rowsRead": 90,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260152954,
+      "elapsedMs": 104.352,
+      "status": 200,
+      "rowsRead": 12029,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260153120,
+      "elapsedMs": 62.812,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260153183,
+      "elapsedMs": 71.64,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260156910,
+      "elapsedMs": 59.396,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260156969,
+      "elapsedMs": 72.782,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157042,
+      "elapsedMs": 43.797,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157086,
+      "elapsedMs": 67.257,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157153,
+      "elapsedMs": 61.807,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157215,
+      "elapsedMs": 67.015,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157282,
+      "elapsedMs": 39.527,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157322,
+      "elapsedMs": 46.907,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157369,
+      "elapsedMs": 46.025,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "warmup-piece",
+      "at": 1792260157415,
+      "elapsedMs": 39.247,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157455,
+      "elapsedMs": 45.404,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157500,
+      "elapsedMs": 35.556,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157536,
+      "elapsedMs": 40.138,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157576,
+      "elapsedMs": 42.558,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157619,
+      "elapsedMs": 39.01,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157658,
+      "elapsedMs": 43.708,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157702,
+      "elapsedMs": 40.134,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157742,
+      "elapsedMs": 32.467,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157774,
+      "elapsedMs": 38.061,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157813,
+      "elapsedMs": 41.493,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157854,
+      "elapsedMs": 39.174,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157893,
+      "elapsedMs": 40.327,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157934,
+      "elapsedMs": 44.961,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260157979,
+      "elapsedMs": 45.275,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158024,
+      "elapsedMs": 35.11,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158060,
+      "elapsedMs": 51.883,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158112,
+      "elapsedMs": 55.189,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158167,
+      "elapsedMs": 52.664,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158220,
+      "elapsedMs": 50.935,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158271,
+      "elapsedMs": 49.287,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158320,
+      "elapsedMs": 46.012,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158366,
+      "elapsedMs": 53.984,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158421,
+      "elapsedMs": 63.361,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158484,
+      "elapsedMs": 53.899,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158538,
+      "elapsedMs": 56.661,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158595,
+      "elapsedMs": 65.616,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158661,
+      "elapsedMs": 68.51,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158729,
+      "elapsedMs": 56.942,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158786,
+      "elapsedMs": 69.221,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158856,
+      "elapsedMs": 36.456,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158892,
+      "elapsedMs": 38.338,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158931,
+      "elapsedMs": 45.711,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260158977,
+      "elapsedMs": 33.157,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159010,
+      "elapsedMs": 41.758,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159052,
+      "elapsedMs": 41.59,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159094,
+      "elapsedMs": 50.91,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159146,
+      "elapsedMs": 55.289,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159202,
+      "elapsedMs": 47.352,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159249,
+      "elapsedMs": 31.567,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159281,
+      "elapsedMs": 39.505,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159320,
+      "elapsedMs": 35.957,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159356,
+      "elapsedMs": 36.596,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159393,
+      "elapsedMs": 45.566,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159439,
+      "elapsedMs": 54.508,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159494,
+      "elapsedMs": 46.1,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159540,
+      "elapsedMs": 51.473,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159591,
+      "elapsedMs": 48.676,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159640,
+      "elapsedMs": 37.773,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159678,
+      "elapsedMs": 47.386,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159726,
+      "elapsedMs": 44.828,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159771,
+      "elapsedMs": 32.53,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159803,
+      "elapsedMs": 36.833,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159840,
+      "elapsedMs": 36.019,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159876,
+      "elapsedMs": 45.216,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159922,
+      "elapsedMs": 47.549,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260159969,
+      "elapsedMs": 33.045,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160002,
+      "elapsedMs": 38.602,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160041,
+      "elapsedMs": 42.766,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160084,
+      "elapsedMs": 37.04,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160121,
+      "elapsedMs": 52.239,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160174,
+      "elapsedMs": 48.328,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160222,
+      "elapsedMs": 54.477,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160277,
+      "elapsedMs": 72.451,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160349,
+      "elapsedMs": 35.982,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160385,
+      "elapsedMs": 31.162,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160417,
+      "elapsedMs": 40.941,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160458,
+      "elapsedMs": 52.662,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160510,
+      "elapsedMs": 61.411,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160572,
+      "elapsedMs": 48.84,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160621,
+      "elapsedMs": 38.679,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160660,
+      "elapsedMs": 39.179,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160699,
+      "elapsedMs": 35.7,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160735,
+      "elapsedMs": 50.738,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160786,
+      "elapsedMs": 43.29,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160829,
+      "elapsedMs": 52.087,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160881,
+      "elapsedMs": 55.861,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160937,
+      "elapsedMs": 45.676,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260160983,
+      "elapsedMs": 44.296,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161028,
+      "elapsedMs": 72.081,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161100,
+      "elapsedMs": 53.172,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161153,
+      "elapsedMs": 103.304,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161256,
+      "elapsedMs": 67.796,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161324,
+      "elapsedMs": 49.331,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161374,
+      "elapsedMs": 61.504,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161435,
+      "elapsedMs": 62.99,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161499,
+      "elapsedMs": 60.045,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161559,
+      "elapsedMs": 45.674,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161605,
+      "elapsedMs": 56.902,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161662,
+      "elapsedMs": 42.901,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161705,
+      "elapsedMs": 52.951,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161758,
+      "elapsedMs": 46.577,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161805,
+      "elapsedMs": 48.818,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161854,
+      "elapsedMs": 46.97,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161901,
+      "elapsedMs": 58.77,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260161960,
+      "elapsedMs": 44.48,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260162005,
+      "elapsedMs": 47.456,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260162052,
+      "elapsedMs": 54.034,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260162106,
+      "elapsedMs": 61.342,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260162168,
+      "elapsedMs": 50.31,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece",
+      "at": 1792260162218,
+      "elapsedMs": 45.228,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162264,
+      "elapsedMs": 44.586,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162308,
+      "elapsedMs": 50.021,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162359,
+      "elapsedMs": 42.108,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162401,
+      "elapsedMs": 49.156,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162450,
+      "elapsedMs": 43.233,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162493,
+      "elapsedMs": 51.984,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162546,
+      "elapsedMs": 44.276,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162590,
+      "elapsedMs": 55.745,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162646,
+      "elapsedMs": 41.481,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162688,
+      "elapsedMs": 46.399,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162734,
+      "elapsedMs": 36.825,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162771,
+      "elapsedMs": 53.984,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162825,
+      "elapsedMs": 48.233,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162874,
+      "elapsedMs": 63.223,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162937,
+      "elapsedMs": 48.936,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260162986,
+      "elapsedMs": 55.021,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163041,
+      "elapsedMs": 77.345,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163119,
+      "elapsedMs": 89.581,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163208,
+      "elapsedMs": 61.361,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163270,
+      "elapsedMs": 51.406,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163321,
+      "elapsedMs": 46.452,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163368,
+      "elapsedMs": 56.358,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163424,
+      "elapsedMs": 34.886,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163459,
+      "elapsedMs": 40.989,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163500,
+      "elapsedMs": 44.987,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163546,
+      "elapsedMs": 40.033,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163586,
+      "elapsedMs": 44.663,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163630,
+      "elapsedMs": 39.426,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163670,
+      "elapsedMs": 62.55,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163733,
+      "elapsedMs": 49.756,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163783,
+      "elapsedMs": 51.965,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163835,
+      "elapsedMs": 44.583,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163879,
+      "elapsedMs": 40.033,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163920,
+      "elapsedMs": 44.269,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260163964,
+      "elapsedMs": 53.719,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164018,
+      "elapsedMs": 46.365,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164064,
+      "elapsedMs": 44.14,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164109,
+      "elapsedMs": 48.893,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164158,
+      "elapsedMs": 63.569,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164221,
+      "elapsedMs": 87.584,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164309,
+      "elapsedMs": 45.838,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164355,
+      "elapsedMs": 54.997,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164410,
+      "elapsedMs": 53,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164463,
+      "elapsedMs": 44.716,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164508,
+      "elapsedMs": 46.369,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164555,
+      "elapsedMs": 50.546,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164605,
+      "elapsedMs": 46.307,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164652,
+      "elapsedMs": 37.07,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164689,
+      "elapsedMs": 44.966,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164734,
+      "elapsedMs": 41.798,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164776,
+      "elapsedMs": 50.311,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164827,
+      "elapsedMs": 49.513,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164876,
+      "elapsedMs": 45.29,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164922,
+      "elapsedMs": 45.799,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260164968,
+      "elapsedMs": 46.553,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165014,
+      "elapsedMs": 43.427,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165058,
+      "elapsedMs": 50.291,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165108,
+      "elapsedMs": 48.706,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165157,
+      "elapsedMs": 55.985,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165213,
+      "elapsedMs": 64.268,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165278,
+      "elapsedMs": 56.758,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165335,
+      "elapsedMs": 39.884,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165375,
+      "elapsedMs": 46.865,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165422,
+      "elapsedMs": 44.551,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165466,
+      "elapsedMs": 52.195,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165519,
+      "elapsedMs": 43.459,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165562,
+      "elapsedMs": 42.635,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165605,
+      "elapsedMs": 48.126,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165653,
+      "elapsedMs": 43.419,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165697,
+      "elapsedMs": 55.524,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165752,
+      "elapsedMs": 42.5,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165795,
+      "elapsedMs": 45.222,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165840,
+      "elapsedMs": 44.329,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165885,
+      "elapsedMs": 54.641,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165940,
+      "elapsedMs": 49.884,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260165989,
+      "elapsedMs": 103.92,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166094,
+      "elapsedMs": 62.096,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166156,
+      "elapsedMs": 168.216,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166324,
+      "elapsedMs": 177.139,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166501,
+      "elapsedMs": 116.71,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166618,
+      "elapsedMs": 146.825,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166766,
+      "elapsedMs": 74.601,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166840,
+      "elapsedMs": 143.379,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260166984,
+      "elapsedMs": 100.796,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167085,
+      "elapsedMs": 141.775,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167237,
+      "elapsedMs": 211.84,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167449,
+      "elapsedMs": 124.343,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167573,
+      "elapsedMs": 143.128,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167716,
+      "elapsedMs": 102.709,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167819,
+      "elapsedMs": 85.247,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260167904,
+      "elapsedMs": 121.635,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168027,
+      "elapsedMs": 97.232,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168124,
+      "elapsedMs": 98.602,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168223,
+      "elapsedMs": 112.137,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168335,
+      "elapsedMs": 150.798,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168486,
+      "elapsedMs": 97.979,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168584,
+      "elapsedMs": 68.328,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168652,
+      "elapsedMs": 115.615,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168768,
+      "elapsedMs": 167.345,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168935,
+      "elapsedMs": 52.875,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260168988,
+      "elapsedMs": 79.468,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169068,
+      "elapsedMs": 86.301,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169154,
+      "elapsedMs": 116.976,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169271,
+      "elapsedMs": 88.863,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169360,
+      "elapsedMs": 73.003,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169433,
+      "elapsedMs": 61.065,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169494,
+      "elapsedMs": 89.029,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169583,
+      "elapsedMs": 74.99,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169659,
+      "elapsedMs": 64.585,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169723,
+      "elapsedMs": 73.06,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169796,
+      "elapsedMs": 50.516,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169847,
+      "elapsedMs": 50.508,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169898,
+      "elapsedMs": 81.008,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260169979,
+      "elapsedMs": 62.725,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170042,
+      "elapsedMs": 80.979,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170123,
+      "elapsedMs": 93.842,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170217,
+      "elapsedMs": 79.992,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170297,
+      "elapsedMs": 84.08,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170381,
+      "elapsedMs": 107.108,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170488,
+      "elapsedMs": 60.325,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170548,
+      "elapsedMs": 61.153,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170610,
+      "elapsedMs": 79.817,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170690,
+      "elapsedMs": 78.386,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170768,
+      "elapsedMs": 86.892,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170855,
+      "elapsedMs": 84.371,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260170939,
+      "elapsedMs": 84.522,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171024,
+      "elapsedMs": 66.406,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171091,
+      "elapsedMs": 78.925,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171170,
+      "elapsedMs": 96.702,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171266,
+      "elapsedMs": 101.718,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171368,
+      "elapsedMs": 46.536,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171415,
+      "elapsedMs": 66.659,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171481,
+      "elapsedMs": 66.546,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171548,
+      "elapsedMs": 130.099,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171678,
+      "elapsedMs": 63.342,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171742,
+      "elapsedMs": 58.847,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171801,
+      "elapsedMs": 74.89,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171876,
+      "elapsedMs": 96.436,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260171972,
+      "elapsedMs": 57.113,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172031,
+      "elapsedMs": 71.247,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172105,
+      "elapsedMs": 57.348,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172162,
+      "elapsedMs": 95.46,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172258,
+      "elapsedMs": 133.278,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172391,
+      "elapsedMs": 96.79,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172488,
+      "elapsedMs": 78.129,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172566,
+      "elapsedMs": 61.594,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172628,
+      "elapsedMs": 47.405,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172675,
+      "elapsedMs": 96.137,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172772,
+      "elapsedMs": 55.871,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172828,
+      "elapsedMs": 78.357,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172906,
+      "elapsedMs": 46.034,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "piece-remainder",
+      "at": 1792260172954,
+      "elapsedMs": 80.476,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 3,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260173034,
+      "elapsedMs": 224.03,
+      "status": 200,
+      "rowsRead": 350,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260173259,
+      "elapsedMs": 97.879,
+      "status": 200,
+      "rowsRead": 12,
+      "rowsWritten": 2,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177307,
+      "elapsedMs": 43.577,
+      "status": 409,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177350,
+      "elapsedMs": 41.993,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177392,
+      "elapsedMs": 46.821,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177439,
+      "elapsedMs": 33.937,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177474,
+      "elapsedMs": 32.504,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177506,
+      "elapsedMs": 36.793,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177543,
+      "elapsedMs": 32.543,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177576,
+      "elapsedMs": 33.222,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177609,
+      "elapsedMs": 34.975,
+      "status": 200,
+      "rowsRead": 138,
+      "rowsWritten": 32,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177644,
+      "elapsedMs": 38.736,
+      "status": 200,
+      "rowsRead": 34,
+      "rowsWritten": 7,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177683,
+      "elapsedMs": 35.324,
+      "status": 200,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177718,
+      "elapsedMs": 47.795,
+      "status": 409,
+      "rowsRead": 17,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177781,
+      "elapsedMs": 34.142,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 4,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260177816,
+      "elapsedMs": 49.745,
+      "status": 200,
+      "rowsRead": 14,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260181575,
+      "elapsedMs": 37.805,
+      "status": 413,
+      "rowsRead": 3,
+      "rowsWritten": 0,
+      "queries": 1,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260181613,
+      "elapsedMs": 53.945,
+      "status": 200,
+      "rowsRead": 6,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260185173,
+      "elapsedMs": 43.39,
+      "status": 200,
+      "rowsRead": 11,
+      "rowsWritten": 1,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260188954,
+      "elapsedMs": 29.463,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260188984,
+      "elapsedMs": 46.125,
+      "status": 401,
+      "rowsRead": 2,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260189030,
+      "elapsedMs": 22.3,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    },
+    {
+      "case": "check",
+      "at": 1792260193292,
+      "elapsedMs": 49.112,
+      "status": 503,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null
+    }
+  ],
+  "windows": [
+    {
+      "name": "piece",
+      "from": "2026-10-17T18:02:36.909Z",
+      "to": "2026-10-17T18:02:53.034Z",
+      "clientCount": 100
+    }
+  ],
+  "metrics": [
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 2
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 22
+    },
+    {
+      "duration": 4
+    },
+    {
+      "duration": 11
+    },
+    {
+      "duration": 2
+    },
+    {
+      "duration": 44
+    },
+    {
+      "duration": 8
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 2
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 6
+    },
+    {
+      "duration": 10
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 6
+    },
+    {
+      "duration": 0
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    },
+    {
+      "duration": 1
+    }
+  ]
+}

@@ -149,8 +149,9 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 11A, 11B, 12.
 - Add validated reads/saves with stored revision and atomic compare-and-swap. Save content and private progress consistently, enforce the draft-size cap and ownership checks, and protect the permanent milestone against stale updates.
-- Integrate the [measured bounded-save repository](../specs/2026-10-16-free-owner-saves/protocol.md) with the permanent 11B progress contract and portfolio columns. Add staging tables through a production migration and strict product action schemas. Preserve changed-field saves, explicit recovery and bounded cleanup; do not expose the failed full-body save experiment.
-- [ ] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address.
+- Integrate the [measured bounded-save repository](../specs/2026-10-16-free-owner-saves/protocol.md) with the permanent 11B progress contract and portfolio columns. Extend the existing 11B staging tables through a forward migration and strict product action schemas. Preserve changed-field saves, explicit recovery and bounded cleanup; do not expose the failed full-body save experiment.
+- October 18, 2026: [implementation and verification evidence](../specs/2026-10-17-revision-aware-drafts/results.md) and the [production protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md) record consistent reads, setup/content contexts, atomic content/progress CAS, staged legacy validation and explicit recovery. All 22 provider cases meet the warm p95 CPU target, and temporary resources are removed. The owner approved Phase 13 completion on October 18, 2026. Autosave and editor/onboarding orchestration remain in later phases.
+- [x] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address.
 
 ### Phase 14. Add shared autosave and local recovery
 

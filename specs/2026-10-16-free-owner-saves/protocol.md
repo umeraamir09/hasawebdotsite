@@ -1,5 +1,7 @@
 # Bounded owner saves
 
+Historical October 16 measurement contract. The [Phase 13 production protocol](../2026-10-17-revision-aware-drafts/protocol.md) now specifies the shipped portfolio/progress mapping, tracked staging migration extensions, reads, contexts and bounded legacy validation. The fixture progress shape below remains isolated measurement data.
+
 The owner approved implementation and isolated testing on October 16, 2026, then explicitly approved a 2,048 UTF-8 byte limit for each URL and 254 UTF-8 bytes for each email address. Free text and the complete draft retain the 1,048,576-byte ceiling. This changes version 1 validation for unusually long destinations. Existing stored values beyond those limits require an explicit correction during later integration, never truncation or silent replacement.
 
 ## Requests and storage

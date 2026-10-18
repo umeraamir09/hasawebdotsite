@@ -1,0 +1,16 @@
+
+ ⛅️ wrangler 4.151.0 (update available 4.151.1)
+───────────────────────────────────────────────
+Total Upload: 8889.85 KiB / gzip: 1775.77 KiB
+Worker Startup Time: 48 ms
+Your Worker has access to the following bindings:
+Binding                                                               Resource                  
+env.OWNER_API (hasaweb-owner-runtime-jobs#RuntimeOwnerApi)            Worker                    
+env.JOBS (hasaweb-owner-runtime-jobs)                                 Worker                    
+env.RUNTIME_ORIGIN ("https://hasaweb-owner-runtime-web.ume...")       Environment Variable      
+env.RUNTIME_ENABLED ("true")                                          Environment Variable      
+
+Uploaded hasaweb-owner-runtime-web (23.03 sec)
+Deployed hasaweb-owner-runtime-web triggers (2.32 sec)
+  https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev
+Current Version ID: d9a8a1c9-c10a-4a62-9c53-111e53416a9e
