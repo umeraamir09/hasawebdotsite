@@ -9,3 +9,5 @@ Phase 12 owns sample portfolio provisioning; Phase 17 owns the complete editor. 
 Configure an exact app origin and provider secrets through Worker bindings, with no production fallback secrets. Only local loopback HTTP may use development cookie names. Production requires the HTTPS apex and `__Host-` cookies. No deployments or provider app changes are required for this local implementation. Record live-provider verification limits.
 
 Repository AGENTS.md branch conventions override the older roadmap branch example. Leave the phase checkbox pending until the owner approves it after implementation.
+
+October 19, 2026 callback update: [Phase 15](../2026-10-19-conflict-session-recovery/results.md) adds fixed `/auth/recovery` and `/auth/recovery/error` destinations for same-tab draft recovery. Normal sign-in remains `/editor`; the original Phase 11 result is historical.

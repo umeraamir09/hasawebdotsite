@@ -1,6 +1,6 @@
 # MVP implementation roadmap
 
-Build the full MVP in the written order below. Existing phase IDs remain stable; lettered phases are explicit additions. Phases 01–14, including 11A–11E, are checked. The owner approved Phase 14 implementation after reviewing its isolated fixture and recorded verification. Each phase is a small, reviewable increment with a concrete completion check; split it further if it cannot be reviewed as one focused change. Dated summaries retain historical test counts and scope; consult [current implementation and decision changes](implementation-status.md) and later production protocols before reusing older experiment instructions.
+Build the full MVP in the written order below. Existing phase IDs remain stable; lettered phases are explicit additions. Phases 01–15, including 11A–11E, are checked. The owner approved Phase 14 implementation after reviewing its isolated fixture and recorded verification, and explicitly approved Phase 15 completion on October 19, 2026. Each phase is a small, reviewable increment with a concrete completion check; split it further if it cannot be reviewed as one focused change. Dated summaries retain historical test counts and scope; consult [current implementation and decision changes](implementation-status.md) and later production protocols before reusing older experiment instructions.
 
 ## Sources and scope
 
@@ -170,8 +170,9 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 - Dependencies: 14 and existing auth recovery. Integrate the shared controller's typed blocked states, owner/portfolio-scoped journals and expected-owner precondition; do not add a separate mutation queue. Known revision/setup-closure blocks are durable; ordinary Retry must not resolve them. Add explicit reviewed resolution before mounting a fresh editable scope.
 - Offer Load newer version or Keep my edits for review for setup/editor conflicts. Keep `owner_changed`, `setup_closed`, unknown staging and revision conflicts distinct; a missing journal cannot be reconstructed from pending metadata. Offer explicit discard/rebuild for an unverifiable lost begin receipt, and block session transfer of uncertain commands until their receipt hash is verified. Preserve transfer/discard intent checkpoints across lost replies and require exact transfer sequences. Legacy validation also requires its matching journal; preserve correction text bound to the issue/base revision and explicitly review input from other revisions. Reauthenticate without discarding recoverable input and return to the controlled pending flow. Prevent a stale setup tab from resetting a later editor-entry milestone.
+- Use the [Phase 15 protocol/results](../specs/2026-10-19-conflict-session-recovery/results.md) and shared coordinator for initially unselected three-way review, confirmed replacement and retained review-only copies. Recheck revision/milestone, including after reload of a prepared replacement, before applying selected values through a fresh bounded-save scope. Reauthentication uses fixed same-tab `/auth/recovery` and `/auth/recovery/error` destinations with an identifier-only tab continuation. Check uncached owner/portfolio identity before opening recovery. This phase supplies shared controls and isolated fixtures; `/editor` stays the welcome shell, full editor remains Phase 17 and required guide routing remains Phase 42E. The owner approved Phase 15 implementation completion on October 19, 2026.
 - Phase 13 conflicts return error codes without a newer draft. Fetch/reconcile separately, distinguish revision/attempt conflicts from `setup_closed`, and preserve canonical/staged/local input until the owner chooses the appropriate recovery. A successful staged command alone does not mean Saved.
-- [ ] Complete when two tabs/devices cannot silently overwrite content/progress, reauthentication saves the preserved draft, and post-handoff setup tabs cannot reinitialize the portfolio.
+- [x] Complete when two tabs/devices cannot silently overwrite content/progress, reauthentication saves the preserved draft, and post-handoff setup tabs cannot reinitialize the portfolio.
 
 ## Shared editor and publication foundations
 
@@ -187,7 +188,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 17. Build the editor and live preview
 
 - Dependencies: 13–16.
-- Integrate the Phase 14 shared controller/status/recovery controls into the content/customization panel, component selection, and live preview. Render raw unfinished field input separately from the valid working draft and preserve stable entry selectors. Support desktop/mobile editing and viewport-specific iframe preview without server-rendering drafts. The editor must open the existing prepared draft without applying initialization again.
+- Integrate the Phase 14 controller and Phase 15 shared review/recovery coordinator into the content/customization panel, component selection, and live preview. Render raw unfinished field input separately from the valid working draft and preserve stable entry selectors. Follow coordinator controller replacements, reset field state on `scopeKey` changes, disable fields while suspended or reviewing and retain review-only copies without blocking resolved work. Reuse the fixed same-tab recovery callback; do not add another save queue. Support desktop/mobile editing and viewport-specific iframe preview without server-rendering drafts. The editor must open the existing prepared draft without applying initialization again.
 - [ ] Complete when selecting a component opens its controls and edits appear immediately at either preview width. Private preview routes/messages stay owner-only. Use handoff fixtures until setup routing is activated in 42E.
 
 ### Phase 18. Implement private upload storage
@@ -223,7 +224,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 22A. Add setup-aware account entry and handoff services
 
 - Dependencies: 11B, 12–22 and completed Phase 11's auth boundaries.
-- Use `flushValid()`'s confirmed revision and local-only flag for authoritative required-setup validation. Preserve optional local recovery without converting old setup batches or replaying progress. Implement controlled post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in`, direct editor navigation, and recovery. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Setup saves/uploads/private previews must remain accessible without an editor milestone.
+- Use `flushValid()`'s confirmed revision and local-only flag for authoritative required-setup validation. Preserve optional local recovery without converting old setup batches or replaying progress. Implement controlled normal post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in` and direct editor navigation while preserving Phase 15's fixed recovery callback/error pair. Integrate its shared controls and explicitly selected post-handoff content recovery without converting setup attempts. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Setup saves/uploads/private previews must remain accessible without an editor milestone.
 - [ ] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
 
 ### Phase 23. Build publication validation and checklist
@@ -379,7 +380,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 
 ### Phase 42E. Add Review, first editor handoff, and route activation
 
-- Reuse the shared autosave controller and expected-owner precondition. Flush valid input, validate its confirmed revision and preserve optional local-only input for editor field recovery. Never convert a prepared setup attempt or replay old progress after handoff.
+- Reuse the shared autosave controller and expected-owner precondition. Flush valid input, validate its confirmed revision and preserve optional local-only input for editor field recovery. Reuse Phase 15 selected review and fixed same-tab recovery; apply applicable setup content only in a fresh content scope after handoff. Never convert a prepared setup attempt or replay old progress after handoff.
 
 - Dependencies: 16–17, 22A–26, 35, 40–42, 42A–42D.
 - Render the actual saved private portfolio with desktop/mobile switching, Back, incomplete statuses, and Open editor. Route all remaining-step skips here. Flush valid saves and reuse the authoritative idempotent handoff service; retain applicable local optional recovery. Activate the complete controlled post-auth entry resolver only now.
@@ -388,7 +389,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 ### Phase 42F. Verify onboarding recovery and the full new-user journey
 
 - Dependencies: 42E and the actual publication/GitHub paths through 42.
-- Run ON-01 through ON-19 with both signup providers, completed/skipped/partial optional content, two tabs/devices, another owner, invalid local input, failures, crop/import retry, authorization return/removal, address collisions, and permanent handoff. Compare saved values with Review/editor and published output.
+- Verify the Phase 15 callback continuation through the actual guide/editor adapters, including wrong accounts, cancelled/failed consent, reload and post-handoff selected recovery. Run ON-01 through ON-19 with both signup providers, completed/skipped/partial optional content, two tabs/devices, another owner, invalid local input, failures, crop/import retry, authorization return/removal, address collisions, and permanent handoff. Compare saved values with Review/editor and published output.
 - [ ] Complete when recorded automated browser/viewport/provider-fixture checks pass and no new work is marked complete without owner approval. Phase 53 still performs the full cross-feature acceptance review, and Phase 54 retains target-user timing/launch checks.
 
 ## Message delivery
@@ -428,7 +429,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 
 ### Phase 49. Add permanent account deletion
 
-- Dispose the deleted owner's controllers and await their serialized local writes before removing its owner/portfolio IndexedDB range. Add owner-scoped invalidation/tombstones and cross-tab coordination so late writes cannot recreate deleted-account recovery; Phase 14 does not implement that lifecycle service. Preserve other accounts' recovery and avoid clearing the whole browser database.
+- Dispose the deleted owner's controllers and await their serialized local writes before removing its owner/portfolio IndexedDB range. Add owner-scoped invalidation/tombstones and cross-tab coordination so late writes cannot recreate deleted-account recovery; Phase 14 does not implement that lifecycle service. Include retained review copies, prepared replacements and matching tab continuations in account-scoped cleanup. Recovery callbacks must still check uncached persisted identity before local reads. Preserve other accounts' recovery/continuations and avoid clearing the whole browser database.
 
 - Dependencies: 10, 11B, 18, 24–26, 41, 48 and retryable cleanup.
 - Explain loss and require confirmation. Immediately deny public/owner access, invalidate sessions, revoke grants, and retry removal of draft content, private setup/progress/milestone data, uploads, snapshots, local recovery, and account records. An unclaimed candidate leaves no reservation.
@@ -447,20 +448,20 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 - Dependencies: shared publication/lifecycle/GitHub/email capabilities and setup persistence from 11B.
 - Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, audited operator lookup, bounded garbage collection, and audit cleanup. Protect assets referenced by unfinished setup/partial drafts and delete abandoned unreachable uploads under the existing GC policy. Keep operator controls out of the product UI.
 - Add dormant-owner staging collection beyond Phase 13's explicit owner cleanup. Expiry blocks writes but does not delete rows. Bound piece deletion, protect active attempts and unreconciled commit receipts, and observe D1 size before the recorded 350 MB alert threshold. Preserve global GitHub cleanup state until remote revocation is resolved.
-- Use the [Phase 14 client costs](../specs/2026-10-18-shared-autosave-recovery/quotas.md) when budgeting staging/cleanup. Repeated maximum-field replacements and dense collection edits exceed the illustrative Free daily model; collection must remain bounded rather than assuming ordinary editing costs.
+- Include the [Phase 15 recovery costs](../specs/2026-10-19-conflict-session-recovery/quotas.md) and use the [Phase 14 client costs](../specs/2026-10-18-shared-autosave-recovery/quotas.md) when budgeting staging/cleanup. Repeated maximum-field replacements and dense collection edits exceed the illustrative Free daily model; collection must remain bounded rather than assuming ordinary editing costs.
 - [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup cannot delete active setup assets or retain deleted-account setup data. No source-image retention is introduced.
 
 ### Phase 52. Prepare production delivery and recovery
 
 - Dependencies: all feature/lifecycle increments, including 11A–11D, 22A, 42A–42F and the measured publication/withdrawal revisions.
-- Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/candidate migrations, activity OAuth returns/revocation cleanup, both signup callbacks, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
+- Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/candidate migrations, activity OAuth returns/revocation cleanup, both provider callbacks, fixed same-tab recovery success/error destinations, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
 - Recheck the Phase 14 CPU/location boundary and current autosave request/D1 model before owner-flow activation. Preserve failed-run evidence, measure intended deployment conditions and establish an agreed compatible response to budget failures; a historical passing location cannot authorize rollout by itself.
 - [ ] Complete when CI and release config cover the architecture's required checks, the full guide is available before required routing is activated, and rollback preserves drafts/milestones. Re-verify provider limits before launch; no application rewrite is needed for the approved upgrade path.
 
 ### Phase 53. Run the complete acceptance review
 
 - Dependencies: all preceding implementation and operational phases.
-- Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Cover all optional completion paths, publication/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
+- Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Extend Phase 15's Chromium fixture evidence to the complete confirmed browser matrix and real guide/editor integration, including continuation replay, structural review, unknown staging and setup closure. Cover all optional completion paths, publication/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
 - [ ] Complete when checks pass with recorded evidence across the confirmed browser/viewport matrix, including keyboard/focus, contrast across all twelve preset palettes, crop dialogs, recovery, private consent, reduced motion, both decoration loops and pause/play independent of Face Reveal, flashing limits, and deferred-scope exclusions. Do not add real-device/assistive-technology verification requirements beyond the confirmed scope.
 
 ### Phase 54. Validate the journey and release the MVP

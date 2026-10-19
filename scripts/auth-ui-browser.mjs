@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { createHmac } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -14,6 +15,17 @@ export async function checkAuthUi({
   fixturePort,
   evidenceDirectory = join(root, "specs/2026-10-15-sign-in"),
 }) {
+  const require = createRequire(import.meta.url);
+  const esbuild = createRequire(require.resolve("wrangler"))("esbuild");
+  const helper = await esbuild.build({
+    entryPoints: [join(root, "apps/web/integration/auth-recovery-fixture.ts")],
+    bundle: true,
+    platform: "browser",
+    format: "esm",
+    write: false,
+    define: { "process.env.NODE_ENV": '"production"' },
+  });
+  const helperCode = helper.outputFiles[0].text;
   const port = 8812;
   const uiState = join(root, ".wrangler/auth-ui/state");
   await rm(uiState, { recursive: true, force: true });
@@ -274,18 +286,34 @@ export async function checkAuthUi({
     async function intercept(params) {
       const { requestId, request } = params;
       const url = new URL(request.url);
-      requests.push({
+      const measurement = {
         host: url.hostname,
         path: url.pathname,
         method: request.method,
-      });
+      };
+      requests.push(measurement);
       if (url.hostname !== "hasaweb.site") {
+        if (providerMode === "hold")
+          return fulfill(
+            requestId,
+            200,
+            [{ name: "Content-Type", value: "text/html" }],
+            "<!doctype html><title>Provider consent fixture</title><p>Consent fixture</p>",
+          );
         const provider = url.hostname === "github.com" ? "github" : "google";
         const query = new URLSearchParams({
           state: url.searchParams.get("state"),
         });
         if (providerMode === "cancel") query.set("error", "access_denied");
-        else query.set("code", "explicit");
+        else
+          query.set(
+            "code",
+            providerMode === "wrong"
+              ? "other"
+              : providerMode === "failure"
+                ? "unknown-fixture"
+                : "explicit",
+          );
         return fulfill(requestId, 302, [
           {
             name: "Location",
@@ -293,6 +321,13 @@ export async function checkAuthUi({
           },
         ]);
       }
+      if (url.pathname === "/__recovery-fixture.js")
+        return fulfill(
+          requestId,
+          200,
+          [{ name: "Content-Type", value: "text/javascript" }],
+          helperCode,
+        );
       if (url.pathname === "/api/auth/sign-in/social") {
         signInCalls++;
         if (holdSignIn)
@@ -312,7 +347,8 @@ export async function checkAuthUi({
       const api =
         url.pathname.startsWith("/api/auth/") ||
         url.pathname === "/api/owner" ||
-        url.pathname.startsWith("/api/owner/");
+        url.pathname.startsWith("/api/owner/") ||
+        url.pathname.startsWith("/__fixture/");
       const headers = new Headers(request.headers);
       // CDP's paused-request headers may omit Cookie. Read Chromium's scoped
       // jar rather than manufacturing cookies or accepting a caller's user ID.
@@ -336,6 +372,13 @@ export async function checkAuthUi({
           redirect: "manual",
         },
       );
+      if (api)
+        Object.assign(measurement, {
+          status: response.status,
+          reads: Number(response.headers.get("X-Fixture-Rows-Read")),
+          writes: Number(response.headers.get("X-Fixture-Rows-Written")),
+          queries: Number(response.headers.get("X-Fixture-Queries")),
+        });
       if (
         url.pathname === "/api/owner/portfolio" &&
         loseInitializationResponse
@@ -386,18 +429,23 @@ export async function checkAuthUi({
       if (message.error) item.reject(new Error(JSON.stringify(message.error)));
       else item.resolve(message.result);
     });
-    const evaluate = async (expression) =>
-      (
-        await command("Runtime.evaluate", {
-          expression,
-          returnByValue: true,
-          awaitPromise: true,
-        })
-      ).result.value;
+    const evaluate = async (expression) => {
+      const response = await command("Runtime.evaluate", {
+        expression,
+        returnByValue: true,
+        awaitPromise: true,
+      });
+      if (response.exceptionDetails)
+        throw new Error(
+          response.exceptionDetails.exception?.description ??
+            response.exceptionDetails.text,
+        );
+      return response.result.value;
+    };
     async function until(expression) {
       for (let i = 0; i < 150; i++) {
         if (interceptError) throw interceptError;
-        if (await evaluate(expression)) return;
+        if (await evaluate(expression).catch(() => false)) return;
         await setTimeout(100);
       }
       const state = await evaluate(
@@ -576,6 +624,193 @@ export async function checkAuthUi({
     );
     assert.deepEqual(googleOwner, githubOwner);
     checks.push("sign-out and Google reauthentication reopen the same account");
+    for (const provider of ["github", "google"]) {
+      await evaluate("import('/__recovery-fixture.js')");
+      await evaluate(
+        `void window.recoveryFixture.prepare('${provider}').catch(e => { window.recoveryFailure = e.message; })`,
+      );
+      await until(
+        "location.pathname === '/auth/recovery' && Array.from(document.querySelectorAll('button')).some(b => b.textContent === 'Continue preserved edits' && !b.disabled)",
+      );
+      const continuation = await evaluate(
+        "JSON.parse(sessionStorage.getItem('hasaweb-draft-auth-v1'))",
+      );
+      assert.deepEqual(
+        Object.keys(continuation).sort(),
+        [
+          "context",
+          "flow",
+          "ownerId",
+          "portfolioId",
+          "recordId",
+          "version",
+        ].sort(),
+      );
+      assert.equal(continuation.ownerId, githubOwner.user.id);
+      await evaluate(
+        "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Continue preserved edits').click()",
+      );
+      await until(
+        `document.querySelector('[role=status]')?.textContent === 'Unsaved input' && document.body.textContent.includes('Unfinished input')`,
+      );
+      const saved = await evaluate(
+        `fetch('/api/owner/draft',{headers:{'X-Expected-Owner-Id':'${githubOwner.user.id}'}}).then(r=>r.json())`,
+      );
+      assert.equal(saved.draft.profile.name, `Recovered with ${provider}`);
+      await screenshot(`recovery-${provider}`);
+      const continued = await evaluate(
+        "JSON.parse(sessionStorage.getItem('hasaweb-draft-auth-v1'))",
+      );
+      assert.equal(continued.ownerId, continuation.ownerId);
+      assert.notEqual(continued.recordId, continuation.recordId);
+      const beforeReplay = requests.filter((request) =>
+        request.path.endsWith("/patch"),
+      ).length;
+      await command("Page.reload");
+      await until(
+        "Array.from(document.querySelectorAll('button')).some(b => b.textContent === 'Continue preserved edits' && !b.disabled)",
+      );
+      assert.equal(
+        requests.filter((request) => request.path.endsWith("/patch")).length,
+        beforeReplay,
+      );
+      assert.deepEqual(
+        await evaluate(
+          "JSON.parse(sessionStorage.getItem('hasaweb-draft-auth-v1'))",
+        ),
+        continued,
+      );
+      await navigate("/editor");
+      await until(
+        "document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+      );
+    }
+    checks.push(
+      "GitHub and Google same-tab expired-session recovery explicitly confirm preserved saves and keep raw input; callback replay is safe",
+    );
+    await evaluate("import('/__recovery-fixture.js')");
+    await evaluate(
+      "void window.recoveryFixture.prepareReview().catch(e => { window.recoveryFailure = e.message; })",
+    );
+    await until(
+      "location.pathname === '/auth/recovery' && Array.from(document.querySelectorAll('button')).some(b => b.textContent === 'Reopen review' && !b.disabled)",
+    );
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Reopen review').click()",
+    );
+    await until(
+      "document.querySelectorAll('input[type=checkbox]:checked').length === 1",
+    );
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Apply selected changes').click()",
+    );
+    await until(
+      "document.querySelector('[role=status]')?.textContent === 'Unsaved input'",
+    );
+    const reviewedSave = await evaluate(
+      `fetch('/api/owner/draft',{headers:{'X-Expected-Owner-Id':'${githubOwner.user.id}'}}).then(r=>r.json())`,
+    );
+    assert.equal(
+      reviewedSave.draft.profile.name,
+      "Preserved review after auth",
+    );
+    assert.equal(
+      reviewedSave.draft.profile.bio,
+      "Newer content before review sign-in",
+    );
+    checks.push(
+      "expiry during conflict review preserves selected decisions through sign-in and saves against the newer draft",
+    );
+    await navigate("/editor");
+    await until(
+      "document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+    );
+    await evaluate("import('/__recovery-fixture.js')");
+    providerMode = "cancel";
+    await evaluate(
+      "void window.recoveryFixture.prepare('github').catch(e => { window.recoveryFailure = e.message; })",
+    );
+    await until(
+      "location.pathname === '/auth/recovery/error' && document.body.textContent.includes('cancelled')",
+    );
+    const interruptedContinuation = await evaluate(
+      "sessionStorage.getItem('hasaweb-draft-auth-v1')",
+    );
+    assert.ok(interruptedContinuation);
+    providerMode = "hold";
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Sign in with GitHub').click()",
+    );
+    await until("location.hostname === 'github.com'");
+    const history = await command("Page.getNavigationHistory");
+    await command("Page.navigateToHistoryEntry", {
+      entryId: history.entries[history.currentIndex - 1].id,
+    });
+    await until(
+      "location.pathname === '/auth/recovery/error' && Array.from(document.querySelectorAll('button')).some(b => b.textContent === 'Sign in with GitHub' && !b.disabled)",
+    );
+    assert.equal(
+      await evaluate("sessionStorage.getItem('hasaweb-draft-auth-v1')"),
+      interruptedContinuation,
+    );
+    checks.push(
+      "Back from provider consent preserves tab continuation and re-enables recovery sign-in",
+    );
+    providerMode = "failure";
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Sign in with Google').click()",
+    );
+    await until(
+      `location.pathname === '/auth/recovery/error' && document.body.textContent.includes("Sign-in didn't finish")`,
+    );
+    assert.equal(
+      await evaluate("sessionStorage.getItem('hasaweb-draft-auth-v1')"),
+      interruptedContinuation,
+    );
+    providerMode = "wrong";
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Sign in with GitHub').click()",
+    );
+    await until(
+      "location.pathname === '/auth/recovery' && document.body.textContent.includes('different account or portfolio')",
+    );
+    assert.equal(
+      await evaluate("sessionStorage.getItem('hasaweb-draft-auth-v1')"),
+      interruptedContinuation,
+    );
+    await command("Page.reload");
+    await until(
+      "document.body.textContent.includes('different account or portfolio')",
+    );
+    providerMode = "success";
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Sign in with GitHub').click()",
+    );
+    await until(
+      "Array.from(document.querySelectorAll('button')).some(b => b.textContent === 'Continue preserved edits' && !b.disabled)",
+    );
+    await evaluate(
+      "Array.from(document.querySelectorAll('button')).find(b => b.textContent === 'Continue preserved edits').click()",
+    );
+    await until(
+      "document.querySelector('[role=status]')?.textContent === 'Unsaved input'",
+    );
+    checks.push(
+      "recovery cancellation, token failure, wrong account and reload preserve the continuation until original-account recovery succeeds",
+    );
+    await evaluate("sessionStorage.removeItem('hasaweb-draft-auth-v1')");
+    await command("Page.reload");
+    await until(
+      "document.body.textContent.includes('No recovery continuation')",
+    );
+    checks.push(
+      "missing continuation falls back to ordinary account entry without provisioning",
+    );
+    await navigate("/editor");
+    await until(
+      "document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+    );
+
     await evaluate("document.querySelector('button').click()");
     await until("location.pathname === '/sign-in'");
     await navigate("/editor");
@@ -596,6 +831,7 @@ export async function checkAuthUi({
       browser: (await command("Browser.getVersion")).product,
       checks,
       desktop,
+      requests,
       exceptions,
     };
   } finally {

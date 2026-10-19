@@ -1,0 +1,6 @@
+{
+  "passed": false,
+  "stage": "first recovery fixture preparation",
+  "cause": "Earlier auth regressions leave the shared explicit owner with an unvalidated oversized email. Normal draft GET correctly returned validation_required. The helper now performs explicit bounded validation/correction before starting the independent expiry scenario.",
+  "providerHandlerGroupsPassed": 30
+}

@@ -32,15 +32,31 @@ const messages: Record<string, string> = {
     "This draft version cannot be edited. Download the original for recovery.",
 };
 
-export function DraftStatus({ controller }: { controller: DraftController }) {
+export function DraftStatus({
+  controller,
+  managedRecovery = false,
+}: {
+  controller: DraftController;
+  managedRecovery?: boolean;
+}) {
   // Reset confirmations and correction text when a flow/account replaces its
   // controller. These controls must never carry input into a different scope.
   return (
-    <DraftStatusControls key={controller.scopeKey} controller={controller} />
+    <DraftStatusControls
+      key={controller.scopeKey}
+      controller={controller}
+      managedRecovery={managedRecovery}
+    />
   );
 }
 
-function DraftStatusControls({ controller }: { controller: DraftController }) {
+function DraftStatusControls({
+  controller,
+  managedRecovery,
+}: {
+  controller: DraftController;
+  managedRecovery: boolean;
+}) {
   const state = useStore(controller.store);
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -116,42 +132,46 @@ function DraftStatusControls({ controller }: { controller: DraftController }) {
           available. It is not saved across devices.
         </p>
       )}
-      {(state.status === "failed" || state.batch || state.discardJournal) && (
-        <button
-          className="ghost-button"
-          type="button"
-          disabled={busy}
-          onClick={() => void action(() => controller.retry())}
-        >
-          Retry
-        </button>
-      )}
-      {state.recoveries.map((entry) => (
-        <div className="draft-recovery" key={entry.id}>
-          <p>
-            Unfinished {entry.context === "setup" ? "setup" : "editor"} input is
-            available from this browser.
-          </p>
+      {!state.suspended &&
+        (state.status === "failed" || state.batch || state.discardJournal) && (
           <button
             className="ghost-button"
             type="button"
             disabled={busy}
-            onClick={() => void action(() => controller.restore(entry.id))}
+            onClick={() => void action(() => controller.retry())}
           >
-            Restore input
+            Retry
           </button>
-          <button
-            className="ghost-button"
-            type="button"
-            disabled={busy}
-            onClick={() =>
-              void action(() => controller.discardRecovery(entry.id))
-            }
-          >
-            Discard local recovery
-          </button>
-        </div>
-      ))}
+        )}
+      {!managedRecovery &&
+        state.recoveries
+          .filter((entry) => !entry.reviewOnly)
+          .map((entry) => (
+            <div className="draft-recovery" key={entry.id}>
+              <p>
+                Unfinished {entry.context === "setup" ? "setup" : "editor"}{" "}
+                input is available from this browser.
+              </p>
+              <button
+                className="ghost-button"
+                type="button"
+                disabled={busy}
+                onClick={() => void action(() => controller.restore(entry.id))}
+              >
+                Restore input
+              </button>
+              <button
+                className="ghost-button"
+                type="button"
+                disabled={busy}
+                onClick={() =>
+                  void action(() => controller.discardRecovery(entry.id))
+                }
+              >
+                Discard local recovery
+              </button>
+            </div>
+          ))}
       {(state.pending ||
         state.batch?.mode === "staged" ||
         state.validationJournal ||

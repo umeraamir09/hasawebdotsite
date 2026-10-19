@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "verifiedAt": "2026-10-19T03:02:57.029611+00:00",
+  "command": "pnpm test:runtime",
+  "runtime": "local workerd",
+  "receipt": "PASS: three Workers, D1, three R2 buckets, services, Queue, Workflow, and restart persistence",
+  "productionDeployment": false
+}

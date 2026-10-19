@@ -1,0 +1,6 @@
+{
+  "passed": false,
+  "stage": "first explicit continuation click",
+  "cause": "The browser wait matched explanatory text before the Continue button mounted. The CDP evaluator previously swallowed the resulting script exception. The harness now waits for the enabled control and fails script exceptions explicitly.",
+  "handlerGroupsPassed": 30
+}
