@@ -19,7 +19,8 @@ export type LocalCode =
   | SaveErrorCode
   | "network"
   | "recovery_required"
-  | "journal_missing";
+  | "journal_missing"
+  | "review_changed";
 export class DraftFailure extends Error {
   constructor(
     readonly code: LocalCode,
@@ -82,6 +83,10 @@ export type RecoveryRecord = {
   validationJournal: ValidationJournal | null;
   discardJournal?: DiscardJournal | null;
   blocked?: "revision_conflict" | "setup_closed";
+  // Optional extension keeps Phase 14 version-1 records readable.
+  review?: ReviewCheckpoint;
+  reviewOnly?: boolean;
+  reviewBase?: DraftReadResult;
 };
 export type ValidationJournal = {
   baseRevision: number;
@@ -105,6 +110,7 @@ export interface Coordinator {
   close(): void;
 }
 export type DraftState = {
+  suspended: boolean;
   confirmed: DraftReadResult | null;
   working: DraftDoc | null;
   progress: SetupProgress | null;
@@ -120,4 +126,40 @@ export type DraftState = {
   validation: LegacyValidationResult | null;
   discardJournal: DiscardJournal | null;
   validationJournal: ValidationJournal | null;
+};
+
+export type ReviewItem = {
+  id: string;
+  path: FieldPath;
+  kind:
+    | "value"
+    | "add"
+    | "remove"
+    | "order"
+    | "structure"
+    | "missing"
+    | "progress";
+  base: unknown;
+  local: unknown;
+  current: unknown;
+  conflicting: boolean;
+  selectable: boolean;
+};
+export type SelectedResolution = { itemIds: string[] };
+export type ReviewCheckpoint = {
+  version: 1;
+  phase: "review" | "prepared" | "resolved";
+  choice: "review" | "load";
+  canonical: DraftReadResult;
+  selection: SelectedResolution;
+  replacementId?: string;
+  receipt?: { pending: SaveAttemptStatus; recoveryId?: string };
+};
+export type AuthContinuation = {
+  version: 1;
+  ownerId: string;
+  portfolioId: string;
+  recordId: string;
+  context: Context;
+  flow: "draft-recovery";
 };

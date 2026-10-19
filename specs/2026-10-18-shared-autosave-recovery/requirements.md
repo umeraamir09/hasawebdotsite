@@ -10,3 +10,5 @@ The owner approved the October 18 plan. Phase 13's production protocol and measu
 - Pending metadata contains no staged content. An unfinished attempt without its local journal cannot safely be reconstructed or committed. Retain it for the original browser or explicit discard.
 - Share status/recovery controls and a separately built browser fixture. Keep /editor unchanged. Full conflict choices/reauthentication remain Phase 15, editor Phase 17 and onboarding routing Phase 42E.
 - Preserve publication, claims, assets and connected services. Revalidate costs, document limitations and affected guidance. Production deployment and phase approval are excluded.
+
+October 19, 2026 scope update: [Phase 15](../2026-10-19-conflict-session-recovery/results.md) implements shared selected-change review and fixed same-tab reauthentication recovery. The Phase 14 scope and historical verification above remain unchanged. Full editor/guide adapters and deployment CPU prerequisites remain in their owning phases.

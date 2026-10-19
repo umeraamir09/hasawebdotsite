@@ -8,3 +8,5 @@
 6. Search current/historical guidance for changed assumptions, update dependent phases and record documentation impact/results. Leave the roadmap checkbox pending owner approval.
 
 October 18, 2026 completion record: the owner explicitly approved the implemented phase and requested a pull request. Phase 14 is now checked in the roadmap; the approval requirement above describes the original implementation gate.
+
+October 19, 2026 scope update: [Phase 15](../2026-10-19-conflict-session-recovery/results.md) implements shared selected-change review and fixed same-tab reauthentication recovery. The Phase 14 scope and historical verification above remain unchanged. Full editor/guide adapters and deployment CPU prerequisites remain in their owning phases.

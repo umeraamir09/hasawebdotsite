@@ -63,3 +63,5 @@ The automated integration tests replace provider HTTP responses and consent with
 Real GitHub and Google callbacks and verified matching-email account linking now pass in the local runtime, as recorded above. Deployed callbacks/TLS and deployed auth CPU remain unverified. This phase does not establish Free-tier production feasibility. The owner configured development provider applications; no production deployment was made.
 
 Phase 12 still owns provisioning the single sample portfolio. Phase 17 owns the complete editor. Phase 15 owns recoverable unsaved edits across session expiry; this phase proves persisted account/portfolio recovery without changing or clearing local draft storage. Phase 47 owns connected-provider settings and disconnect flows.
+
+October 19, 2026 supersession note: [Phase 15](../2026-10-19-conflict-session-recovery/results.md) adds fixed same-tab `/auth/recovery` and `/auth/recovery/error` destinations alongside normal `/editor` sign-in. Historical Phase 11 evidence, approval and provider callback routes above remain unchanged.

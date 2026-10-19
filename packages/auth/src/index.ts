@@ -246,11 +246,13 @@ export async function authResponse(
     )
       return privateJson(null, 400);
     const errorURL = `${origin}/sign-in?provider=${body.provider}`;
-    if (
-      body.callbackURL !== `${origin}/editor` ||
-      body.errorCallbackURL !== errorURL
-    )
-      return privateJson(null, 403);
+    const normal =
+      body.callbackURL === `${origin}/editor` &&
+      body.errorCallbackURL === errorURL;
+    const recovery =
+      body.callbackURL === `${origin}/auth/recovery` &&
+      body.errorCallbackURL === `${origin}/auth/recovery/error`;
+    if (!normal && !recovery) return privateJson(null, 403);
   }
   const response = await auth.handler(request);
   const headers = new Headers(response.headers);

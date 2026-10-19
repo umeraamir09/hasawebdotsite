@@ -1,0 +1,270 @@
+{
+  "recordedAt": "2026-10-19T02:21:13.352Z",
+  "remote": false,
+  "checks": [
+    {
+      "name": "real session guards and unchanged provisioning/status contracts",
+      "passed": true
+    },
+    {
+      "name": "real session missing portfolios return not_found on reads and writes",
+      "passed": true
+    }
+  ],
+  "samples": [
+    {
+      "case": "check",
+      "at": 1792376255107,
+      "elapsedMs": 39.236,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": false,
+      "sameDatabase": false
+    },
+    {
+      "case": "check",
+      "at": 1792376255148,
+      "elapsedMs": 43.355,
+      "status": 401,
+      "rowsRead": 4,
+      "rowsWritten": 1,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255191,
+      "elapsedMs": 32.727,
+      "status": 401,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255224,
+      "elapsedMs": 52.271,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255279,
+      "elapsedMs": 29.649,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255309,
+      "elapsedMs": 37.347,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255346,
+      "elapsedMs": 25.952,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255372,
+      "elapsedMs": 32.561,
+      "status": 200,
+      "rowsRead": 13,
+      "rowsWritten": 5,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255405,
+      "elapsedMs": 28.007,
+      "status": 200,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255435,
+      "elapsedMs": 9.19,
+      "status": 401,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255445,
+      "elapsedMs": 10.443,
+      "status": 403,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255455,
+      "elapsedMs": 10.276,
+      "status": 415,
+      "rowsRead": 0,
+      "rowsWritten": 0,
+      "queries": 0,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255466,
+      "elapsedMs": 26.916,
+      "status": 405,
+      "rowsRead": 4,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255493,
+      "elapsedMs": 17.552,
+      "status": 400,
+      "rowsRead": 2,
+      "rowsWritten": 0,
+      "queries": 2,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255510,
+      "elapsedMs": 20.061,
+      "status": 409,
+      "rowsRead": 4,
+      "rowsWritten": 0,
+      "queries": 3,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255532,
+      "elapsedMs": 28.137,
+      "status": 200,
+      "rowsRead": 7,
+      "rowsWritten": 1,
+      "queries": 5,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255560,
+      "elapsedMs": 23.894,
+      "status": 404,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 4,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255584,
+      "elapsedMs": 28.504,
+      "status": 404,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 5,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255613,
+      "elapsedMs": 35.565,
+      "status": 404,
+      "rowsRead": 8,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255649,
+      "elapsedMs": 33.454,
+      "status": 404,
+      "rowsRead": 6,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    },
+    {
+      "case": "check",
+      "at": 1792376255682,
+      "elapsedMs": 31.838,
+      "status": 404,
+      "rowsRead": 7,
+      "rowsWritten": 0,
+      "queries": 6,
+      "colo": null,
+      "sameEnvironment": true,
+      "sameDatabase": true
+    }
+  ],
+  "windows": [],
+  "failure": "Expected values to be strictly equal:\n+ actual - expected\n\n+ \"Couldn't save\"\n- 'Unsaved input'\n"
+}

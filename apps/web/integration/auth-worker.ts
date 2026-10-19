@@ -2,6 +2,7 @@
 import "../spike/auth-provider-fixtures";
 import { ownerRepositories, privateJson } from "@hasaweb/db";
 import { createEmptyDraft } from "@hasaweb/schema";
+import { measureDb } from "../../jobs/integration/measure-db";
 import { createOwnerRouter } from "../../jobs/src/owner-api";
 import {
   type AuthEnvironment,
@@ -146,10 +147,29 @@ export default {
     url.host = request.headers.get("X-Fixture-Host") ?? "hasaweb.site";
     const virtual = new Request(url, request);
     try {
-      return url.pathname === "/api/owner" ||
-        url.pathname.startsWith("/api/owner/")
-        ? await ownerRouter.fetch(virtual, settings)
-        : await authResponse(virtual, settings, auth);
+      const measured = measureDb(env.DB);
+      const measuredSettings = { ...settings, DB: measured.db };
+      const response =
+        url.pathname === "/api/owner" || url.pathname.startsWith("/api/owner/")
+          ? await ownerRouter.fetch(virtual, measuredSettings)
+          : await authResponse(
+              virtual,
+              measuredSettings,
+              createProductAuth(measuredSettings),
+            );
+      response.headers.set(
+        "X-Fixture-Rows-Read",
+        String(measured.counts.reads),
+      );
+      response.headers.set(
+        "X-Fixture-Rows-Written",
+        String(measured.counts.writes),
+      );
+      response.headers.set(
+        "X-Fixture-Queries",
+        String(measured.counts.queries),
+      );
+      return response;
     } catch {
       return privateJson(null, 503);
     }

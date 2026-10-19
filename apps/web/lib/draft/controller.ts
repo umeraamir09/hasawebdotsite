@@ -51,6 +51,7 @@ type Options = {
   };
 };
 const initial = (): DraftState => ({
+  suspended: false,
   confirmed: null,
   working: null,
   progress: null,
@@ -67,6 +68,23 @@ const initial = (): DraftState => ({
   validation: null,
   validationJournal: null,
 });
+export function recoverable(entry: RecoveryRecord) {
+  return (
+    !entry.reviewOnly &&
+    Boolean(
+      entry.review ||
+        entry.blocked ||
+        entry.batch ||
+        entry.validationJournal ||
+        entry.discardJournal ||
+        Object.keys(entry.inputs).length ||
+        Object.keys(entry.validationInputs ?? {}).length ||
+        !equal(entry.working, entry.base?.draft ?? null) ||
+        (entry.context === "setup" &&
+          !equal(entry.progress, entry.base?.progress ?? null)),
+    )
+  );
+}
 export function createDraftController(options: Options) {
   const store = createStore<DraftState>()(initial);
   const id = options.id ?? crypto.randomUUID();
@@ -103,10 +121,12 @@ export function createDraftController(options: Options) {
   };
   let timer: unknown,
     disposed = false,
+    paused = false,
     active: Promise<unknown> | null = null;
   let persistence = Promise.resolve();
   let recoverySource: RecoveryRecord | null = null;
   let recoveryBlock: RecoveryRecord["blocked"];
+  let reviewBase: DraftReadResult | undefined;
   const transport: Transport = {
     read: () => {
       throwIfDisposed();
@@ -124,6 +144,7 @@ export function createDraftController(options: Options) {
       // Check when dispatching, including after an awaited local checkpoint.
       // In-flight replies may still be recorded, but disposal starts no command.
       throwIfDisposed();
+      if (paused) throw new DraftFailure("recovery_required");
       return network.action(action, body);
     },
   };
@@ -187,6 +208,7 @@ export function createDraftController(options: Options) {
       validationJournal: s.validationJournal,
       discardJournal: s.discardJournal,
       ...(recoveryBlock ? { blocked: recoveryBlock } : {}),
+      ...(reviewBase ? { reviewBase } : {}),
     });
   }
   function persist() {
@@ -236,7 +258,7 @@ export function createDraftController(options: Options) {
   }
   function schedule() {
     cancelTimer();
-    if (disposed || state().error || !dirty()) {
+    if (disposed || paused || state().error || !dirty()) {
       status();
       return;
     }
@@ -284,12 +306,12 @@ export function createDraftController(options: Options) {
     return exclusive(async () => {
       if (dirty() || state().batch || state().discardJournal || hasLocalInput())
         throw new DraftFailure("recovery_required");
-      const records = await storage
-        .list(options.ownerId, options.portfolioId)
-        .catch(() => {
+      const records = (
+        await storage.list(options.ownerId, options.portfolioId).catch(() => {
           store.setState({ localRecoveryAvailable: false });
           return [];
-        });
+        })
+      ).filter((entry) => entry.reviewOnly || recoverable(entry));
       let result: DraftReadResult | null = null,
         readError: unknown;
       try {
@@ -317,12 +339,16 @@ export function createDraftController(options: Options) {
       if (readError) throw readError;
       recoveryBlock = undefined;
       store.setState({ error: null });
-      if (pending || records.some((entry) => entry.id !== id))
+      if (
+        pending ||
+        records.some((entry) => entry.id !== id && recoverable(entry))
+      )
         throw new DraftFailure("recovery_required");
       status();
     });
   }
   function editable() {
+    if (paused) throw new DraftFailure("recovery_required");
     if (!state().working || disposed)
       throw new Error("Load the draft before editing");
     if (state().error === "owner_changed")
@@ -433,8 +459,10 @@ export function createDraftController(options: Options) {
     action: NonNullable<Batch["sent"]>["action"],
     body: unknown,
   ): Promise<T> {
+    if (paused) throw new DraftFailure("recovery_required");
     batch.sent = { action, body: structuredClone(body) };
     await checkpoint(batch);
+    if (paused) throw new DraftFailure("recovery_required");
     const result = await transport.action<T>(action, body);
     delete batch.sent;
     return result;
@@ -483,6 +511,7 @@ export function createDraftController(options: Options) {
       progress:
         options.context === "setup" ? batch.progress : batch.base.progress,
     };
+    reviewBase = undefined;
     store.setState({ confirmed });
     // Receipt and newer edits are durable before either checkpoint is cleared.
     await checkpoint(batch);
@@ -561,6 +590,7 @@ export function createDraftController(options: Options) {
     await acknowledge(batch, result.revision);
   }
   async function flush(drain: boolean) {
+    if (paused) throw new DraftFailure("recovery_required");
     cancelTimer();
     return exclusive(async () => {
       if (state().error)
@@ -725,11 +755,12 @@ export function createDraftController(options: Options) {
     return false;
   }
   async function retry(transfer = false) {
+    if (paused) throw new DraftFailure("recovery_required");
     if (state().error === "owner_changed")
       throw new DraftFailure("owner_changed");
+    if (state().discardJournal) return discardAttempt(true);
     const blocked = blockedReason();
     if (blocked) throw new DraftFailure(blocked);
-    if (state().discardJournal) return discardAttempt(true);
     if (state().validationJournal) return validateLegacy();
     if (!state().confirmed && !state().batch) {
       await initialize();
@@ -761,7 +792,10 @@ export function createDraftController(options: Options) {
     });
     return flushValid();
   }
-  async function restore(recordId: string) {
+  async function restore(
+    recordId: string,
+    beforeRetire?: (replacement: RecoveryRecord) => Promise<void>,
+  ) {
     await exclusive(async () => {
       if (dirty() || state().batch) throw new DraftFailure("recovery_required");
       const records = await storage.list(options.ownerId, options.portfolioId);
@@ -772,6 +806,41 @@ export function createDraftController(options: Options) {
         saved.portfolioId !== options.portfolioId
       )
         throw new DraftFailure("owner_changed");
+      if (saved.reviewOnly || saved.review)
+        throw new DraftFailure("recovery_required");
+      if (saved.discardJournal) {
+        // Restore cleanup intent even across a revision change or setup handoff.
+        // Keep its original base and values; discard never replays this batch.
+        recoverySource = structuredClone(saved);
+        reviewBase =
+          saved.reviewBase ?? saved.batch?.base ?? saved.base ?? undefined;
+        store.setState({
+          confirmed: saved.base ?? state().confirmed,
+          working: saved.working ?? state().working,
+          progress: saved.progress ?? state().progress,
+          inputs: { ...saved.inputs, ...state().inputs },
+          validationInputs: {
+            ...saved.validationInputs,
+            ...state().validationInputs,
+          },
+          batch: saved.batch,
+          validationJournal: saved.validationJournal,
+          discardJournal: saved.discardJournal,
+          recoveries: records.filter(
+            (entry) => entry.id !== saved.id && entry.id !== id,
+          ),
+          error:
+            saved.blocked ??
+            (saved.working &&
+            (saved.context !== options.context || contextClosed())
+              ? "setup_closed"
+              : "recovery_required"),
+          status: "blocked",
+        });
+        await persist();
+        if (state().localRecoveryAvailable) await beforeRetire?.(record());
+        return;
+      }
       if (
         saved.validationJournal ||
         (!saved.working &&
@@ -791,6 +860,7 @@ export function createDraftController(options: Options) {
           status: "blocked",
         });
         await persist();
+        if (state().localRecoveryAvailable) await beforeRetire?.(record());
         return;
       }
       // A setup record after handoff is exposed as local input, never setup writes.
@@ -807,6 +877,11 @@ export function createDraftController(options: Options) {
         throw new DraftFailure("setup_closed");
       }
       recoverySource = structuredClone(saved);
+      reviewBase =
+        saved.reviewBase ??
+        (saved.batch?.confirmedRevision ? saved.base : saved.batch?.base) ??
+        saved.base ??
+        undefined;
       store.setState({
         inputs: { ...saved.inputs, ...state().inputs },
         validationInputs: {
@@ -827,6 +902,7 @@ export function createDraftController(options: Options) {
         error: saved.blocked ?? (saved.batch ? "recovery_required" : null),
       });
       await persist();
+      if (state().localRecoveryAvailable) await beforeRetire?.(record());
       if (!saved.batch && !saved.blocked) {
         if (state().localRecoveryAvailable) {
           await storage.remove(saved.id, recoverySource ?? saved);
@@ -863,17 +939,17 @@ export function createDraftController(options: Options) {
     await exclusive(async () => {
       const blocked = blockedReason();
       const savedIntent = state().discardJournal;
-      const expected =
-        savedIntent?.id ??
-        state().pending?.id ??
-        state().batch?.attemptId ??
-        state().validationJournal?.id;
+      const expected = savedIntent
+        ? savedIntent.id
+        : (state().pending?.id ??
+          state().batch?.attemptId ??
+          state().validationJournal?.id);
       const pending = await transport.action<SaveAttemptStatus | null>(
         "pending",
         {},
       );
       store.setState({ pending });
-      if (pending && expected && pending.id !== expected)
+      if (pending && expected !== undefined && pending.id !== expected)
         throw new DraftFailure("attempt_conflict");
       if (recover && !savedIntent) throw new DraftFailure("recovery_required");
       if (
@@ -930,8 +1006,13 @@ export function createDraftController(options: Options) {
       // A different device may have advanced the canonical draft. Preserve the
       // original working state instead of silently rebasing it after discard.
       const base = state().batch?.base ?? state().confirmed;
-      if (base && base.revision !== metadata.revision)
-        throw new DraftFailure("revision_conflict");
+      const changedBase = base && base.revision !== metadata.revision;
+      if (changedBase) {
+        reviewBase ??= base;
+        recoveryBlock = blocked ?? "revision_conflict";
+        store.setState({ error: recoveryBlock, status: "blocked" });
+        await persist();
+      }
       await cleanup();
       store.setState({
         validationJournal: null,
@@ -945,6 +1026,7 @@ export function createDraftController(options: Options) {
         await storage.remove(recoverySource.id, recoverySource);
         recoverySource = null;
       }
+      if (changedBase) throw new DraftFailure("revision_conflict");
       if (blocked) throw new DraftFailure(blocked);
       if (!state().confirmed) await initializeAfterDiscard();
       store.setState({ error: null });
@@ -1210,6 +1292,7 @@ export function createDraftController(options: Options) {
       throw new DraftFailure("owner_changed");
   }
   function dispose() {
+    if (disposed) return;
     disposed = true;
     cancelTimer();
     coordinator.close();
@@ -1244,6 +1327,59 @@ export function createDraftController(options: Options) {
     validateLegacy,
     download: () => exclusive(() => transport.download(), true),
     persist,
+    // Stop new edits/commands, settle the current reply, then capture latest input.
+    async quiesce() {
+      paused = true;
+      store.setState({ suspended: true });
+      cancelTimer();
+      await active?.catch(() => {});
+      await persist();
+      return record();
+    },
+    releaseReviewPause() {
+      if (!disposed) {
+        paused = false;
+        store.setState({ suspended: false });
+        schedule();
+      }
+    },
+    // Only the recovery coordinator calls this after durable reviewed replacement.
+    async adoptReviewed(saved: RecoveryRecord) {
+      if (
+        saved.id !== id ||
+        saved.ownerId !== options.ownerId ||
+        saved.portfolioId !== options.portfolioId ||
+        saved.context !== options.context ||
+        saved.batch ||
+        saved.validationJournal ||
+        saved.discardJournal ||
+        !saved.base ||
+        !saved.working
+      )
+        throw new DraftFailure("recovery_required");
+      recoveryBlock = undefined;
+      store.setState({
+        confirmed: saved.base,
+        working: saved.working,
+        progress: saved.progress,
+        inputs: saved.inputs,
+        validationInputs: saved.validationInputs ?? {},
+        batch: null,
+        pending: null,
+        error: null,
+      });
+      try {
+        await storage.put(record());
+        store.setState({
+          recoveries: (
+            await storage.list(options.ownerId, options.portfolioId)
+          ).filter((entry) => entry.id !== id),
+        });
+      } catch {
+        store.setState({ localRecoveryAvailable: false });
+      }
+      status();
+    },
     dispose,
   };
 }

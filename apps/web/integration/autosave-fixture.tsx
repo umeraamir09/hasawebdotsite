@@ -1,8 +1,10 @@
 // Browser test bundle only. This file has no production route or import.
 import { createRoot } from "react-dom/client";
 import { useStore } from "zustand";
+import { DraftRecovery } from "../components/draft-recovery";
 import { DraftStatus } from "../components/draft-status";
 import { createDraftController } from "../lib/draft/controller";
+import { createRecoveryCoordinator } from "../lib/draft/recovery-coordinator";
 import { createDraftTransport } from "../lib/draft/transport";
 import "../app/globals.css";
 
@@ -25,7 +27,7 @@ const send: typeof fetch = async (input, init) => {
   }
   return response;
 };
-const controller = createDraftController({
+const options = {
   ownerId: owner.user.id,
   portfolioId: owner.portfolio.id,
   context:
@@ -33,9 +35,13 @@ const controller = createDraftController({
       ? "content"
       : "setup",
   transport: createDraftTransport(owner.user.id, owner.portfolio.id, send),
-});
+} as const;
+const controller = createDraftController(options);
+const recovery = createRecoveryCoordinator({ ...options, controller });
 function Fixture() {
-  const state = useStore(controller.store);
+  const recoveryState = useStore(recovery.store);
+  const current = recoveryState.controller;
+  const state = useStore(current.store);
   return (
     <main className="editor-entry">
       <h1>Autosave fixture</h1>
@@ -43,17 +49,31 @@ function Fixture() {
         Name
         <input
           id="fixture-name"
+          disabled={state.suspended || Boolean(recoveryState.review)}
           value={state.working?.profile.name ?? ""}
           onChange={(event) =>
-            controller.edit(["profile", "name"], event.target.value)
+            current.edit(["profile", "name"], event.target.value)
           }
         />
       </label>
-      <DraftStatus controller={controller} />
+      {new URL(location.href).searchParams.has("recovery") ? (
+        <DraftRecovery recovery={recovery} />
+      ) : (
+        <DraftStatus controller={current} />
+      )}
     </main>
   );
 }
 createRoot(document.getElementById("root") as HTMLElement).render(<Fixture />);
-Object.assign(window, { fixture: { controller, fault, ready: false } });
+Object.assign(window, {
+  fixture: {
+    get controller() {
+      return recovery.store.getState().controller;
+    },
+    recovery,
+    fault,
+    ready: false,
+  },
+});
 await controller.initialize().catch(() => {});
 (window as unknown as { fixture: { ready: boolean } }).fixture.ready = true;

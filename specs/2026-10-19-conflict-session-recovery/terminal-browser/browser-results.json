@@ -1,0 +1,305 @@
+{
+  "recordedAt": "2026-10-19T02:39:30.555Z",
+  "filter": "committed receipt retirement",
+  "browser": "154.0.8037.57",
+  "checks": [
+    {
+      "name": "committed receipt retirement preserves conflict review across a lost cleanup reply",
+      "passed": true,
+      "requests": 32,
+      "rowsRead": 489,
+      "rowsWritten": 13
+    }
+  ],
+  "requests": [
+    {
+      "path": "/api/owner/portfolio",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 11,
+      "writes": 4,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/begin",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 34,
+      "reads": 11,
+      "writes": 4,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/change",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 142,
+      "reads": 100,
+      "writes": 1,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/commit",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 58,
+      "reads": 20,
+      "writes": 2,
+      "queries": 7
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 409,
+      "requestBytes": 167,
+      "reads": 25,
+      "writes": 0,
+      "queries": 6
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 7,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 7,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 7,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/progress",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 7,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 15,
+      "writes": 1,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 8,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/progress",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 7,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft/cleanup",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 7,
+      "writes": 0,
+      "queries": 5
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/pending",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 2,
+      "reads": 4,
+      "writes": 0,
+      "queries": 4
+    },
+    {
+      "path": "/api/owner/draft",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 0,
+      "reads": 12,
+      "writes": 0,
+      "queries": 3
+    },
+    {
+      "path": "/api/owner/draft/patch",
+      "session": "alice",
+      "status": 200,
+      "requestBytes": 167,
+      "reads": 101,
+      "writes": 1,
+      "queries": 5
+    }
+  ],
+  "errors": []
+}

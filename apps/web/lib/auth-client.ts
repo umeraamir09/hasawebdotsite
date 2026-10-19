@@ -30,15 +30,21 @@ export async function openOwnerPortfolio(
   if (!response.ok) throw new Error("Could not open your portfolio");
   return response.json() as Promise<Owner>;
 }
-export async function startSignIn(provider: Provider) {
+export async function startSignIn(
+  provider: Provider,
+  mode: "normal" | "draft-recovery" = "normal",
+) {
   const origin = window.location.origin;
   const response = await fetch("/api/auth/sign-in/social", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       provider,
-      callbackURL: `${origin}/editor`,
-      errorCallbackURL: `${origin}/sign-in?provider=${provider}`,
+      callbackURL: `${origin}${mode === "draft-recovery" ? "/auth/recovery" : "/editor"}`,
+      errorCallbackURL:
+        mode === "draft-recovery"
+          ? `${origin}/auth/recovery/error`
+          : `${origin}/sign-in?provider=${provider}`,
     }),
     signal: AbortSignal.timeout(15000),
   });

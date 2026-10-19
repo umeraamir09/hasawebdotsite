@@ -6,6 +6,10 @@ import { join } from "node:path";
 import { chromium } from "playwright";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
+const browserFilter = process.argv
+  .find((argument) => argument.startsWith("--browser-filter="))
+  ?.slice("--browser-filter=".length);
+
 export async function checkAutosave({
   root,
   origin,
@@ -127,6 +131,7 @@ export async function checkAutosave({
     await target.waitForFunction(() => window.fixture?.ready);
   }
   async function run(name, work) {
+    if (browserFilter && !new RegExp(browserFilter).test(name)) return;
     const start = requests.length;
     await work();
     checks.push({
@@ -1090,6 +1095,87 @@ export async function checkAutosave({
     }
     for (const lost of ["abort", "cleanup"]) {
       await run(
+        `changed-base working discard recovers a lost ${lost} reply through review`,
+        async () => {
+          await reset();
+          await boot(page, "?recovery");
+          await page.evaluate(() => {
+            window.fixture.fault.action = "piece";
+            window.fixture.fault.mode = "before";
+            window.fixture.controller.edit(
+              ["profile", "bio"],
+              "preserved-discard".repeat(800),
+            );
+            window.fixture.controller.setInput(
+              ["requestedSubdomain"],
+              "unfinished-discard-",
+            );
+            return window.fixture.controller.flushValid().catch(() => {});
+          });
+          await sql(
+            "UPDATE portfolio SET draft=json_set(draft,'$.profile.location','Remote location'),draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+          );
+          await page.evaluate(async (action) => {
+            window.fixture.fault.action = action;
+            window.fixture.fault.mode = "after";
+            await window.fixture.controller.discardAttempt().catch(() => {});
+          }, lost);
+          assert.ok((await snapshot()).discardJournal);
+          await boot(page, "?recovery");
+          await page
+            .getByRole("button", {
+              name: "Continue preserved edits",
+              exact: true,
+            })
+            .click();
+          await page.waitForFunction(
+            () =>
+              !window.fixture.recovery.store.getState().busy &&
+              window.fixture.controller.store.getState().error ===
+                "revision_conflict",
+          );
+          assert.equal((await snapshot()).discardJournal, null);
+          assert.equal(
+            (await snapshot()).working.profile.bio,
+            "preserved-discard".repeat(800),
+          );
+          assert.equal((await getDraft()).profile.location, "Remote location");
+          await page
+            .getByRole("region", { name: "Resolve saved version", exact: true })
+            .getByRole("button", {
+              name: "Keep my edits for review",
+              exact: true,
+            })
+            .click();
+          await page.waitForFunction(
+            () =>
+              !window.fixture.recovery.store.getState().busy &&
+              Boolean(window.fixture.recovery.store.getState().review),
+          );
+          assert.equal(await page.getByRole("checkbox").count(), 1);
+          await page.getByRole("checkbox").click();
+          await page.waitForFunction(
+            () => !window.fixture.recovery.store.getState().busy,
+          );
+          await page
+            .getByRole("button", { name: "Apply selected changes" })
+            .click();
+          await page.waitForFunction(
+            () =>
+              window.fixture.controller.store.getState().status === "unsaved",
+          );
+          assert.equal(
+            (await getDraft()).profile.bio,
+            "preserved-discard".repeat(800),
+          );
+          assert.equal((await getDraft()).profile.location, "Remote location");
+          assert.equal(
+            Object.values((await snapshot()).inputs)[0].value,
+            "unfinished-discard-",
+          );
+        },
+      );
+      await run(
         `lost ${lost} reply preserves explicit discard intent across reload`,
         async () => {
           const legacy = structuredClone(fixture);
@@ -1187,6 +1273,461 @@ export async function checkAutosave({
         )[0];
         assert.ok(row.first_editor_entered_at);
         assert.equal(JSON.parse(row.setup_progress).step, "address");
+      },
+    );
+    await run(
+      "selected conflict review preserves newer fields and unfinished input across reload",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await edit(["profile", "name"], "Reviewed owner");
+        await page.evaluate(() =>
+          window.fixture.controller.setInput(
+            ["requestedSubdomain"],
+            "unfinished-",
+          ),
+        );
+        const second = await context.newPage();
+        await boot(second);
+        // The second session loads the existing recovery but does not adopt it.
+        await second.evaluate(async () => {
+          const c = window.fixture.controller;
+          for (const record of c.store.getState().recoveries)
+            await c.discardRecovery(record.id);
+          c.edit(["profile", "bio"], "Saved in the other tab");
+          await c.flushValid();
+        });
+        await page.waitForFunction(
+          () =>
+            window.fixture.controller.store.getState().error ===
+            "revision_conflict",
+        );
+        await second.close();
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        assert.equal(
+          await page.getByRole("checkbox", { checked: true }).count(),
+          0,
+        );
+        await page.getByRole("checkbox").first().click();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await boot(page, "?recovery");
+        await page
+          .getByRole("button", { name: "Reopen review", exact: true })
+          .click();
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page.getByRole("checkbox", { checked: true }).first().waitFor();
+        assert.equal(
+          await page.getByRole("checkbox", { checked: true }).count(),
+          1,
+        );
+        await page
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page.waitForFunction(
+          () =>
+            window.fixture.controller.store.getState().confirmed?.draft.profile
+              .name === "Reviewed owner",
+        );
+        assert.equal((await getDraft()).profile.bio, "Saved in the other tab");
+        assert.equal((await snapshot()).status, "unsaved");
+        assert.equal(
+          Object.values((await snapshot()).inputs)[0].value,
+          "unfinished-",
+        );
+        assert.equal(
+          await page
+            .getByText("Retained recovery copy", { exact: true })
+            .count(),
+          1,
+        );
+      },
+    );
+    await run(
+      "review revision recheck resets selections and load newer retains local values",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await edit(["profile", "name"], "Keep for review");
+        await sql(
+          "UPDATE portfolio SET draft=json_set(draft,'$.profile.name','Newer saved'),draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+        );
+        await page.evaluate(() =>
+          window.fixture.controller.flushValid().catch(() => {}),
+        );
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page.getByRole("checkbox").first().click();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await sql(
+          "UPDATE portfolio SET draft=json_set(draft,'$.profile.bio','Another newer value'),draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+        );
+        await page
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page
+          .getByRole("alert")
+          .filter({ hasText: "Another version" })
+          .waitFor();
+        assert.equal(
+          await page.getByRole("checkbox", { checked: true }).count(),
+          0,
+        );
+        await page
+          .getByRole("button", { name: "Load newer version", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Confirm load newer version" })
+          .click();
+        await page.waitForFunction(
+          () => window.fixture.controller.store.getState().status === "saved",
+        );
+        assert.equal((await snapshot()).working.profile.name, "Newer saved");
+        assert.equal((await getDraft()).profile.bio, "Another newer value");
+        await page.getByText("Retained recovery copy", { exact: true }).click();
+        await page
+          .getByRole("button", { name: "Review retained edits" })
+          .click();
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        assert.ok(
+          await page.getByText("Keep for review", { exact: true }).count(),
+        );
+      },
+    );
+    await run(
+      "setup recovery contributes selected content after permanent handoff",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await edit(["profile", "name"], "Post-handoff review");
+        const milestone = Date.now();
+        await sql(
+          "UPDATE portfolio SET first_editor_entered_at=?,setup_progress=?,draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+          [milestone, JSON.stringify({ schemaVersion: 1, step: "review" })],
+        );
+        await page.evaluate(() =>
+          window.fixture.controller.flushValid().catch(() => {}),
+        );
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page.getByRole("checkbox").first().click();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page.waitForFunction(
+          () => window.fixture.controller.store.getState().status === "saved",
+        );
+        const row = (
+          await sql(
+            "SELECT first_editor_entered_at,setup_progress FROM portfolio WHERE user_id='draft-alice'",
+          )
+        )[0];
+        assert.equal(row.first_editor_entered_at, milestone);
+        assert.equal(JSON.parse(row.setup_progress).step, "review");
+        assert.equal((await getDraft()).profile.name, "Post-handoff review");
+      },
+    );
+    await run(
+      "separate-session same-field and structural selections use bounded staging",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await sql(
+          "INSERT OR REPLACE INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES('draft-session-alice-other',?,'draft-alice',?,1,1)",
+          [tokens["alice-other"], Date.now() + 7200000],
+        );
+        const separate = await browser.newContext();
+        try {
+          await separate.addCookies([
+            {
+              name: "fixture-session",
+              value: "alice-other",
+              url: browserOrigin,
+            },
+          ]);
+          const other = await separate.newPage();
+          await boot(other);
+          await other.evaluate(async () => {
+            const c = window.fixture.controller;
+            c.edit(["profile", "name"], "Other saved name");
+            c.edit(["profile", "bio"], "Unrelated other-session bio");
+            await c.flushValid();
+          });
+        } finally {
+          await separate.close();
+        }
+        await page.evaluate(() => {
+          const c = window.fixture.controller;
+          const draft = structuredClone(c.store.getState().working);
+          draft.profile.name = "Local selected name";
+          draft.links = [
+            {
+              ...draft.links[0],
+              id: "local-added",
+              label: "Selected addition",
+            },
+            ...draft.links.toReversed(),
+          ];
+          c.update(draft);
+        });
+        await page.evaluate(() =>
+          window.fixture.controller.flushValid().catch(() => {}),
+        );
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        for (const checkbox of await page.getByRole("checkbox").all()) {
+          await checkbox.click();
+          await page.waitForFunction(
+            () => !window.fixture.recovery.store.getState().busy,
+          );
+        }
+        const requestStart = requests.length;
+        await page
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page.waitForFunction(
+          () => window.fixture.controller.store.getState().status === "saved",
+        );
+        const saved = await getDraft();
+        assert.equal(saved.profile.name, "Local selected name");
+        assert.equal(saved.profile.bio, "Unrelated other-session bio");
+        assert.equal(saved.links[0].id, "local-added");
+        assert.equal(saved.links[1].id, fixture.links.at(-1).id);
+        assert.ok(
+          requests.slice(requestStart).some((v) => v.path.endsWith("/begin")),
+        );
+        assert.ok(
+          requests.slice(requestStart).some((v) => v.path.endsWith("/commit")),
+        );
+      },
+    );
+    await run(
+      "conflict review keyboard, focus, status, axe and responsive controls",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await edit(["profile", "name"], "Accessible conflict");
+        await sql(
+          "UPDATE portfolio SET draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+        );
+        await page.evaluate(() =>
+          window.fixture.controller.flushValid().catch(() => {}),
+        );
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .focus();
+        await page.keyboard.press("Enter");
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        assert.equal(
+          await page.evaluate(() => document.activeElement.id),
+          "draft-review-heading",
+        );
+        await page.addScriptTag({
+          path: join(root, "node_modules/axe-core/axe.min.js"),
+        });
+        for (const width of [360, 768, 1280]) {
+          await page.setViewportSize({ width, height: 900 });
+          const checkbox = page.getByRole("checkbox").first();
+          await checkbox.focus();
+          await page.keyboard.press("Space");
+          await page.waitForFunction(
+            () => !window.fixture.recovery.store.getState().busy,
+          );
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth,
+            ),
+            true,
+          );
+          const audit = await page.evaluate(() =>
+            window.axe.run(document, {
+              runOnly: {
+                type: "tag",
+                values: ["wcag2a", "wcag2aa", "wcag22aa"],
+              },
+            }),
+          );
+          assert.deepEqual(
+            audit.violations.map((v) => v.id),
+            [],
+          );
+          await page.screenshot({
+            path: join(evidence, `conflict-review-${width}.png`),
+            fullPage: true,
+          });
+        }
+        await page
+          .getByRole("button", { name: "Load newer version", exact: true })
+          .click();
+        await page
+          .getByRole("button", { name: "Confirm load newer version" })
+          .focus();
+        await page.keyboard.press("Enter");
+        await page.waitForFunction(
+          () => window.fixture.controller.store.getState().status === "saved",
+        );
+        assert.equal(
+          await page.getByRole("status").first().textContent(),
+          "Saved",
+        );
+      },
+    );
+    await run(
+      "committed receipt retirement preserves conflict review across a lost cleanup reply",
+      async () => {
+        await reset();
+        await boot(page, "?recovery");
+        await sql(
+          "INSERT OR REPLACE INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES('draft-session-alice-other',?,'draft-alice',?,1,1)",
+          [tokens["alice-other"], Date.now() + 7200000],
+        );
+        const separate = await browser.newContext();
+        try {
+          await separate.addCookies([
+            {
+              name: "fixture-session",
+              value: "alice-other",
+              url: browserOrigin,
+            },
+          ]);
+          const owner = await (
+            await separate.request.get(`${browserOrigin}/api/owner`)
+          ).json();
+          const action = async (name, body) => {
+            const response = await separate.request.post(
+              `${browserOrigin}/api/owner/draft/${name}`,
+              { headers: { "X-Expected-Owner-Id": owner.user.id }, data: body },
+            );
+            assert.equal(response.status(), 200);
+            return response.json();
+          };
+          const base = await snapshot();
+          const begin = await action("begin", {
+            context: "content",
+            revision: base.confirmed.revision,
+          });
+          const changed = await action("change", {
+            id: begin.id,
+            sequence: begin.sequence,
+            change: {
+              op: "set",
+              path: ["profile", "bio"],
+              value: "Canonical terminal receipt",
+            },
+          });
+          await action("commit", { id: begin.id, sequence: changed.sequence });
+        } finally {
+          await separate.close();
+        }
+        await page.evaluate(async () => {
+          const c = window.fixture.controller;
+          c.edit(["profile", "name"], "Local after terminal receipt");
+          await c.flushValid().catch(() => {});
+          window.fixture.fault.action = "cleanup";
+          window.fixture.fault.mode = "after";
+        });
+        const requestStart = requests.length;
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page.waitForFunction(
+          () =>
+            !window.fixture.recovery.store.getState().busy &&
+            Boolean(window.fixture.controller.store.getState().discardJournal),
+        );
+        await boot(page, "?recovery");
+        await page
+          .getByRole("button", { name: "Reopen review", exact: true })
+          .click();
+        await page
+          .getByRole("heading", { name: "Review your preserved edits" })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page.getByRole("checkbox").first().click();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page.waitForFunction(
+          () => window.fixture.controller.store.getState().status === "saved",
+        );
+        assert.equal(
+          (await getDraft()).profile.name,
+          "Local after terminal receipt",
+        );
+        assert.equal(
+          (await getDraft()).profile.bio,
+          "Canonical terminal receipt",
+        );
+        assert.equal(
+          requests
+            .slice(requestStart)
+            .some((request) => request.path.endsWith("/resume")),
+          false,
+        );
       },
     );
     await run(
@@ -1314,6 +1855,8 @@ export async function checkAutosave({
       new URL(`file://${join(evidence, "browser-results.json")}`),
       {
         recordedAt: new Date().toISOString(),
+        filter: browserFilter ?? null,
+        browser: browser.version(),
         checks,
         requests,
         errors,
@@ -1324,6 +1867,8 @@ export async function checkAutosave({
       new URL(`file://${join(evidence, "browser-partial.json")}`),
       {
         recordedAt: new Date().toISOString(),
+        filter: browserFilter ?? null,
+        browser: browser.version(),
         checks,
         requests,
         errors,

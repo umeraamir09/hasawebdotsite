@@ -92,14 +92,22 @@ async function request(path, jar = new Jar(), body, extra = {}) {
   jar.take(response);
   return response;
 }
-async function begin(provider, jar, link = false, extra = {}) {
+async function begin(
+  provider,
+  jar,
+  link = false,
+  extra = {},
+  recovery = false,
+) {
   const response = await request(
     `/api/auth/${link ? "link-social" : "sign-in/social"}`,
     jar,
     {
       provider,
-      callbackURL: `${origin}/editor`,
-      errorCallbackURL: `${origin}/sign-in?provider=${provider}`,
+      callbackURL: `${origin}${recovery ? "/auth/recovery" : "/editor"}`,
+      errorCallbackURL: recovery
+        ? `${origin}/auth/recovery/error`
+        : `${origin}/sign-in?provider=${provider}`,
     },
     extra,
   );
@@ -385,6 +393,64 @@ try {
         ).status,
         404,
       );
+    },
+  );
+  await check(
+    "fixed recovery callbacks support GitHub and Google success, cancellation and replay",
+    async () => {
+      for (const provider of ["github", "google"]) {
+        const jar = new Jar();
+        const started = await begin(provider, jar, false, {}, true);
+        assert.equal(started.response.status, 200);
+        const completed = await callback(
+          provider,
+          jar,
+          started.data.url,
+          "shared",
+        );
+        assert.equal(
+          new URL(completed.headers.get("location")).pathname,
+          "/auth/recovery",
+        );
+        assert.ok((await identity(jar)).user.id);
+        const replay = await callback(
+          provider,
+          jar,
+          started.data.url,
+          "shared",
+        );
+        assert.notEqual(
+          new URL(replay.headers.get("location")).pathname,
+          "/auth/recovery",
+        );
+        const cancelled = await begin(provider, jar, false, {}, true);
+        const failure = await callback(provider, jar, cancelled.data.url, "", {
+          error: "access_denied",
+        });
+        const destination = new URL(failure.headers.get("location"));
+        assert.equal(destination.pathname, "/auth/recovery/error");
+        assert.equal(destination.searchParams.get("error"), "access_denied");
+        for (const [callbackURL, errorCallbackURL] of [
+          [
+            `${origin}/auth/recovery?return=/editor`,
+            `${origin}/auth/recovery/error`,
+          ],
+          [`${origin}/auth/recovery`, `${origin}/sign-in?provider=${provider}`],
+          [`${origin}/editor`, `${origin}/auth/recovery/error`],
+          [`${origin}/auth/recovery`, "https://evil.example/error"],
+        ]) {
+          assert.equal(
+            (
+              await request("/api/auth/sign-in/social", new Jar(), {
+                provider,
+                callbackURL,
+                errorCallbackURL,
+              })
+            ).status,
+            403,
+          );
+        }
+      }
     },
   );
   await check(
