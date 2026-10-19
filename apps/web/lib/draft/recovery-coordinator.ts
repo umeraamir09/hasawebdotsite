@@ -502,9 +502,10 @@ export function createRecoveryCoordinator(options: Options) {
   }
   async function continueRecord(recordId: string) {
     return action(async () => {
+      const controller = store.getState().controller;
+      await controller.quiesce();
       const saved = await getRecord(recordId);
       if (saved.review) throw new DraftFailure("recovery_required");
-      const controller = store.getState().controller;
       const beforeRetire = async (replacement: RecoveryRecord) => {
         remapContinuation(saved, replacement);
       };
@@ -526,6 +527,7 @@ export function createRecoveryCoordinator(options: Options) {
             : "revision_conflict",
         );
       await controller.restore(recordId, beforeRetire);
+      controller.releaseReviewPause();
       if (saved.batch || saved.validationJournal || saved.discardJournal)
         await controller.retry();
       else await controller.flushValid();

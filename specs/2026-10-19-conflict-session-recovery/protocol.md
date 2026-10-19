@@ -22,6 +22,8 @@ Before same-tab navigation persist the quiesced recovery record and a strict ver
 
 The callback calls uncached owner status before reading local records. Owner and portfolio must match. Wrong accounts cannot open, copy or delete the original range. Missing/stale continuation offers ordinary account entry; cancelled/failed consent and reload/Back retain continuation for retry. The callback mounts shared controls; Continue preserved edits restores exact journals and verifies receipts before saving. It never automatically transfers an uncertain command or adopts unknown validation/staging. Changed-base/setup-closed recovery enters review.
 
+Continue preserved edits quiesces the active controller before source lookup and keeps fields suspended throughout restoration, including storage waits and source retirement. Release the pause after restoration before receipt verification/saving. Restore-only validation/discard paths and failures release it through the coordinator's finalizer. Existing active edits remain checkpointed and the controller rejects restoration over dirty values.
+
 The callback is a shared recovery entry only. Phase 17 supplies full editor fields and Phase 42E activates required guide routing through Phase 22A's future authoritative handoff/resolver.
 
 Continuation retirement follows replacement persistence. Restoration updates a matching tab continuation to the durable replacement record before deleting the original source. Callback reload can therefore offer remaining unfinished input without repeating a confirmed write. A changed-base staging discard checkpoints its original `reviewBase` and durable block before cleanup clears the journal, preserving the three-way comparison through a crash.

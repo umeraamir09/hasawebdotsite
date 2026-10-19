@@ -69,6 +69,70 @@ const seedPreserved = async (
   await storage.put(record);
 };
 describe("durable recovery coordination", () => {
+  it.each([false, true])(
+    "suspends edits throughout preserved restoration and releases the pause, storage failure: %s",
+    async (storageFails) => {
+      vi.useFakeTimers();
+      const network = fixtureTransport(),
+        storage = memoryStorage();
+      const options = {
+        ownerId: "owner-a",
+        portfolioId: "portfolio-a",
+        context: "setup" as const,
+        storage,
+        transport: network.transport,
+      };
+      const recovery = createRecoveryCoordinator(options);
+      scopes.push(recovery);
+      const controller = recovery.store.getState().controller;
+      await controller.initialize();
+      await seedPreserved(storage, network, options);
+      let release!: () => void;
+      const held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      let entered!: () => void;
+      const restoring = new Promise<void>((resolve) => {
+        entered = resolve;
+      });
+      const list = storage.list;
+      let reads = 0;
+      storage.list = async (...args) => {
+        // The coordinator reads the source first; hold restore's own lookup.
+        if (++reads === 2) {
+          entered();
+          await held;
+          if (storageFails) throw new Error("IndexedDB unavailable");
+        }
+        return list(...args);
+      };
+      const continuing = recovery.continueRecord("preserved-other-session");
+      const completed = continuing.catch((error: unknown) => error);
+      await restoring;
+      const suspended = controller.store.getState().suspended;
+      let accepted = false;
+      try {
+        accepted = controller.edit(["profile", "name"], "During restore");
+      } catch (error) {
+        expect(error).toMatchObject({ code: "recovery_required" });
+      } finally {
+        release();
+      }
+      const result = await completed;
+      expect(suspended).toBe(true);
+      expect(accepted).toBe(false);
+      expect(controller.store.getState().suspended).toBe(false);
+      if (storageFails) {
+        expect(result).toBeInstanceOf(Error);
+        expect(storage.records.has("preserved-other-session")).toBe(true);
+      } else {
+        expect(result).toBeUndefined();
+        expect(network.get().draft.profile.bio).toBe("Other session bio");
+        expect(controller.store.getState().status).toBe("saved");
+      }
+      expect(controller.edit(["profile", "name"], "After restore")).toBe(true);
+    },
+  );
   it("applies selected changes with a new scope and keeps a nonblocking review copy", async () => {
     const { recovery, network, storage, controller, options } = await fixture();
     controller.setInput(["requestedSubdomain"], "unfinished-");
