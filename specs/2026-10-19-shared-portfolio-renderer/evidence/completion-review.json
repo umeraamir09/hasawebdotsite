@@ -11,5 +11,10 @@
   "recordedDirectSourceComparisons": 6,
   "phase16Checked": true,
   "ownerAuthorization": "If no problems arise, check off phase 16 and open a pr",
-  "scopeUnchanged": true
+  "scopeUnchanged": true,
+  "committedSourceAndGuidanceWhitespaceCheck": true,
+  "preservedWhitespaceExceptions": [
+    "original copied OFL license",
+    "raw historical test logs"
+  ]
 }
