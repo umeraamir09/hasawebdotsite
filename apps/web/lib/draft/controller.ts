@@ -68,6 +68,23 @@ const initial = (): DraftState => ({
   validation: null,
   validationJournal: null,
 });
+export function recoverable(entry: RecoveryRecord) {
+  return (
+    !entry.reviewOnly &&
+    Boolean(
+      entry.review ||
+        entry.blocked ||
+        entry.batch ||
+        entry.validationJournal ||
+        entry.discardJournal ||
+        Object.keys(entry.inputs).length ||
+        Object.keys(entry.validationInputs ?? {}).length ||
+        !equal(entry.working, entry.base?.draft ?? null) ||
+        (entry.context === "setup" &&
+          !equal(entry.progress, entry.base?.progress ?? null)),
+    )
+  );
+}
 export function createDraftController(options: Options) {
   const store = createStore<DraftState>()(initial);
   const id = options.id ?? crypto.randomUUID();
@@ -284,23 +301,6 @@ export function createDraftController(options: Options) {
     if (result.portfolioId !== options.portfolioId)
       throw new DraftFailure("owner_changed");
     return result;
-  }
-  function recoverable(entry: RecoveryRecord) {
-    return (
-      !entry.reviewOnly &&
-      Boolean(
-        entry.review ||
-          entry.blocked ||
-          entry.batch ||
-          entry.validationJournal ||
-          entry.discardJournal ||
-          Object.keys(entry.inputs).length ||
-          Object.keys(entry.validationInputs ?? {}).length ||
-          !equal(entry.working, entry.base?.draft ?? null) ||
-          (entry.context === "setup" &&
-            !equal(entry.progress, entry.base?.progress ?? null)),
-      )
-    );
   }
   async function initialize() {
     return exclusive(async () => {

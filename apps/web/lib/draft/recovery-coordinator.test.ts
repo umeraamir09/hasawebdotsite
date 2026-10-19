@@ -13,7 +13,7 @@ import {
   type RecoveryCoordinator,
 } from "./recovery-coordinator";
 import { fixtureTransport, memoryStorage } from "./test-fixtures";
-import { DraftFailure, type Transport } from "./types";
+import { DraftFailure, type RecoveryRecord, type Transport } from "./types";
 
 const scopes: RecoveryCoordinator[] = [];
 afterEach(() => {
@@ -45,6 +45,29 @@ async function fixture() {
   });
   return { network, storage, options, recovery, controller };
 }
+const seedPreserved = async (
+  storage: ReturnType<typeof memoryStorage>,
+  network: ReturnType<typeof fixtureTransport>,
+  options: { ownerId: string; portfolioId: string },
+) => {
+  const base = structuredClone(network.get());
+  const working = structuredClone(base.draft);
+  working.profile.bio = "Other session bio";
+  const record: RecoveryRecord = {
+    version: 1,
+    id: "preserved-other-session",
+    ownerId: options.ownerId,
+    portfolioId: options.portfolioId,
+    context: "setup",
+    base,
+    working,
+    progress: base.progress,
+    inputs: {},
+    batch: null,
+    validationJournal: null,
+  };
+  await storage.put(record);
+};
 describe("durable recovery coordination", () => {
   it("applies selected changes with a new scope and keeps a nonblocking review copy", async () => {
     const { recovery, network, storage, controller, options } = await fixture();
@@ -709,5 +732,45 @@ describe("durable recovery coordination", () => {
     expect(JSON.stringify([...storage.records.values()])).toBe(records);
     expect(network.calls).toHaveLength(calls);
     expect(recovery.store.getState().review?.id).toBe(review.id);
+  });
+  it("keeps the active checkpoint when reviewing another preserved record", async () => {
+    const { recovery, storage, network, options } = await fixture();
+    await seedPreserved(storage, network, options);
+    await recovery.start("preserved-other-session");
+    expect(recovery.store.getState().review?.working?.profile.bio).toBe(
+      "Other session bio",
+    );
+    expect(
+      [...storage.records.values()].some(
+        (record) => !record.review && record.working?.profile.name === "Mine",
+      ),
+    ).toBe(true);
+  });
+  it("keeps unfinished raw input in the active scope when reviewing another record", async () => {
+    const { recovery, storage, network, options, controller } = await fixture();
+    controller.setInput(["requestedSubdomain"], "unfinished-");
+    await seedPreserved(storage, network, options);
+    await recovery.start("preserved-other-session");
+    expect(
+      [...storage.records.values()].some((record) =>
+        Object.values(record.inputs).some(
+          (input) => input.value === "unfinished-",
+        ),
+      ),
+    ).toBe(true);
+  });
+  it("leaves the kept active checkpoint listed after applying another review", async () => {
+    const { recovery, storage, network, options } = await fixture();
+    await seedPreserved(storage, network, options);
+    await recovery.start("preserved-other-session");
+    await recovery.select(recovery.store.getState().items[0]!.id, true);
+    await recovery.apply();
+    expect(network.get().draft.profile.bio).toBe("Other session bio");
+    const current = recovery.store.getState().controller;
+    expect(
+      current.store
+        .getState()
+        .recoveries.some((record) => record.working?.profile.name === "Mine"),
+    ).toBe(true);
   });
 });

@@ -1,7 +1,11 @@
 import type { DraftReadResult, SaveAttemptStatus } from "@hasaweb/schema";
 import { createStore } from "zustand/vanilla";
 import { readContinuation, writeContinuation } from "./auth-recovery";
-import { createDraftController, type DraftController } from "./controller";
+import {
+  createDraftController,
+  type DraftController,
+  recoverable,
+} from "./controller";
 import { createRecoveryStorage } from "./recovery";
 import { applySelections, compareRecovery } from "./review";
 import { createDraftTransport } from "./transport";
@@ -219,7 +223,9 @@ export function createRecoveryCoordinator(options: Options) {
       await storage.put(review);
       remapContinuation(source, review);
       await storage.remove(source.id, source);
-      if (checkpoint.id !== source.id)
+      // Reviewing an archived record must not delete the active scope's newer
+      // work. Keep a recoverable checkpoint; only a clean one is retired.
+      if (checkpoint.id !== source.id && !recoverable(checkpoint))
         await storage.remove(checkpoint.id, checkpoint);
       store.setState({
         review,
