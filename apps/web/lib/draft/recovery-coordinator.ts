@@ -204,8 +204,6 @@ export function createRecoveryCoordinator(options: Options) {
           !(source.context === "setup" && latest.firstEditorEnteredAt !== null))
       )
         throw new DraftFailure("recovery_required");
-      controller.dispose();
-      await controller.persist();
       const review: RecoveryRecord = {
         ...structuredClone(source),
         id: crypto.randomUUID(),
@@ -222,16 +220,18 @@ export function createRecoveryCoordinator(options: Options) {
       // The review copy exists before conditional retirement of either source.
       await storage.put(review);
       remapContinuation(source, review);
-      await storage.remove(source.id, source);
-      // Reviewing an archived record must not delete the active scope's newer
-      // work. Keep a recoverable checkpoint; only a clean one is retired.
-      if (checkpoint.id !== source.id && !recoverable(checkpoint))
-        await storage.remove(checkpoint.id, checkpoint);
+      controller.dispose();
+      await controller.persist();
       store.setState({
         review,
         items: compareRecovery(review, latest),
         selected: [],
       });
+      await storage.remove(source.id, source);
+      // Reviewing an archived record must not delete the active scope's newer
+      // work. Keep a recoverable checkpoint; only a clean one is retired.
+      if (checkpoint.id !== source.id && !recoverable(checkpoint))
+        await storage.remove(checkpoint.id, checkpoint);
       await finishReviewReceipt(review);
     });
   }
@@ -322,6 +322,7 @@ export function createRecoveryCoordinator(options: Options) {
       if (prepared && replacement) {
         const controller = make(replacement.context);
         await controller.initialize().catch(() => {});
+        await controller.quiesce();
         previous.dispose();
         await previous.persist();
         store.setState({ controller });
@@ -353,6 +354,7 @@ export function createRecoveryCoordinator(options: Options) {
           ).filter((entry) => entry.id !== activeRecord.id),
         });
         store.setState({ controller, review: null, items: [], selected: [] });
+        controller.releaseReviewPause();
         if (journal) await controller.retry();
         else await controller.flushValid();
         await controller.persist();
@@ -509,9 +511,13 @@ export function createRecoveryCoordinator(options: Options) {
       const beforeRetire = async (replacement: RecoveryRecord) => {
         remapContinuation(saved, replacement);
       };
-      if (saved.validationJournal || (!saved.working && saved.discardJournal)) {
+      if (saved.discardJournal || saved.validationJournal) {
         await controller.restore(recordId, beforeRetire);
-        // Restore only. The validation/resume controls verify the journal and
+        if (saved.discardJournal) {
+          controller.releaseReviewPause();
+          await controller.discardAttempt(true);
+        }
+        // Validation is restore-only. Its controls verify the journal and
         // require the appropriate explicit correction/transfer choice.
         return;
       }

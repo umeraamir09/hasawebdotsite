@@ -69,6 +69,186 @@ const seedPreserved = async (
   await storage.put(record);
 };
 describe("durable recovery coordination", () => {
+  it.each(["setup", "content"] as const)(
+    "finishes setup discard in %s context after handoff without replaying content or progress",
+    async (context) => {
+      vi.useFakeTimers();
+      const network = fixtureTransport(),
+        storage = memoryStorage();
+      const options = {
+        ownerId: "owner-a",
+        portfolioId: "portfolio-a",
+        context: "setup" as const,
+        storage,
+        transport: network.transport,
+      };
+      const original = createDraftController(options);
+      await original.initialize();
+      original.edit(["profile", "name"], "Post-handoff selection");
+      const source = await original.quiesce();
+      original.dispose();
+      await original.persist();
+      await storage.put({
+        ...source,
+        discardJournal: { id: null, revision: 0, confirmed: true },
+      });
+      // The permanent milestone is independently authoritative, even at the same revision.
+      network.get().firstEditorEnteredAt = 123;
+      network.get().progress = { schemaVersion: 1, step: "review" };
+      const recovery = createRecoveryCoordinator({ ...options, context });
+      scopes.push(recovery);
+      const controller = recovery.store.getState().controller;
+      await controller.initialize().catch(() => {});
+      await expect(recovery.continueRecord(source.id)).rejects.toMatchObject({
+        code: "setup_closed",
+      });
+      expect(controller.store.getState().discardJournal).toBeNull();
+      expect(network.get().draft.profile.name).not.toBe(
+        "Post-handoff selection",
+      );
+      expect(
+        network.calls.some((call) =>
+          ["patch", "begin", "commit"].includes(call.action),
+        ),
+      ).toBe(false);
+      await recovery.start();
+      await recovery.select(
+        recovery.store
+          .getState()
+          .items.find((item) => item.path.at(-1) === "name")!.id,
+        true,
+      );
+      await recovery.apply();
+      expect(network.get().draft.profile.name).toBe("Post-handoff selection");
+      expect(network.get().progress.step).toBe("review");
+      expect(network.get().firstEditorEnteredAt).toBe(123);
+      expect(
+        network.calls.filter((call) => call.action === "patch").at(-1)?.body
+          .context,
+      ).toBe("content");
+    },
+  );
+  it("keeps a freshly readable canonical draft when a discard checkpoint has no working draft", async () => {
+    vi.useFakeTimers();
+    const network = fixtureTransport(),
+      storage = memoryStorage();
+    const options = {
+      ownerId: "owner-a",
+      portfolioId: "portfolio-a",
+      context: "content" as const,
+      storage,
+      transport: network.transport,
+    };
+    await storage.put({
+      version: 1,
+      id: "discard-without-draft",
+      ownerId: options.ownerId,
+      portfolioId: options.portfolioId,
+      context: options.context,
+      base: null,
+      working: null,
+      progress: null,
+      inputs: {},
+      batch: null,
+      validationJournal: null,
+      discardJournal: { id: null, revision: 0, confirmed: true },
+    });
+    const recovery = createRecoveryCoordinator(options);
+    scopes.push(recovery);
+    const controller = recovery.store.getState().controller;
+    await controller.initialize().catch(() => {});
+    await recovery.continueRecord("discard-without-draft");
+    expect(controller.store.getState().working).toEqual(network.get().draft);
+    expect(controller.store.getState().status).toBe("saved");
+    expect(
+      network.calls.some((call) =>
+        ["patch", "begin", "commit"].includes(call.action),
+      ),
+    ).toBe(false);
+  });
+  it.each(["abort", "cleanup"])(
+    "finishes a crash-retained %s discard before reviewing changed-base working values",
+    async (lostReply) => {
+      vi.useFakeTimers();
+      const network = fixtureTransport(),
+        storage = memoryStorage();
+      const options = {
+        ownerId: "owner-a",
+        portfolioId: "portfolio-a",
+        context: "setup" as const,
+        storage,
+        transport: network.transport,
+      };
+      const first = createRecoveryCoordinator(options);
+      scopes.push(first);
+      const original = first.store.getState().controller;
+      await original.initialize();
+      original.edit(["profile", "bio"], "preserved".repeat(1500));
+      original.setInput(["requestedSubdomain"], "unfinished-");
+      network.before(async (action) => {
+        if (action === "piece") throw new DraftFailure("network", true);
+      });
+      await original.flushValid().catch(() => {});
+      network.before(null);
+      network.get().revision++;
+      network.get().draft.profile.location = "Remote location";
+      network.after((action) => {
+        if (action === lostReply) {
+          network.after(null);
+          throw new DraftFailure("network", true);
+        }
+      });
+      await original.discardAttempt().catch(() => {});
+      original.dispose();
+      await original.persist();
+      const source = [...storage.records.values()][0]!;
+      expect(source.discardJournal).toBeTruthy();
+      // A journal may outlive its batch checkpoint as well.
+      if (lostReply === "abort") {
+        source.batch = null;
+        await storage.put(source);
+      }
+      const reload = createRecoveryCoordinator(options);
+      scopes.push(reload);
+      const controller = reload.store.getState().controller;
+      await controller.initialize().catch(() => {});
+      await expect(reload.continueRecord(source.id)).rejects.toMatchObject({
+        code: "revision_conflict",
+      });
+      expect(controller.store.getState().discardJournal).toBeNull();
+      expect(
+        controller.store
+          .getState()
+          .recoveries.some((record) => record.id === source.id),
+      ).toBe(false);
+      expect(controller.store.getState().working?.profile.bio).toBe(
+        "preserved".repeat(1500),
+      );
+      expect(controller.store.getState().suspended).toBe(false);
+      expect(network.pending()).toBeNull();
+      expect(network.calls.some((call) => call.action === "commit")).toBe(
+        false,
+      );
+      await reload.start();
+      expect(
+        reload.store
+          .getState()
+          .items.some((item) => item.path.at(-1) === "location"),
+      ).toBe(false);
+      expect(
+        Object.values(reload.store.getState().review!.inputs)[0]?.value,
+      ).toBe("unfinished-");
+      await reload.select(
+        reload.store
+          .getState()
+          .items.find((item) => item.path.at(-1) === "bio")!.id,
+        true,
+      );
+      await reload.apply();
+      expect(network.get().draft.profile.location).toBe("Remote location");
+      expect(network.get().draft.profile.bio).toBe("preserved".repeat(1500));
+    },
+  );
   it.each([false, true])(
     "suspends edits throughout preserved restoration and releases the pause, storage failure: %s",
     async (storageFails) => {
@@ -219,6 +399,68 @@ describe("durable recovery coordination", () => {
     };
     await expect(recovery.start()).rejects.toThrow();
     expect(storage.records.get(source.id)?.working?.profile.name).toBe("Mine");
+    expect(controller.store.getState().suspended).toBe(false);
+    expect(controller.edit(["profile", "name"], "After storage failure")).toBe(
+      true,
+    );
+  });
+  it("suspends a prepared journal replacement while its restore lookup waits", async () => {
+    const { recovery, network, storage, options } = await fixture();
+    await recovery.start();
+    await recovery.select(recovery.store.getState().items[0]!.id, true);
+    network.after((action) => {
+      if (action === "patch") {
+        network.after(null);
+        throw new DraftFailure("network", true);
+      }
+    });
+    await recovery.apply().catch(() => {});
+    const review = [...storage.records.values()].find(
+      (record) => record.reviewOnly,
+    )!;
+    review.reviewOnly = false;
+    review.review!.phase = "prepared";
+    await storage.put(review);
+    const reload = createRecoveryCoordinator(options);
+    scopes.push(reload);
+    const previous = reload.store.getState().controller;
+    await previous.initialize().catch(() => {});
+    let release!: () => void, entered!: () => void;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const restoring = new Promise<void>((resolve) => {
+      entered = resolve;
+    });
+    const list = storage.list;
+    let waiting = true;
+    storage.list = async (...args) => {
+      if (waiting && reload.store.getState().controller !== previous) {
+        waiting = false;
+        entered();
+        await held;
+      }
+      return list(...args);
+    };
+    const reopening = reload.reopen(review.id);
+    const completed = reopening.catch((error: unknown) => error);
+    await restoring;
+    const current = reload.store.getState().controller;
+    const suspended = current.store.getState().suspended;
+    let accepted = false;
+    try {
+      accepted = current.edit(["profile", "bio"], "During prepared restore");
+    } catch (error) {
+      expect(error).toMatchObject({ code: "recovery_required" });
+    } finally {
+      release();
+    }
+    expect(await completed).toBeUndefined();
+    expect(suspended).toBe(true);
+    expect(accepted).toBe(false);
+    expect(current.store.getState().suspended).toBe(false);
+    expect(current.store.getState().working?.profile.name).toBe("Mine");
+    expect(network.get().draft.profile.bio).toBe("Newer bio");
   });
   it("does not erase a source another tab updated", async () => {
     const { recovery, storage } = await fixture();

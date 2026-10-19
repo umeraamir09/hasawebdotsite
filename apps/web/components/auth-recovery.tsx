@@ -131,10 +131,15 @@ export function AuthRecovery() {
         </div>
       )}
       {entry?.kind === "ready" && (
-        <p>
-          Your account matches. Continue preserved edits explicitly, verify an
-          interrupted save, or review against the newer saved draft.
-        </p>
+        <>
+          <p>
+            Your account matches. Continue preserved edits explicitly, verify an
+            interrupted save, or review against the newer saved draft.
+          </p>
+          <a className="ghost-button" href="/editor">
+            Open your account
+          </a>
+        </>
       )}
       {recovery && <DraftRecovery recovery={recovery} />}
     </main>

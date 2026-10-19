@@ -758,9 +758,9 @@ export function createDraftController(options: Options) {
     if (paused) throw new DraftFailure("recovery_required");
     if (state().error === "owner_changed")
       throw new DraftFailure("owner_changed");
+    if (state().discardJournal) return discardAttempt(true);
     const blocked = blockedReason();
     if (blocked) throw new DraftFailure(blocked);
-    if (state().discardJournal) return discardAttempt(true);
     if (state().validationJournal) return validateLegacy();
     if (!state().confirmed && !state().batch) {
       await initialize();
@@ -808,6 +808,39 @@ export function createDraftController(options: Options) {
         throw new DraftFailure("owner_changed");
       if (saved.reviewOnly || saved.review)
         throw new DraftFailure("recovery_required");
+      if (saved.discardJournal) {
+        // Restore cleanup intent even across a revision change or setup handoff.
+        // Keep its original base and values; discard never replays this batch.
+        recoverySource = structuredClone(saved);
+        reviewBase =
+          saved.reviewBase ?? saved.batch?.base ?? saved.base ?? undefined;
+        store.setState({
+          confirmed: saved.base ?? state().confirmed,
+          working: saved.working ?? state().working,
+          progress: saved.progress ?? state().progress,
+          inputs: { ...saved.inputs, ...state().inputs },
+          validationInputs: {
+            ...saved.validationInputs,
+            ...state().validationInputs,
+          },
+          batch: saved.batch,
+          validationJournal: saved.validationJournal,
+          discardJournal: saved.discardJournal,
+          recoveries: records.filter(
+            (entry) => entry.id !== saved.id && entry.id !== id,
+          ),
+          error:
+            saved.blocked ??
+            (saved.working &&
+            (saved.context !== options.context || contextClosed())
+              ? "setup_closed"
+              : "recovery_required"),
+          status: "blocked",
+        });
+        await persist();
+        if (state().localRecoveryAvailable) await beforeRetire?.(record());
+        return;
+      }
       if (
         saved.validationJournal ||
         (!saved.working &&

@@ -1095,6 +1095,87 @@ export async function checkAutosave({
     }
     for (const lost of ["abort", "cleanup"]) {
       await run(
+        `changed-base working discard recovers a lost ${lost} reply through review`,
+        async () => {
+          await reset();
+          await boot(page, "?recovery");
+          await page.evaluate(() => {
+            window.fixture.fault.action = "piece";
+            window.fixture.fault.mode = "before";
+            window.fixture.controller.edit(
+              ["profile", "bio"],
+              "preserved-discard".repeat(800),
+            );
+            window.fixture.controller.setInput(
+              ["requestedSubdomain"],
+              "unfinished-discard-",
+            );
+            return window.fixture.controller.flushValid().catch(() => {});
+          });
+          await sql(
+            "UPDATE portfolio SET draft=json_set(draft,'$.profile.location','Remote location'),draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+          );
+          await page.evaluate(async (action) => {
+            window.fixture.fault.action = action;
+            window.fixture.fault.mode = "after";
+            await window.fixture.controller.discardAttempt().catch(() => {});
+          }, lost);
+          assert.ok((await snapshot()).discardJournal);
+          await boot(page, "?recovery");
+          await page
+            .getByRole("button", {
+              name: "Continue preserved edits",
+              exact: true,
+            })
+            .click();
+          await page.waitForFunction(
+            () =>
+              !window.fixture.recovery.store.getState().busy &&
+              window.fixture.controller.store.getState().error ===
+                "revision_conflict",
+          );
+          assert.equal((await snapshot()).discardJournal, null);
+          assert.equal(
+            (await snapshot()).working.profile.bio,
+            "preserved-discard".repeat(800),
+          );
+          assert.equal((await getDraft()).profile.location, "Remote location");
+          await page
+            .getByRole("region", { name: "Resolve saved version", exact: true })
+            .getByRole("button", {
+              name: "Keep my edits for review",
+              exact: true,
+            })
+            .click();
+          await page.waitForFunction(
+            () =>
+              !window.fixture.recovery.store.getState().busy &&
+              Boolean(window.fixture.recovery.store.getState().review),
+          );
+          assert.equal(await page.getByRole("checkbox").count(), 1);
+          await page.getByRole("checkbox").click();
+          await page.waitForFunction(
+            () => !window.fixture.recovery.store.getState().busy,
+          );
+          await page
+            .getByRole("button", { name: "Apply selected changes" })
+            .click();
+          await page.waitForFunction(
+            () =>
+              window.fixture.controller.store.getState().status === "unsaved",
+          );
+          assert.equal(
+            (await getDraft()).profile.bio,
+            "preserved-discard".repeat(800),
+          );
+          assert.equal((await getDraft()).profile.location, "Remote location");
+          assert.equal(
+            Object.values((await snapshot()).inputs)[0].value,
+            "unfinished-discard-",
+          );
+        },
+      );
+      await run(
         `lost ${lost} reply preserves explicit discard intent across reload`,
         async () => {
           const legacy = structuredClone(fixture);

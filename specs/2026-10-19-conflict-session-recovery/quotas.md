@@ -32,3 +32,14 @@ Fixture-only D1 instrumentation records rows read/written and queries without re
 The Phase 14 [quota model](../2026-10-18-shared-autosave-recovery/quotas.md) and [CPU investigation](../2026-10-18-shared-autosave-recovery/performance.md) still apply. Maximum streamed reads cost 76 observed rows in the prior fixture; dense component scans and repeated large replacements can exceed Free capacity. Recovery fetches add that shape-dependent cost, so adapters must not poll full drafts or refetch after every ordinary acknowledgement.
 
 No production draft-handler hot path changed. The server change is the fixed social sign-in destination allowlist. This phase makes no claim of equivalent deployed CPU performance. The initial KHI failure and intended-deployment/cold CPU prerequisite remain unresolved before owner-flow activation, as do shared publication dispatch and withdrawal budgets.
+
+## PR 21 follow-up costs
+
+The [follow-up record](review-follow-up.json) retains the final local Chromium run's changed-base discard/review costs. Each scenario includes provisioning, interrupted staging, a dropped discard reply, reload, pinned cleanup, explicit selection and the final staged save. Counts cover instrumented browser/API requests; fixture SQL mutations run outside that measurement. These are complete scenario costs, not per-discard allowances.
+
+| Scenario | Requests | D1 rows read | D1 rows written |
+| --- | ---: | ---: | ---: |
+| Changed-base working values, lost abort reply and selected review | 33 | 481 | 37 |
+| Changed-base working values, lost cleanup reply and selected review | 33 | 475 | 37 |
+
+Clean callback journeys also verify that account entry and callback reload perform no draft patch. The account-entry link and additional suspension/checkpoint ordering add no server action or polling. Existing CPU and publication prerequisites above remain unchanged.

@@ -73,7 +73,7 @@ Object.assign(window, {
       if (!record) throw new Error("Fixture review checkpoint missing");
       await signInForRecovery(record, "github");
     },
-    async prepare(provider: "github" | "google") {
+    async prepare(provider: "github" | "google", clean = false) {
       const owner = await readOwner();
       if (!owner?.portfolio)
         throw new Error("Fixture needs a signed-in portfolio");
@@ -104,15 +104,26 @@ Object.assign(window, {
         if (controller.store.getState().status !== "saved")
           throw new Error("Fixture validation did not finish");
       });
-      controller.edit(["profile", "name"], `Recovered with ${provider}`);
-      controller.setInput(["requestedSubdomain"], `unfinished-${provider}-`);
+      if (!clean) {
+        controller.edit(["profile", "name"], `Recovered with ${provider}`);
+        controller.setInput(["requestedSubdomain"], `unfinished-${provider}-`);
+      }
       const expired = await fetch("/__fixture/expire", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "{}",
       });
       if (!expired.ok) throw new Error("Could not expire fixture session");
-      await controller.flushValid().catch(() => {});
+      if (clean) {
+        // Model expiry before the first successful draft read for Google.
+        if (provider === "google")
+          controller.store.setState({
+            confirmed: null,
+            working: null,
+            progress: null,
+          });
+        await controller.initialize().catch(() => {});
+      } else await controller.flushValid().catch(() => {});
       if (controller.store.getState().error !== "unauthorized")
         throw new Error("Expected expired session");
       await leaveForRecovery(controller, provider);

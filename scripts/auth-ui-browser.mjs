@@ -625,6 +625,33 @@ export async function checkAuthUi({
     assert.deepEqual(googleOwner, githubOwner);
     checks.push("sign-out and Google reauthentication reopen the same account");
     for (const provider of ["github", "google"]) {
+      const before = requests.filter((request) =>
+        request.path.endsWith("/patch"),
+      ).length;
+      await evaluate("import('/__recovery-fixture.js')");
+      await evaluate(
+        `void window.recoveryFixture.prepare('${provider}', true).catch(e => { window.recoveryFailure = e.message; })`,
+      );
+      const accountLink =
+        "Array.from(document.querySelectorAll('a')).find(a => a.textContent === 'Open your account' && a.getAttribute('href') === '/editor')";
+      await until(
+        `location.pathname === '/auth/recovery' && !!(${accountLink})`,
+      );
+      await command("Page.reload");
+      await until(`!!(${accountLink})`);
+      assert.equal(
+        requests.filter((request) => request.path.endsWith("/patch")).length,
+        before,
+      );
+      await evaluate(`(${accountLink}).click()`);
+      await until(
+        "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+      );
+    }
+    checks.push(
+      "clean recovery and expiry before the first draft read offer account entry across callback reload without draft writes",
+    );
+    for (const provider of ["github", "google"]) {
       await evaluate("import('/__recovery-fixture.js')");
       await evaluate(
         `void window.recoveryFixture.prepare('${provider}').catch(e => { window.recoveryFailure = e.message; })`,
