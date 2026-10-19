@@ -1,0 +1,51 @@
+.draft-status {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: 20px;
+  border: 1px solid var(--border-control);
+  border-radius: 12px;
+  background: var(--bg-raised);
+  font-size: 14px;
+  line-height: 20px;
+}
+.draft-message {
+  color: var(--text-secondary);
+}
+.draft-recovery,
+.draft-confirm {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.draft-recovery > p,
+.draft-confirm > p {
+  flex: 1 0 100%;
+}
+.draft-confirm {
+  padding: 16px;
+  background: var(--bg-surface);
+  border-radius: 12px;
+}
+.draft-status label {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+.draft-status input {
+  min-height: 48px;
+  max-width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-control);
+  border-radius: 12px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font: inherit;
+}
+.draft-status input:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 4px;
+}

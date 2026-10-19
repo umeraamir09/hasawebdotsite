@@ -2,7 +2,7 @@
 
 This document defines how to verify each MVP feature in [product.md](product.md). Section numbers match the product's feature map. Each numbered criterion is a pass/fail requirement, not a claim that the current implementation passes it.
 
-The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. The ON checks in section 2 still require the guided UI and integrated journey; passing prerequisite fixtures does not pass a whole ON check. See [current status](implementation-status.md).
+The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13, with Phase 14 shared autosave/recovery controls verified through an isolated fixture. Full editor/onboarding integration remains pending. The ON checks in section 2 still require the guided UI and integrated journey; passing prerequisite fixtures does not pass a whole ON check. See [current status](implementation-status.md).
 
 Verify owner behavior with a new account and a returning account. Verify public behavior as a signed-out visitor and, for access boundaries, as another signed-in owner. Use known test content and compare the saved draft and published output against it. Exercise failures with controlled authentication, network, upload, save, and delivery failures. Record the observed result for each criterion.
 

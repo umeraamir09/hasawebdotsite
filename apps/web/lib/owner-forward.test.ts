@@ -10,11 +10,18 @@ describe("owner Worker adapter", () => {
     };
     const request = new Request("https://hasaweb.site/api/owner/draft", {
       method: "POST",
-      headers: { Cookie: "signed-session", Origin: env.APP_ORIGIN },
+      headers: {
+        Cookie: "signed-session",
+        Origin: env.APP_ORIGIN,
+        "X-Expected-Owner-Id": "owner-a",
+      },
       body: "draft body",
     });
     expect((await forwardOwnerRequest(request, env))?.status).toBe(200);
     expect(fetch.mock.calls[0]?.[0]).toBe(request);
+    expect(fetch.mock.calls[0]?.[0].headers.get("X-Expected-Owner-Id")).toBe(
+      "owner-a",
+    );
     expect(request.bodyUsed).toBe(false);
     for (const path of ["/api/ownership", "/api/auth/get-session", "/editor"])
       expect(

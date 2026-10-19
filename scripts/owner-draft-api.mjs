@@ -106,6 +106,7 @@ async function request(action, body = {}, options = {}) {
         Origin: origin,
         "Content-Type": "application/json",
         Cookie: options.owner === null ? "" : cookie(options.owner ?? "alice"),
+        "X-Expected-Owner-Id": `draft-${(options.owner ?? "alice").replace("-other", "")}`,
         ...options.headers,
       },
       ...(method === "GET"
@@ -188,6 +189,8 @@ async function request(action, body = {}, options = {}) {
   return result;
 }
 async function check(name, action) {
+  if (process.argv.includes("--autosave") && !name.startsWith("real session"))
+    return;
   if (
     process.argv.includes("--legacy-only") &&
     !name.startsWith("real session") &&
@@ -441,6 +444,30 @@ try {
         { headers: { "Content-Type": "text/plain" }, status: 415 },
       );
       await request("/api/owner/draft", {}, { method: "DELETE", status: 405 });
+      assert.deepEqual(
+        await request(
+          "/api/owner/draft",
+          {},
+          { headers: { "X-Expected-Owner-Id": "" }, status: 400 },
+        ),
+        { error: "invalid_input" },
+      );
+      assert.deepEqual(
+        await request(
+          "patch",
+          {
+            context: "content",
+            revision: 0,
+            change: {
+              op: "set",
+              path: ["profile", "name"],
+              value: "foreign input",
+            },
+          },
+          { headers: { "X-Expected-Owner-Id": "draft-bob" }, status: 409 },
+        ),
+        { error: "owner_changed" },
+      );
     },
   );
   await check(
@@ -1715,6 +1742,20 @@ try {
         ),
       );
     }
+  }
+  if (process.argv.includes("--autosave")) {
+    const { checkAutosave } = await import("./autosave-browser.mjs");
+    await checkAutosave({
+      root,
+      origin,
+      cookie,
+      sql,
+      fixture,
+      esbuild,
+      evidence,
+      secrets,
+      tokens,
+    });
   }
   await writeJsonEvidence(
     pathToFileURL(

@@ -1,0 +1,122 @@
+{
+  "date": "2026-10-18",
+  "branch": "feat/shared-autosave-recovery",
+  "checks": [
+    {
+      "command": "pnpm check",
+      "passed": true,
+      "packages": 12,
+      "unitTests": 280,
+      "testFiles": 24,
+      "clientPlannerTests": 56
+    },
+    {
+      "command": "pnpm build",
+      "passed": true,
+      "tasks": 12
+    },
+    {
+      "command": "pnpm test:draft-api",
+      "passed": true,
+      "groups": 15,
+      "evidence": "cpu-candidate-api/local-results.json"
+    },
+    {
+      "command": "pnpm test:autosave",
+      "passed": true,
+      "browserScenarios": 37,
+      "requests": 1364,
+      "maxQueries": 10,
+      "maxWireBytes": 4164,
+      "evidence": "review-browser/browser-results.json",
+      "priorFixtureInitializationFailure": "journal-browser/browser-partial.json",
+      "accessibilityStates": [
+        "ordinary unsaved input",
+        "local recovery",
+        "Retry",
+        "Resume",
+        "destination correction",
+        "staged discard confirmation"
+      ]
+    },
+    {
+      "command": "pnpm test:persistence",
+      "passed": true,
+      "groups": 73,
+      "evidence": "persistence-evidence.json"
+    },
+    {
+      "command": "pnpm test:auth:browser",
+      "passed": true,
+      "checks": 29,
+      "browserJourneys": 10,
+      "evidence": "auth-final/evidence.json"
+    },
+    {
+      "command": "pnpm test:bounded-saves",
+      "passed": true,
+      "groups": 17,
+      "evidence": "bounded/local-results.json",
+      "priorTransientFailure": "bounded-failed/local-results.json"
+    },
+    {
+      "command": "pnpm test:runtime",
+      "passed": true,
+      "capabilities": [
+        "three Workers",
+        "D1",
+        "three R2 buckets",
+        "service bindings",
+        "Queue",
+        "Workflow",
+        "restart persistence"
+      ]
+    },
+    {
+      "check": "production artifact fixture marker scan",
+      "passed": true
+    },
+    {
+      "check": "roadmap checkbox comparison: only explicitly approved Phase 14 changes",
+      "passed": true
+    }
+  ],
+  "provider": {
+    "measuredColo": "LHE",
+    "nativeCases": 22,
+    "primaryCommands": 2200,
+    "maxJobsP95Ms": 8.797,
+    "maxWebP95Ms": 1.23,
+    "jobsStartupMs": 103,
+    "webStartupMs": 36,
+    "quotaCases": 22,
+    "maximumReadRows": 76,
+    "maximumReadQueries": 3,
+    "fixturePreparationFailure": {
+      "code": 1101,
+      "primaryCommandsFailed": 0,
+      "cause": "unknown",
+      "normalEvidence": "provider/final-65536/deployed-partial.json",
+      "validationEvidence": "provider/final-validation/deployed-requests.json"
+    },
+    "cleanupVerified": true,
+    "cleanupEvidence": "provider/cleanup-verification.json",
+    "remainingPrerequisite": "Remeasure retained configuration in KHI/intended deployment conditions before owner-flow activation; the original KHI failure remains unresolved."
+  },
+  "documentationImpact": {
+    "documents": 20,
+    "localLinks": 245,
+    "broken": [],
+    "checks": [
+      "Current and historical autosave/recovery/owner-header/CPU/byte-limit guidance searched with rg",
+      "Dependent phases 15, 17, 22A, 24, 42E, 49 and 51\u201352 reviewed/updated",
+      "Only the Phase 14 checkbox changes after explicit owner completion approval; earlier approval records and later phases remain unchanged"
+    ]
+  },
+  "ownerApproval": {
+    "date": "2026-10-18",
+    "instruction": "Mark it as complete and open a PR.",
+    "phase": 14,
+    "checked": true
+  }
+}

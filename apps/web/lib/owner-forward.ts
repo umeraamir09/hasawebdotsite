@@ -14,7 +14,8 @@ export async function forwardOwnerRequest(
   if (!env.APP_ORIGIN || url.origin !== env.APP_ORIGIN)
     return new Response(null, { status: 404, headers });
   try {
-    // Forward the original cookie and stream. Never forward a claimed owner ID.
+    // Forward the original cookie, stream and expected-owner precondition.
+    // Only the jobs authentication boundary supplies the authoritative identity.
     return await env.OWNER_API.fetch(request);
   } catch {
     return new Response(null, { status: 503, headers });

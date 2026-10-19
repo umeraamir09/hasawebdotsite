@@ -111,6 +111,7 @@ export type SaveAttemptStatus = {
   validationIssue: LegacyValidationIssue | null;
 };
 export type SaveErrorCode =
+  | "owner_changed"
   | "revision_conflict"
   | "attempt_conflict"
   | "attempt_unavailable"

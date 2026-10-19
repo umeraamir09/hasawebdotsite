@@ -7,7 +7,7 @@ import { type Attempt, boundedSaves, SaveError } from "./bounded-save";
 import type { SessionIdentity } from "./repositories";
 
 const responseEncoder = new TextEncoder();
-const RESPONSE_CHARACTERS = 16_384;
+const RESPONSE_CHARACTERS = 65_536;
 
 export const activeSaveSession = `EXISTS(SELECT 1 FROM session s JOIN user u ON u.id=s.user_id WHERE s.id=? AND s.user_id=? AND s.expires_at>? AND u.deleting_at IS NULL)`;
 export const saveSessionParams = (identity: SessionIdentity) => [
@@ -15,6 +15,17 @@ export const saveSessionParams = (identity: SessionIdentity) => [
   identity.user.id,
   Date.now(),
 ];
+export async function assertSaveSession(
+  db: D1Database,
+  identity: SessionIdentity,
+) {
+  const row = await db
+    .prepare(`SELECT ${activeSaveSession} AS active`)
+    .bind(...saveSessionParams(identity))
+    .first<{ active: number }>();
+  if (!row?.active)
+    throw new SaveError(401, "Owner unavailable", "unauthorized");
+}
 export function publicAttempt(
   row: Attempt | Record<string, unknown> | null,
 ): SaveAttemptStatus | null {
@@ -40,8 +51,14 @@ export function ownerDrafts(db: D1Database, identity: SessionIdentity) {
     user: { id: identity.user.id },
     session: { id: identity.session.id },
   };
-  const saves = (context: "setup" | "content") =>
-    boundedSaves(db, identity, {
+  const engines = new Map<
+    "setup" | "content",
+    ReturnType<typeof boundedSaves>
+  >();
+  const saves = (context: "setup" | "content") => {
+    let engine = engines.get(context);
+    if (engine) return engine;
+    engine = boundedSaves(db, identity, {
       table: "portfolio",
       owner: "user_id",
       revision: "draft_rev",
@@ -52,6 +69,15 @@ export function ownerDrafts(db: D1Database, identity: SessionIdentity) {
       updatedAt: "updated_at",
       context,
     });
+    engines.set(context, engine);
+    return engine;
+  };
+  const unavailable = async (): Promise<never> => {
+    // Only failure paths need this query. Each successful operation already
+    // checks active access in its own SQL statement.
+    await assertSaveSession(db, identity);
+    throw new SaveError(404, "Portfolio unavailable", "not_found");
+  };
   const metadata = async () => {
     const row = await db
       .prepare(
@@ -64,7 +90,7 @@ export function ownerDrafts(db: D1Database, identity: SessionIdentity) {
         progress: string;
         firstEditorEnteredAt: number | null;
       }>();
-    if (!row) throw new SaveError(404, "Portfolio unavailable", "not_found");
+    if (!row) return unavailable();
     return {
       ...row,
       progress: setupProgressSchema.parse(JSON.parse(row.progress)),
@@ -84,15 +110,7 @@ export function ownerDrafts(db: D1Database, identity: SessionIdentity) {
       .raw<[number, number, string | null]>();
     const row = rows[0];
     if (!row) {
-      // Only the failure path needs another read to distinguish a missing
-      // portfolio from a session revoked/deleted after library verification.
-      const active = await db
-        .prepare(`SELECT ${activeSaveSession} AS active`)
-        .bind(...saveSessionParams(identity))
-        .first<{ active: number }>();
-      if (!active?.active)
-        throw new SaveError(401, "Owner unavailable", "unauthorized");
-      throw new SaveError(404, "Portfolio unavailable", "not_found");
+      return unavailable();
     }
     if (!row[1] && !recovery)
       throw new SaveError(409, "Unsupported draft", "unsupported_version");
