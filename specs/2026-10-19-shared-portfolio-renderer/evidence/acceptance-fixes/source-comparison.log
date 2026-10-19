@@ -1,0 +1,299 @@
+[
+  {
+    "width": 360,
+    "shared": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 104,
+          "height": 104,
+          "x": 68.84375,
+          "y": 282.15625,
+          "radius": "20px",
+          "border": "0px"
+        },
+        "slot": {
+          "width": 104,
+          "height": 104,
+          "x": 68.84375,
+          "y": 282.15625,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 104,
+          "height": 104,
+          "x": 68.84375,
+          "y": 282.15625,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 104,
+          "height": 104,
+          "x": 50,
+          "y": 532.09375,
+          "radius": "26px",
+          "border": "6px"
+        },
+        "slot": {
+          "width": 92,
+          "height": 92,
+          "x": 56,
+          "y": 538.09375,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 92,
+          "height": 92,
+          "x": 56,
+          "y": 538.09375,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ],
+    "source": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 104,
+          "height": 104,
+          "x": 52.84375,
+          "y": 725.03125,
+          "radius": "20px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 104,
+          "height": 104,
+          "x": 52.84375,
+          "y": 725.03125,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 104,
+          "height": 104,
+          "x": 34,
+          "y": 920.96875,
+          "radius": "26px",
+          "border": "6px"
+        },
+        "image": {
+          "width": 92,
+          "height": 92,
+          "x": 40,
+          "y": 926.96875,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ]
+  },
+  {
+    "width": 768,
+    "shared": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 85.796875,
+          "y": 184.515625,
+          "radius": "24px",
+          "border": "0px"
+        },
+        "slot": {
+          "width": 124,
+          "height": 124,
+          "x": 85.796875,
+          "y": 184.515625,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 124,
+          "height": 124,
+          "x": 85.796875,
+          "y": 184.515625,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 58,
+          "y": 464.859375,
+          "radius": "30px",
+          "border": "6px"
+        },
+        "slot": {
+          "width": 112,
+          "height": 112,
+          "x": 64,
+          "y": 470.859375,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 112,
+          "height": 112,
+          "x": 64,
+          "y": 470.859375,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ],
+    "source": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 69.796875,
+          "y": 687.578125,
+          "radius": "24px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 124,
+          "height": 124,
+          "x": 69.796875,
+          "y": 687.578125,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 42,
+          "y": 913.921875,
+          "radius": "30px",
+          "border": "6px"
+        },
+        "image": {
+          "width": 112,
+          "height": 112,
+          "x": 48,
+          "y": 919.921875,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ]
+  },
+  {
+    "width": 1280,
+    "shared": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 309.796875,
+          "y": 184.515625,
+          "radius": "24px",
+          "border": "0px"
+        },
+        "slot": {
+          "width": 124,
+          "height": 124,
+          "x": 309.796875,
+          "y": 184.515625,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 124,
+          "height": 124,
+          "x": 309.796875,
+          "y": 184.515625,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 282,
+          "y": 464.859375,
+          "radius": "30px",
+          "border": "6px"
+        },
+        "slot": {
+          "width": 112,
+          "height": 112,
+          "x": 288,
+          "y": 470.859375,
+          "radius": "0px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 112,
+          "height": 112,
+          "x": 288,
+          "y": 470.859375,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ],
+    "source": [
+      {
+        "variant": "cat",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 69.796875,
+          "y": 687.578125,
+          "radius": "24px",
+          "border": "0px"
+        },
+        "image": {
+          "width": 124,
+          "height": 124,
+          "x": 69.796875,
+          "y": 687.578125,
+          "radius": "0px",
+          "border": "0px"
+        }
+      },
+      {
+        "variant": "hands",
+        "portrait": {
+          "width": 124,
+          "height": 124,
+          "x": 42,
+          "y": 913.921875,
+          "radius": "30px",
+          "border": "6px"
+        },
+        "image": {
+          "width": 112,
+          "height": 112,
+          "x": 48,
+          "y": 919.921875,
+          "radius": "0px",
+          "border": "0px"
+        }
+      }
+    ]
+  }
+]

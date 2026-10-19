@@ -1,0 +1,38 @@
+{
+  "checkedMarkdownFiles": [
+    "README.md",
+    "docs/appearance-catalog.md",
+    "docs/architecture.md",
+    "docs/avatar-decorations.md",
+    "docs/implementation-status.md",
+    "docs/onboarding.md",
+    "docs/roadmap.md",
+    "packages/components/README.md",
+    "packages/render/README.md",
+    "packages/schema/README.md",
+    "specs/2026-10-15-publish-render/results.md",
+    "specs/2026-10-19-shared-portfolio-renderer/acceptance-criteria.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design-a.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design-b.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design.md",
+    "specs/2026-10-19-shared-portfolio-renderer/grounding.md",
+    "specs/2026-10-19-shared-portfolio-renderer/plan.md",
+    "specs/2026-10-19-shared-portfolio-renderer/protocol.md",
+    "specs/2026-10-19-shared-portfolio-renderer/requirements.md",
+    "specs/2026-10-19-shared-portfolio-renderer/results.md"
+  ],
+  "missingTargets": [],
+  "supersededGuidanceSearches": {
+    "shared product renderer remains": [],
+    "packages/render/src.*empty": [],
+    "currently re-exports.*registry": [],
+    "future editor and renderer adapters": [],
+    "single static inline script": [],
+    "found open avatar image geometry": [],
+    "two Phase 16 blockers": [],
+    "Repair both before completion review": []
+  },
+  "sourceReferenceChanges": [],
+  "gitDiffWhitespaceCheck": true,
+  "phase16Checked": false
+}

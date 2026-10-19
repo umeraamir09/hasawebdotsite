@@ -1,0 +1,35 @@
+{
+  "checkedMarkdownFiles": [
+    "README.md",
+    "docs/implementation-status.md",
+    "docs/architecture.md",
+    "docs/roadmap.md",
+    "docs/onboarding.md",
+    "docs/appearance-catalog.md",
+    "docs/avatar-decorations.md",
+    "packages/schema/README.md",
+    "packages/components/README.md",
+    "packages/render/README.md",
+    "specs/2026-10-19-shared-portfolio-renderer/requirements.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design-a.md",
+    "specs/2026-10-19-shared-portfolio-renderer/grounding.md",
+    "specs/2026-10-19-shared-portfolio-renderer/protocol.md",
+    "specs/2026-10-19-shared-portfolio-renderer/acceptance-criteria.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design-b.md",
+    "specs/2026-10-19-shared-portfolio-renderer/design.md",
+    "specs/2026-10-19-shared-portfolio-renderer/results.md",
+    "specs/2026-10-19-shared-portfolio-renderer/plan.md"
+  ],
+  "missingTargets": [],
+  "supersededGuidanceSearches": {
+    "shared product renderer remains": [],
+    "packages/render/src.*empty": [],
+    "currently re-exports.*registry": [],
+    "future editor and renderer adapters": [],
+    "The later renderer": [],
+    "single static inline script": []
+  },
+  "sourceAvatarReferenceUnchanged": true,
+  "gitDiffWhitespaceCheck": true,
+  "phase16Checked": false
+}

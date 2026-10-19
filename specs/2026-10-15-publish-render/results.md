@@ -1,5 +1,7 @@
 # S-1 publish rendering results
 
+October 19, 2026 update. [Phase 16](../2026-10-19-shared-portfolio-renderer/results.md) now supplies the actual shared markup and a bounded fragment boundary. The production renderer statements below describe this historical spike date. Its rejected whole-page assumption and unresolved preparation, CPU and dispatcher prerequisites remain controlling; offline parity is not publication feasibility.
+
 Recorded October 15, 2026 in local workerd. Reproduce with `pnpm spike:render`. The command only bundles with Wrangler dry-run and starts a local Miniflare runtime. It does not deploy or require Cloudflare credentials.
 
 ## Decision

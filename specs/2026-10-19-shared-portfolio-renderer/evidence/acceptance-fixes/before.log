@@ -1,0 +1,523 @@
+$ node scripts/portfolio-renderer-browser.mjs
+file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:540
+      throw new AggregateError(
+            ^
+
+AggregateError: Phase 16 acceptance regressions: none loading actual avatar image at 360px: width
+
+90 !== 92
+; cat loading actual avatar image at 360px: width
+
+102 !== 104
+; hands loading actual avatar image at 360px: width
+
+90 !== 92
+; none ready actual avatar image at 360px: width
+
+90 !== 92
+; cat ready actual avatar image at 360px: width
+
+102 !== 104
+; hands ready actual avatar image at 360px: width
+
+90 !== 92
+; none unavailable actual avatar image at 360px: width
+
+90 !== 92
+; cat unavailable actual avatar image at 360px: width
+
+102 !== 104
+; hands unavailable actual avatar image at 360px: width
+
+90 !== 92
+; none loading actual avatar image at 768px: width
+
+110 !== 112
+; cat loading actual avatar image at 768px: width
+
+122 !== 124
+; hands loading actual avatar image at 768px: width
+
+110 !== 112
+; none ready actual avatar image at 768px: width
+
+110 !== 112
+; cat ready actual avatar image at 768px: width
+
+122 !== 124
+; hands ready actual avatar image at 768px: width
+
+110 !== 112
+; none unavailable actual avatar image at 768px: width
+
+110 !== 112
+; cat unavailable actual avatar image at 768px: width
+
+122 !== 124
+; hands unavailable actual avatar image at 768px: width
+
+110 !== 112
+; none loading actual avatar image at 1280px: width
+
+110 !== 112
+; cat loading actual avatar image at 1280px: width
+
+122 !== 124
+; hands loading actual avatar image at 1280px: width
+
+110 !== 112
+; none ready actual avatar image at 1280px: width
+
+110 !== 112
+; cat ready actual avatar image at 1280px: width
+
+122 !== 124
+; hands ready actual avatar image at 1280px: width
+
+110 !== 112
+; none unavailable actual avatar image at 1280px: width
+
+110 !== 112
+; cat unavailable actual avatar image at 1280px: width
+
+122 !== 124
+; hands unavailable actual avatar image at 1280px: width
+
+110 !== 112
+; published Dark mode action must not expose a pressed state
+
+'false' !== null
+; published Light mode action must not expose a pressed state
+
+'true' !== null
+; published Dark mode action must not expose a pressed state
+
+'false' !== null
+; preview Dark mode action must not expose a pressed state
+
+'false' !== null
+; preview Light mode action must not expose a pressed state
+
+'true' !== null
+; preview Dark mode action must not expose a pressed state
+
+'false' !== null
+
+    at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:540:13 {
+  [errors]: [
+    AssertionError [ERR_ASSERTION]: none loading actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24
+        at runNextTicks (node:internal/process/task_queues:64:5)
+        at process.processImmediate (node:internal/timers:452:9)
+        at process.callbackTrampoline (node:internal/async_hooks:130:17) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat loading actual avatar image at 360px: width
+    
+    102 !== 104
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24
+        at runNextTicks (node:internal/process/task_queues:64:5)
+        at process.processImmediate (node:internal/timers:452:9)
+        at process.callbackTrampoline (node:internal/async_hooks:130:17) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 102,
+      expected: 104,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands loading actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24
+        at runNextTicks (node:internal/process/task_queues:64:5)
+        at process.processImmediate (node:internal/timers:452:9)
+        at process.callbackTrampoline (node:internal/async_hooks:130:17) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none ready actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat ready actual avatar image at 360px: width
+    
+    102 !== 104
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 102,
+      expected: 104,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands ready actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none unavailable actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat unavailable actual avatar image at 360px: width
+    
+    102 !== 104
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 102,
+      expected: 104,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands unavailable actual avatar image at 360px: width
+    
+    90 !== 92
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 90,
+      expected: 92,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none loading actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat loading actual avatar image at 768px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands loading actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none ready actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat ready actual avatar image at 768px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands ready actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none unavailable actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat unavailable actual avatar image at 768px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands unavailable actual avatar image at 768px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none loading actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat loading actual avatar image at 1280px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands loading actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none ready actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat ready actual avatar image at 1280px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands ready actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: none unavailable actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: cat unavailable actual avatar image at 1280px: width
+    
+    122 !== 124
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24
+        at runNextTicks (node:internal/process/task_queues:64:5)
+        at process.processImmediate (node:internal/timers:452:9)
+        at process.callbackTrampoline (node:internal/async_hooks:130:17) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 122,
+      expected: 124,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: hands unavailable actual avatar image at 1280px: width
+    
+    110 !== 112
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:411:24
+        at runNextTicks (node:internal/process/task_queues:64:5)
+        at process.processImmediate (node:internal/timers:452:9)
+        at process.callbackTrampoline (node:internal/async_hooks:130:17) {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 110,
+      expected: 112,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: published Dark mode action must not expose a pressed state
+    
+    'false' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'false',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: published Light mode action must not expose a pressed state
+    
+    'true' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'true',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: published Dark mode action must not expose a pressed state
+    
+    'false' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'false',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: preview Dark mode action must not expose a pressed state
+    
+    'false' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'false',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: preview Light mode action must not expose a pressed state
+    
+    'true' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'true',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    },
+    AssertionError [ERR_ASSERTION]: preview Dark mode action must not expose a pressed state
+    
+    'false' !== null
+    
+        at file:///home/umer/hasawebdotsite/scripts/portfolio-renderer-browser.mjs:506:20 {
+      generatedMessage: false,
+      code: 'ERR_ASSERTION',
+      actual: 'false',
+      expected: null,
+      operator: 'strictEqual',
+      diff: 'simple'
+    }
+  ]
+}
+
+Node.js v22.22.1
+[ELIFECYCLE] Command failed with exit code 1.

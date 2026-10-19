@@ -1,5 +1,3 @@
-// Canonical data contracts are browser/Worker-safe and do not import React.
-// Editor and Render adapters will consume these same definitions.
 export {
   type ComponentOf,
   type ComponentType,
@@ -8,3 +6,19 @@ export {
   type DraftComponent,
   profileDefinition,
 } from "@hasaweb/schema";
+export { PortfolioAvatar } from "./avatar";
+export {
+  type ComponentModel,
+  type DisplayAsset,
+  type PortfolioModel,
+  type ProfileModel,
+  type ProjectionOptions,
+  parsePortfolioModel,
+  projectPortfolio,
+} from "./model";
+export {
+  Portfolio,
+  PortfolioProfile,
+  PortfolioSection,
+  RichText,
+} from "./portfolio";

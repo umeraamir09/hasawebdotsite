@@ -1,0 +1,533 @@
+{
+  "avatarGeometry": [
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 102,
+          "height": 102,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "20px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 102,
+          "height": 102,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "20px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 102,
+          "height": 102,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "20px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 90,
+          "height": 90,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "26px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 122,
+          "height": 122,
+          "offsetX": 1,
+          "offsetY": 1,
+          "slotRadius": "24px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 110,
+          "height": 110,
+          "offsetX": 7,
+          "offsetY": 7,
+          "slotRadius": "30px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    }
+  ],
+  "themeActions": [
+    {
+      "host": "published",
+      "key": null,
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": "false"
+    },
+    {
+      "host": "published",
+      "key": "Enter",
+      "mode": "dark",
+      "snapshot": "- button \"Light mode\" [pressed]",
+      "pressed": "true"
+    },
+    {
+      "host": "published",
+      "key": "Space",
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": "false"
+    },
+    {
+      "host": "preview",
+      "key": null,
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": "false"
+    },
+    {
+      "host": "preview",
+      "key": "Enter",
+      "mode": "dark",
+      "snapshot": "- button \"Light mode\" [pressed]",
+      "pressed": "true"
+    },
+    {
+      "host": "preview",
+      "key": "Space",
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": "false"
+    }
+  ],
+  "failures": [
+    "none loading actual avatar image at 360px: width\n\n90 !== 92\n",
+    "cat loading actual avatar image at 360px: width\n\n102 !== 104\n",
+    "hands loading actual avatar image at 360px: width\n\n90 !== 92\n",
+    "none ready actual avatar image at 360px: width\n\n90 !== 92\n",
+    "cat ready actual avatar image at 360px: width\n\n102 !== 104\n",
+    "hands ready actual avatar image at 360px: width\n\n90 !== 92\n",
+    "none unavailable actual avatar image at 360px: width\n\n90 !== 92\n",
+    "cat unavailable actual avatar image at 360px: width\n\n102 !== 104\n",
+    "hands unavailable actual avatar image at 360px: width\n\n90 !== 92\n",
+    "none loading actual avatar image at 768px: width\n\n110 !== 112\n",
+    "cat loading actual avatar image at 768px: width\n\n122 !== 124\n",
+    "hands loading actual avatar image at 768px: width\n\n110 !== 112\n",
+    "none ready actual avatar image at 768px: width\n\n110 !== 112\n",
+    "cat ready actual avatar image at 768px: width\n\n122 !== 124\n",
+    "hands ready actual avatar image at 768px: width\n\n110 !== 112\n",
+    "none unavailable actual avatar image at 768px: width\n\n110 !== 112\n",
+    "cat unavailable actual avatar image at 768px: width\n\n122 !== 124\n",
+    "hands unavailable actual avatar image at 768px: width\n\n110 !== 112\n",
+    "none loading actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "cat loading actual avatar image at 1280px: width\n\n122 !== 124\n",
+    "hands loading actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "none ready actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "cat ready actual avatar image at 1280px: width\n\n122 !== 124\n",
+    "hands ready actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "none unavailable actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "cat unavailable actual avatar image at 1280px: width\n\n122 !== 124\n",
+    "hands unavailable actual avatar image at 1280px: width\n\n110 !== 112\n",
+    "published Dark mode action must not expose a pressed state\n\n'false' !== null\n",
+    "published Light mode action must not expose a pressed state\n\n'true' !== null\n",
+    "published Dark mode action must not expose a pressed state\n\n'false' !== null\n",
+    "preview Dark mode action must not expose a pressed state\n\n'false' !== null\n",
+    "preview Light mode action must not expose a pressed state\n\n'true' !== null\n",
+    "preview Dark mode action must not expose a pressed state\n\n'false' !== null\n"
+  ]
+}

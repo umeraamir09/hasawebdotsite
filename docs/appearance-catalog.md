@@ -8,7 +8,7 @@ The versioned source of truth is [catalog.json](../packages/theme/catalog.json),
 
 Run `node scripts/appearance-catalog-review.mjs --serve` and open [the local review](http://127.0.0.1:8791). The command also writes [review.html](../specs/2026-10-17-appearance-catalog/review.html), which can open directly from disk with its relative local font assets. It shows all six themes as twelve light/dark palette specimens and each actual font. Its decoration cards link to the [actual imported component review](http://127.0.0.1:3000/catalog/avatar-decorations), which requires `pnpm dev:web --port 3000`. Example content has no connection to owner storage.
 
-The review is a catalog specimen, not an implementation or approval of the portfolio renderer, page layouts, appearance controls or onboarding screens. Phase 16 implements the shared renderer. Phases 35 through 38 implement appearance controls, custom colors, decorations and Face Reveal.
+The review is a catalog specimen, not an implementation or approval of the portfolio renderer, page layouts, appearance controls or onboarding screens. The [Phase 16 renderer](../packages/render/README.md) implements default Leaf/DM Sans styling and reusable owner-data decoration markup. Phases 35 through 38 activate catalog choices, appearance controls, custom colors, decorations and Face Reveal.
 
 ## Template and defaults
 

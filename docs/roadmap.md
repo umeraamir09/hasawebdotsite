@@ -183,11 +183,13 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 - Dependencies: 09, 11E, 12 and the recorded rendering constraints.
 - Render the fixed profile and component order through shared markup-only components with the approved default styling/font. Establish responsive styling, security headers, and the small public interaction script used by previews and snapshots. Permit honest private rendering of incomplete drafts.
 - Preserve the imported cat/hands art, source-equivalent CSS, responsive envelope and loading geometry in reusable owner-data markup. Keep the React source reference intact and public output free of React hydration. Source portraits/labels are review fixtures. Later appearance/decorations phases activate catalog selections and playback controls.
-- [ ] Complete when the same fixture renders consistently in private browser preview and publish output with safe links, readable layout, keyboard controls, and unavailable/incomplete states. Onboarding Review later reuses this renderer.
+- The [implementation protocol and evidence](../specs/2026-10-19-shared-portfolio-renderer/results.md) record the shared renderer increment. The October 19 audit defects in avatar image geometry and theme semantics are repaired, with failing-before and passing-after browser evidence. The owner approved completion on October 19, 2026 after the final light review. The offline snapshot helper is fixture tooling; Phase 24 still owns resumable preparation, oversized-unit partitioning and measured dispatch.
+- [x] Complete when the same fixture renders consistently in private browser preview and publish output with safe links, readable layout, keyboard controls, and unavailable/incomplete states. Onboarding Review later reuses this renderer.
 
 ### Phase 17. Build the editor and live preview
 
 - Dependencies: 13–16.
+- Reuse Phase 16 display projection and browser mount/bridge, retaining stable component IDs for selection. Authorize the owner before mounting/serving private previews and before resolving each draft asset; transport display-only models rather than PublicContent. Pin origin/source/channel and an increasing per-mount render sequence independent of saved CAS revisions, handle a rejected update without reporting it displayed, and dispose replaced mounts. The current bridge has bounded whole-model messages; before supporting model expansion beyond its envelope, implement bounded chunking/cancellation without reducing the 1 MiB draft allowance.
 - Integrate the Phase 14 controller and Phase 15 shared review/recovery coordinator into the content/customization panel, component selection, and live preview. Render raw unfinished field input separately from the valid working draft and preserve stable entry selectors. Follow coordinator controller replacements, reset field state on `scopeKey` changes, disable fields while suspended or reviewing and retain review-only copies without blocking resolved work. Use `continueRecord` for ordinary preserved restoration and `reopen` for prepared replacements so suspension covers storage waits; verify edits are rejected during restoration, including prepared replacements, and resume after success or failure. Keep the active controller usable after failed review checkpointing. Restore pinned discard journals with their working values before finishing cleanup; changed bases still require review. Reuse the fixed same-tab recovery callback; do not add another save queue. Support desktop/mobile editing and viewport-specific iframe preview without server-rendering drafts. The editor must open the existing prepared draft without applying initialization again.
 - [ ] Complete when selecting a component opens its controls and edits appear immediately at either preview width. Private preview routes/messages stay owner-only. Use handoff fixtures until setup routing is activated in 42E.
 
@@ -236,6 +238,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 24. Prepare immutable publication versions
 
 - Dependencies: 02, 08, 11A, 16, 18, 23 and successful measurement of the S-8 Queue/D1 batching fallback with the full shared quota/CPU model. Also validate the S-9 browser/query cache requirements before dependent withdrawal behavior.
+- Measure the real Phase 16 renderer, not its offline full-document helper. Prepare immutable revision-bound fragments without whole-draft hot parsing. Oversized profile, text, list, project and description fields can return `needs_partitioning`; implement Unicode-safe splitting and wrapper-preserving assembly without duplication/truncation before publication. Recheck descendant/depth/string/input/output bounds and actual CPU with final generated art/styles and asset descriptions.
 - Record the dispatcher measurements before building the pipeline, including bounded validation/snapshot preparation, retries, invocation API calls and shared contact/GitHub Queue costs. The existing `RuntimeWorkflow` is a local probe. Durable steps do not establish fresh CPU budgets, and one Queue message per fragment repeats a rejected approach.
 - Specify the authorized source-asset transfer boundary: the private draft bucket is currently bound only to web, so jobs cannot copy its objects directly. Include that boundary in CPU/operation measurements and ownership checks.
 - Use the shared controller to flush autosave and capture its exact confirmed revision. Resolve local-only unsaved input and required uploads before publication. Snapshot only public portfolio content, exclude private setup/progress metadata, copy only reachable assets, and render using the measured bounded task dispatch. Retain content-hashed platform assets, including each selected decoration's clean animation/still or hands CSS/SVG. Keep raw regeneration inputs, tooling and example source portraits out of owner publication manifests.
@@ -244,6 +247,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 ### Phase 25. Commit and serve a complete version
 
 - Dependencies: 04, 22–24 and the permanently reserved subdomain rules.
+- Adopt the renderer security/document policy in thin serving without importing React into the request path. Serve retained content-hashed CSS/JS/fonts/art through the authorized platform asset arrangement, with the verified cache/withdrawal policy; Phase 16 fixture headers do not establish cache withdrawal.
 - Atomically claim the selected candidate on first Publish and switch the published-version pointer. Build thin public serving for approved hosts, pages, assets, and unavailable states. Keep setup/progress private and exclude unvalidated private graph access from public output.
 - [ ] Complete when concurrent first publications produce one claimant, failed commits create no successful claim, and requests serve complete old or new versions. Another owner saving the same candidate earlier confers no ownership; draft routes/assets remain inaccessible.
 
@@ -305,17 +309,19 @@ Add each capability through the shared registry, draft saving, validation, previ
 ### Phase 35. Add preset appearance controls across pages
 
 - Dependencies: the approved catalog/defaults from 11E, renderer 16, and completed portfolio/case-study/resume capabilities through 34.
+- Extend the Phase 16 default-only display model/CSS and system/visitor behavior to saved owner appearance, including initial light/dark/system and theme initialization before first paint under the final CSP. Preserve parity across the retained platform asset delivery path.
 - Reuse the catalog decision rather than repeat it. Add exactly six preset-theme choices (Leaf, Violet, Clay, Matcha, Strawberry and Coffee), curated self-hosted fonts, and initial light/dark/system mode across page types. The existing default styles support setup without adding an appearance step.
 - [ ] Complete when approved presets/fonts apply across all pages without changing content, order, or template, and visitor mode switching works on each page type.
 
 ### Phase 36. Generate coordinated custom colors
 
-- Generate both mode palettes from one selected color, explain automatic adjustments, and allow reset to the selected preset.
+- Generate both mode palettes from one selected color, explain automatic adjustments, and allow reset to the selected preset. Deliver generated tokens under the shared renderer CSP using retained generated CSS or an explicit reviewed hash. Do not accept owner CSS or weaken inline-script restrictions.
 - [ ] Complete when supported presets and a seed-color sweep meet the confirmed contrast standard and all tokens update immediately in preview. Individual palette editing remains absent.
 
 ### Phase 37. Add decorations and Face Reveal setup
 
 - Dependencies: 11E, 19, 35–36 and the existing Face Reveal publication rules.
+- Reuse Phase 16 owner-data avatar markup and its generated source-equivalent CSS/hashed assets. Its explicit decoration specimens are reusable markup, not saved selection activation. Extend the display projection and publication manifest together when activating selection.
 - Reuse only the approved Ginger cat and Hands gallery, with an unselected initial state and change/remove controls. Keep original art/choreography, geometry and reduced-motion specimens in previews. Add the optional Face Reveal second-image toggle/upload/crop/replace/remove/description. Explain public accessibility of the published photo. Keep these controls out of onboarding.
 - [ ] Complete when owners can select, change and remove both cat and hands, saved selections match preview, and removal omits `decorationId`. New drafts have no decoration and Face Reveal off. Enabled incomplete Face Reveal uploads block publication; disabling retains a ready second photo privately. Custom decoration uploads remain absent. Public pause/play behavior is verified in Phase 38.
 
@@ -383,6 +389,7 @@ All shared editor/content/GitHub phases above are prerequisites rather than dupl
 - Reuse the shared autosave controller and expected-owner precondition. Flush valid input, validate its confirmed revision and preserve optional local-only input for editor field recovery. Reuse Phase 15 selected review and fixed same-tab recovery; apply applicable setup content only in a fresh content scope after handoff. Never convert a prepared setup attempt or replay old progress after handoff.
 
 - Dependencies: 16–17, 22A–26, 35, 40–42, 42A–42D.
+- Reuse Phase 16 display-only projection, shared browser markup and iframe bridge after owner/asset authorization. Apply noindex/no-store and the permitted frame parent. Replace unavailable graph/contact/additional-page adapters with their completed services, without exposing recipient or grant configuration.
 - Render the actual saved private portfolio with desktop/mobile switching, Back, incomplete statuses, and Open editor. Route all remaining-step skips here. Flush valid saves and reuse the authoritative idempotent handoff service; retain applicable local optional recovery. Activate the complete controlled post-auth entry resolver only now.
 - [ ] Complete when ON-06/12/15/16/17/18 pass, including actual Skip remaining navigation to Review. The editor receives exact prepared content, all-optional-skipped owners see only their real profile/links, no route exposes drafts publicly, and later missing required content blocks Publish without rerunning onboarding.
 

@@ -1,0 +1,137 @@
+$ pnpm lint && pnpm typecheck && pnpm test
+$ biome check .
+packages/render/tsconfig.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     8  8 │     ],
+     9  9 │     "compilerOptions": {
+    10    │ - ····"lib":·[
+    11    │ - ······"ES2022",
+    12    │ - ······"DOM"
+    13    │ - ····],
+    14    │ - ····"types":·[
+    15    │ - ······"@cloudflare/workers-types"
+    16    │ - ····],
+       10 │ + ····"lib":·["ES2022",·"DOM"],
+       11 │ + ····"types":·["@cloudflare/workers-types"],
+    17 12 │       "jsx": "react-jsx"
+    18 13 │     }
+  
+
+scripts/portfolio-renderer-browser.mjs format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    195 195 │     }
+    196 196 │     if (url.pathname === "/private/host") {
+    197     │ - ····headers["content-security-policy"]·=
+    198     │ - ······`${headers["content-security-policy"].replace(
+    199     │ - ········"connect-src·'none'",
+    200     │ - ········"connect-src·'self'",
+    201     │ - ······)};·frame-src·'self'`;
+        197 │ + ····headers["content-security-policy"]·=·`${headers[
+        198 │ + ······"content-security-policy"
+        199 │ + ····].replace("connect-src·'none'",·"connect-src·'self'")};·frame-src·'self'`;
+    202 200 │       response.writeHead(200, headers);
+    203 201 │       response.end(
+    ······· │ 
+    461 459 │               await frame.evaluate(() => document.documentElement.scrollHeight),
+    462 460 │             );
+    463     │ - ··········await·frame
+    464     │ - ············.locator(".pf-portfolio")
+    465     │ - ············.screenshot({
+    466     │ - ··············path:·join(evidence,·`${name}-${width}-preview.png`),
+    467     │ - ············});
+    468     │ - ··········await·publicPage
+    469     │ - ············.locator(".pf-portfolio")
+    470     │ - ············.screenshot({
+    471     │ - ··············path:·join(evidence,·`${name}-${width}-snapshot.png`),
+    472     │ - ············});
+        461 │ + ··········await·frame.locator(".pf-portfolio").screenshot({
+        462 │ + ············path:·join(evidence,·`${name}-${width}-preview.png`),
+        463 │ + ··········});
+        464 │ + ··········await·publicPage.locator(".pf-portfolio").screenshot({
+        465 │ + ············path:·join(evidence,·`${name}-${width}-snapshot.png`),
+        466 │ + ··········});
+    473 467 │           }
+    474 468 │           checks.push({
+  
+
+specs/2026-10-19-shared-portfolio-renderer/evidence/complete-snapshot.html:1:2798 lint/a11y/noRedundantAlt ━━━━━━━━━━
+
+  × Avoid the words "image", "picture", or "photo" in img element alt text.
+  
+  > 1 │ .../published/assets/broken.webp" alt="An unavailable project image" width="640" height="640" decoding=...
+      │                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  
+  i Screen readers announce img elements as "images", so it is not necessary to redeclare this in alternative text.
+  
+
+turbo.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    14 14 │     "tasks": {
+    15 15 │       "build": {
+    16    │ - ······"dependsOn":·[
+    17    │ - ········"^build"
+    18    │ - ······],
+       16 │ + ······"dependsOn":·["^build"],
+    19 17 │         "outputs": [],
+    20    │ - ······"env":·[
+    21    │ - ········"NEXT_TELEMETRY_DISABLED"
+    22    │ - ······]
+       18 │ + ······"env":·["NEXT_TELEMETRY_DISABLED"]
+    23 19 │       },
+    24 20 │       "typecheck": {
+    25    │ - ······"dependsOn":·[
+    26    │ - ········"^typecheck"
+    27    │ - ······],
+       21 │ + ······"dependsOn":·["^typecheck"],
+    28 22 │         "outputs": []
+    29 23 │       },
+    30 24 │       "@hasaweb/web#build": {
+    31    │ - ······"dependsOn":·[
+    32    │ - ········"^build"
+    33    │ - ······],
+    34    │ - ······"outputs":·[
+    35    │ - ········".next/**",
+    36    │ - ········"!.next/cache/**",
+    37    │ - ········".open-next/**"
+    38    │ - ······]
+       25 │ + ······"dependsOn":·["^build"],
+       26 │ + ······"outputs":·[".next/**",·"!.next/cache/**",·".open-next/**"]
+    39 27 │       },
+    40 28 │       "@hasaweb/site#build": {
+    41    │ - ······"dependsOn":·[
+    42    │ - ········"^build"
+    43    │ - ······],
+    44    │ - ······"outputs":·[
+    45    │ - ········"dist/**"
+    46    │ - ······]
+       29 │ + ······"dependsOn":·["^build"],
+       30 │ + ······"outputs":·["dist/**"]
+    47 31 │       },
+    48 32 │       "@hasaweb/jobs#build": {
+    49    │ - ······"dependsOn":·[
+    50    │ - ········"^build"
+    51    │ - ······],
+    52    │ - ······"outputs":·[
+    53    │ - ········"dist/**"
+    54    │ - ······]
+       33 │ + ······"dependsOn":·["^build"],
+       34 │ + ······"outputs":·["dist/**"]
+    55 35 │       }
+    56 36 │     }
+  
+
+Checked 488 files in 2s. No fixes applied.
+Found 4 errors.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+
+[ELIFECYCLE] Command failed with exit code 1.
+[ELIFECYCLE] Command failed with exit code 1.

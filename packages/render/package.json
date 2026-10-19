@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./offline": "./src/offline.tsx"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -18,6 +19,9 @@
   },
   "dependencies": {
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "@hasaweb/schema": "workspace:*",
+    "@hasaweb/components": "workspace:*",
+    "zod": "4.6.7"
   }
 }

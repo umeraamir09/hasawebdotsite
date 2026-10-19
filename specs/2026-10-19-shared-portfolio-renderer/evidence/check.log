@@ -1,0 +1,49 @@
+$ pnpm lint && pnpm typecheck && pnpm test
+$ biome check .
+Checked 489 files in 1080ms. No fixes applied.
+$ turbo run typecheck
+
+   • turbo 2.11.8
+   • Packages in scope: @hasaweb/auth, @hasaweb/components, @hasaweb/config, @hasaweb/db, @hasaweb/email, @hasaweb/github, @hasaweb/jobs, @hasaweb/render, @hasaweb/schema, @hasaweb/site, @hasaweb/theme, @hasaweb/web
+   • Running typecheck in 12 packages
+   • Remote caching disabled
+
+@hasaweb/config:typecheck: cache hit, replaying logs 9913ae6bf087eebe
+@hasaweb/config:typecheck: $ tsc --noEmit
+@hasaweb/schema:typecheck: cache miss, executing 545f4ac204c55f06
+@hasaweb/email:typecheck: cache hit, replaying logs f2c220eece97811e
+@hasaweb/github:typecheck: cache hit, replaying logs e4e145de8290985b
+@hasaweb/email:typecheck: $ tsc --noEmit && tsc --noEmit -p spike/tsconfig.json
+@hasaweb/github:typecheck: $ tsc --noEmit && tsc --noEmit -p spike/tsconfig.json
+@hasaweb/site:typecheck: cache hit, replaying logs aeccb981c53c349e
+@hasaweb/site:typecheck: $ tsc --noEmit
+@hasaweb/schema:typecheck: $ tsc --noEmit
+@hasaweb/theme:typecheck: cache miss, executing 5cfab7062e61a2ab
+@hasaweb/components:typecheck: cache miss, executing 35fffa0fa8d0a517
+@hasaweb/theme:typecheck: $ tsc --noEmit
+@hasaweb/components:typecheck: $ tsc --noEmit
+@hasaweb/db:typecheck: cache miss, executing e5ada69f54d3be05
+@hasaweb/db:typecheck: $ tsc --noEmit
+@hasaweb/render:typecheck: cache miss, executing ffa021a8a554587b
+@hasaweb/render:typecheck: $ tsc --noEmit
+@hasaweb/auth:typecheck: cache miss, executing f94de75742a30e3a
+@hasaweb/auth:typecheck: $ tsc --noEmit
+@hasaweb/jobs:typecheck: cache miss, executing 715384b524db95ea
+@hasaweb/web:typecheck: cache miss, executing 3d18ba58992d0561
+@hasaweb/web:typecheck: $ tsc --noEmit
+@hasaweb/jobs:typecheck: $ tsc --noEmit
+
+ Tasks:    12 successful, 12 total
+Cached:    4 cached, 12 total
+  Time:    8.754s 
+
+$ vitest run
+
+ RUN  v4.1.11 /home/umer/hasawebdotsite
+
+
+ Test Files  28 passed (28)
+      Tests  340 passed (340)
+   Start at  18:46:45
+   Duration  10.80s (transform 2.44s, setup 0ms, import 11.32s, tests 5.82s, environment 9ms)
+

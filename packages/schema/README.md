@@ -1,6 +1,6 @@
 # Draft and component contracts
 
-`@hasaweb/schema` owns version 2 of the private draft JSON, the data-only component registry and the migration runners. It uses Zod and Web Platform APIs, with no React, Node, database or provider dependency. `@hasaweb/components` re-exports the registry so future editor and renderer adapters share these definitions without a package dependency cycle.
+`@hasaweb/schema` owns version 2 of the private draft JSON, the data-only component registry and the migration runners. It uses Zod and Web Platform APIs, with no React, Node, database or provider dependency. `@hasaweb/components` re-exports the registry and implements shared markup-only renderer adapters. Future editor adapters use the same definitions without a package dependency cycle.
 
 ```ts
 import { createComponent, createEmptyDraft, draftSchema, readDraft } from "@hasaweb/schema";
@@ -20,7 +20,7 @@ Version 2 adds optional `requestedSubdomain`, a non-reserving candidate with the
 
 `setupProgressSchema` is a separate private version 1 navigation contract with a `step` of address, profile, links, skills, projects, github or review. Its initial value is Address. Progress proves no required completion and accepts no milestone flag or duplicated answers. `firstEditorEnteredAt` belongs to private persistence, outside the draft.
 
-`toPublicContent` returns only schema version, profile, links, components, appearance and SEO. It excludes the candidate and sample metadata. Publication must first omit untouched samples and validate readiness; this projection alone is not a publish-ready snapshot. Never serialize a complete portfolio row as public data.
+`toPublicContent` returns only schema version, profile, links, components, appearance and SEO. It excludes the candidate and sample metadata. Publication must first omit untouched samples and validate readiness; this projection alone is not a publish-ready snapshot. Never serialize a complete portfolio row as public data. `PublicContent` still includes contact recipient IDs and raw asset references. Use the narrower display-only `projectPortfolio` model from `@hasaweb/components` for preview transport and rendered output; publication snapshot preparation and readiness checks remain separate.
 
 ## Document and component rules
 
@@ -65,7 +65,7 @@ The stored JSON follows Tiptap node names with an explicit subset. The future ed
 - Link marks contain only `attrs.href`. Allowed destinations are absolute HTTP(S) URLs or a simple `mailto:` address. Credentials, control characters, backslashes, relative links and mail headers are rejected.
 - Only case-study documents can contain block images, and image attributes contain only an asset ID and optional description.
 
-Unapproved nodes, marks, attributes, HTML/CSS structures, scripts, embeds and remote image URLs fail. Markup inside a plain text string remains literal text and is preserved. The later renderer must escape text and serialize these nodes itself, never interpret owner strings as HTML. Links' `rel` and other presentation attributes belong to that serializer.
+Unapproved nodes, marks, attributes, HTML/CSS structures, scripts, embeds and remote image URLs fail. Markup inside a plain text string remains literal text and is preserved. The shared renderer escapes text and serializes these allowed nodes, never interpreting owner strings as HTML. Links' `rel` and other presentation attributes belong to that serializer.
 
 Draft JSON is limited to 1,048,576 UTF-8 bytes and 64 nesting levels. The nesting bound protects recursive validation. Cycles, prototype keys, accessors, hidden/symbol properties, sparse/extended arrays and non-JSON values fail before recursive parsing.
 
