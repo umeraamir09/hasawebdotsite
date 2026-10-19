@@ -1,0 +1,9 @@
+{
+  "deterministic": true,
+  "sha256": {
+    "packages/components/src/avatar.tsx": "d95e2a01129caaf0ae4d351ea0505f2e0e6a927150e719426ab8283f3a27e416",
+    "packages/components/static/avatar.css": "baf46fb3f6e5af3fc861fd8b0ed4f517fe877bbc9eee88553ab49bedfaca07b1",
+    "packages/components/static/default-theme.css": "6dacb43e18d8a403714c8c59a70139969f46d25ed042a12c3e914391b7d4f08d",
+    "packages/components/static/manifest.json": "4692b42d247f8d83110d3ca63a56030ff0b711d37a6309d1a63ad81f400917b9"
+  }
+}

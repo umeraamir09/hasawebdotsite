@@ -1,0 +1,499 @@
+{
+  "avatarGeometry": [
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 104,
+          "height": 104,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 104,
+          "height": 104,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 360,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 104,
+          "height": 104,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 92,
+          "height": 92,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 768,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "loading",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "loading",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "loading",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        },
+        {
+          "decoration": "hands",
+          "state": "loading",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "0",
+          "status": "Image loading"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "ready",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "ready",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "ready",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        },
+        {
+          "decoration": "hands",
+          "state": "ready",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "visible",
+          "opacity": "1",
+          "status": ""
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/published",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "none",
+          "state": "unavailable",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    },
+    {
+      "width": 1280,
+      "path": "/decorations",
+      "state": "unavailable",
+      "geometry": [
+        {
+          "decoration": "cat",
+          "state": "unavailable",
+          "width": 124,
+          "height": 124,
+          "offsetX": 0,
+          "offsetY": 0,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        },
+        {
+          "decoration": "hands",
+          "state": "unavailable",
+          "width": 112,
+          "height": 112,
+          "offsetX": 6,
+          "offsetY": 6,
+          "slotRadius": "0px",
+          "visibility": "hidden",
+          "opacity": "1",
+          "status": "Image unavailable"
+        }
+      ]
+    }
+  ],
+  "themeActions": [
+    {
+      "host": "published",
+      "key": null,
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": null
+    },
+    {
+      "host": "published",
+      "key": "Enter",
+      "mode": "dark",
+      "snapshot": "- button \"Light mode\"",
+      "pressed": null
+    },
+    {
+      "host": "published",
+      "key": "Space",
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": null
+    },
+    {
+      "host": "preview",
+      "key": null,
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": null
+    },
+    {
+      "host": "preview",
+      "key": "Enter",
+      "mode": "dark",
+      "snapshot": "- button \"Light mode\"",
+      "pressed": null
+    },
+    {
+      "host": "preview",
+      "key": "Space",
+      "mode": "light",
+      "snapshot": "- button \"Dark mode\"",
+      "pressed": null
+    }
+  ],
+  "failures": []
+}

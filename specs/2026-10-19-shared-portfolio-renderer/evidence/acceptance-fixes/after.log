@@ -1,0 +1,2 @@
+$ node scripts/portfolio-renderer-browser.mjs
+Passed 27 renderer browser groups. Evidence at /home/umer/hasawebdotsite/specs/2026-10-19-shared-portfolio-renderer/evidence/acceptance-fixes/after

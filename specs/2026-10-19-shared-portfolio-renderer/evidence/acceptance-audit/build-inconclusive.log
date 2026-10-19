@@ -1,0 +1,129 @@
+$ turbo run build
+
+   • turbo 2.11.8
+   • Packages in scope: @hasaweb/auth, @hasaweb/components, @hasaweb/config, @hasaweb/db, @hasaweb/email, @hasaweb/github, @hasaweb/jobs, @hasaweb/render, @hasaweb/schema, @hasaweb/site, @hasaweb/theme, @hasaweb/web
+   • Running build in 12 packages
+   • Remote caching disabled
+
+@hasaweb/github:build: cache hit, replaying logs 511322c1e2284336
+@hasaweb/github:build: $ tsc --noEmit && tsc --noEmit -p spike/tsconfig.json
+@hasaweb/config:build: cache hit, replaying logs 3525c8ae5aa6142e
+@hasaweb/config:build: $ tsc --noEmit
+@hasaweb/site:build: cache hit, replaying logs c62bb254824b5954
+@hasaweb/site:build: $ wrangler deploy --dry-run --outdir dist
+@hasaweb/site:build: 
+@hasaweb/site:build:  ⛅️ wrangler 4.151.0
+@hasaweb/site:build: ────────────────────
+@hasaweb/site:build: Total Upload: 1.33 KiB / gzip: 0.67 KiB
+@hasaweb/site:build: Your Worker has access to the following bindings:
+@hasaweb/site:build: Binding                                               Resource                  
+@hasaweb/site:build: env.CONTACT_QUEUE (hasaweb-contact-local)             Queue                     
+@hasaweb/site:build: env.GITHUB_QUEUE (hasaweb-github-local)               Queue                     
+@hasaweb/site:build: env.DB (hasaweb-local)                                D1 Database               
+@hasaweb/site:build: env.SITES_BUCKET (hasaweb-sites-local)                R2 Bucket                 
+@hasaweb/site:build: env.PUBLIC_ASSETS_BUCKET (hasaweb-assets-local)       R2 Bucket                 
+@hasaweb/site:build: env.APP_ENV ("local")                                 Environment Variable      
+@hasaweb/site:build: 
+@hasaweb/site:build: --dry-run: exiting now.
+@hasaweb/email:build: cache hit, replaying logs 26982d0c0b400180
+@hasaweb/email:build: $ tsc --noEmit && tsc --noEmit -p spike/tsconfig.json
+@hasaweb/schema:build: cache hit, replaying logs a110c14a3b24daf1
+@hasaweb/schema:build: $ tsc --noEmit
+@hasaweb/theme:build: cache hit, replaying logs 3dbc7ece5388de7a
+@hasaweb/theme:build: $ tsc --noEmit
+@hasaweb/components:build: cache miss, executing 3a22191ba839cd6a
+@hasaweb/db:build: cache hit, replaying logs fbc2793732bb9c3c
+@hasaweb/db:build: $ tsc --noEmit
+@hasaweb/auth:build: cache hit, replaying logs 0d31e0f52f76b4de
+@hasaweb/auth:build: $ tsc --noEmit
+@hasaweb/jobs:build: cache hit, replaying logs dee36d75f54b132a
+@hasaweb/jobs:build: $ wrangler deploy --dry-run --outdir dist
+@hasaweb/jobs:build: 
+@hasaweb/jobs:build:  ⛅️ wrangler 4.151.0 (update available 4.151.2)
+@hasaweb/jobs:build: ───────────────────────────────────────────────
+@hasaweb/jobs:build: Total Upload: 2941.92 KiB / gzip: 502.74 KiB
+@hasaweb/jobs:build: Your Worker has access to the following bindings:
+@hasaweb/jobs:build: Binding                                                 Resource                  
+@hasaweb/jobs:build: env.PUBLISH_WORKFLOW (RuntimeWorkflow)                  Workflow                  
+@hasaweb/jobs:build: env.CONTACT_QUEUE (hasaweb-contact-local)               Queue                     
+@hasaweb/jobs:build: env.GITHUB_QUEUE (hasaweb-github-local)                 Queue                     
+@hasaweb/jobs:build: env.DB (hasaweb-local)                                  D1 Database               
+@hasaweb/jobs:build: env.SITES_BUCKET (hasaweb-sites-local)                  R2 Bucket                 
+@hasaweb/jobs:build: env.PUBLIC_ASSETS_BUCKET (hasaweb-assets-local)         R2 Bucket                 
+@hasaweb/jobs:build: env.APP_ENV ("local")                                   Environment Variable      
+@hasaweb/jobs:build: env.APP_ORIGIN ("http://127.0.0.1:8787")                Environment Variable      
+@hasaweb/jobs:build: 
+@hasaweb/jobs:build: --dry-run: exiting now.
+@hasaweb/components:build: $ tsc --noEmit
+@hasaweb/web:build: cache hit, replaying logs a78d87291ac5c08a
+@hasaweb/web:build: $ opennextjs-cloudflare build
+@hasaweb/web:build: 
+@hasaweb/web:build: ┌─────────────────────────────┐
+@hasaweb/web:build: │ OpenNext — Cloudflare build │
+@hasaweb/web:build: └─────────────────────────────┘
+@hasaweb/web:build: 
+@hasaweb/web:build: Monorepo detected at /home/umer/hasawebdotsite
+@hasaweb/web:build: App directory: /home/umer/hasawebdotsite/apps/web
+@hasaweb/web:build: Next.js version : 16.3.8
+@hasaweb/web:build: @opennextjs/cloudflare version: 1.20.11
+@hasaweb/web:build: @opennextjs/aws version: 4.1.10
+@hasaweb/web:build: workerd compatibility_date: 2026-10-14
+@hasaweb/web:build: 
+@hasaweb/web:build: ┌─────────────────────────────────┐
+@hasaweb/web:build: │ OpenNext — Building Next.js app │
+@hasaweb/web:build: └─────────────────────────────────┘
+@hasaweb/web:build: 
+@hasaweb/web:build: $ next build
+@hasaweb/web:build: ▲ Next.js 16.3.8 (Turbopack)
+@hasaweb/web:build: ✓ Running next.config.ts took 59ms
+@hasaweb/web:build: 
+@hasaweb/web:build:   Creating an optimized production build ...
+@hasaweb/web:build: ✓ Compiled successfully in 306ms
+@hasaweb/web:build:   Running TypeScript ...
+@hasaweb/web:build:   Finished TypeScript in 1468ms ...
+@hasaweb/web:build:   Collecting page data using 3 workers ...
+@hasaweb/web:build:   Generating static pages using 3 workers (0/8) ...
+@hasaweb/web:build:   Generating static pages using 3 workers (2/8) 
+@hasaweb/web:build:   Generating static pages using 3 workers (4/8) 
+@hasaweb/web:build:   Generating static pages using 3 workers (6/8) 
+@hasaweb/web:build: ✓ Generating static pages using 3 workers (8/8) in 690ms
+@hasaweb/web:build:   Finalizing page optimization ...
+@hasaweb/web:build: 
+@hasaweb/web:build: Route (app)
+@hasaweb/web:build: ┌ ○ /
+@hasaweb/web:build: ├ ○ /_not-found
+@hasaweb/web:build: ├ ƒ /api/auth/[...all]
+@hasaweb/web:build: ├ ƒ /api/dev-runtime/[...path]
+@hasaweb/web:build: ├ ƒ /api/health
+@hasaweb/web:build: ├ ƒ /api/owner
+@hasaweb/web:build: ├ ƒ /api/runtime-spike
+@hasaweb/web:build: ├ ○ /auth/recovery
+@hasaweb/web:build: ├ ○ /auth/recovery/error
+@hasaweb/web:build: ├ ○ /catalog/avatar-decorations
+@hasaweb/web:build: ├ ○ /editor
+@hasaweb/web:build: └ ○ /sign-in
+@hasaweb/web:build: 
+@hasaweb/web:build: 
+@hasaweb/web:build: ○  (Static)   prerendered as static content
+@hasaweb/web:build: ƒ  (Dynamic)  server-rendered on demand
+@hasaweb/web:build: 
+@hasaweb/web:build: 
+@hasaweb/web:build: ┌──────────────────────────────┐
+@hasaweb/web:build: │ OpenNext — Generating bundle │
+@hasaweb/web:build: └──────────────────────────────┘
+@hasaweb/web:build: 
+@hasaweb/web:build: (node:23875) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+@hasaweb/web:build: (Use `node --trace-deprecation ...` to show where the warning was created)
+@hasaweb/web:build: Bundling middleware function...
+@hasaweb/web:build: Bundling static assets...
+@hasaweb/web:build: Bundling cache assets...
+@hasaweb/web:build: Building server function: default...
+@hasaweb/web:build: Applying code patches: 5.280s
+@hasaweb/web:build: # copyPackageTemplateFiles
+@hasaweb/web:build: [35m⚙️ Bundling the OpenNext server...
+@hasaweb/web:build: [0m
+@hasaweb/web:build: [35mWorker saved in `.open-next/worker.js` 🚀
+@hasaweb/web:build: [0m
+@hasaweb/web:build: OpenNext build complete.
+@hasaweb/render:build: cache miss, executing 83c41b55ef580118
+@hasaweb/render:build: $ tsc --noEmit

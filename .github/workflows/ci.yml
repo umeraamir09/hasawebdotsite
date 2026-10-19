@@ -21,6 +21,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm build
+      - run: RENDERER_EVIDENCE=.wrangler/ci-renderer pnpm test:renderer
       - run: pnpm test:auth:browser --evidence-dir=.wrangler/ci-auth
       - run: pnpm test:persistence
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-draft-api pnpm test:draft-api

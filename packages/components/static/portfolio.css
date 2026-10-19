@@ -1,0 +1,215 @@
+@import url("./avatar.css");
+@import url("./default-theme.css");
+@font-face {
+  font-family: "DM Sans";
+  src: url("/portfolio-platform/8cd08d97e89c24d0-dm-sans-variable.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--pf-page);
+  color: var(--pf-ink);
+  font-family: "DM Sans", system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: var(--pf-link);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+:focus-visible {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: var(--pf-raised);
+  border: 1px solid var(--pf-control);
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  min-height: 44px;
+}
+.pf-portfolio {
+  width: min(100% - 32px, 800px);
+  margin: 0 auto;
+  overflow-wrap: anywhere;
+}
+.pf-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 24px 0;
+  gap: 16px;
+  align-items: center;
+}
+.pf-skip {
+  position: absolute;
+  left: -10000px;
+}
+.pf-skip:focus {
+  position: static;
+}
+.pf-profile,
+.pf-section {
+  background: var(--pf-surface);
+  border: 1px solid var(--pf-border);
+  border-radius: 28px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.pf-profile-copy,
+.pf-section {
+  padding: 32px;
+}
+
+.pf-avatar-envelope {
+  --avatar-surface: var(--pf-surface);
+  --avatar-raised: var(--pf-raised);
+  --avatar-border: var(--pf-control);
+}
+
+.pf-profile .pf-avatar-envelope {
+  margin-top: 12px;
+}
+.pf-profile h1 {
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+  margin: 0 0 20px;
+}
+h2 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+  margin: 0 0 24px;
+}
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.3;
+  margin: 16px 0 8px;
+}
+p {
+  margin: 0 0 16px;
+  white-space: pre-wrap;
+}
+.pf-bio {
+  font-size: 1.15rem;
+}
+.pf-muted {
+  color: var(--pf-muted);
+}
+.pf-links,
+.pf-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 0;
+  list-style: none;
+  margin: 16px 0 0;
+}
+.pf-links a {
+  display: inline-block;
+  padding: 4px 0;
+}
+.pf-tags {
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.pf-tags li {
+  padding: 4px 12px;
+  border: 1px solid var(--pf-border);
+  border-radius: 999px;
+  background: var(--pf-raised);
+}
+.pf-entry + .pf-entry {
+  border-top: 1px solid var(--pf-border);
+  margin-top: 28px;
+  padding-top: 28px;
+}
+.pf-image {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--pf-raised);
+  border: 1px solid var(--pf-border);
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+}
+.pf-image-banner {
+  aspect-ratio: 10 / 3;
+  border: 0;
+  border-radius: 0;
+}
+.pf-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.pf-image-status {
+  color: var(--pf-muted);
+  font-size: 0.85rem;
+  padding: 12px;
+  text-align: center;
+}
+.pf-avatar-portraitButton .pf-image-status {
+  font-size: 0.72rem;
+}
+.pf-image[data-asset-state="ready"] .pf-image-status {
+  display: none;
+}
+.pf-image[data-asset-state="unavailable"] img {
+  visibility: hidden;
+}
+.pf-image[data-asset-state="loading"] img {
+  opacity: 0;
+}
+.pf-rich-text > :last-child {
+  margin-bottom: 0;
+}
+.pf-rich-text ul,
+.pf-rich-text ol {
+  padding-inline-start: 24px;
+}
+.pf-footer {
+  color: var(--pf-muted);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 16px 0 40px;
+}
+@media (max-width: 760px) {
+  .pf-profile-copy,
+  .pf-section {
+    padding: 24px;
+  }
+  .pf-profile,
+  .pf-section {
+    border-radius: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+  }
+}

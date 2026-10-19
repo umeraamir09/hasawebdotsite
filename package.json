@@ -39,7 +39,9 @@
     "test:owner-runtime": "node scripts/owner-runtime-benchmark.mjs",
     "test:bounded-saves": "node scripts/bounded-save-runtime.mjs",
     "test:draft-api": "node scripts/owner-draft-api.mjs",
-    "test:autosave": "node scripts/owner-draft-api.mjs --autosave"
+    "test:autosave": "node scripts/owner-draft-api.mjs --autosave",
+    "test:renderer": "node scripts/portfolio-renderer-browser.mjs",
+    "generate:renderer-assets": "node scripts/generate-renderer-avatar.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

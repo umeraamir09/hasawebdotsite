@@ -1,0 +1,10 @@
+{
+  "before": {
+    "accessibility": "- button \"Dark mode\"",
+    "mode": "light"
+  },
+  "after": {
+    "accessibility": "- button \"Light mode\" [pressed]",
+    "mode": "dark"
+  }
+}
