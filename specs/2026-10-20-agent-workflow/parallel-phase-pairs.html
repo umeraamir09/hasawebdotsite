@@ -115,7 +115,9 @@ h2 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
 .legend-swatch.cross { background: var(--violet); }
 .legend-swatch.warn { background: var(--amber); }
 .legend-swatch.serial { background: #555; }
-.schedule { border-top: 1px solid var(--rule); }
+.schedule { display: block; width: 100%; border-spacing: 0; border-top: 1px solid var(--rule); }
+.schedule > tbody { display: block; }
+.schedule th, .schedule td { min-width: 0; padding: 0; font-weight: inherit; text-align: left; }
 .sched-row {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) minmax(0, 1fr) 190px;
@@ -193,12 +195,12 @@ h2 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
   .phase-count { display: none; }
   .section-head { flex-direction: column; align-items: flex-start; gap: 4px; }
   .section-note { text-align: left; }
-  .sched-row { grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "round a b" "round note note"; gap: 4px 10px; padding: 8px 0 8px 10px; }
+  .sched-row { grid-template-columns: 34px minmax(0, 1fr) minmax(0, 1fr); gap: 4px 10px; padding: 8px 0 8px 10px; }
   .sched-row.header { display: none; }
-  .sched-row .round { grid-area: round; }
-  .sched-row .lane-a { grid-area: a; }
-  .sched-row .lane-b { grid-area: b; }
-  .sched-row .sched-note { grid-area: note; }
+  .sched-row .round { grid-column: 1; grid-row: 1 / span 2; }
+  .sched-row .lane-a { grid-column: 2; grid-row: 1; }
+  .sched-row .lane-b { grid-column: 3; grid-row: 1; }
+  .sched-row .sched-note { grid-column: 2 / span 2; grid-row: 2; }
   .sched-phase .ptitle { display: none; }
   .two-col { grid-template-columns: 1fr; }
   .two-col .right { padding-top: 22px; padding-left: 0; border-top: 1px solid var(--rule); border-left: 0; }
@@ -226,13 +228,13 @@ h2 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
     </div>
   </header>
 
-  <div class="kpis" aria-label="Key figures">
+  <section class="kpis" aria-label="Key figures">
     <div class="kpi"><span class="kpi-value">45</span><span class="kpi-label">pending phases</span></div>
     <div class="kpi"><span class="kpi-value">16</span><span class="kpi-label">readiness frontiers</span></div>
     <div class="kpi"><span class="kpi-value">82</span><span class="kpi-label">same-frontier pairs</span></div>
     <div class="kpi"><span class="kpi-value">561</span><span class="kpi-label">independent pairs</span></div>
     <div class="kpi"><span class="kpi-value">24</span><span class="kpi-label">minimum rounds</span></div>
-  </div>
+  </section>
 
   <p class="lede">Frontier 2 is the widest launch point: <strong>10 phases</strong> and <strong>45 possible pairs</strong>. The reference plan uses 21 double rounds and 3 single-worker rounds; the last three phases are a strict serial release chain.</p>
 
@@ -425,139 +427,139 @@ h2 { margin: 0; font-size: 14px; font-weight: 650; letter-spacing: -.01em; }
       <h2 id="schedule-title">Reference two-worker schedule</h2>
       <p class="section-note">21 double rounds · 3 single rounds · 45 phase slots</p>
     </div>
-    <div class="schedule-legend" aria-label="Schedule legend">
+    <section class="schedule-legend" aria-label="Schedule legend">
       <span class="legend-item"><span class="legend-swatch named"></span>roadmap-named</span>
       <span class="legend-item"><span class="legend-swatch cross"></span>cross-frontier</span>
       <span class="legend-item"><span class="legend-swatch warn"></span>completion-ordered</span>
       <span class="legend-item"><span class="legend-swatch serial"></span>serial</span>
-    </div>
+    </section>
     <p class="caption">One valid plan; pair order within a frontier is interchangeable. Hover a row for its full coordination note.</p>
-    <div class="schedule" role="table" aria-label="24-round reference schedule">
-      <div class="sched-row header" role="row">
-        <span role="columnheader">Round</span><span role="columnheader">Worker A</span><span role="columnheader">Worker B</span><span role="columnheader">Coordination</span>
-      </div>
-      <div class="sched-row is-named" title="Roadmap-named. One schema owner for draft asset references. 17 consumes asset IDs; 18 owns storage and owner-authorized routes.">
-    <div class="round">01</div>
-    <div class="lane-a"><span class="sched-phase" title="Editor and live preview"><span class="pid">17</span><span class="ptitle">Editor and live preview</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Private upload storage"><span class="pid">18</span><span class="ptitle">Private upload storage</span></span></div>
-    <div class="sched-note"><span class="strong">roadmap-named · schema</span></div>
-  </div><div class="sched-row" title="Strict-independent. Palette generation and email adapters do not share a surface.">
-    <div class="round">02</div>
-    <div class="lane-a"><span class="sched-phase" title="Custom color generation"><span class="pid">36</span><span class="ptitle">Custom color generation</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Email adapters"><span class="pid">43</span><span class="ptitle">Email adapters</span></span></div>
-    <div class="sched-note"><span class="strong">independent</span></div>
-  </div><div class="sched-row is-named" title="Roadmap-named. One schema owner for asset references and `requestedSubdomain`. Address selection is not a claim.">
-    <div class="round">03</div>
-    <div class="lane-a"><span class="sched-phase" title="Upload controls and cropping"><span class="pid">19</span><span class="ptitle">Upload controls and cropping</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Unreserved address selection"><span class="pid">22</span><span class="ptitle">Unreserved address selection</span></span></div>
-    <div class="sched-note"><span class="strong">roadmap-named · schema + editor</span></div>
-  </div><div class="sched-row" title="One schema owner for links and the component registry; separate editor panels.">
-    <div class="round">04</div>
-    <div class="lane-a"><span class="sched-phase" title="Social and contact identity"><span class="pid">21</span><span class="ptitle">Social and contact identity</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Component picker and ordering"><span class="pid">27</span><span class="ptitle">Component picker and ordering</span></span></div>
-    <div class="sched-note"><span class="strong">schema + editor</span></div>
-  </div><div class="sched-row" title="One renderer/schema owner for the display model and metadata fields.">
-    <div class="round">05</div>
-    <div class="lane-a"><span class="sched-phase" title="Preset appearance controls"><span class="pid">35</span><span class="ptitle">Preset appearance controls</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Sharing metadata"><span class="pid">46</span><span class="ptitle">Sharing metadata</span></span></div>
-    <div class="sched-note"><span class="strong">schema +2</span></div>
-  </div><div class="sched-row" title="One schema owner for profile fields and the project component; separate editor panels.">
-    <div class="round">06</div>
-    <div class="lane-a"><span class="sched-phase" title="Profile and provider suggestions"><span class="pid">20</span><span class="ptitle">Profile and provider suggestions</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Project cards"><span class="pid">28</span><span class="ptitle">Project cards</span></span></div>
-    <div class="sched-note"><span class="strong">schema + editor</span></div>
-  </div><div class="sched-row" title="One schema/registry owner for text sections and skills; separate editor panels.">
-    <div class="round">07</div>
-    <div class="lane-a"><span class="sched-phase" title="Rich text and text sections"><span class="pid">29</span><span class="ptitle">Rich text and text sections</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Skills and categories"><span class="pid">31</span><span class="ptitle">Skills and categories</span></span></div>
-    <div class="sched-note"><span class="strong">schema +2</span></div>
-  </div><div class="sched-row" title="One schema/registry owner for work entries and the social-links component; separate editor panels.">
-    <div class="round">08</div>
-    <div class="lane-a"><span class="sched-phase" title="Work experience"><span class="pid">32</span><span class="ptitle">Work experience</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Social links component"><span class="pid">33</span><span class="ptitle">Social links component</span></span></div>
-    <div class="sched-note"><span class="strong">schema +2</span></div>
-  </div><div class="sched-row" title="Highest coupling in the plan. Land the display-model and publication-manifest shape under one owner, or sequence 37 after 34.">
-    <div class="round">09</div>
-    <div class="lane-a"><span class="sched-phase" title="Resume download"><span class="pid">34</span><span class="ptitle">Resume download</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Decorations and Face Reveal setup"><span class="pid">37</span><span class="ptitle">Decorations and Face Reveal setup</span></span></div>
-    <div class="sched-note"><span class="strong">schema +4</span></div>
-  </div><div class="sched-row" title="Shared editor surface only; separate pages. 40 owns the GitHub graph, 50 owns discovery.">
-    <div class="round">10</div>
-    <div class="lane-a"><span class="sched-phase" title="Public GitHub graph"><span class="pid">40</span><span class="ptitle">Public GitHub graph</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Discovery and example"><span class="pid">50</span><span class="ptitle">Discovery and example</span></span></div>
-    <div class="sched-note"><span class="strong">editor</span></div>
-  </div><div class="sched-row" title="One renderer/publication owner for case-study pages and Face Reveal behavior; both add public-page behavior.">
-    <div class="round">11</div>
-    <div class="lane-a"><span class="sched-phase" title="Project case studies"><span class="pid">30</span><span class="ptitle">Project case studies</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Face Reveal interaction"><span class="pid">38</span><span class="ptitle">Face Reveal interaction</span></span></div>
-    <div class="sched-note"><span class="strong">renderer +3</span></div>
-  </div><div class="sched-row is-cross" title="Cross-frontier. 22A unblocks 23 and 42A; 39 is ready after 30/34/35/38. Both are ready by this round.">
-    <div class="round">12</div>
-    <div class="lane-a"><span class="sched-phase" title="Setup-aware account entry"><span class="pid">22A</span><span class="ptitle">Setup-aware account entry</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Full-page draft preview"><span class="pid">39</span><span class="ptitle">Full-page draft preview</span></span></div>
-    <div class="sched-note"><span class="strong">cross-frontier · schema + editor</span></div>
-  </div><div class="sched-row" title="Shared address/setup validation. 23 extends setup checks into publication validation; 42A consumes address checks.">
-    <div class="round">13</div>
-    <div class="lane-a"><span class="sched-phase" title="Publication validation"><span class="pid">23</span><span class="ptitle">Publication validation</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Guide shell and Address"><span class="pid">42A</span><span class="ptitle">Guide shell and Address</span></span></div>
-    <div class="sched-note"><span class="strong">schema + editor</span></div>
-  </div><div class="sched-row" title="Coordinate asset readiness. 24 copies reachable assets; 42B creates profile assets.">
-    <div class="round">14</div>
-    <div class="lane-a"><span class="sched-phase" title="Immutable publication versions"><span class="pid">24</span><span class="ptitle">Immutable publication versions</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Profile and Links screens"><span class="pid">42B</span><span class="ptitle">Profile and Links screens</span></span></div>
-    <div class="sched-note"><span class="strong">storage</span></div>
-  </div><div class="sched-row" title="Strict-independent. Publication serving and onboarding content adapters do not share a surface.">
-    <div class="round">15</div>
-    <div class="lane-a"><span class="sched-phase" title="Commit and serve a version"><span class="pid">25</span><span class="ptitle">Commit and serve a version</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Skills and Projects adapters"><span class="pid">42C</span><span class="ptitle">Skills and Projects adapters</span></span></div>
-    <div class="sched-note"><span class="strong">independent</span></div>
-  </div><div class="sched-row is-warn" title="44's completion gate includes 26. Start together; land 26's publication behavior before 44 completes, and approve 26 first.">
-    <div class="round">16</div>
-    <div class="lane-a"><span class="sched-phase" title="Republish primitives"><span class="pid">26</span><span class="ptitle">Republish primitives</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Contact submissions"><span class="pid">44</span><span class="ptitle">Contact submissions</span></span></div>
-    <div class="sched-note"><span class="strong">completion-ordered · publication +2</span></div>
-  </div><div class="sched-row" title="Shared jobs runtime; separate GitHub and email services. Coordinate bindings and deployment only.">
-    <div class="round">17</div>
-    <div class="lane-a"><span class="sched-phase" title="Private activity consent"><span class="pid">41</span><span class="ptitle">Private activity consent</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Message delivery"><span class="pid">45</span><span class="ptitle">Message delivery</span></span></div>
-    <div class="sched-note"><span class="strong">ops</span></div>
-  </div><div class="sched-row" title="One GitHub service owner. 47 reuses 41's cleanup; 42 uses 41's generation contracts.">
-    <div class="round">18</div>
-    <div class="lane-a"><span class="sched-phase" title="GitHub refresh"><span class="pid">42</span><span class="ptitle">GitHub refresh</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Connected-provider settings"><span class="pid">47</span><span class="ptitle">Connected-provider settings</span></span></div>
-    <div class="sched-note"><span class="strong">github</span></div>
-  </div><div class="sched-row is-cross" title="Cross-frontier. Unpublish/restore and GitHub onboarding do not share a surface; both are ready by this round.">
-    <div class="round">19</div>
-    <div class="lane-a"><span class="sched-phase" title="Unpublish and restore"><span class="pid">48</span><span class="ptitle">Unpublish and restore</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="GitHub onboarding"><span class="pid">42D</span><span class="ptitle">GitHub onboarding</span></span></div>
-    <div class="sched-note"><span class="strong">cross-frontier · independent</span></div>
-  </div><div class="sched-row is-cross" title="Cross-frontier. 49 deletes recovery and prepared-replacement data that 42E uses. One auth/schema owner; test cross-account cleanup.">
-    <div class="round">20</div>
-    <div class="lane-a"><span class="sched-phase" title="Account deletion"><span class="pid">49</span><span class="ptitle">Account deletion</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Review and handoff"><span class="pid">42E</span><span class="ptitle">Review and handoff</span></span></div>
-    <div class="sched-note"><span class="strong">cross-frontier · schema + auth</span></div>
-  </div><div class="sched-row is-cross" title="Cross-frontier. Operator controls and onboarding verification do not share a surface; both are ready by this round.">
-    <div class="round">21</div>
-    <div class="lane-a"><span class="sched-phase" title="Operator controls"><span class="pid">51</span><span class="ptitle">Operator controls</span></span></div>
-    <div class="lane-b"><span class="sched-phase" title="Onboarding verification"><span class="pid">42F</span><span class="ptitle">Onboarding verification</span></span></div>
-    <div class="sched-note"><span class="strong">cross-frontier · independent</span></div>
-  </div><div class="sched-row is-single" title="Serial release chain. 52 needs all 42 prior phases plus 42F.">
-    <div class="round">22</div>
-    <div class="lane-a"><span class="sched-phase" title="Production delivery"><span class="pid">52</span><span class="ptitle">Production delivery</span></span></div>
-    <div class="lane-b"><span class="sched-empty">—</span></div>
-    <div class="sched-note"><span class="strong">serial</span></div>
-  </div><div class="sched-row is-single" title="Serial. 53 needs 52.">
-    <div class="round">23</div>
-    <div class="lane-a"><span class="sched-phase" title="Acceptance review"><span class="pid">53</span><span class="ptitle">Acceptance review</span></span></div>
-    <div class="lane-b"><span class="sched-empty">—</span></div>
-    <div class="sched-note"><span class="strong">serial</span></div>
-  </div><div class="sched-row is-single" title="Serial. 54 needs 50, 52, 53 and 42F.">
-    <div class="round">24</div>
-    <div class="lane-a"><span class="sched-phase" title="Journey validation and launch"><span class="pid">54</span><span class="ptitle">Journey validation and launch</span></span></div>
-    <div class="lane-b"><span class="sched-empty">—</span></div>
-    <div class="sched-note"><span class="strong">serial</span></div>
-  </div>
-    </div>
+    <table class="schedule" aria-label="24-round reference schedule">
+      <tr class="sched-row header">
+        <th scope="col">Round</th><th scope="col">Worker A</th><th scope="col">Worker B</th><th scope="col">Coordination</th>
+      </tr>
+      <tr class="sched-row is-named" title="Roadmap-named. One schema owner for draft asset references. 17 consumes asset IDs; 18 owns storage and owner-authorized routes.">
+    <td class="round">01</td>
+    <td class="lane-a"><span class="sched-phase" title="Editor and live preview"><span class="pid">17</span><span class="ptitle">Editor and live preview</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Private upload storage"><span class="pid">18</span><span class="ptitle">Private upload storage</span></span></td>
+    <td class="sched-note"><span class="strong">roadmap-named · schema</span></td>
+  </tr><tr class="sched-row" title="Strict-independent. Palette generation and email adapters do not share a surface.">
+    <td class="round">02</td>
+    <td class="lane-a"><span class="sched-phase" title="Custom color generation"><span class="pid">36</span><span class="ptitle">Custom color generation</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Email adapters"><span class="pid">43</span><span class="ptitle">Email adapters</span></span></td>
+    <td class="sched-note"><span class="strong">independent</span></td>
+  </tr><tr class="sched-row is-named" title="Roadmap-named. One schema owner for asset references and `requestedSubdomain`. Address selection is not a claim.">
+    <td class="round">03</td>
+    <td class="lane-a"><span class="sched-phase" title="Upload controls and cropping"><span class="pid">19</span><span class="ptitle">Upload controls and cropping</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Unreserved address selection"><span class="pid">22</span><span class="ptitle">Unreserved address selection</span></span></td>
+    <td class="sched-note"><span class="strong">roadmap-named · schema + editor</span></td>
+  </tr><tr class="sched-row" title="One schema owner for links and the component registry; separate editor panels.">
+    <td class="round">04</td>
+    <td class="lane-a"><span class="sched-phase" title="Social and contact identity"><span class="pid">21</span><span class="ptitle">Social and contact identity</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Component picker and ordering"><span class="pid">27</span><span class="ptitle">Component picker and ordering</span></span></td>
+    <td class="sched-note"><span class="strong">schema + editor</span></td>
+  </tr><tr class="sched-row" title="One renderer/schema owner for the display model and metadata fields.">
+    <td class="round">05</td>
+    <td class="lane-a"><span class="sched-phase" title="Preset appearance controls"><span class="pid">35</span><span class="ptitle">Preset appearance controls</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Sharing metadata"><span class="pid">46</span><span class="ptitle">Sharing metadata</span></span></td>
+    <td class="sched-note"><span class="strong">schema +2</span></td>
+  </tr><tr class="sched-row" title="One schema owner for profile fields and the project component; separate editor panels.">
+    <td class="round">06</td>
+    <td class="lane-a"><span class="sched-phase" title="Profile and provider suggestions"><span class="pid">20</span><span class="ptitle">Profile and provider suggestions</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Project cards"><span class="pid">28</span><span class="ptitle">Project cards</span></span></td>
+    <td class="sched-note"><span class="strong">schema + editor</span></td>
+  </tr><tr class="sched-row" title="One schema/registry owner for text sections and skills; separate editor panels.">
+    <td class="round">07</td>
+    <td class="lane-a"><span class="sched-phase" title="Rich text and text sections"><span class="pid">29</span><span class="ptitle">Rich text and text sections</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Skills and categories"><span class="pid">31</span><span class="ptitle">Skills and categories</span></span></td>
+    <td class="sched-note"><span class="strong">schema +2</span></td>
+  </tr><tr class="sched-row" title="One schema/registry owner for work entries and the social-links component; separate editor panels.">
+    <td class="round">08</td>
+    <td class="lane-a"><span class="sched-phase" title="Work experience"><span class="pid">32</span><span class="ptitle">Work experience</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Social links component"><span class="pid">33</span><span class="ptitle">Social links component</span></span></td>
+    <td class="sched-note"><span class="strong">schema +2</span></td>
+  </tr><tr class="sched-row" title="Highest coupling in the plan. Land the display-model and publication-manifest shape under one owner, or sequence 37 after 34.">
+    <td class="round">09</td>
+    <td class="lane-a"><span class="sched-phase" title="Resume download"><span class="pid">34</span><span class="ptitle">Resume download</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Decorations and Face Reveal setup"><span class="pid">37</span><span class="ptitle">Decorations and Face Reveal setup</span></span></td>
+    <td class="sched-note"><span class="strong">schema +4</span></td>
+  </tr><tr class="sched-row" title="Shared editor surface only; separate pages. 40 owns the GitHub graph, 50 owns discovery.">
+    <td class="round">10</td>
+    <td class="lane-a"><span class="sched-phase" title="Public GitHub graph"><span class="pid">40</span><span class="ptitle">Public GitHub graph</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Discovery and example"><span class="pid">50</span><span class="ptitle">Discovery and example</span></span></td>
+    <td class="sched-note"><span class="strong">editor</span></td>
+  </tr><tr class="sched-row" title="One renderer/publication owner for case-study pages and Face Reveal behavior; both add public-page behavior.">
+    <td class="round">11</td>
+    <td class="lane-a"><span class="sched-phase" title="Project case studies"><span class="pid">30</span><span class="ptitle">Project case studies</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Face Reveal interaction"><span class="pid">38</span><span class="ptitle">Face Reveal interaction</span></span></td>
+    <td class="sched-note"><span class="strong">renderer +3</span></td>
+  </tr><tr class="sched-row is-cross" title="Cross-frontier. 22A unblocks 23 and 42A; 39 is ready after 30/34/35/38. Both are ready by this round.">
+    <td class="round">12</td>
+    <td class="lane-a"><span class="sched-phase" title="Setup-aware account entry"><span class="pid">22A</span><span class="ptitle">Setup-aware account entry</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Full-page draft preview"><span class="pid">39</span><span class="ptitle">Full-page draft preview</span></span></td>
+    <td class="sched-note"><span class="strong">cross-frontier · schema + editor</span></td>
+  </tr><tr class="sched-row" title="Shared address/setup validation. 23 extends setup checks into publication validation; 42A consumes address checks.">
+    <td class="round">13</td>
+    <td class="lane-a"><span class="sched-phase" title="Publication validation"><span class="pid">23</span><span class="ptitle">Publication validation</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Guide shell and Address"><span class="pid">42A</span><span class="ptitle">Guide shell and Address</span></span></td>
+    <td class="sched-note"><span class="strong">schema + editor</span></td>
+  </tr><tr class="sched-row" title="Coordinate asset readiness. 24 copies reachable assets; 42B creates profile assets.">
+    <td class="round">14</td>
+    <td class="lane-a"><span class="sched-phase" title="Immutable publication versions"><span class="pid">24</span><span class="ptitle">Immutable publication versions</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Profile and Links screens"><span class="pid">42B</span><span class="ptitle">Profile and Links screens</span></span></td>
+    <td class="sched-note"><span class="strong">storage</span></td>
+  </tr><tr class="sched-row" title="Strict-independent. Publication serving and onboarding content adapters do not share a surface.">
+    <td class="round">15</td>
+    <td class="lane-a"><span class="sched-phase" title="Commit and serve a version"><span class="pid">25</span><span class="ptitle">Commit and serve a version</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Skills and Projects adapters"><span class="pid">42C</span><span class="ptitle">Skills and Projects adapters</span></span></td>
+    <td class="sched-note"><span class="strong">independent</span></td>
+  </tr><tr class="sched-row is-warn" title="44's completion gate includes 26. Start together; land 26's publication behavior before 44 completes, and approve 26 first.">
+    <td class="round">16</td>
+    <td class="lane-a"><span class="sched-phase" title="Republish primitives"><span class="pid">26</span><span class="ptitle">Republish primitives</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Contact submissions"><span class="pid">44</span><span class="ptitle">Contact submissions</span></span></td>
+    <td class="sched-note"><span class="strong">completion-ordered · publication +2</span></td>
+  </tr><tr class="sched-row" title="Shared jobs runtime; separate GitHub and email services. Coordinate bindings and deployment only.">
+    <td class="round">17</td>
+    <td class="lane-a"><span class="sched-phase" title="Private activity consent"><span class="pid">41</span><span class="ptitle">Private activity consent</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Message delivery"><span class="pid">45</span><span class="ptitle">Message delivery</span></span></td>
+    <td class="sched-note"><span class="strong">ops</span></td>
+  </tr><tr class="sched-row" title="One GitHub service owner. 47 reuses 41's cleanup; 42 uses 41's generation contracts.">
+    <td class="round">18</td>
+    <td class="lane-a"><span class="sched-phase" title="GitHub refresh"><span class="pid">42</span><span class="ptitle">GitHub refresh</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Connected-provider settings"><span class="pid">47</span><span class="ptitle">Connected-provider settings</span></span></td>
+    <td class="sched-note"><span class="strong">github</span></td>
+  </tr><tr class="sched-row is-cross" title="Cross-frontier. Unpublish/restore and GitHub onboarding do not share a surface; both are ready by this round.">
+    <td class="round">19</td>
+    <td class="lane-a"><span class="sched-phase" title="Unpublish and restore"><span class="pid">48</span><span class="ptitle">Unpublish and restore</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="GitHub onboarding"><span class="pid">42D</span><span class="ptitle">GitHub onboarding</span></span></td>
+    <td class="sched-note"><span class="strong">cross-frontier · independent</span></td>
+  </tr><tr class="sched-row is-cross" title="Cross-frontier. 49 deletes recovery and prepared-replacement data that 42E uses. One auth/schema owner; test cross-account cleanup.">
+    <td class="round">20</td>
+    <td class="lane-a"><span class="sched-phase" title="Account deletion"><span class="pid">49</span><span class="ptitle">Account deletion</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Review and handoff"><span class="pid">42E</span><span class="ptitle">Review and handoff</span></span></td>
+    <td class="sched-note"><span class="strong">cross-frontier · schema + auth</span></td>
+  </tr><tr class="sched-row is-cross" title="Cross-frontier. Operator controls and onboarding verification do not share a surface; both are ready by this round.">
+    <td class="round">21</td>
+    <td class="lane-a"><span class="sched-phase" title="Operator controls"><span class="pid">51</span><span class="ptitle">Operator controls</span></span></td>
+    <td class="lane-b"><span class="sched-phase" title="Onboarding verification"><span class="pid">42F</span><span class="ptitle">Onboarding verification</span></span></td>
+    <td class="sched-note"><span class="strong">cross-frontier · independent</span></td>
+  </tr><tr class="sched-row is-single" title="Serial release chain. 52 needs all 42 prior phases plus 42F.">
+    <td class="round">22</td>
+    <td class="lane-a"><span class="sched-phase" title="Production delivery"><span class="pid">52</span><span class="ptitle">Production delivery</span></span></td>
+    <td class="lane-b"><span class="sched-empty">—</span></td>
+    <td class="sched-note"><span class="strong">serial</span></td>
+  </tr><tr class="sched-row is-single" title="Serial. 53 needs 52.">
+    <td class="round">23</td>
+    <td class="lane-a"><span class="sched-phase" title="Acceptance review"><span class="pid">53</span><span class="ptitle">Acceptance review</span></span></td>
+    <td class="lane-b"><span class="sched-empty">—</span></td>
+    <td class="sched-note"><span class="strong">serial</span></td>
+  </tr><tr class="sched-row is-single" title="Serial. 54 needs 50, 52, 53 and 42F.">
+    <td class="round">24</td>
+    <td class="lane-a"><span class="sched-phase" title="Journey validation and launch"><span class="pid">54</span><span class="ptitle">Journey validation and launch</span></span></td>
+    <td class="lane-b"><span class="sched-empty">—</span></td>
+    <td class="sched-note"><span class="strong">serial</span></td>
+  </tr>
+    </table>
   </section>
 
   <section aria-labelledby="drivers-title">
