@@ -1,6 +1,6 @@
 # hasaweb.site
 
-Phases 01–15, including 11A–11E, are implemented, owner-approved and marked complete in the [roadmap](docs/roadmap.md). Phase 14 supplies shared autosave/recovery code. [Phase 15](specs/2026-10-19-conflict-session-recovery/results.md) adds selected-change review, a fixed same-tab recovery callback and isolated integration fixtures, approved by the owner on October 19, 2026 and checked in the roadmap. Start with [current implementation and decision changes](docs/implementation-status.md) before implementing a phase.
+Use the [roadmap](docs/roadmap.md) for owner-approved phase status, [implementation status](docs/implementation-status.md) for current code and constraints, and the [agent workflow](docs/agent-workflow.md) for parallel work, concise phase records and local checks. Shared saving/recovery and renderer foundations are implemented; editor, publication and guided-setup integration remain pending.
 
 ## Setup
 
@@ -21,13 +21,11 @@ Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete t
 ## Checks
 
 ```sh
-pnpm check
-pnpm build
-pnpm test:runtime
-pnpm test:persistence
+pnpm verify --profile=full
+pnpm verify --profile=renderer --dry-run
 ```
 
-`check` runs Biome, strict TypeScript across all apps/packages, and unit tests. `build` runs Next.js through OpenNext and bundles site/jobs with Wrangler dry runs. `test:runtime` seeds local fixtures, starts all Workers on port 8799, exercises D1/R2/services/Queue/Workflow, and restarts to check persistence. It stops its processes on completion. `test:persistence` verifies migrations, fixtures, owner isolation, session revocation, deletion, and restart persistence in isolated workerd/D1. GitHub Actions runs these checks without Cloudflare credentials. See [database usage and boundaries](packages/db/README.md).
+Named profiles run the applicable local checks under a shared worktree lock and retain routine output in ignored run directories. See the [profile table](docs/agent-workflow.md#choose-local-checks) for affected application builds, high-risk review and evidence policy. `pnpm check`, `pnpm build` and individual test commands remain available during development. CI retains all foundation correctness suites; `pnpm test:runtime:smoke` runs runtime assertions without benchmark profiling. `pnpm spike:runtime` remains the explicit measurement command. See [database boundaries](packages/db/README.md).
 
 ## Workspace
 
@@ -60,4 +58,4 @@ Run `pnpm spike:email` for the isolated S-7 provider and atomic D1 budget fixtur
 
 Run `pnpm test:owner-runtime` after building to verify the thin owner API through the web Worker adapter and named jobs binding. See the [Phase 11A measurement protocol](specs/2026-10-16-owner-api-runtime/protocol.md) for the isolated deployed CPU experiment and cleanup.
 
-After building, run `DRAFT_API_EVIDENCE=.wrangler/draft-api-review pnpm test:draft-api` to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. The evidence override preserves the historical Phase 13 receipts; use a new phase-specific directory when retaining a later run. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). The [shared client](apps/web/lib/draft/README.md) implements Phase 14 autosave/recovery and Phase 15 selected conflict review without activating editor or onboarding routes. Recovery reauthentication uses fixed `/auth/recovery` and `/auth/recovery/error` destinations, preserving the normal `/editor` callback. Every draft/progress request requires `X-Expected-Owner-Id`, checked against the authenticated identity. Run `DRAFT_API_EVIDENCE=.wrangler/autosave-review pnpm test:autosave` for the isolated Playwright browser/API suite, including IndexedDB recovery, dropped replies, account isolation and accessibility. It uses installed Chrome, overridable with `AUTH_SPIKE_CHROMIUM`, and never exposes fixture routes in product builds.
+After building, run `DRAFT_API_EVIDENCE=.wrangler/draft-api-review pnpm test:draft-api` to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. Local runs now default to unique ignored evidence directories. Use an explicit new phase-specific directory only when retaining selected proof. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). The [shared client](apps/web/lib/draft/README.md) implements Phase 14 autosave/recovery and Phase 15 selected conflict review without activating editor or onboarding routes. Recovery reauthentication uses fixed `/auth/recovery` and `/auth/recovery/error` destinations, preserving the normal `/editor` callback. Every draft/progress request requires `X-Expected-Owner-Id`, checked against the authenticated identity. Run `DRAFT_API_EVIDENCE=.wrangler/autosave-review pnpm test:autosave` for the isolated Playwright browser/API suite, including IndexedDB recovery, dropped replies, account isolation and accessibility. It uses installed Chrome, overridable with `AUTH_SPIKE_CHROMIUM`, and never exposes fixture routes in product builds.

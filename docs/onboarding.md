@@ -14,7 +14,7 @@ This experience is required for the MVP launch. It applies to new signups starti
 
 ## Current implementation and changes to prior plans
 
-The baseline was refreshed October 18, 2026. Roadmap Phases 01–15, including 11A–11E, are checked. The owner approved Phase 14's shared client and isolated fixture on October 18, 2026; the owner approved Phase 15 conflict/session recovery on October 19, 2026. Later UI/journey phases remain pending. See [current implementation and decision changes](implementation-status.md) for code boundaries and protocols.
+Use the roadmap for owner-approved phase status. The owner approved Phase 14's shared client and isolated fixture on October 18, 2026, and Phase 15 conflict/session recovery and Phase 16 renderer on October 19, 2026. Later UI/journey phases remain pending. See [current implementation and decision changes](implementation-status.md) for code boundaries and protocols.
 
 | Area | Implemented baseline | Required work |
 | --- | --- | --- |
@@ -124,7 +124,7 @@ Pass/fail requirements are [AC 2](acceptance-criteria.md#2-create-an-account-and
 
 Continue from the completed runtime, contract/persistence, provisioning and draft API foundations with shared client recovery, renderer/editor, uploads/crops/provider import, profile/links/address and authoritative entry/handoff services. Project/skills and production GitHub capabilities precede the onboarding adapters. Build editor parity first and reuse those capabilities rather than creating another component library, asset store, graph service or publication path. Only activate required signup routing when the full guide and handoff are available.
 
-The roadmap retains stable existing phase IDs and keeps shared optional-content/GitHub phases before the new onboarding adapters. Explicit contract, persistence, and account-entry follow-ups precede those adapters. Publication foundations use prepared owner fixtures until the complete guide exists; later integration and launch checks cover the real new-user flow. The under-15-minute profile-only publishing test includes authentication, required setup, skipping optional steps, Review, editor entry, and Publish. Do not invent an additional onboarding time or completion-rate target.
+The roadmap retains stable phase IDs and lists actual prerequisites for each onboarding adapter. Independent shell and adapter work can proceed without unrelated editor features; explicitly approved reusable milestones may satisfy a start dependency while full integration stays pending. Explicit contract, persistence, and account-entry follow-ups precede those adapters. Publication foundations use prepared owner fixtures until the complete guide exists; later integration and launch checks cover the real new-user flow. The under-15-minute profile-only publishing test includes authentication, required setup, skipping optional steps, Review, editor entry, and Publish. Do not invent an additional onboarding time or completion-rate target.
 
 ## Deferred and unresolved items
 
@@ -132,6 +132,6 @@ The interview leaves no unresolved onboarding behavior decision. The following e
 
 - The [catalog](appearance-catalog.md) was approved in Phase 11E on October 17. Phase 12 already provisions Leaf/DM Sans/system, no decoration and Face Reveal off. There is no onboarding appearance screen. Final copy, crop geometry and responsive composition belong to UI implementation using the existing read-only Figma reference.
 - Phase 13 implements production save/progress/recovery APIs on the completed 11A–11D foundations. Phase 14 supplies the shared autosave/local-recovery controller. Phase 15 adds selected-change conflict review and a fixed same-tab owner-gated recovery callback, approved by the owner on October 19, 2026. Editor/guide adapters must reuse these controls, preserve the recovery callback alongside normal-entry resolution, and apply setup recovery as reviewed content only after handoff. Production GitHub integration remains in its phases. Publication batching and withdrawal/cache feasibility still require checks before Phases 24–26. Resolve failed prerequisites without silently dropping private activity or changing the confirmed setup flow.
-- Per-phase implementation specs and migration/API details must be written before implementation. They must preserve these behaviors and the current owner/security boundaries.
+- Use the [concise phase record](agent-workflow.md#start-and-record-the-work) before implementation, linking these behaviors and current owner/security boundaries. Add migration/API protocols only when a lasting contract needs separate documentation.
 
 Repeat onboarding, an initial editor bypass, extra goal/persona questions, AI generation, automatic content discovery/imports, retained original image sources, and additional onboarding screens for the remaining editor capabilities are outside this initial scope. Existing broader MVP exclusions continue to apply. Remaining onboarding implementation phases stay unchecked until implemented, verified and explicitly approved; completed prerequisite phases retain their recorded status.

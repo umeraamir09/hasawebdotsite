@@ -4,9 +4,10 @@ import { spawn, spawnSync } from "node:child_process";
 import { createHmac, randomBytes } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url)),
@@ -33,9 +34,11 @@ const state = join(directory, "state"),
     jobs: join(directory, "jobs.json"),
     web: join(directory, "web.json"),
   };
-const evidence = resolve(
+const evidence = await createEvidenceDirectory(
   root,
-  process.env.DRAFT_API_EVIDENCE ?? "specs/2026-10-17-revision-aware-drafts",
+  "draft-api",
+  process.env.DRAFT_API_EVIDENCE ??
+    (remote ? "specs/2026-10-17-revision-aware-drafts" : undefined),
 );
 const origin = remote
   ? "https://hasaweb-owner-runtime-web.umerthepro2009.workers.dev"

@@ -1,20 +1,32 @@
 # Repository guidelines
 
-## Implementation baseline
+## Start here
 
-Before planning or implementing a phase, read [docs/implementation-status.md](docs/implementation-status.md), its decision changes and the relevant phase protocol/results. Use [docs/roadmap.md](docs/roadmap.md) for order and owner-approved completion. Historical spike instructions do not override the later production protocol. Preserve the documented CPU, quota, recovery and publication constraints when extending completed foundations.
+Read [implementation status](docs/implementation-status.md), the relevant [roadmap entry](docs/roadmap.md), and the acceptance criteria and current contracts for the affected subsystem. Use the subsystem links in the baseline. Read historical experiments only when their measured constraints matter to the change. Product requirements control scope; current production contracts supersede older experiments.
+
+Follow [the agent workflow](docs/agent-workflow.md) for phase records, parallel work and verification. Historical spec plans describe their original work; they do not require future design panels, delegation, evidence ledgers or repeated review loops. Explicitly invoked skills and higher-priority instructions still apply.
+
+## Parallel work and approval
+
+Support two modes. Separate owner-led chats remain the default. When the owner requests parallel implementation in one chat, such as "Implement phases 17 and 18 in parallel", that chat coordinates delegated phase work through subagents. The lead checks independence, supplies each worker's scope and worktree path, handles shared contracts, integrates sequentially and reports to the owner. This authorizes delegation for the named work, not creating separate sidebar chats or approving completion. See [the mode instructions](docs/agent-workflow.md#parallel-implementation-and-integration).
+
+Default to two implementation workers, whether owner-led chats or coordinator-led subagents, each in a separate worktree and branch. Inspect `git worktree list` first. Record each task's phase, prerequisites and write boundaries in its phase record. Give overlapping code/contracts one implementation owner; integrate branches sequentially and reconcile shared guidance in that integration. Run heavy verification through `pnpm verify` so worktrees share the local resource lock.
+
+Start work only after the owner approves its prerequisites and their code is integrated into the shared base. A separately approved reusable milestone can unblock a consumer while its parent phase remains unchecked. Request such approval only when it unblocks actual work. Ask for full phase checkoff after implementation and local verification; check the roadmap only after explicit owner approval. Record approvals already given without requesting them again.
 
 ## Required documentation impact check
 
-Every implementation or decision change must include a check for guidance it makes stale. This applies especially when failed tests, measurements, provider restrictions, security findings or owner decisions force a different approach. Passing code checks alone does not complete the work.
+Assess which assumptions the change affects. Search affected current guidance and downstream references once, and update misleading instructions in the same change. Inspect historical specs when current guidance links to an affected contract. Repeat the search only if later changes invalidate it. Check changed links and the final diff before completion.
 
-1. Identify what changed from the previous plan, why it changed and which earlier assumptions are no longer valid. Search with `rg` for the old approach, names, routes, values and affected capabilities across `AGENTS.md`, `README.md`, `docs/`, `specs/` and package READMEs. Follow references and inspect later roadmap phases that depend on the changed behavior, even if those phases are not being implemented yet.
-2. Update affected current guidance in the same change. Check the implementation-status baseline, architecture/decision log, roadmap, product/acceptance requirements, onboarding/authentication/UI guides and package usage instructions as applicable. Correct contradictory instructions where they appear; a new results note alone is insufficient if another current document still prescribes the rejected approach. Leave unaffected documents alone.
-3. Update dependent phase scopes, prerequisites and completion checks so they explain how to use the replacement approach. Include required compatibility/migration work, recovery/error handling, access boundaries, measurements and verification where affected. Distinguish implemented behavior from a proposed or unverified replacement. Record unresolved work as an explicit prerequisite before dependent implementation; never imply that a fallback decision proves feasibility.
-4. Preserve historical evidence, test counts, migrations and owner approval records. When an older spec can still be mistaken for current instructions, add a dated supersession note linking to the replacement protocol or decision. Do not rewrite the original result to make a rejected approach appear successful. Preserve agreed product scope and the existing phase-approval rules.
-5. Before reporting completion, opening a PR or requesting a phase checkoff, repeat the search for superseded guidance, verify affected links and review the diff for contradictions. Record a Documentation impact section in the current spec's `results.md`, listing the changed assumption, documents and dependent phases updated, and unresolved prerequisites. If no documentation needs changing, record what was checked and why it remains accurate.
+Record the changed assumption, updated guidance and unresolved prerequisites in the phase record's Documentation impact section. If no documentation changes are needed, one sentence explaining why is enough. Do not inventory unrelated documents or produce search receipts. Preserve historical failures, measurements, migrations and owner approvals. Add a dated supersession note only where an old instruction can still be mistaken for current guidance.
 
-Do not leave known misleading guidance for a later documentation cleanup. Documentation updates are part of the change's completion criteria. This rule does not authorize changes to the read-only Figma file or checking off a phase without owner approval.
+## Verification and evidence
+
+Use targeted checks during development and the applicable local verification profile before completion review. Build affected applications; shared contracts, dependencies, runtime/toolchain changes or uncertain impact require the full gate. Tooling-only and test-only changes need their own checks. Unknown impact defaults to full verification. CI supplements the local gate.
+
+High-risk changes require a separate review focused on the changed boundary: authentication, authorization, privacy, data loss/recovery, migrations, publication/withdrawal or runtime budgets. Ordinary changes need a normal diff review. Do not automatically start review chats or delegate without authorization.
+
+Keep one concise `results.md` per phase, linking existing requirements. Update that record for small follow-up fixes. Keep routine logs/screenshots in ignored run directories. Commit selected reproduction proof for consequential failures, regressions, benchmarks or provider decisions. Existing historical evidence stays intact. A passing fixture does not prove production feasibility, and an approved fallback decision does not prove its implementation works.
 
 ## Figma UI reference
 
@@ -45,7 +57,3 @@ Use Conventional Commits: `<type>(<optional-scope>): <description>`.
 - Examples: `feat(ui): add face reveal`, `fix(ui): prevent mobile menu overflow`, `docs: add git naming conventions`.
 
 Apply these conventions to new branches and commits. Do not rewrite existing history solely to rename commits.
-
-## Roadmap Rule
-
-- Make sure to check off the phases that I have explicitly approved after implementation as complete and not leave a completed phase not checked which will cause confusion. After Implementation ask me if you should check it off or not yet.

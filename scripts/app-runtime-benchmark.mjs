@@ -10,6 +10,8 @@ import { setTimeout } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
 
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+
 const root = fileURLToPath(new URL("..", import.meta.url));
 process.chdir(root);
 const require = createRequire(import.meta.url);
@@ -18,7 +20,18 @@ const wrangler = join(
   "bin/wrangler.js",
 );
 const wranglerRequire = createRequire(require.resolve("wrangler"));
-const output = join(root, ".wrangler/app-spike");
+const smoke = process.argv.includes("--smoke");
+const output = join(
+  root,
+  smoke ? ".wrangler/app-smoke" : ".wrangler/app-spike",
+);
+const evidence = smoke
+  ? await createEvidenceDirectory(
+      root,
+      "runtime-smoke",
+      process.env.RUNTIME_EVIDENCE,
+    )
+  : output;
 const state = join(output, "state");
 const port = 8803;
 const inspectorPort = 9233;
@@ -227,14 +240,15 @@ async function request({
 }
 try {
   const cold = [];
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < (smoke ? 1 : 3); i++) {
     const readyMs = await start();
     const first = await request();
-    cold.push({
-      localProcessReadyMs: readyMs,
-      firstSessionRequestElapsedMs: first.ms,
-    });
-    if (i < 2) await stop();
+    if (!smoke)
+      cold.push({
+        localProcessReadyMs: readyMs,
+        firstSessionRequestElapsedMs: first.ms,
+      });
+    if (!smoke && i < 2) await stop();
   }
   const first = await request();
   const cached = [
@@ -279,87 +293,96 @@ try {
   ];
   // Inspector attaches only after unprofiled cold and warm timings.
   const results = [];
-  for (const test of cases) {
-    for (let i = 0; i < 10; i++) await request(test.options);
-    const samples = [];
-    for (let i = 0; i < 100; i++)
-      samples.push((await request(test.options)).ms);
-    results.push({
-      name: test.name,
-      bodyBytes: Buffer.byteLength(test.options.body ?? ""),
-      warmElapsedMs: summary(samples),
-      samplesMs: samples,
-    });
-  }
-  const targets = await (
-    await fetch(`http://127.0.0.1:${inspectorPort}/json`)
-  ).json();
-  const target =
-    targets.find(
-      (t) => t.id?.includes(config.name) || t.title?.includes(config.name),
-    ) ?? targets[0];
-  assert.ok(target?.webSocketDebuggerUrl);
-  const inspectorURL = new URL(target.webSocketDebuggerUrl);
-  inspectorURL.hostname = "127.0.0.1";
-  console.log(
-    JSON.stringify({
-      inspectorTarget: target.id,
-      inspectorTitle: target.title,
-      inspectorURL: inspectorURL.href,
-    }),
-  );
-  const InspectorWebSocket = wranglerRequire("ws");
-  socket = new InspectorWebSocket(inspectorURL, { origin: "http://localhost" });
-  await new Promise((resolve, reject) => {
-    socket.addEventListener("open", resolve, { once: true });
-    socket.addEventListener("error", reject, { once: true });
-  });
-  socket.addEventListener("message", ({ data }) => {
-    const message = JSON.parse(data);
-    const entry = pending.get(message.id);
-    if (!entry) return;
-    pending.delete(message.id);
-    if (message.error) entry.reject(new Error(JSON.stringify(message.error)));
-    else entry.resolve(message.result);
-  });
-  await command("Profiler.enable");
-  await command("Profiler.setSamplingInterval", { interval: 100 });
-  for (let index = 0; index < cases.length; index++) {
-    const test = cases[index];
-    await command("Profiler.start");
-    for (let i = 0; i < 50; i++) await request(test.options);
-    const { profile } = await command("Profiler.stop");
-    await writeFile(
-      join(output, `${test.name}.cpuprofile.gz`),
-      gzipSync(JSON.stringify(profile)),
-    );
-    const nodes = new Map(profile.nodes.map((node) => [node.id, node]));
-    let activeUs = 0;
-    for (let i = 0; i < (profile.samples?.length ?? 0); i++) {
-      if (
-        ["(idle)", "(program)", "(root)"].includes(
-          nodes.get(profile.samples[i])?.callFrame.functionName,
-        )
-      )
-        continue;
-      activeUs += profile.timeDeltas[i];
+  if (smoke) {
+    for (const test of cases) {
+      await request(test.options);
+      results.push({ name: test.name, passed: true });
     }
-    results[index].sampledCpu = {
-      requests: 50,
-      activeMsPerRequest: activeUs / 1000 / 50,
-    };
+  } else {
+    for (const test of cases) {
+      for (let i = 0; i < 10; i++) await request(test.options);
+      const samples = [];
+      for (let i = 0; i < 100; i++)
+        samples.push((await request(test.options)).ms);
+      results.push({
+        name: test.name,
+        bodyBytes: Buffer.byteLength(test.options.body ?? ""),
+        warmElapsedMs: summary(samples),
+        samplesMs: samples,
+      });
+    }
+    const targets = await (
+      await fetch(`http://127.0.0.1:${inspectorPort}/json`)
+    ).json();
+    const target =
+      targets.find(
+        (t) => t.id?.includes(config.name) || t.title?.includes(config.name),
+      ) ?? targets[0];
+    assert.ok(target?.webSocketDebuggerUrl);
+    const inspectorURL = new URL(target.webSocketDebuggerUrl);
+    inspectorURL.hostname = "127.0.0.1";
     console.log(
       JSON.stringify({
-        name: test.name,
-        warmElapsedMs: results[index].warmElapsedMs,
-        sampledCpu: results[index].sampledCpu,
+        inspectorTarget: target.id,
+        inspectorTitle: target.title,
+        inspectorURL: inspectorURL.href,
       }),
     );
+    const InspectorWebSocket = wranglerRequire("ws");
+    socket = new InspectorWebSocket(inspectorURL, {
+      origin: "http://localhost",
+    });
+    await new Promise((resolve, reject) => {
+      socket.addEventListener("open", resolve, { once: true });
+      socket.addEventListener("error", reject, { once: true });
+    });
+    socket.addEventListener("message", ({ data }) => {
+      const message = JSON.parse(data);
+      const entry = pending.get(message.id);
+      if (!entry) return;
+      pending.delete(message.id);
+      if (message.error) entry.reject(new Error(JSON.stringify(message.error)));
+      else entry.resolve(message.result);
+    });
+    await command("Profiler.enable");
+    await command("Profiler.setSamplingInterval", { interval: 100 });
+    for (let index = 0; index < cases.length; index++) {
+      const test = cases[index];
+      await command("Profiler.start");
+      for (let i = 0; i < 50; i++) await request(test.options);
+      const { profile } = await command("Profiler.stop");
+      await writeFile(
+        join(output, `${test.name}.cpuprofile.gz`),
+        gzipSync(JSON.stringify(profile)),
+      );
+      const nodes = new Map(profile.nodes.map((node) => [node.id, node]));
+      let activeUs = 0;
+      for (let i = 0; i < (profile.samples?.length ?? 0); i++) {
+        if (
+          ["(idle)", "(program)", "(root)"].includes(
+            nodes.get(profile.samples[i])?.callFrame.functionName,
+          )
+        )
+          continue;
+        activeUs += profile.timeDeltas[i];
+      }
+      results[index].sampledCpu = {
+        requests: 50,
+        activeMsPerRequest: activeUs / 1000 / 50,
+      };
+      console.log(
+        JSON.stringify({
+          name: test.name,
+          warmElapsedMs: results[index].warmElapsedMs,
+          sampledCpu: results[index].sampledCpu,
+        }),
+      );
+    }
+    await writeFile(
+      join(output, "timings.json"),
+      `${JSON.stringify({ recordedAt: new Date().toISOString(), cold, results }, null, 2)}\n`,
+    );
   }
-  await writeFile(
-    join(output, "timings.json"),
-    `${JSON.stringify({ recordedAt: new Date().toISOString(), cold, results }, null, 2)}\n`,
-  );
   // Assert failure paths do not increment writes. Owner B remains untouched.
   const before = (await request()).data.writes;
   const failures = [
@@ -449,6 +472,7 @@ try {
   await rm(failurePath);
   const report = {
     recordedAt: new Date().toISOString(),
+    mode: smoke ? "smoke" : "benchmark",
     node: process.version,
     versions: Object.fromEntries(
       await Promise.all(
@@ -469,9 +493,10 @@ try {
     workerd: wranglerRequire("workerd/package.json").version,
     platform: `${os.platform()} ${os.release()} ${os.arch()}`,
     cpu: os.cpus()[0]?.model,
-    method:
-      "Compiled OpenNext Worker in local workerd. Three fresh process/isolate first-session requests, persisted local D1. Ten warmups then 100 sequential unprofiled HTTP requests per case. Elapsed includes client, network loopback, framework, auth and D1 I/O. Separate 50-request V8 profiles at requested 100us sampling interval, active leaf deltas excluding idle/program/root divided by 50. Profiles may include GC, framework and unrelated runtime work; no exact CPU percentile. No deployed CPU or startup_time_ms.",
-    cold,
+    method: smoke
+      ? "Correctness only in local workerd/D1. One request per case, cookie/cache, ownership, request rejection, deletion and D1 failure assertions. No cold/warm timing samples or V8 profiling; no CPU or capacity claim."
+      : "Compiled OpenNext Worker in local workerd. Three fresh process/isolate first-session requests, persisted local D1. Ten warmups then 100 sequential unprofiled HTTP requests per case. Elapsed includes client, network loopback, framework, auth and D1 I/O. Separate 50-request V8 profiles at requested 100us sampling interval, active leaf deltas excluding idle/program/root divided by 50. Profiles may include GC, framework and unrelated runtime work; no exact CPU percentile. No deployed CPU or startup_time_ms.",
+    ...(smoke ? {} : { cold }),
     results,
     checks: {
       failureCases: failures.length,
@@ -488,10 +513,10 @@ try {
     },
   };
   await writeFile(
-    join(output, "results.json"),
+    join(evidence, "results.json"),
     `${JSON.stringify(report, null, 2)}\n`,
   );
-  console.log(`Evidence written to ${output}`);
+  console.log(`Evidence written to ${evidence}`);
 } catch (error) {
   console.error(scrub(logs.slice(-2000)));
   throw error;

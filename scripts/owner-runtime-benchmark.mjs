@@ -7,6 +7,8 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+
 const root = fileURLToPath(new URL("..", import.meta.url));
 const require = createRequire(import.meta.url);
 const wrangler = join(
@@ -23,8 +25,12 @@ const output = join(
   remote ? ".wrangler/owner-runtime-remote" : ".wrangler/owner-runtime-local",
 );
 const evidencePath = join(
-  root,
-  process.env.OWNER_RUNTIME_EVIDENCE ?? "specs/2026-10-16-owner-api-runtime",
+  await createEvidenceDirectory(
+    root,
+    "owner-runtime",
+    process.env.OWNER_RUNTIME_EVIDENCE ??
+      (remote ? "specs/2026-10-16-owner-api-runtime" : undefined),
+  ),
   remote
     ? recovery
       ? "deployed-recovery.json"

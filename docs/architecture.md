@@ -497,6 +497,8 @@ Use the [README commands](../README.md): `pnpm dev` builds and starts all three 
 
 ## 13. Testing strategy (mapped to acceptance-criteria.md)
 
+Use the [agent workflow](agent-workflow.md#choose-local-checks) for incremental local profiles, affected application builds, high-risk review and selective evidence. The layers and confirmed release matrix below retain their scope. CI keeps the foundation correctness suites; runtime profiling is an explicit measurement command rather than a routine regression requirement.
+
 | Layer | Tooling | Covers |
 | --- | --- | --- |
 | **Unit** | Vitest | Palette generation and contrast (AC 12.3-12.5), `validateDraft` (AC 2.5, 4.1-4.3, 15.4-15.6), subdomain rules (AC 15.1), rich-text allowlist and XSS payloads (AC 8.3), link validation, date validation (AC 7.3), renderer snapshot tests |

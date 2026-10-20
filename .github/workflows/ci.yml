@@ -27,5 +27,5 @@ jobs:
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-draft-api pnpm test:draft-api
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-autosave pnpm test:autosave
       - run: pnpm test:runtime
-      - run: pnpm spike:runtime
+      - run: RUNTIME_EVIDENCE=.wrangler/ci-runtime-smoke pnpm test:runtime:smoke
       - run: pnpm spike:routing

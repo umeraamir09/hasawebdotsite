@@ -7,14 +7,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+
 // Render the built app in Chromium. Only provider HTTP and consent are fixtures.
 // Browser requests to the auth API execute the product handler in workerd/D1.
 export async function checkAuthUi({
   root,
   wrangler,
   fixturePort,
-  evidenceDirectory = join(root, "specs/2026-10-15-sign-in"),
+  evidenceDirectory,
 }) {
+  evidenceDirectory ??= await createEvidenceDirectory(root, "auth-ui");
   const require = createRequire(import.meta.url);
   const esbuild = createRequire(require.resolve("wrangler"))("esbuild");
   const helper = await esbuild.build({
