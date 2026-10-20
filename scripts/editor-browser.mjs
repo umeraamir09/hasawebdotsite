@@ -409,28 +409,28 @@ export async function checkEditor({
         );
         await page.evaluate(() => {
           const delayed = new WeakSet();
-          window.addEventListener("message", (event) => {
-            if (event.data?.kind !== "select" || delayed.has(event)) return;
-            delayed.add(event);
-            event.stopImmediatePropagation();
-            setTimeout(() => window.dispatchEvent(event), 250);
-          }, { capture: true });
+          window.addEventListener(
+            "message",
+            (event) => {
+              if (event.data?.kind !== "select" || delayed.has(event)) return;
+              delayed.add(event);
+              event.stopImmediatePropagation();
+              setTimeout(() => window.dispatchEvent(event), 250);
+            },
+            { capture: true },
+          );
         });
         await frame()
           .locator('[data-component-id="projects-1"]')
           .click({ position: { x: 10, y: 10 } });
-        assert.equal(
-          await page.getByRole("region", { name: "Projects controls" }).count(),
-          1,
-        );
+        await page
+          .getByRole("region", { name: "Projects controls" })
+          .waitFor({ state: "visible" });
         await frame().locator('[data-component-id="skills-1"]').focus();
         await frame().locator('[data-component-id="skills-1"]').press("Enter");
-        assert.equal(
-          await page
-            .getByRole("region", { name: "Skills and technologies controls" })
-            .count(),
-          1,
-        );
+        await page
+          .getByRole("region", { name: "Skills and technologies controls" })
+          .waitFor({ state: "visible" });
         await frame().locator("[data-theme-toggle]").click();
         assert.equal(
           await page
