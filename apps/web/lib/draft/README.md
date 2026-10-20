@@ -18,7 +18,7 @@ IndexedDB failure leaves memory editing and acknowledged cloud saving available 
 
 Injected storage adapters must honor `remove(id, expectedSnapshot)` as an atomic compare-and-delete. Restoration and older acknowledgements must preserve a source record that its original tab has updated. If replacement persistence fails, retain the durable source instead of deleting its only recoverable copy. Browser recovery uses idb-keyval transactions for this check.
 
-React field adapters must reset local control state when `controller.scopeKey` changes. The shared status controls do so, and a controller that observes `owner_changed` remains stopped. Create a new controller only after obtaining the current authenticated owner/portfolio IDs. Dispose controllers before leaving a flow; disposal starts no later commands after a lock/checkpoint wait.
+React field adapters must reset local control state when `controller.scopeKey` changes. The shared status controls do so, and a controller that observes `owner_changed` remains stopped. Create a new controller only after obtaining the current authenticated owner/portfolio IDs. Dispose standalone controllers before leaving a flow. For a coordinated flow call `recovery.dispose()`, which closes its current and temporary replacement controllers and prevents later writer creation or command dispatch after storage waits. Disposal preserves local checkpoints; it does not flush new network writes.
 
 Every draft/progress request carries `X-Expected-Owner-Id`. The server compares this precondition to the real authenticated identity and returns `owner_changed` on mismatch. It never uses the header as authorization. A returned portfolio-ID mismatch also blocks the client.
 

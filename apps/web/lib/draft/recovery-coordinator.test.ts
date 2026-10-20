@@ -17,7 +17,7 @@ import { DraftFailure, type RecoveryRecord, type Transport } from "./types";
 
 const scopes: RecoveryCoordinator[] = [];
 afterEach(() => {
-  for (const scope of scopes) scope.store.getState().controller.dispose();
+  for (const scope of scopes) scope.dispose();
   scopes.length = 0;
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -45,6 +45,60 @@ async function fixture() {
   });
   return { network, storage, options, recovery, controller };
 }
+it.each(["replacement", "retained"])(
+  "disposal stops replacement writers while %s persistence waits",
+  async (stage) => {
+    const { recovery, network, storage } = await fixture();
+    await recovery.start();
+    const item = recovery.store
+      .getState()
+      .items.find((entry) => entry.selectable);
+    if (!item) throw new Error("A selectable change is required");
+    await recovery.select(item.id, true);
+    let release = () => {};
+    let reached = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const entered = new Promise<void>((resolve) => {
+      reached = resolve;
+    });
+    const put = storage.put;
+    let waiting = true;
+    storage.put = async (record) => {
+      if (
+        waiting &&
+        (stage === "replacement" ? !record.review : record.reviewOnly)
+      ) {
+        waiting = false;
+        reached();
+        await held;
+      }
+      return put(record);
+    };
+    const saved = structuredClone(network.get());
+    const applying = recovery.apply().catch((error: unknown) => error);
+    await entered;
+    recovery.dispose();
+    const sent = network.calls.length;
+    release();
+    expect(await applying).toBeInstanceOf(Error);
+    expect(network.calls.slice(sent)).toEqual([]);
+    expect(network.get()).toEqual(saved);
+    expect(() =>
+      recovery.store
+        .getState()
+        .controller.edit(["profile", "bio"], "after exit"),
+    ).toThrow();
+    await expect(recovery.start()).rejects.toThrow("disposed");
+    expect(
+      [...storage.records.values()].some(
+        (record) =>
+          !record.reviewOnly && record.working?.profile.name === "Mine",
+      ),
+    ).toBe(true);
+  },
+);
 const seedPreserved = async (
   storage: ReturnType<typeof memoryStorage>,
   network: ReturnType<typeof fixtureTransport>,
