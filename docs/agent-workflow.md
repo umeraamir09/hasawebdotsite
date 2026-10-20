@@ -62,9 +62,10 @@ During coding, run the smallest checks that answer the current question. At comp
 | --- | --- |
 | `docs` | `git diff --check HEAD`; manually check changed links and guidance. Documentation-only work. |
 | `checks` | `pnpm check`; tooling/test changes with no shipped bundle impact. Run their focused behavior tests too. |
-| `renderer` | Check, web production build, renderer browser suite. Markup, preview bridge, styles and interaction. |
-| `drafts` | Check, web/jobs builds, draft API and autosave browser suites. Draft/recovery integration. |
-| `auth` | Check, web/jobs builds, auth browser, draft API and autosave suites. Owner/session boundaries. |
+| `renderer` | Check, web/jobs builds, renderer and editor browser suites. Markup, preview bridge, styles and interaction. |
+| `editor` | Check, web/jobs builds and editor browser suite. Editor fields, recovery adapters and private live preview. |
+| `drafts` | Check, web/jobs builds, draft API, autosave and editor browser suites. Draft/recovery integration. |
+| `auth` | Check, web/jobs builds, auth browser, draft API, autosave and editor suites. Owner/session boundaries. |
 | `persistence` | Check, all application builds and persistence suite. Add draft/auth suites when their contracts change; shared schema/migrations select full. |
 | `runtime` / `full` | Check, all builds and every existing foundation regression suite, including runtime smoke and routing. Infrastructure, shared contracts, dependencies, uncertain impact. |
 

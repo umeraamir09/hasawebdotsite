@@ -1,6 +1,6 @@
 # Authentication
 
-Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Normal successful OAuth callbacks open `/editor`, a static client shell that initializes the private portfolio through the Phase 12 API. `/api/owner` remains a read-only session/deletion check returning the owner's name and existing portfolio ID, without tokens, email or draft content. Phase 13 adds separate private draft/progress APIs. Onboarding and the full editor remain planned work. See [current status](implementation-status.md).
+Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Normal successful OAuth callbacks open `/editor`, a static client shell that initializes the private portfolio through the Phase 12 API. `/api/owner` remains a read-only session/deletion check returning the owner's name and existing portfolio ID, without tokens, email or draft content. Phase 13 adds separate private draft/progress APIs. Phase 17 implements a reusable editor and authorized private-preview adapters through handoff fixtures. Production editor entry and onboarding remain gated until the complete guide activates in Phase 42E. See [current status](implementation-status.md).
 
 The following setup/verification instructions describe the authentication baseline and Phase 12 initialization. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey. Required setup routing has not yet been activated.
 
@@ -20,7 +20,13 @@ Before same-tab navigation, quiesce the controller, settle the current acknowled
 
 The callback calls uncached `GET /api/owner` before opening recovery storage. Only an authenticated matching owner and portfolio can load its record range. A different account receives an explanation and another sign-in path; it cannot copy or dismiss the original recovery. Cancellation, provider failure, callback reload and Back retain continuation. Expiry during conflict review preserves its durable selections for explicit continuation. Restoration and reviewed replacement update matching continuations to their durable replacement record/context before retiring sources, so remaining raw input survives another callback reload. Missing or stale continuations offer ordinary account entry without provisioning. Matching callbacks also offer an account-entry link, including clean checkpoints and expiry before the initial draft read; they never require nonexistent edits to continue.
 
-The callback mounts shared recovery controls and requires explicit continuation before saving preserved valid values. Existing command/transfer/discard journals retain receipt verification; unknown staging requires the original journal or explicit discard. Conflicts enter three-way selected review. After handoff, setup records can contribute explicitly selected content to a fresh content scope, without converting setup attempts or replaying progress. This route supplies recovery only. Full guide/editor adapters remain Phases 17, 22A and 42E. See the [client contract](../apps/web/lib/draft/README.md).
+The callback mounts shared recovery controls and requires explicit continuation before saving preserved valid values. Existing command/transfer/discard journals retain receipt verification; unknown staging requires the original journal or explicit discard. Conflicts enter three-way selected review. After handoff, setup records can contribute explicitly selected content to a fresh content scope, without converting setup attempts or replaying progress. This route supplies recovery only. The editor adapter is implemented in Phase 17; controlled setup-aware entry and guide activation remain Phases 22A and 42E. See the [client contract](../apps/web/lib/draft/README.md).
+
+## Dormant editor preview authorization
+
+`serveEditorPreview` verifies the original cookie with the owner API before serving a private/no-store, noindex boot shell. The shell contains no draft data. `openEditorPreview` checks uncached owner/portfolio identity before mounting the child and reports that identity to the pinned parent connection. Focus and browser restoration recheck the original identity before resuming; an account change disposes the old display. Neither preview adapter resolves raw asset IDs. Actual ready-asset access belongs to Phase 18.
+
+These adapters are exercised by the Phase 17 handoff fixture. They are not registered as production routes. Normal OAuth and `/editor` still use the account shell until the complete setup entry resolver is activated.
 
 ## Planned setup-aware entry and recovery
 

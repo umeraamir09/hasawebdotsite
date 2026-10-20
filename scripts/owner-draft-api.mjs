@@ -192,7 +192,11 @@ async function request(action, body = {}, options = {}) {
   return result;
 }
 async function check(name, action) {
-  if (process.argv.includes("--autosave") && !name.startsWith("real session"))
+  if (
+    (process.argv.includes("--autosave") ||
+      process.argv.includes("--editor")) &&
+    !name.startsWith("real session")
+  )
     return;
   if (
     process.argv.includes("--legacy-only") &&
@@ -1758,6 +1762,19 @@ try {
       evidence,
       secrets,
       tokens,
+    });
+  }
+  if (process.argv.includes("--editor")) {
+    const { checkEditor } = await import("./editor-browser.mjs");
+    await checkEditor({
+      root,
+      origin,
+      cookie,
+      sql,
+      fixture,
+      esbuild,
+      evidence,
+      secrets,
     });
   }
   await writeJsonEvidence(

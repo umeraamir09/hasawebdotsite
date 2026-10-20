@@ -28,6 +28,6 @@ These conservative guards are not measured CPU guarantees. A whole valid profile
 
 Run `pnpm test:renderer`. The script builds an isolated local fixture, starts Chromium, checks private fixture gating and compares client iframe rendering with static snapshots. It stops its browser/server afterward. Set `RENDERER_EVIDENCE` to a fresh directory to retain another run. Each standalone run defaults to a unique ignored `.wrangler/evidence/renderer-*` directory. Use the [renderer profile](../../docs/agent-workflow.md#choose-local-checks) for the local completion gate and shared resource lock.
 
-`node scripts/portfolio-renderer-browser.mjs --serve` keeps the fixture at [port 8794](http://127.0.0.1:8794/published). This is synthetic owner content, not a product preview or publication. The actual editor, owner preview routes, upload authorization, publication service and onboarding Review remain later integrations.
+`node scripts/portfolio-renderer-browser.mjs --serve` keeps the fixture at [port 8794](http://127.0.0.1:8794/published). This is synthetic owner content, not a product preview or publication. The Phase 17 editor and dormant authorized preview adapters have their own handoff fixture. Product editor activation, upload authorization, publication and onboarding Review remain later integrations.
 
 See the [Phase 16 protocol](../../specs/2026-10-19-shared-portfolio-renderer/protocol.md) and [results](../../specs/2026-10-19-shared-portfolio-renderer/results.md).

@@ -240,6 +240,9 @@ importers:
       '@hasaweb/auth':
         specifier: workspace:*
         version: link:../../packages/auth
+      '@hasaweb/components':
+        specifier: workspace:*
+        version: link:../../packages/components
       '@hasaweb/config':
         specifier: workspace:*
         version: link:../../packages/config
