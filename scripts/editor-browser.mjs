@@ -407,6 +407,15 @@ export async function checkEditor({
             document.querySelector('[data-component-id="text-1"] h2')
               ?.textContent === "Accepted section",
         );
+        await page.evaluate(() => {
+          const delayed = new WeakSet();
+          window.addEventListener("message", (event) => {
+            if (event.data?.kind !== "select" || delayed.has(event)) return;
+            delayed.add(event);
+            event.stopImmediatePropagation();
+            setTimeout(() => window.dispatchEvent(event), 250);
+          }, { capture: true });
+        });
         await frame()
           .locator('[data-component-id="projects-1"]')
           .click({ position: { x: 10, y: 10 } });
