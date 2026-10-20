@@ -4,9 +4,20 @@ Foundation baseline reviewed October 18, 2026 against `main` at `43e6b62`; Phase
 
 ## Reading order and phase status
 
-Read this baseline and the [roadmap](roadmap.md), then the relevant product/acceptance requirements, architecture sections and linked implementation protocol/results. Product and onboarding documents define the agreed behavior. The roadmap records order and owner-approved completion. Later implementation protocols resolve older experiment details; historical specs retain the evidence and limitations of their original runs. Resolve an actual scope conflict explicitly rather than treating a spike as permission to change the product.
+Read this baseline, the relevant [roadmap entry](roadmap.md), and affected product/acceptance requirements and current subsystem contracts. Use the [agent workflow](agent-workflow.md) for targeted reading, parallel work and local verification. Follow historical evidence links when their constraints matter, rather than rereading every phase result. Product and onboarding documents define the agreed behavior. The roadmap records dependencies and owner-approved completion. Later implementation protocols resolve older experiment details; historical specs retain the evidence and limitations of their original runs. Resolve an actual scope conflict explicitly rather than treating a spike as permission to change the product.
 
-Phases 01–15, including 11A–11E, are checked in the roadmap. The owner approved Phase 14 shared autosave/recovery completion on October 18, 2026 after reviewing the isolated fixture and verification results. Phase 15 adds shared selected-change conflict review and same-tab reauthentication recovery, approved by the owner on October 19, 2026 and checked in the roadmap. See its [protocol and results](../specs/2026-10-19-conflict-session-recovery/results.md). A completed feasibility phase can record a rejected approach and a required fallback; its checkbox does not prove that fallback works. These approvals complete Phases 14 and 15 only; their documented activation prerequisites remain.
+The [roadmap](roadmap.md) records owner-approved completion through Phase 16, including 11A–11E. Its checkboxes are the status source of truth. Completed feasibility work can include a rejected approach; approval does not establish that an untested fallback works. Owner-flow activation and release prerequisites remain.
+
+| Subsystem | Current contract and constraints |
+| --- | --- |
+| Draft HTTP and validation | [Phase 13 protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md), [schema](../packages/schema/README.md), bounded hot APIs and generation policy below |
+| Autosave, conflicts and reauthentication | [Client contract](../apps/web/lib/draft/README.md), expected-owner preconditions and recovery decisions below |
+| Renderer and preview | [Components](../packages/components/README.md), [rendering](../packages/render/README.md), display-only projection and publication bounds below |
+| Persistence and private uploads | [Database](../packages/db/README.md), private-bucket transfer boundary below; upload service remains Phase 18 |
+| Authentication and account entry | [Authentication](authentication.md), permanent handoff/activation boundaries below |
+| GitHub and message delivery | [GitHub](../packages/github/README.md), [email adapters](../packages/email/src/index.ts), consent/budget boundaries and production integration phases |
+| Publication, CPU and withdrawal | Decisions below, [architecture risks](architecture.md#15-risks-and-spikes); S-8/S-9 replacements remain unverified prerequisites |
+| UI and catalog | [UI reference](ui-direction.md), [catalog](appearance-catalog.md), read-only Figma and approved source-art constraints |
 
 ## What exists
 
@@ -47,4 +58,4 @@ Phases 01–15, including 11A–11E, are checked in the roadmap. The owner appro
 
 The [review results](../specs/2026-10-18-foundation-review/results.md) record fresh local checks. Prior phase results retain their original test counts, provider measurements and cleanup receipts. Phase 13's 22 provider cases met the warm p95 target in LHE. The [Phase 14 investigation](../specs/2026-10-18-shared-autosave-recovery/performance.md) records an initial failing KHI run and the current bounded-read/access-precheck follow-up. A passing location or warm sample does not establish global/cold CPU feasibility or publication capacity. Production callback/TLS checks, final dispatcher measurements, complete browser/accessibility coverage and the real signup-to-publication journey remain release requirements.
 
-Preserve earlier receipts when rerunning harnesses. Set `DRAFT_API_EVIDENCE` for the draft API, `BOUNDED_SAVE_EVIDENCE` for bounded saves, and `--evidence-dir=...` for auth to the new phase's directory or an ignored `.wrangler/` directory. Their defaults write historical spec locations. Keep Wrangler suites sequential because inspector ports overlap.
+Preserve earlier receipts when rerunning harnesses. Local verification defaults to unique ignored evidence directories; explicit `DRAFT_API_EVIDENCE`, `BOUNDED_SAVE_EVIDENCE`, `OWNER_RUNTIME_EVIDENCE`, `RENDERER_EVIDENCE` and auth `--evidence-dir=...` remain supported. Use the named profiles and shared resource lock in the [agent workflow](agent-workflow.md). Wrangler suites remain sequential because ports overlap. Smoke checks do not replace the CPU, quota, provider or withdrawal measurements required by changed boundaries.

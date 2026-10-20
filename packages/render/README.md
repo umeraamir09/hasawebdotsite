@@ -26,7 +26,7 @@ These conservative guards are not measured CPU guarantees. A whole valid profile
 
 ## Reproduce parity evidence
 
-Run `pnpm test:renderer`. The script builds an isolated local fixture, starts Chromium, checks private fixture gating and compares client iframe rendering with static snapshots. It stops its browser/server afterward. Set `RENDERER_EVIDENCE` to a fresh directory to retain another run. The default is ignored `.wrangler/renderer-evidence`.
+Run `pnpm test:renderer`. The script builds an isolated local fixture, starts Chromium, checks private fixture gating and compares client iframe rendering with static snapshots. It stops its browser/server afterward. Set `RENDERER_EVIDENCE` to a fresh directory to retain another run. Each standalone run defaults to a unique ignored `.wrangler/evidence/renderer-*` directory. Use the [renderer profile](../../docs/agent-workflow.md#choose-local-checks) for the local completion gate and shared resource lock.
 
 `node scripts/portfolio-renderer-browser.mjs --serve` keeps the fixture at [port 8794](http://127.0.0.1:8794/published). This is synthetic owner content, not a product preview or publication. The actual editor, owner preview routes, upload authorization, publication service and onboarding Review remain later integrations.
 

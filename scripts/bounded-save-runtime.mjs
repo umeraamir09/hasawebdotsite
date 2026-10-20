@@ -7,6 +7,8 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+
 const root = fileURLToPath(new URL("..", import.meta.url)),
   require = createRequire(import.meta.url);
 const wrangler = join(
@@ -29,10 +31,11 @@ const directory = join(
     remote ? ".wrangler/owner-runtime-remote" : ".wrangler/bounded-owner-local",
   ),
   state = join(directory, "state");
-const evidence = join(
+const evidence = await createEvidenceDirectory(
   root,
+  "bounded-save",
   process.env.BOUNDED_SAVE_EVIDENCE ??
-    "specs/2026-10-16-free-owner-saves/bounded",
+    (remote ? "specs/2026-10-16-free-owner-saves/bounded" : undefined),
 );
 await mkdir(directory, { recursive: true });
 await mkdir(evidence, { recursive: true });

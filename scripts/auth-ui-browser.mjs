@@ -7,14 +7,17 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+
 // Render the built app in Chromium. Only provider HTTP and consent are fixtures.
 // Browser requests to the auth API execute the product handler in workerd/D1.
 export async function checkAuthUi({
   root,
   wrangler,
   fixturePort,
-  evidenceDirectory = join(root, "specs/2026-10-15-sign-in"),
+  evidenceDirectory,
 }) {
+  evidenceDirectory ??= await createEvidenceDirectory(root, "auth-ui");
   const require = createRequire(import.meta.url);
   const esbuild = createRequire(require.resolve("wrangler"))("esbuild");
   const helper = await esbuild.build({
@@ -141,6 +144,9 @@ export async function checkAuthUi({
   let nextId = 0;
   const checks = [];
   let interceptError;
+  const interceptions = new Map();
+  let cancelledResponse;
+  let cancelledRequest;
   let providerMode = "success";
   let nextFailure = false;
   let loseInitializationResponse = false;
@@ -276,12 +282,39 @@ export async function checkAuthUi({
       });
     }
     async function fulfill(requestId, status, headers, body = "") {
-      await command("Fetch.fulfillRequest", {
-        requestId,
-        responseCode: status,
-        responseHeaders: headers,
-        body: Buffer.from(body).toString("base64"),
-      });
+      const interception = interceptions.get(requestId);
+      assert.ok(interception, "Cannot fulfill an unknown paused request");
+      assert.equal(
+        interception.fulfillmentAttempted,
+        false,
+        "A paused request can only be fulfilled once",
+      );
+      interception.fulfillmentAttempted = true;
+      if (interception.cancelled) {
+        interception.measurement.retired = "browser-cancelled";
+        return;
+      }
+      try {
+        await command("Fetch.fulfillRequest", {
+          requestId,
+          responseCode: status,
+          responseHeaders: headers,
+          body: Buffer.from(body).toString("base64"),
+        });
+      } catch (error) {
+        let protocolError;
+        try {
+          protocolError = JSON.parse(error.message);
+        } catch {}
+        if (
+          protocolError?.code === -32602 &&
+          protocolError.message === "Invalid InterceptionId."
+        ) {
+          interception.measurement.retired = "interception-retired";
+          return;
+        }
+        throw error;
+      }
     }
     async function intercept(params) {
       const { requestId, request } = params;
@@ -292,6 +325,14 @@ export async function checkAuthUi({
         method: request.method,
       };
       requests.push(measurement);
+      interceptions.get(requestId).measurement = measurement;
+      if (url.pathname === "/__cancelled-response-fixture") {
+        cancelledRequest = interceptions.get(requestId);
+        await new Promise((resolve) => {
+          cancelledResponse = resolve;
+        });
+        return fulfill(requestId, 200, [], "cancelled response");
+      }
       if (url.hostname !== "hasaweb.site") {
         if (providerMode === "hold")
           return fulfill(
@@ -407,19 +448,46 @@ export async function checkAuthUi({
       });
       for (const value of response.headers.getSetCookie())
         returned.push({ name: "Set-Cookie", value });
-      await command("Fetch.fulfillRequest", {
+      await fulfill(
         requestId,
-        responseCode: response.status,
-        responseHeaders: returned,
-        body: Buffer.from(await response.arrayBuffer()).toString("base64"),
-      });
+        response.status,
+        returned,
+        await response.arrayBuffer(),
+      );
     }
     socket.addEventListener("message", ({ data }) => {
       const message = JSON.parse(data);
-      if (message.method === "Fetch.requestPaused")
-        void intercept(message.params).catch((error) => {
-          interceptError = error;
-        });
+      if (
+        message.method === "Network.loadingFailed" &&
+        message.params.canceled
+      ) {
+        for (const interception of interceptions.values()) {
+          if (interception.networkId === message.params.requestId)
+            interception.cancelled = true;
+        }
+      }
+      if (message.method === "Fetch.requestPaused") {
+        const interception = {
+          requestId: message.params.requestId,
+          networkId: message.params.networkId,
+          cancelled: false,
+          settled: false,
+          fulfillmentAttempted: false,
+        };
+        interceptions.set(message.params.requestId, interception);
+        void intercept(message.params)
+          .catch((error) => {
+            const url = new URL(message.params.request.url);
+            interceptError = new Error(
+              `${message.params.request.method} ${url.hostname}${url.pathname}: ${error.message}; browser cancelled=${interception.cancelled}`,
+              { cause: error },
+            );
+          })
+          .finally(() => {
+            interception.settled = true;
+            interceptions.delete(message.params.requestId);
+          });
+      }
       if (message.method === "Runtime.exceptionThrown")
         exceptions.push(message.params.exceptionDetails.text);
       const item = pending.get(message.id);
@@ -506,6 +574,43 @@ export async function checkAuthUi({
     }
     checks.push(
       "desktop follows Figma artwork, typography, 576px visual and provider assets",
+    );
+    await evaluate(`
+      window.cancelledFixtureController = new AbortController();
+      window.cancelledFixtureResult = 'pending';
+      fetch('/__cancelled-response-fixture', {signal: window.cancelledFixtureController.signal})
+        .catch(error => { window.cancelledFixtureResult = error.name; });
+      true;
+    `);
+    for (let i = 0; i < 100 && !cancelledResponse; i++) await setTimeout(20);
+    assert.ok(
+      cancelledResponse,
+      "cancellation fixture must pause a browser request",
+    );
+    await evaluate("window.cancelledFixtureController.abort(); true");
+    await until("window.cancelledFixtureResult === 'AbortError'");
+    for (let i = 0; i < 100 && !cancelledRequest.cancelled; i++)
+      await setTimeout(20);
+    assert.equal(
+      cancelledRequest.cancelled,
+      true,
+      "Chromium must report cancellation",
+    );
+    cancelledResponse();
+    for (let i = 0; i < 100 && !cancelledRequest.settled; i++)
+      await setTimeout(20);
+    assert.equal(cancelledRequest.settled, true);
+    assert.equal(interceptError, undefined);
+    await assert.rejects(
+      fulfill(cancelledRequest.requestId, 200, []),
+      /unknown paused request/,
+    );
+    assert.equal(
+      await evaluate("document.querySelectorAll('.provider-button').length"),
+      2,
+    );
+    checks.push(
+      "browser-cancelled subrequests settle without invalid late fulfillment or hiding active request failures",
     );
     for (const width of [360, 390, 768]) {
       await command("Emulation.setDeviceMetricsOverride", {
@@ -862,6 +967,7 @@ export async function checkAuthUi({
       exceptions,
     };
   } finally {
+    cancelledResponse?.();
     held?.();
     socket?.close();
     for (const item of pending.values()) clearTimeout(item.timer);

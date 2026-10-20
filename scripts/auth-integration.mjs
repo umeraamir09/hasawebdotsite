@@ -3,11 +3,12 @@ import { spawn, spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { checkBrowserCookies } from "./auth-cookie-browser.mjs";
 import { checkAuthUi } from "./auth-ui-browser.mjs";
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkPortfolioProvisioning } from "./portfolio-provisioning-checks.mjs";
 
@@ -18,11 +19,12 @@ const wrangler = join(
   "bin/wrangler.js",
 );
 const output = join(root, ".wrangler/auth-integration");
-const evidenceDirectory = resolve(
+const evidenceDirectory = await createEvidenceDirectory(
   root,
+  "auth",
   process.argv
     .find((argument) => argument.startsWith("--evidence-dir="))
-    ?.slice("--evidence-dir=".length) ?? "specs/2026-10-15-sign-in",
+    ?.slice("--evidence-dir=".length) ?? process.env.AUTH_EVIDENCE,
 );
 const state = join(output, "state");
 const configPath = join(output, "wrangler.json");

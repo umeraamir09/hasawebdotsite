@@ -3,17 +3,20 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const require = createRequire(import.meta.url);
 const esbuild = createRequire(require.resolve("wrangler"))("esbuild");
 const output = join(root, ".wrangler/portfolio-renderer");
-const evidence = resolve(
-  process.env.RENDERER_EVIDENCE ?? join(root, ".wrangler/renderer-evidence"),
+const evidence = await createEvidenceDirectory(
+  root,
+  "renderer",
+  process.env.RENDERER_EVIDENCE,
 );
 await mkdir(output, { recursive: true });
 await mkdir(evidence, { recursive: true });
