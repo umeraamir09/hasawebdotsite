@@ -61,46 +61,12 @@ export function mountPreview(
     },
   };
 }
-export function attachPreviewBridge({
-  target,
-  parentWindow,
-  parentOrigin,
-  channel,
-  assetOrigins,
-}: {
-  target: Pick<ReturnType<typeof mountPreview>, "update">;
-  parentWindow: Window;
-  parentOrigin: string;
-  channel: string;
-  assetOrigins: readonly string[];
-}): () => void {
-  if (
-    parentOrigin === "null" ||
-    new URL(parentOrigin).origin !== parentOrigin ||
-    !/^https?:/.test(parentOrigin) ||
-    !channel ||
-    channel.length > 128
-  )
-    throw new Error("Invalid preview bridge configuration");
-  let revision = -1;
-  const receive = (event: MessageEvent<unknown>) => {
-    if (
-      event.source !== parentWindow ||
-      event.origin !== parentOrigin ||
-      !event.data ||
-      typeof event.data !== "object" ||
-      !("channel" in event.data) ||
-      event.data.channel !== channel ||
-      !("revision" in event.data) ||
-      typeof event.data.revision !== "number" ||
-      !Number.isSafeInteger(event.data.revision) ||
-      event.data.revision <= revision ||
-      !("model" in event.data)
-    )
-      return;
-    const model = trustedModel(event.data.model, { assetOrigins });
-    if (model && target.update(model)) revision = event.data.revision;
-  };
-  window.addEventListener("message", receive);
-  return () => window.removeEventListener("message", receive);
-}
+export type {
+  PreviewIdentity,
+  PreviewSelection,
+  PreviewState,
+} from "./preview-transport";
+export {
+  attachPreviewReceiver as attachPreviewBridge,
+  connectPreviewBridge,
+} from "./preview-transport";

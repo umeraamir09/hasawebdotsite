@@ -1,5 +1,7 @@
 # Phase 16 renderer protocol
 
+October 20 supersession note. Phase 17 replaces the whole-model preview wire format and browser envelope with the acknowledged chunk protocol in the [current component contract](../../packages/components/README.md#browser-adapter). The original Phase 16 measurements and fixture evidence below remain historical. Static fragment and publication constraints are unchanged.
+
 Recorded October 19, 2026. The [selected design](design.md) supersedes both retained exploration candidates. This increment adds reusable renderer code and isolated evidence. It does not activate editor, public serving, publication or mandatory signup routes.
 
 ## Data and ownership
