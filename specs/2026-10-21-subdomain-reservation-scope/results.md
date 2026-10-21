@@ -14,12 +14,19 @@ and its migration belong to Phase 22; the publish conversion belongs to Phase 25
 Requirements updated together: [product](../../docs/product.md) section 15,
 [onboarding](../../docs/onboarding.md), [acceptance criteria](../../docs/acceptance-criteria.md)
 ON-02/ON-14/ON-18 and AC 15.1-15.3, 15.8, 18.5-18.6, [architecture](../../docs/architecture.md)
-D-15/A-4/ADR-16/ADR-19/Q-1, [roadmap](../../docs/roadmap.md) Phases 22, 25, 26, 42A, 42F, 48, 49,
-and [implementation status](../../docs/implementation-status.md).
+D-15/A-4/ADR-16/ADR-19/Q-1, [roadmap](../../docs/roadmap.md) Phases 22, 22A, 23, 25, 26, 42A, 42F,
+48, 49, and [implementation status](../../docs/implementation-status.md).
 
 Write boundaries: `docs/` only, plus this record. Shared base `main` at `9c4014c`; branch
 `docs/address-reservation-contract` in its own worktree. No approved prerequisites apply because
 no phase is implemented and no phase checkbox changed.
+
+The same change also records the implementation consequences of the contract for work the completed
+phases already produced. Those consequences were verified against
+`packages/db/migrations/0001_owner_constraints.sql`, `packages/db/src/schema.ts`,
+`packages/db/src/bounded-save.ts`, `packages/db/README.md`, `packages/schema/README.md` and
+`specs/2026-10-17-revision-aware-drafts/protocol.md`. The plan for that amendment is
+`/home/umer/.opencode/plan/2026-10-21-pr25-reservation-amendment.md`.
 
 ## Decisions
 
@@ -31,6 +38,16 @@ no phase is implemented and no phase checkbox changed.
   reclamation can release holds later without changing the selection contract.
 - Existing Phase 11B `requestedSubdomain` values are not auto-promoted. The next confirmed Address
   save attempts the reservation.
+- The existing `subdomain_claim` record is extended, not replaced. Its Phase 22 migration adds the
+  `held`/`claimed` state and timestamps and rewrites the delete trigger so a `held` row can be
+  released while a `claimed` row stays permanent. Only the delete trigger blocks the new model; the
+  existing name, platform-reserved and format triggers already cover held rows, and the existing
+  transfer trigger already permits the `held` to `claimed` state change and the owner-clearing on
+  account deletion.
+- Ownership: Phase 22 owns the migration, the trigger rewrite, the batched reservation save, the
+  unavailable-name result and the rule that staged and legacy paths do not reserve. Phase 22A owns
+  the required-setup check that the portfolio holds the reservation. Phase 25 owns the conversion
+  and consumes the Phase 22 guards. No new phase ID was added.
 
 ## Results
 
@@ -53,8 +70,27 @@ Documentation profile (`docs`) applied:
   No `apps/`, `packages/`, migration, test or Figma change.
 - No phase was checked off. Phases 22, 25, 26, 42A, 42F, 48 and 49 keep their previous status.
 
+Amendment verification against the working tree, recorded so later phases do not rediscover it:
+
+| Check | Evidence | Result |
+| --- | --- | --- |
+| `subdomain_claim` has only `name` and `portfolio_id`; no `state` column | `packages/db/src/schema.ts` | confirmed |
+| The delete trigger aborts every DELETE | `packages/db/migrations/0001_owner_constraints.sql` | confirmed |
+| The transfer trigger blocks a name change or portfolio transfer but allows `portfolio_id` to become NULL | trigger condition, plus the account-deletion fixture leaving an ownerless claim | confirmed |
+| The transfer trigger does **not** block a `held` to `claimed` state change | the trigger inspects only `name` and `portfolio_id` | confirmed |
+| The Phase 13 protocol states that no save claims an address, and its error set has no unavailable-name code | `specs/2026-10-17-revision-aware-drafts/protocol.md` | confirmed |
+| Multi-statement D1 `batch()` is the established atomic-write mechanism | `packages/db/src/bounded-save.ts` | confirmed |
+| The `site` Worker needs no change, because a held name is absent from `portfolio.subdomain` | `docs/architecture.md` section 8.4 | confirmed |
+
+Correction: an earlier review of this change stated that the transfer trigger blocks the
+`held` to `claimed` conversion. That is wrong and the roadmap text does not rely on it. The trigger
+inspects only `name` and `portfolio_id`, so a state update trips neither condition. Only the delete
+trigger blocks the new model, in two places: releasing the previous hold on replacement and
+cleaning up held rows on account deletion. The recorded plan reflects the corrected analysis.
+
 Limitations: no runtime behavior changed, so no application gate was required. The reservation
-behavior itself remains unimplemented; Phase 22 owns the migration and registry.
+behavior itself remains unimplemented; Phase 22 owns the migration, the trigger rewrite and the
+registry.
 
 ## Documentation impact
 
@@ -67,8 +103,13 @@ Updated guidance: `docs/product.md`, `docs/onboarding.md`, `docs/acceptance-crit
 their historical completion records with a dated October 21, 2026 supersession note where the old
 behavior could still be read as current.
 
-Unresolved prerequisites: the reservation registry and its forward migration (Phase 22), the
-publish conversion (Phase 25), and the `packages/schema` README, fixtures and migration tests.
-`docs/rough-idea.md`, `docs/agent-workflow.md`, `docs/appearance-catalog.md`,
-`docs/avatar-decorations.md` and `docs/ui-direction.md` needed no change; historical `specs/`
-records were not edited.
+Unresolved prerequisites: the reservation registry and its forward migration, the delete-trigger
+rewrite, the batched reservation save and the unavailable-name result (all Phase 22), the
+required-setup check that the portfolio holds the reservation (Phase 22A), the publish conversion
+(Phase 25), and the `packages/schema` and `packages/db` READMEs, fixtures and migration tests.
+`packages/db/README.md` lines 53 and 65 and `packages/schema/README.md` line 19 still describe the
+pre-migration behavior; they are correct for the implemented code today and are now named as
+Phase 22 deliverables. `docs/rough-idea.md`, `docs/agent-workflow.md`,
+`docs/appearance-catalog.md`, `docs/avatar-decorations.md` and `docs/ui-direction.md` needed no
+change; historical `specs/` records were not edited, and the Phase 13 protocol file keeps its
+pre-October 21 wording as the historical record for the completed work.
