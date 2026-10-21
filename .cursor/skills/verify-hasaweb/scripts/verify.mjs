@@ -1,0 +1,1 @@
+../../../../.agents/skills/verify-hasaweb/scripts/verify.mjs
