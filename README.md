@@ -27,6 +27,8 @@ pnpm verify --profile=renderer --dry-run
 
 Named profiles run the applicable local checks under a shared worktree lock and retain routine output in ignored run directories. See the [profile table](docs/agent-workflow.md#choose-local-checks) for affected application builds, high-risk review and evidence policy. `pnpm check`, `pnpm build` and individual test commands remain available during development. CI retains all foundation correctness suites; `pnpm test:runtime:smoke` runs runtime assertions without benchmark profiling. `pnpm spike:runtime` remains the explicit measurement command. See [database boundaries](packages/db/README.md).
 
+The project-local [verification skill](.agents/skills/verify-hasaweb/SKILL.md) and [feature map](.agents/skills/verify-hasaweb/features/README.md) describe user journeys, selectors and current fixture boundaries. The skill lives in `.agents/skills` for Codex and other compatible tools; `.cursor/skills/verify-hasaweb` links to the same files. Run `./.agents/skills/verify-hasaweb/scripts/verify.mjs` for a built-app signed-out entry proof with isolated storage, browser evidence and automatic cleanup under the shared verification lock.
+
 ## Workspace
 
 - `apps/web` holds Next.js App Router and OpenNext.
