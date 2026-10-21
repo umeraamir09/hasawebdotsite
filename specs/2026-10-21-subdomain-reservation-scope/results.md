@@ -92,6 +92,8 @@ Limitations: no runtime behavior changed, so no application gate was required. T
 behavior itself remains unimplemented; Phase 22 owns the migration, the trigger rewrite and the
 registry.
 
+PR #25 review fixes, October 21, 2026: documented a delete-then-insert hold swap that respects unique `portfolio_id`, with whole-batch rollback on constraint or revision CAS failure. Split first-publication and republish commits, including durable retry receipts and protection against restoring an older pointer. Address continuation now requires server confirmation of the reservation save. Updated the downstream Phase 22/25, onboarding and baseline wording. These are future implementation contracts; reservations remain unimplemented. Verification: `git diff --check HEAD` passed, the final diff and section references were reviewed, and no links changed. No application tests were run for this documentation-only follow-up.
+
 ## Documentation impact
 
 Changed assumption: address selection is no longer a non-reserving candidate, and the
@@ -113,3 +115,5 @@ Phase 22 deliverables. `docs/rough-idea.md`, `docs/agent-workflow.md`,
 `docs/appearance-catalog.md`, `docs/avatar-decorations.md` and `docs/ui-direction.md` needed no
 change; historical `specs/` records were not edited, and the Phase 13 protocol file keeps its
 pre-October 21 wording as the historical record for the completed work.
+
+Review follow-up: replacement ordering and republish state assumptions are corrected in architecture, roadmap, onboarding and implementation status. Phase 22 still owns the atomic swap and its migration; Phase 25 owns the separate commit paths and retry guards. No implementation prerequisites or phase approvals changed.
