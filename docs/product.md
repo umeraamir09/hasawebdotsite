@@ -6,7 +6,7 @@ This document defines the target audience, the problem the product addresses, an
 
 See [UI direction](ui-direction.md) for the project's Figma visual reference, agent access through Figma MCP, and the read-only rule during development.
 
-The [initial setup specification](onboarding.md), confirmed October 16, 2026, defines mandatory Address, Profile, and Links steps followed by optional Skills, Projects, and GitHub steps. The interview replaced the original optional-onboarding idea and the earlier sample-starter plan. This document describes target behavior, not the current authentication-only implementation.
+The [initial setup specification](onboarding.md), confirmed October 16, 2026 with the address reservation amended October 21, 2026, defines mandatory Address, Profile, and Links steps followed by optional Skills, Projects, and GitHub steps. The interview replaced the original optional-onboarding idea and the earlier sample-starter plan. This document describes target behavior, not the current authentication-only implementation.
 
 ## Target audience
 
@@ -22,7 +22,7 @@ Developers need a clear way to present their skills, projects, experience, and p
 
 Users should be able to publish a portfolio they feel confident sharing with prospective employers. Visitors should be able to understand their skills, what they built, and their individual contributions, with clear links to inspect their work and contact them.
 
-With their content ready, users should be able to publish a usable portfolio in under 15 minutes. Publishing requires a real name and bio, an owner-selected avatar and banner, at least one valid social or contact link, and an available subdomain. An email address, GitHub profile, another supported social profile, or website URL can satisfy the link requirement. Projects and detailed case studies are optional. If users add projects, they should explain their individual contributions and include relevant code or demo links. Users should receive a public subdomain they can share without buying a domain or configuring hosting.
+With their content ready, users should be able to publish a usable portfolio in under 15 minutes. Publishing requires a real name and bio, an owner-selected avatar and banner, at least one valid social or contact link, and a reserved subdomain. An email address, GitHub profile, another supported social profile, or website URL can satisfy the link requirement. Projects and detailed case studies are optional. If users add projects, they should explain their individual contributions and include relevant code or demo links. Users should receive a public subdomain they can share without buying a domain or configuring hosting.
 
 New owners should receive guidance before learning the editor. Required initial setup collects their address selection, profile, and links; optional steps prepare skills, projects, and GitHub activity. Their first editor view uses their actual accepted content. Skipping optional steps preserves entered work, and every collected value remains editable in the editor.
 
@@ -45,9 +45,9 @@ Feelings, thoughts, and pain points remain blank until user evidence is availabl
 | Journey steps | Evaluate the builder | Start a portfolio | Build and personalize | Publish and share | Return and update |
 | --- | --- | --- | --- | --- | --- |
 | User actions | Inspect an example portfolio.<br>Review available capabilities and customization.<br>Review how public subdomains work. | Sign up.<br>Select an available address, complete the combined profile screen, and add a social/contact link.<br>Optionally add skills, projects, and public/private GitHub activity, or skip optional steps.<br>Review the private portfolio and open the editor. | Customize the prepared profile and any optional content.<br>Add other components or finish incomplete setup.<br>Optionally personalize styling and component order. | Review or change the selected address before first Publish.<br>Resolve validation and availability issues, then explicitly publish.<br>Open or copy the public URL to share with employers. | Return directly to the editor after first handoff.<br>Reopen the saved draft, edit content, and review the preview.<br>Explicitly publish changes at the same public URL. |
-| Intended goals | Decide whether the builder suits their portfolio needs. | Provide information through guided screens and see actual progress before learning the editor. | Present their identity and work without designing a layout. Optional content and personalization remain optional. | Publish a shareable portfolio with a real name and bio, avatar, banner, social or contact link, and an available subdomain. | Keep the portfolio current without editing code or rebuilding the site. |
+| Intended goals | Decide whether the builder suits their portfolio needs. | Provide information through guided screens and see actual progress before learning the editor. | Present their identity and work without designing a layout. Optional content and personalization remain optional. | Publish a shareable portfolio with a real name and bio, avatar, banner, social or contact link, and a reserved subdomain. | Keep the portfolio current without editing code or rebuilding the site. |
 | Feelings and thoughts | | | | | |
-| Planned opportunities | Show example portfolios.<br>Explain customization options.<br>Explain the public subdomain. | Require initial setup before first editor access.<br>Preselect the template and save progress.<br>Offer accepted provider suggestions, image cropping, optional content, and a real review preview. | Provide all onboarding fields and actions in the editor.<br>Offer live preview, themes, colors, fonts, light/dark mode, images, and component order.<br>Save edits automatically as a draft. | Validate required and included content.<br>Claim the selected address only on successful first publication.<br>Provide the public URL with Open and Copy options. | Keep drafts separate from the published site.<br>Update the public site only on Publish.<br>Keep the existing URL and do not rerun onboarding. |
+| Planned opportunities | Show example portfolios.<br>Explain customization options.<br>Explain the public subdomain. | Require initial setup before first editor access.<br>Preselect the template and save progress.<br>Offer accepted provider suggestions, image cropping, optional content, and a real review preview. | Provide all onboarding fields and actions in the editor.<br>Offer live preview, themes, colors, fonts, light/dark mode, images, and component order.<br>Save edits automatically as a draft. | Validate required and included content.<br>Reserve the selected address during setup; claim it on successful first publication.<br>Provide the public URL with Open and Copy options. | Keep drafts separate from the published site.<br>Update the public site only on Publish.<br>Keep the existing URL and do not rerun onboarding. |
 | Pain points | | | | | |
 
 The feature map below defines the agreed MVP capabilities and recovery behavior. Discovery channels and evidence about user feelings and pain points remain outside this feature scope.
@@ -63,7 +63,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 ### 1. Discover and evaluate the builder
 
 - The public entry page shows an example portfolio that visitors can inspect before creating an account.
-- It explains the included components, customization choices, and the one-portfolio limit. It shows appearance examples and explains how an address such as `username.hasaweb.site` works.
+- It explains the included components, customization choices, and the one-portfolio limit. It shows appearance examples and explains how an address such as `username.hasaweb.site` works, including that choosing an address reserves it until the first publication and creates no public site.
 - It states that the MVP is free and provides a clear Start building action leading to authentication.
 - Prospective owners can understand what they can publish without buying a domain, configuring hosting, or writing code.
 
@@ -73,7 +73,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 - Both providers open the same account when they supply the same verified email. Linking an additional provider requires proof of ownership; an unverified or missing email must not cause automatic account merging.
 - A new account starts one private portfolio in the preselected template. There is no template picker or alternative layout in this release.
 - The sequence is Address, Profile, Links, Skills, Projects, GitHub, Review, then Editor. Address, Profile, and Links are required before first editor entry, with no initial skip or direct-editor bypass. Profile is one screen containing name, bio, avatar, banner, image previews, and cropping/adjustment controls.
-- Address checks format and current availability but does not reserve the name. Links requires at least one valid labeled social/website URL or email shown in the profile.
+- Address checks format and current availability; a successful save reserves the name. Links requires at least one valid labeled social/website URL or email shown in the profile.
 - Skills, Projects, and GitHub are optional. Owners can skip each step or all remaining optional steps. Skipping preserves entered content, including unfinished projects or graph setup, which remains subject to normal publication validation.
 - Provider name is prefilled for review. A provider photo requires explicit acceptance, cropping, and a successful private upload. Account email is never silently made public. Forms offer examples, but the prepared portfolio contains real accepted content and no inserted sample profile or project.
 - Review uses the shared renderer and desktop/mobile preview. The fixed profile appears first, followed by supplied skills, projects, and GitHub sections in that order. Empty optional steps create no sections. Review explains that the portfolio is private and offers Back and Open editor.
@@ -217,15 +217,17 @@ Animated decorations autoplay unless the visitor requests reduced motion. A sepa
 
 ### 15. Subdomain selection and publication
 
-- The first required onboarding screen selects a subdomain and checks availability. Before first publication, owners can review or change the saved candidate in the editor. Names contain 3–30 lowercase letters, numbers, or hyphens, with no leading or trailing hyphen. Platform-reserved names cannot be claimed.
-- The builder explains invalid or unavailable names and lets owners choose another. An availability check does not guarantee ownership until the first successful publication claims the address atomically.
-- Saving a candidate does not reserve it or prevent another owner from selecting it. If it is taken before Publish, the owner chooses another in the editor without rerunning onboarding.
-- The public address follows `username.hasaweb.site`. The chosen subdomain is fixed after first publication for the MVP.
+- The first required onboarding screen selects a subdomain, checks availability, and reserves it when the save succeeds. Before first publication, owners can review or change the reserved address in the editor. Names contain 3–30 lowercase letters, numbers, or hyphens, with no leading or trailing hyphen. Platform-reserved names cannot be selected.
+- The builder explains invalid or unavailable names and lets owners choose another. An availability check alone does not reserve. A successful save atomically creates an exclusive reservation owned by that portfolio and prevents another owner from selecting or publishing the name. Concurrent selections produce exactly one reservation; the other owner receives an unavailable-name result and chooses another.
+- A reservation creates no public site and is not a permanent claim. Owners can change it until first publication; a confirmed change reserves the new name and releases the old one in one transaction. An invalid, unavailable, or failed change leaves the current reservation intact.
+- First Publish verifies the portfolio still owns the reservation and converts it to the permanent claim in the same operation that switches the live version. A failed first publication keeps the reservation and reports neither a live website nor a successfully claimed address.
+- The public address follows `username.hasaweb.site`. The address is fixed after first publication for the MVP.
 - A publication checklist identifies missing required profile content, invalid links, incomplete uploads, and included components that lack their required setup. Each issue links to the relevant editor control.
-- The minimum publishable portfolio has a real name and bio, accepted avatar and banner, at least one valid social or contact link, and a valid available subdomain. Optional projects, case studies, and personalization are not required.
+- The minimum publishable portfolio has a real name and bio, accepted avatar and banner, at least one valid social or contact link, and a valid reserved subdomain. Optional projects, case studies, and personalization are not required.
 - Untouched optional samples are omitted. Owner-edited optional components must be complete enough to function: a GitHub graph needs a successful fetch, a contact form needs a verified recipient, and resume controls need a valid PDF.
 - Publish saves and validates the current draft, then updates the complete portfolio and its additional pages as one operation. Visitors must not see a mixture of old and new page content.
 - A failed publication leaves the previous public version intact and offers Retry. A failed first publication must not report a live website or a successfully claimed address.
+- A reservation is held for the life of the account. Account deletion releases an address that was never published; a published address remains permanently reserved.
 - After success, owners receive the public URL with Open and Copy actions. Later publications update that same address.
 
 ### 16. Public visitor experience
@@ -251,8 +253,8 @@ Animated decorations autoplay unless the visitor requests reduced motion. A sepa
 - Account settings show connected GitHub and Google providers. Owners can connect or disconnect providers after proving ownership, but must retain at least one usable sign-in method.
 - Disconnecting GitHub removes its authorization and private activity access as described in the GitHub component rules. Owners can reconnect when they want to restore authorized capabilities.
 - Owners can sign out. Authentication failures and expired sessions offer a route back into the same account and portfolio.
-- Owners can unpublish their portfolio. This removes public access to the portfolio, case studies, and resume while retaining the draft and reserving its subdomain. Owners can later republish at the same address.
-- Permanent account deletion requires explicit confirmation. It removes the public portfolio, draft content, stored uploads, and connected-account access. The confirmation explains the loss before deletion proceeds.
+- Owners can unpublish their portfolio. This removes public access to the portfolio, case studies, and resume while retaining the draft and its published address claim. Owners can later republish at the same address.
+- Permanent account deletion requires explicit confirmation. It removes the public portfolio, draft content, stored uploads, and connected-account access. It releases a never-published reservation; a previously published address remains permanently unavailable. The confirmation explains the loss before deletion proceeds.
 
 ## Features deferred beyond the MVP (Out of Scope)
 

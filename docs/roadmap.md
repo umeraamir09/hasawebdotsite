@@ -5,13 +5,13 @@ Build according to the explicit dependencies below; phase numbers identify scope
 ## Sources and scope
 
 - [product.md](product.md) defines the required behavior and MVP scope.
-- [onboarding.md](onboarding.md) records the October 16, 2026 agreement: mandatory Address/Profile/Links, optional Skills/Projects/GitHub public/private setup, private Review, and permanent first editor handoff.
+- [onboarding.md](onboarding.md) records the October 16, 2026 agreement, amended October 21, 2026 for address reservation: mandatory Address/Profile/Links, optional Skills/Projects/GitHub public/private setup, private Review, and permanent first editor handoff.
 - [acceptance-criteria.md](acceptance-criteria.md) defines pass/fail checks. References such as AC 15 refer to its matching feature section.
 - [architecture.md](architecture.md) defines the implementation approach and confirmed decisions. Its section 13 resolves verification settings that the acceptance document originally left open.
 - [implementation-status.md](implementation-status.md) maps implemented code, superseded approaches and the constraints later phases must preserve. Phase 13's protocol is the current draft API contract.
 - [rough-idea.md](rough-idea.md) explains the original concept. Use it for context; the agreed product scope controls what ships.
 
-The release is free. Each account has one portfolio, one preselected template, and one fixed public subdomain after first publication. Implement the fixed profile and every optional MVP component. A component being optional for owners does not make its implementation optional for the release.
+The release is free. Each account has one portfolio, one preselected template, and one reserved public subdomain, fixed after first publication. Implement the fixed profile and every optional MVP component. A component being optional for owners does not make its implementation optional for the release.
 
 Keep drafts and uploads private. Publish changes content, appearance, assets, and additional pages together. GitHub refreshes, private-access removal, and contact delivery operate independently of Publish.
 
@@ -54,7 +54,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 
 ### Phase 04. Prove hostname and asset routing
 
-- Run S-3 and S-4, with S-10's domain availability and registration dependency. Check the apex, wildcard portfolios, reserved hosts, asset-host exclusion, TLS, and static-request accounting.
+- Run S-3 and S-4, with S-10's domain availability and registration dependency. Check the apex, wildcard portfolios, platform-reserved hosts, asset-host exclusion, TLS, and static-request accounting.
 - October 15, 2026: [production routing/TLS and asset-accounting evidence](../specs/2026-10-15-host-routing/results.md) is recorded. The owner already registered the domain and approved temporary test routing. All 36 deployed host/path/method checks pass; accounting observations retain adaptive-sampling limitations. The owner approved completion on October 15, 2026.
 - [x] Complete when routing and quota assumptions have evidence. Document any external setup still required; local host simulation alone does not pass production routing checks.
 
@@ -115,6 +115,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 - Add a versioned non-unique `requestedSubdomain` draft field, separate private progress, and a permanent first-editor-entry milestone with revision-aware owner-scoped storage. Preserve content/sample-marker compatibility and exclude setup metadata from public snapshots. Do not put an unclaimed candidate in the current unique claimed-subdomain column.
 - October 16, 2026: [contract, migration and owner-scoped setup storage evidence](../specs/2026-10-16-initial-setup-storage/results.md) is recorded. All 167 unit tests, 45 persistence/access groups, 21 auth groups, 17 bounded-save groups, builds and runtime smoke checks pass. Version 1 compatibility, duplicate candidates, revision conflicts, permanent entry, prepared-save races and private-data cleanup are covered. The final lint run flags an unrelated untracked HTML file, documented in the evidence. The owner approved Phase 11B completion on October 16, 2026.
 - [x] Complete when migrations preserve version 1 fixtures/content, two owners can save the same candidate without a claim, repeated creation retains one portfolio, and stale updates/another owner cannot reset milestones or overwrite content/progress. This is follow-up work to completed Phases 09 and 10.
+- October 21, 2026 supersession: the target address behavior changed. A confirmed Address save now reserves the name exclusively, and first Publish converts that reservation to the permanent claim. The October 16 non-reserving implementation and the completion criteria above remain the historical record for the completed work; Phase 22 adds the forward migration and the unique reservation registry. Do not read this phase's non-reserving criteria as current target behavior.
 
 ### Phase 11C. Verify the separate public GitHub credential
 
@@ -152,7 +153,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 - Add validated reads/saves with stored revision and atomic compare-and-swap. Save content and private progress consistently, enforce the draft-size cap and ownership checks, and protect the permanent milestone against stale updates.
 - Integrate the [measured bounded-save repository](../specs/2026-10-16-free-owner-saves/protocol.md) with the permanent 11B progress contract and portfolio columns. Extend the existing 11B staging tables through a forward migration and strict product action schemas. Preserve changed-field saves, explicit recovery and bounded cleanup; do not expose the failed full-body save experiment.
 - October 18, 2026: [implementation and verification evidence](../specs/2026-10-17-revision-aware-drafts/results.md) and the [production protocol](../specs/2026-10-17-revision-aware-drafts/protocol.md) record consistent reads, setup/content contexts, atomic content/progress CAS, staged legacy validation and explicit recovery. All 22 provider cases meet the warm p95 CPU target, and temporary resources are removed. The owner approved Phase 13 completion on October 18, 2026. Autosave and editor/onboarding orchestration remain in later phases.
-- [x] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address.
+- [x] Complete when saves return confirmed revisions, stale content/progress saves return conflicts without overwriting newer state, and no save changes a published version or claims a candidate address (a reservation is not a claim).
 
 ### Phase 14. Add shared autosave and local recovery
 
@@ -217,22 +218,24 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 - Add, edit, remove, and order labeled links with valid HTTP(S) destinations or email addresses. Store profile/social-component placement against one entry. Suggest account email only for deliberate public acceptance; explain its visibility.
 - [ ] Complete when one valid profile-displayed email/social/website link satisfies setup/profile requirements, invalid links fail, and a contact form alone cannot substitute. The same controls/data are reused in onboarding.
 
-### Phase 22. Implement unreserved address selection
+### Phase 22. Implement reserved address selection
 
-- Dependencies: 11B, 13–15, 17 and the existing reserved-name/claim contracts.
-- Add format/reserved-name/current-availability validation and save the non-unique candidate for onboarding/editor use. Explain that selection is not reservation and allow editor changes until first publication. Atomic claim mutation belongs to Phase 25.
-- [ ] Complete when boundary/reserved-name checks pass, two owners can select the same candidate without a claim, and later conflicts are actionable. The address becomes fixed only after successful first publication.
+- Dependencies: 11B, 13–15, 17 and the existing platform-reserved/claim contracts.
+- Add a forward migration for the unique address reservation: one namespace record per name with a `held`/`claimed` state and its timestamps, extending the existing `subdomain_claim` record rather than adding a second uniqueness domain. Rewrite the existing delete trigger so a `held` row can be released while a `claimed` row stays permanent; the existing name, platform-reserved and format triggers already cover held rows. Do not bulk-promote existing `requestedSubdomain` values; the next confirmed Address save attempts the reservation.
+- Add format/platform-reserved/availability validation and an atomic reservation save in Address/editor. Reserve in the same D1 batch as the draft revision CAS; when the insert conflicts, return an actionable unavailable-name result and leave both the draft and the previous hold unchanged. Only a confirmed Address save reserves: staged attempts and legacy validation commits do not. Explain that a successful save holds the name and creates no public site. Allow a confirmed replacement until first publication: delete only the portfolio's current `held` row, then insert the new hold in the same atomic D1 batch as the draft revision CAS. Constraint or CAS failure must abort the whole batch and restore the old hold and draft, including when the CAS matches zero rows. Keep the draft's `requestedSubdomain` as a mirror; the reservation record is authoritative.
+- Update the schema and database package READMEs, fixtures and migration tests with the migration, including the reservation and trigger semantics that the current READMEs describe as claim-only.
+- [ ] Complete when boundary/platform-reserved checks pass, concurrent saves produce one holder, a held address serves no public URL, a failed replacement keeps the old hold, and account deletion releases a never-published hold. Do not rewrite Phase 11B's historical non-reserving completion; record the October 21 supersession here.
 
 ### Phase 22A. Add setup-aware account entry and handoff services
 
 - Dependencies: 11, 11B, 12–15, 17–22 and the existing auth boundaries.
-- Use `flushValid()`'s confirmed revision and local-only flag for authoritative required-setup validation. Preserve optional local recovery without converting old setup batches or replaying progress. Implement controlled normal post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in` and direct editor navigation while preserving Phase 15's fixed recovery callback/error pair. Integrate its shared controls and explicitly selected post-handoff content recovery without converting setup attempts. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Setup saves/uploads/private previews must remain accessible without an editor milestone.
-- [ ] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
+- Use `flushValid()`'s confirmed revision and local-only flag for authoritative required-setup validation. Preserve optional local recovery without converting old setup batches or replaying progress. Implement controlled normal post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in` and direct editor navigation while preserving Phase 15's fixed recovery callback/error pair. Integrate its shared controls and explicitly selected post-handoff content recovery without converting setup attempts. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Required Address validation must confirm the portfolio holds the reservation for the mirrored address, not only that the address field is well formed; a valid draft address can sit behind no reservation. Setup saves/uploads/private previews must remain accessible without an editor milestone.
+- [ ] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, a handoff requires a held reserved address, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
 
 ### Phase 23. Build publication validation and checklist
 
 - Dependencies: 11E, 13, 17–18, 20–22A and the current component contracts.
-- Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, approved six-theme/three-font/two-decoration catalog membership, compatible sample omission, selected address/claim rules, and included components. Resolve a taken onboarding candidate in the editor rather than restarting setup.
+- Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, approved six-theme/three-font/two-decoration catalog membership, compatible sample omission, reserved-address/claim rules, and included components. Resolve a missing or unavailable address reservation in the editor rather than restarting setup.
 - [ ] Complete when each issue opens its control, untouched compatible samples are omitted, and owner-edited/incomplete optional content uses normal validation. Extend checks during later component phases. Setup completion alone must never count as publication readiness.
 
 ### Phase 24. Prepare immutable publication versions
@@ -246,15 +249,15 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 ### Phase 25. Commit and serve a complete version
 
-- Dependencies: 04, 22–24 and the permanently reserved subdomain rules.
+- Dependencies: 04, 22–24 and the platform-reserved name and permanent claim rules.
 - Adopt the renderer security/document policy in thin serving without importing React into the request path. Serve retained content-hashed CSS/JS/fonts/art through the authorized platform asset arrangement, with the verified cache/withdrawal policy; Phase 16 fixture headers do not establish cache withdrawal.
-- Atomically claim the selected candidate on first Publish and switch the published-version pointer. Build thin public serving for approved hosts, pages, assets, and unavailable states. Keep setup/progress private and exclude unvalidated private graph access from public output.
-- [ ] Complete when concurrent first publications produce one claimant, failed commits create no successful claim, and requests serve complete old or new versions. Another owner saving the same candidate earlier confers no ownership; draft routes/assets remain inaccessible.
+- Convert the portfolio's held reservation to the permanent claim on first Publish and switch the published-version pointer. Verify in the same batch that the portfolio still owns the reservation and that the name is not platform-reserved; fail with an actionable unavailable-address result when it does not, and attempt no fresh availability insert. Republishing, including after unpublish, instead verifies the existing owned `claimed` row against the fixed published address and retains it while switching versions. Follow architecture section 8.3 for expected-state guards and durable same-publication retry receipts so a retry never requires a new hold or restores an older pointer. The first-publication conversion updates only a `held` row owned by that portfolio; the permanent-claim guard that a claimed row cannot be deleted, renamed, transferred or un-claimed comes from the Phase 22 migration. Build thin public serving for approved hosts, pages, assets, and unavailable states. Keep setup/progress private and exclude unvalidated private graph access from public output.
+- [ ] Complete when concurrent reservation attempts produce one holder, only that holder's first publication can create the claim, failed first commits leave the reservation and create no claim, republishing retains the permanent claim, retries cannot restore an older pointer, and requests serve complete old or new versions. Draft routes/assets remain inaccessible.
 
 ### Phase 26. Finish publication and republishing primitives
 
 - Dependencies: 14–15, 23–25 and verified S-9 withdrawal/cache policy.
-- Add Publish progress, actionable errors, Retry, and public URL Open/Copy. Remove withdrawn public assets and purge caches after successful version changes. Recheck candidate availability and permit a replacement before first publication without rerunning setup.
+- Add Publish progress, actionable errors, Retry, and public URL Open/Copy. Remove withdrawn public assets and purge caches after successful version changes. Verify the portfolio's reservation before the first publish conversion and permit a replacement before first publication without rerunning setup; a failed or unavailable replacement keeps the existing hold.
 - [ ] Complete when a profile-only handoff fixture can publish, reopen its saved editor draft, and republish at the same URL. Unsaved edits, unfinished uploads, and failures cannot report false success or corrupt the live site. The real signup-to-publication journey is verified in 42F and 54.
 
 ## Optional content and public pages
@@ -383,8 +386,8 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 ### Phase 42A. Build the guide shell, progress, and Address screen
 
 - Dependencies: 11A–11B, 12–17, 22–22A and the confirmed read-only UI direction. Default styling from 16/11E is sufficient; appearance controls from 35 are not a shell prerequisite.
-- Add the focused responsive step shell, progress/navigation, saved-step resume, and first required Address screen. Use the same unreserved candidate and availability checks as the editor, with no initial skip/editor bypass. Preserve local recovery and revision conflicts.
-- [ ] Complete when ON-01/02/13/14/19 pass for this increment, two owners can select the same name without a claim, and required navigation cannot be forged. Do not activate an incomplete required signup journey yet.
+- Add the focused responsive step shell, progress/navigation, saved-step resume, and first required Address screen. Use the same exclusive reservation and availability checks as the editor, with no initial skip/editor bypass. Preserve local recovery and revision conflicts.
+- [ ] Complete when ON-01/02/13/14/19 pass for this increment, concurrent selection produces one reservation and no public URL, and required navigation cannot be forged. Do not activate an incomplete required signup journey yet.
 
 ### Phase 42B. Add the combined Profile and required Links screens
 
@@ -417,7 +420,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 ### Phase 42F. Verify onboarding recovery and the full new-user journey
 
 - Dependencies: 42E and the actual publication/GitHub paths through 42.
-- Verify the Phase 15 callback continuation through the actual guide/editor adapters, including wrong accounts, cancelled/failed consent, clean or not-yet-loaded checkpoints, reload, changed-base discard journals with working values and post-handoff selected recovery. Run ON-01 through ON-19 with both signup providers, completed/skipped/partial optional content, two tabs/devices, another owner, invalid local input, failures, crop/import retry, authorization return/removal, address collisions, and permanent handoff. Compare saved values with Review/editor and published output.
+- Verify the Phase 15 callback continuation through the actual guide/editor adapters, including wrong accounts, cancelled/failed consent, clean or not-yet-loaded checkpoints, reload, changed-base discard journals with working values and post-handoff selected recovery. Run ON-01 through ON-19 with both signup providers, completed/skipped/partial optional content, two tabs/devices, another owner, invalid local input, failures, crop/import retry, authorization return/removal, address reservation collisions and replacements, and permanent handoff. Compare saved values with Review/editor and published output.
 - [ ] Complete when recorded automated browser/viewport/provider-fixture checks pass and no new work is marked complete without owner approval. Phase 53 still performs the full cross-feature acceptance review, and Phase 54 retains target-user timing/launch checks.
 
 ## Message delivery
@@ -462,7 +465,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 25–26 and verified withdrawal/cache policy.
 - Integration before full completion: 38, 40–41, 44 for withdrawal of second photos, live graph/contact endpoints and their caches.
-- Remove access to portfolio, case studies, resume, live endpoints, and public assets while preserving the private draft and subdomain reservation. Purge public caches.
+- Remove access to portfolio, case studies, resume, live endpoints, and public assets while preserving the private draft and the published address claim. Purge public caches.
 - [ ] Complete when old page/asset URLs no longer expose content, another account cannot claim the address, and republishing restores the saved portfolio at that address.
 
 ### Phase 49. Add permanent account deletion
@@ -470,14 +473,14 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 - Dependencies: 10, 11B, 15, 18, 24–26, 41, 48 and retryable cleanup.
 - Dispose the deleted owner's controllers and await their serialized local writes before removing its owner/portfolio IndexedDB range. Add owner-scoped invalidation/tombstones and cross-tab coordination so late writes cannot recreate deleted-account recovery; Phase 14 does not implement that lifecycle service. Include retained review copies, prepared replacements and matching tab continuations in account-scoped cleanup. Recovery callbacks must still check uncached persisted identity before local reads. Preserve other accounts' recovery/continuations and avoid clearing the whole browser database.
 
-- Explain loss and require confirmation. Immediately deny public/owner access, invalidate sessions, revoke grants, and retry removal of draft content, private setup/progress/milestone data, uploads, snapshots, local recovery, and account records. An unclaimed candidate leaves no reservation.
-- [ ] Complete when cached sessions cannot bypass deletion and cleanup failures recover. Only a previously claimed subdomain's ownerless permanent reservation survives; cancellation preserves the account.
+- Explain loss and require confirmation. Immediately deny public/owner access, invalidate sessions, revoke grants, and retry removal of draft content, private setup/progress/milestone data, uploads, snapshots, local recovery, and account records. A held but never published address reservation is released; only published claims survive permanently.
+- [ ] Complete when cached sessions cannot bypass deletion and cleanup failures recover. Only a previously published address's ownerless permanent claim survives; a never-published reservation is released, and cancellation preserves the account.
 
 ### Phase 50. Complete discovery and the example portfolio
 
 - Dependencies: 16–17, 35 for discovery layout and approved appearance examples.
 - Integration before full completion: 25, 38–39, 42F, 45–46 and every capability actually presented in discovery/examples. Publish the example through the real pipeline and complete the real signup journey.
-- Build the entry page with examples, free one-portfolio offer, public-subdomain explanation, and Start building. Explain required initial setup with optional content steps; do not promise a direct editor bypass or early address reservation. Publish the internal example through the real renderer.
+- Build the entry page with examples, free one-portfolio offer, public-subdomain explanation, and Start building. Explain required initial setup with optional content steps; do not promise a direct editor bypass. Explain that selecting an address reserves it until first publication and creates no public site. Publish the internal example through the real renderer.
 - [ ] Complete when visitors can inspect the example/appearance options, understand the offer and required setup, authenticate, and reach the complete first-user flow.
 
 ## Operations and release checks
@@ -486,27 +489,27 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 11B, 13, 18, 25–26, 41, 45, 49 and verified cleanup/budget boundaries.
 - Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, audited operator lookup, bounded garbage collection, and audit cleanup. Protect assets referenced by unfinished setup/partial drafts and delete abandoned unreachable uploads under the existing GC policy. Keep operator controls out of the product UI.
-- Add dormant-owner staging collection beyond Phase 13's explicit owner cleanup. Expiry blocks writes but does not delete rows. Bound piece deletion, protect active attempts and unreconciled commit receipts, and observe D1 size before the recorded 350 MB alert threshold. Preserve global GitHub cleanup state until remote revocation is resolved.
+- Add dormant-owner staging collection beyond Phase 13's explicit owner cleanup. Expiry blocks writes but does not delete rows. Do not release an account's address reservation there; reservations last for the life of the account. Bound piece deletion, protect active attempts and unreconciled commit receipts, and observe D1 size before the recorded 350 MB alert threshold. Preserve global GitHub cleanup state until remote revocation is resolved.
 - Include the [Phase 15 recovery costs](../specs/2026-10-19-conflict-session-recovery/quotas.md) and use the [Phase 14 client costs](../specs/2026-10-18-shared-autosave-recovery/quotas.md) when budgeting staging/cleanup. Repeated maximum-field replacements and dense collection edits exceed the illustrative Free daily model; collection must remain bounded rather than assuming ordinary editing costs.
 - [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup cannot delete active setup assets or retain deleted-account setup data. No source-image retention is introduced.
 
 ### Phase 52. Prepare production delivery and recovery
 
 - Dependencies: all feature/lifecycle increments through 51, including 22A and 42A–42F, and the measured publication/withdrawal revisions.
-- Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/candidate migrations, activity OAuth returns/revocation cleanup, both provider callbacks, fixed same-tab recovery success/error destinations, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
+- Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/address reservation migrations, activity OAuth returns/revocation cleanup, both provider callbacks, fixed same-tab recovery success/error destinations, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
 - Recheck the Phase 14 CPU/location boundary and current autosave request/D1 model before owner-flow activation. Preserve failed-run evidence, measure intended deployment conditions and establish an agreed compatible response to budget failures; a historical passing location cannot authorize rollout by itself.
 - [ ] Complete when CI and release config cover the architecture's required checks, the full guide is available before required routing is activated, and rollback preserves drafts/milestones. Re-verify provider limits before launch; no application rewrite is needed for the approved upgrade path.
 
 ### Phase 53. Run the complete acceptance review
 
 - Dependencies: all implementation and operational phases through 52.
-- Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Extend Phase 15's Chromium fixture evidence to the complete confirmed browser matrix and real guide/editor integration, including continuation replay, structural review, unknown staging and setup closure. Cover all optional completion paths, publication/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
+- Run every numbered criterion, including ON-01 through ON-19, with new/returning owners, visitors, and another owner. Extend Phase 15's Chromium fixture evidence to the complete confirmed browser matrix and real guide/editor integration, including continuation replay, structural review, unknown staging and setup closure. Cover all optional completion paths, publication reservations/claims, races/failures/recovery/deletion, and live-data exceptions. Compare actual values across onboarding, Review, editor, and public output.
 - [ ] Complete when checks pass with recorded evidence across the confirmed browser/viewport matrix, including keyboard/focus, contrast across all twelve preset palettes, crop dialogs, recovery, private consent, reduced motion, both decoration loops and pause/play independent of Face Reveal, flashing limits, and deferred-scope exclusions. Do not add real-device/assistive-technology verification requirements beyond the confirmed scope.
 
 ### Phase 54. Validate the journey and release the MVP
 
 - Dependencies: 11E, 50, 52–53 and the full new-user journey from 42F.
-- Run discovery through required Address/Profile/Links, skipped optional steps, Review, editor, first Publish, and later republish with target users whose content is ready. Also gather feedback on optional/partial paths and owner/visitor understanding; fix failures and repeat affected checks.
+- Run discovery through required Address/Profile/Links, including the address reservation, skipped optional steps, Review, editor, first Publish, and later republish with target users whose content is ready. Also gather feedback on optional/partial paths and owner/visitor understanding; fix failures and repeat affected checks.
 - [ ] Complete when the unchanged under-15-minute profile-only publishing target and full acceptance review pass, the catalog is approved, and production smoke checks pass through real hosts and controlled consent returns. Record qualitative findings without inventing new onboarding timing/completion targets.
 
 After launch, submit `hasaweb.site` to the Public Suffix List as architecture Q-5 requires. Submission acceptance is not an MVP launch prerequisite. Continue monitoring operational limits and failures; expanding the feature scope belongs in a separate roadmap.
