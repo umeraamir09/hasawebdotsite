@@ -1,4 +1,6 @@
-export function installSite(root: ParentNode): () => void {
+export function installSite(
+  root: Pick<ParentNode, "querySelectorAll">,
+): () => void {
   const cleanups: (() => void)[] = [];
   for (const button of root.querySelectorAll<HTMLButtonElement>(
     "[data-theme-toggle]",

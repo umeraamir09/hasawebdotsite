@@ -45,7 +45,7 @@ export function AuthRecovery() {
             .controller.initialize()
             .catch(() => {});
           if (!disposed) setRecovery(current);
-          else current.store.getState().controller.dispose();
+          else current.dispose();
         }
       } catch {
         if (!disposed)
@@ -62,7 +62,7 @@ export function AuthRecovery() {
     window.addEventListener("pageshow", reset);
     return () => {
       disposed = true;
-      current?.store.getState().controller.dispose();
+      current?.dispose();
       window.removeEventListener("pageshow", reset);
     };
   }, []);

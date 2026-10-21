@@ -1,0 +1,1101 @@
+import assert from "node:assert/strict";
+import { mkdir, readFile } from "node:fs/promises";
+import { createServer } from "node:http";
+import { extname, join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { chromium } from "playwright";
+import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+
+export async function checkEditor({
+  root,
+  origin,
+  cookie,
+  sql,
+  fixture,
+  esbuild,
+  evidence,
+  secrets,
+}) {
+  const directory = join(root, ".wrangler/editor-browser");
+  await mkdir(directory, { recursive: true });
+  await esbuild.build({
+    entryPoints: [
+      join(root, "apps/web/integration/editor-fixture.tsx"),
+      join(root, "apps/web/integration/editor-preview-fixture.ts"),
+    ],
+    bundle: true,
+    platform: "browser",
+    format: "esm",
+    jsx: "automatic",
+    external: ["/fonts/*", "/portfolio-platform/*"],
+    outdir: directory,
+    define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" },
+  });
+  const adapterFile = join(directory, "preview-document.cjs");
+  await esbuild.build({
+    entryPoints: [join(root, "apps/web/lib/editor/preview-document.ts")],
+    bundle: true,
+    platform: "node",
+    format: "cjs",
+    outfile: adapterFile,
+  });
+  const { serveEditorPreview } = (await import(pathToFileURL(adapterFile)))
+    .default;
+  const browserOrigin = "http://127.0.0.1:8826";
+  const requests = [],
+    errors = [],
+    checks = [];
+  const shell = (script, preview = false) =>
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Private editor handoff fixture</title><link rel="stylesheet" href="/${script}.css"></head><body><div id="${preview ? "preview-root" : "root"}"></div><script type="module" src="/${script}.js"></script></body></html>`;
+  async function authority(path, init = {}, session = "alice") {
+    const response = await fetch(`${origin}${path}`, {
+      ...init,
+      headers: {
+        Cookie: session === "none" ? "" : cookie(session),
+        Origin: origin,
+        "X-Runtime-Key": secrets.RUNTIME_KEY,
+        ...init.headers,
+      },
+    });
+    requests.push({ path, session, status: response.status });
+    return response;
+  }
+  async function relay(response, res) {
+    const headers = new Headers(response.headers);
+    for (const name of [
+      "content-encoding",
+      "content-length",
+      "transfer-encoding",
+    ])
+      headers.delete(name);
+    res.writeHead(response.status, Object.fromEntries(headers));
+    res.end(await response.text());
+  }
+  const server = createServer(async (req, res) => {
+    try {
+      const url = new URL(req.url, browserOrigin);
+      const session =
+        /(?:^|;\s*)fixture-session=([^;]+)/.exec(
+          req.headers.cookie ?? "",
+        )?.[1] ?? "none";
+      if (url.pathname === "/private/editor-preview") {
+        const response = await serveEditorPreview(
+          new Request(url, { headers: { Cookie: req.headers.cookie ?? "" } }),
+          {
+            APP_ORIGIN: browserOrigin,
+            OWNER_API: { fetch: () => authority("/api/owner", {}, session) },
+          },
+          shell("editor-preview-fixture", true),
+        );
+        await relay(response, res);
+        return;
+      }
+      if (
+        url.pathname.startsWith("/api/") ||
+        url.pathname === "/editor/preview"
+      ) {
+        const body = [];
+        for await (const chunk of req) body.push(chunk);
+        const response = await authority(
+          req.url,
+          {
+            method: req.method,
+            headers: {
+              "Content-Type": "application/json",
+              ...(req.headers["x-expected-owner-id"]
+                ? { "X-Expected-Owner-Id": req.headers["x-expected-owner-id"] }
+                : {}),
+            },
+            ...(!["GET", "HEAD"].includes(req.method)
+              ? { body: Buffer.concat(body) }
+              : {}),
+          },
+          session,
+        );
+        await relay(response, res);
+        return;
+      }
+      if (/^\/editor-(?:preview-)?fixture\.(?:js|css)$/.test(url.pathname)) {
+        res.setHeader(
+          "Content-Type",
+          url.pathname.endsWith(".js") ? "text/javascript" : "text/css",
+        );
+        res.end(await readFile(join(directory, url.pathname.slice(1))));
+        return;
+      }
+      if (
+        url.pathname === "/fonts/dm-sans-latin.woff2" ||
+        url.pathname.startsWith("/portfolio-platform/")
+      ) {
+        const filename =
+          url.pathname === "/fonts/dm-sans-latin.woff2"
+            ? join(root, "apps/web/public/fonts/dm-sans-latin.woff2")
+            : join(
+                root,
+                "packages/components/static",
+                url.pathname
+                  .split("/")
+                  .at(-1)
+                  .replace(/^[a-f0-9]+-/, ""),
+              );
+        res.setHeader(
+          "Content-Type",
+          extname(filename) === ".ttf" ? "font/ttf" : "font/woff2",
+        );
+        res.end(await readFile(filename));
+        return;
+      }
+      res.setHeader("Content-Type", "text/html");
+      res.end(
+        url.pathname === "/empty"
+          ? "<!doctype html><title>Prepare</title>"
+          : shell("editor-fixture"),
+      );
+    } catch (error) {
+      errors.push(String(error));
+      res.writeHead(503);
+      res.end("Unavailable");
+    }
+  });
+  await new Promise((resolve) => server.listen(8826, "127.0.0.1", resolve));
+  const browser = await chromium.launch({
+    executablePath:
+      process.env.AUTH_SPIKE_CHROMIUM ?? "/opt/google/chrome/chrome",
+    headless: true,
+    ignoreDefaultArgs: ["--disable-back-forward-cache"],
+    args: ["--no-sandbox"],
+  });
+  const context = await browser.newContext({
+    viewport: { width: 1500, height: 1000 },
+  });
+  let page;
+  async function boot(draft = fixture) {
+    for (const open of context.pages()) await open.close();
+    page = await context.newPage();
+    page.on("pageerror", (error) => errors.push(error.message));
+    await context.addCookies([
+      { name: "fixture-session", value: "alice", url: browserOrigin },
+    ]);
+    await sql("DELETE FROM owner_save_attempt WHERE user_id='draft-alice'");
+    await sql("DELETE FROM portfolio WHERE user_id='draft-alice'");
+    await page.goto(`${browserOrigin}/empty`);
+    await page.evaluate(() =>
+      fetch("/api/owner/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      }),
+    );
+    await sql(
+      "UPDATE portfolio SET draft=?,draft_validation_version=2,draft_rev=draft_rev+1,first_editor_entered_at=? WHERE user_id='draft-alice'",
+      [JSON.stringify(draft), Date.now()],
+    );
+    await page.evaluate(async () => {
+      await new Promise((resolve, reject) => {
+        const request = indexedDB.deleteDatabase("hasaweb-draft-recovery-v1");
+        request.onsuccess = resolve;
+        request.onerror = reject;
+        request.onblocked = reject;
+      });
+    });
+    await page.goto(browserOrigin);
+    if (errors.length) throw new Error(errors.join("; "));
+    await page.waitForFunction(() => window.editorFixture?.ready);
+    await displayed();
+  }
+  const displayed = () =>
+    page.waitForFunction(
+      () =>
+        document.querySelector("[data-preview-state]")?.dataset.previewState ===
+        "displayed",
+      { timeout: 45000 },
+    );
+  const frame = () =>
+    page
+      .frames()
+      .find((candidate) => candidate.url().includes("/private/editor-preview"));
+  async function run(name, work) {
+    const filter = process.argv
+      .find((argument) => argument.startsWith("--browser-filter="))
+      ?.slice("--browser-filter=".length);
+    if (filter && !new RegExp(filter).test(name)) return;
+    await work();
+    checks.push({ name, passed: true });
+    console.log(`PASS editor: ${name}`);
+  }
+  async function seed(kind = "ordinary") {
+    return page.evaluate(async (kind) => {
+      const f = window.editorFixture,
+        controller = f.recovery.store.getState().controller;
+      const state = controller.store.getState(),
+        id = crypto.randomUUID();
+      const working = structuredClone(state.confirmed.draft);
+      working.profile.name = "Restored owner";
+      const record = {
+        version: 1,
+        id,
+        ...f.scope,
+        context: "content",
+        base: state.confirmed,
+        working,
+        progress: state.progress,
+        inputs: {
+          '["profile","bio"]': {
+            path: ["profile", "bio"],
+            value: "Raw preserved bio",
+          },
+        },
+        batch: null,
+        validationJournal: null,
+      };
+      if (kind === "prepared") {
+        const replacement = { ...record, id: crypto.randomUUID() };
+        await f.storage.put(replacement);
+        record.review = {
+          version: 1,
+          phase: "prepared",
+          choice: "review",
+          canonical: state.confirmed,
+          selection: { itemIds: [] },
+          replacementId: replacement.id,
+        };
+      }
+      await f.storage.put(record);
+      controller.store.setState({ recoveries: [record] });
+      return id;
+    }, kind);
+  }
+  async function holdStorage() {
+    await page.evaluate(async () => {
+      const db = await new Promise((resolve, reject) => {
+        const open = indexedDB.open("hasaweb-draft-recovery-v1");
+        open.onsuccess = () => resolve(open.result);
+        open.onerror = reject;
+      });
+      const transaction = db.transaction("records", "readwrite"),
+        store = transaction.objectStore("records");
+      window.storageReleased = false;
+      const keep = () => {
+        if (!window.storageReleased) store.get("hold").onsuccess = keep;
+      };
+      keep();
+      transaction.oncomplete = () => db.close();
+    });
+  }
+  try {
+    await run(
+      "authorized preview document and inactive production route",
+      async () => {
+        const anonymous = await context.request.get(
+          `${browserOrigin}/private/editor-preview`,
+        );
+        assert.equal(anonymous.status(), 401);
+        await boot();
+        const response = await context.request.get(
+          `${browserOrigin}/private/editor-preview`,
+        );
+        assert.equal(response.status(), 200);
+        assert.match(response.headers()["cache-control"], /private.*no-store/);
+        assert.equal(response.headers()["x-robots-tag"], "noindex");
+        assert.match(response.headers().vary, /Cookie/);
+        assert.match(
+          response.headers()["content-security-policy"],
+          /frame-ancestors 'self'/,
+        );
+        assert.doesNotMatch(
+          await response.text(),
+          /recipient-1|avatar-1|includePrivate|umer@example/,
+        );
+        assert.equal(
+          (
+            await context.request.get(`${browserOrigin}/editor/preview`)
+          ).status(),
+          404,
+        );
+      },
+    );
+    await run(
+      "valid edits reach both viewport widths before autosave",
+      async () => {
+        await boot();
+        let release;
+        const blocked = new Promise((resolve) => {
+          release = resolve;
+        });
+        await page.route("**/api/owner/draft/*", async (route) => {
+          if (route.request().method() === "POST") await blocked;
+          await route.continue();
+        });
+        await page.getByLabel("Name", { exact: true }).fill("Immediate owner");
+        await frame().waitForFunction(
+          () => document.querySelector("h1")?.textContent === "Immediate owner",
+        );
+        const saved = JSON.parse(
+          (
+            await sql("SELECT draft FROM portfolio WHERE user_id='draft-alice'")
+          )[0].draft,
+        );
+        assert.equal(saved.profile.name, fixture.profile.name);
+        for (const parentWidth of [1500, 520]) {
+          await page.setViewportSize({ width: parentWidth, height: 1000 });
+          if (parentWidth === 520)
+            await page
+              .getByRole("button", { name: "View preview", exact: true })
+              .click();
+          for (const [label, width] of [
+            ["Desktop", 1120],
+            ["Mobile", 390],
+          ]) {
+            await page
+              .getByRole("button", { name: label, exact: true })
+              .click();
+            assert.equal(await frame().evaluate(() => innerWidth), width);
+            assert.equal(
+              await frame().locator("h1").innerText(),
+              "Immediate owner",
+            );
+            await page.screenshot({
+              path: join(
+                evidence,
+                `editor-${parentWidth}-${label.toLowerCase()}.png`,
+              ),
+            });
+          }
+        }
+        release();
+        await page.unrouteAll({ behavior: "wait" });
+        await page.setViewportSize({ width: 1500, height: 1000 });
+      },
+    );
+    await run(
+      "stable selection, unfinished raw input and sample acceptance",
+      async () => {
+        const draft = structuredClone(fixture);
+        draft.samples["profile.name"] = true;
+        draft.samples["components.text-1"] = true;
+        await boot(draft);
+        assert.equal(await frame().locator("h1").innerText(), "Name not added");
+        await page.getByLabel("Name", { exact: true }).fill("Accepted name");
+        await frame().waitForFunction(
+          () => document.querySelector("h1")?.textContent === "Accepted name",
+        );
+        await page.getByLabel("Email me", { exact: true }).fill("unfinished@");
+        assert.equal(
+          await page
+            .getByLabel("Email me", { exact: true })
+            .getAttribute("aria-invalid"),
+          "true",
+        );
+        assert.match(await frame().locator("main").innerText(), /Email me/);
+        await page.evaluate(() => {
+          const c = window.editorFixture.recovery.store.getState().controller;
+          const d = structuredClone(c.store.getState().working);
+          d.links.reverse();
+          c.update(d);
+        });
+        assert.equal(
+          await page.getByLabel("Email me", { exact: true }).inputValue(),
+          "unfinished@",
+        );
+        await page
+          .getByRole("button", { name: "Text section", exact: true })
+          .first()
+          .click();
+        await page.getByLabel("Section title").fill("Accepted section");
+        await frame().waitForFunction(
+          () =>
+            document.querySelector('[data-component-id="text-1"] h2')
+              ?.textContent === "Accepted section",
+        );
+        await page.evaluate(() => {
+          const delayed = new WeakSet();
+          window.addEventListener(
+            "message",
+            (event) => {
+              if (event.data?.kind !== "select" || delayed.has(event)) return;
+              delayed.add(event);
+              event.stopImmediatePropagation();
+              setTimeout(() => window.dispatchEvent(event), 250);
+            },
+            { capture: true },
+          );
+        });
+        await frame()
+          .locator('[data-component-id="projects-1"]')
+          .click({ position: { x: 10, y: 10 } });
+        await page
+          .getByRole("region", { name: "Projects controls" })
+          .waitFor({ state: "visible" });
+        await frame().locator('[data-component-id="skills-1"]').focus();
+        await frame().locator('[data-component-id="skills-1"]').press("Enter");
+        await page
+          .getByRole("region", { name: "Skills and technologies controls" })
+          .waitFor({ state: "visible" });
+        await frame().locator("[data-theme-toggle]").click();
+        assert.equal(
+          await page
+            .getByRole("button", {
+              name: "Skills and technologies",
+              exact: true,
+            })
+            .getAttribute("aria-current"),
+          "true",
+        );
+        await page
+          .getByRole("button", { name: "Customization", exact: true })
+          .click();
+        assert.match(
+          await page.getByRole("region", { name: "Customization" }).innerText(),
+          /Leaf palette/,
+        );
+      },
+    );
+    await run(
+      "equivalent owner rerenders retain active controller and iframe",
+      async () => {
+        await boot();
+        const before = await page
+          .locator("[data-editor-scope]")
+          .getAttribute("data-editor-scope");
+        const channel = await page.locator("iframe").getAttribute("src");
+        await page.evaluate(() => window.editorFixture.rerender());
+        await page.getByLabel("Name", { exact: true }).fill("Same session");
+        await frame().waitForFunction(
+          () => document.querySelector("h1")?.textContent === "Same session",
+        );
+        assert.equal(
+          await page
+            .locator("[data-editor-scope]")
+            .getAttribute("data-editor-scope"),
+          before,
+        );
+        assert.equal(await page.locator("iframe").getAttribute("src"), channel);
+      },
+    );
+    for (const kind of ["ordinary", "prepared"]) {
+      for (const fail of [false, true]) {
+        await run(
+          `${kind} restoration suspends editor through storage ${fail ? "failure" : "success"}`,
+          async () => {
+            await boot();
+            const id = await seed(kind);
+            await holdStorage();
+            await page.evaluate(
+              ({ id, kind }) => {
+                const f = window.editorFixture;
+                window.restoreResult = null;
+                void (
+                  kind === "prepared"
+                    ? f.recovery.reopen(id)
+                    : f.recovery.continueRecord(id)
+                ).then(
+                  () => {
+                    window.restoreResult = "success";
+                  },
+                  () => {
+                    window.restoreResult = "failure";
+                  },
+                );
+              },
+              { id, kind },
+            );
+            await page.waitForFunction(
+              () => document.querySelector("input")?.disabled,
+            );
+            assert.equal(
+              await page.evaluate(() => {
+                try {
+                  window.editorFixture.recovery.store
+                    .getState()
+                    .controller.edit(["profile", "name"], "Must reject");
+                  return false;
+                } catch {
+                  return true;
+                }
+              }),
+              true,
+            );
+            await page.evaluate((fail) => {
+              if (fail) {
+                const original = IDBObjectStore.prototype.getAll;
+                IDBObjectStore.prototype.getAll = () => {
+                  IDBObjectStore.prototype.getAll = original;
+                  throw new Error("Fixture storage failure");
+                };
+              }
+              window.storageReleased = true;
+            }, fail);
+            await page.waitForFunction(() => window.restoreResult !== null);
+            assert.equal(
+              await page.evaluate(() => window.restoreResult),
+              fail ? "failure" : "success",
+            );
+            if (!fail) {
+              await page.waitForFunction(
+                () =>
+                  document.querySelector("input")?.value === "Restored owner",
+              );
+              assert.equal(
+                await page.getByLabel("Bio", { exact: true }).inputValue(),
+                "Raw preserved bio",
+              );
+            }
+            await page.waitForFunction(
+              () => !document.querySelector("input")?.disabled,
+            );
+            await page
+              .getByLabel("Name", { exact: true })
+              .fill("Usable after restoration");
+            await frame().waitForFunction(
+              () =>
+                document.querySelector("h1")?.textContent ===
+                "Usable after restoration",
+            );
+          },
+        );
+      }
+    }
+    await run(
+      "pinned discard keeps working values and requires review on a changed base",
+      async () => {
+        await boot();
+        const id = await seed();
+        await page.evaluate(async (id) => {
+          const f = window.editorFixture;
+          const records = await f.storage.list(
+            f.scope.ownerId,
+            f.scope.portfolioId,
+          );
+          const source = records.find((record) => record.id === id);
+          source.discardJournal = {
+            id: null,
+            revision: source.base.revision,
+            confirmed: true,
+          };
+          await f.storage.put(source);
+        }, id);
+        await sql(
+          "UPDATE portfolio SET draft=json_set(draft,'$.profile.location','Remote location'),draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+        );
+        await page.evaluate(async (id) => {
+          await window.editorFixture.recovery
+            .continueRecord(id)
+            .catch(() => {});
+        }, id);
+        assert.equal(
+          await page.getByLabel("Name", { exact: true }).inputValue(),
+          "Restored owner",
+        );
+        assert.equal(
+          await page.getByLabel("Bio", { exact: true }).inputValue(),
+          "Raw preserved bio",
+        );
+        const status = await page.evaluate(() => {
+          const state = window.editorFixture.recovery.store
+            .getState()
+            .controller.store.getState();
+          return { error: state.error, discardJournal: state.discardJournal };
+        });
+        assert.equal(status.error, "revision_conflict");
+        assert.equal(status.discardJournal, null);
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .first()
+          .click();
+        const checkboxes = page.getByRole("checkbox", {
+          name: /Apply this change/,
+        });
+        await checkboxes.first().waitFor({ state: "visible" });
+        for (let i = 0; i < (await checkboxes.count()); i++) {
+          if (!(await checkboxes.nth(i).isEnabled())) continue;
+          await checkboxes.nth(i).click();
+          await page.waitForFunction(
+            () => !window.editorFixture.recovery.store.getState().busy,
+          );
+          assert.equal(await checkboxes.nth(i).isChecked(), true);
+        }
+        await page
+          .getByRole("button", { name: "Apply selected changes", exact: true })
+          .click();
+        await page.waitForFunction(
+          () =>
+            window.editorFixture.recovery.store
+              .getState()
+              .controller.store.getState().status === "unsaved",
+        );
+        assert.equal(
+          await page.getByLabel("Name", { exact: true }).inputValue(),
+          "Restored owner",
+        );
+        assert.equal(
+          await page.getByLabel("Location", { exact: true }).inputValue(),
+          "Remote location",
+        );
+      },
+    );
+    await run(
+      "editor exit cancels an Apply waiting on replacement persistence",
+      async () => {
+        await boot();
+        const originalName = await page
+          .getByLabel("Name", { exact: true })
+          .inputValue();
+        await page
+          .getByLabel("Name", { exact: true })
+          .fill("Do not save after exit");
+        await page.evaluate(async () => {
+          const recovery = window.editorFixture.recovery;
+          await recovery.start();
+          for (const item of recovery.store.getState().items)
+            if (item.selectable) await recovery.select(item.id, true);
+        });
+        await holdStorage();
+        await page.evaluate(() => {
+          window.applyAfterExit = null;
+          void window.editorFixture.recovery.apply().then(
+            () => {
+              window.applyAfterExit = "success";
+            },
+            () => {
+              window.applyAfterExit = "failure";
+            },
+          );
+        });
+        await page.waitForFunction(
+          () => window.editorFixture.recovery.store.getState().busy,
+        );
+        await page.evaluate(() => {
+          window.editorFixture.root.unmount();
+          window.storageReleased = true;
+        });
+        await page.waitForFunction(() => window.applyAfterExit !== null);
+        assert.equal(
+          await page.evaluate(() => window.applyAfterExit),
+          "failure",
+        );
+        assert.equal(
+          await page.evaluate(() => {
+            try {
+              window.editorFixture.recovery.store
+                .getState()
+                .controller.edit(["profile", "name"], "Must stay stopped");
+              return false;
+            } catch {
+              return true;
+            }
+          }),
+          true,
+        );
+        const saved = await authority("/api/owner/draft", {
+          headers: { "X-Expected-Owner-Id": "draft-alice" },
+        });
+        assert.equal((await saved.json()).draft.profile.name, originalName);
+      },
+    );
+    await run("failed review checkpoint keeps the editor usable", async () => {
+      await boot();
+      await page.evaluate(() => {
+        const put = IDBObjectStore.prototype.put;
+        IDBObjectStore.prototype.put = () => {
+          IDBObjectStore.prototype.put = put;
+          throw new Error("Fixture checkpoint failed");
+        };
+        window.reviewResult = null;
+        void window.editorFixture.recovery.start().then(
+          () => {
+            window.reviewResult = "success";
+          },
+          () => {
+            window.reviewResult = "failure";
+          },
+        );
+      });
+      await page.waitForFunction(() => window.reviewResult !== null);
+      assert.equal(await page.evaluate(() => window.reviewResult), "failure");
+      await page.getByLabel("Name", { exact: true }).fill("Still editable");
+      await frame().waitForFunction(
+        () => document.querySelector("h1")?.textContent === "Still editable",
+      );
+    });
+    await run(
+      "review replacement clears scope field state and follows the fresh controller",
+      async () => {
+        await boot();
+        await page
+          .getByLabel("Name", { exact: true })
+          .fill("Local review edit");
+        await page.getByLabel("Email me", { exact: true }).fill("raw@");
+        const before = await page
+          .locator("[data-editor-scope]")
+          .getAttribute("data-editor-scope");
+        await page.evaluate(() => window.editorFixture.recovery.start());
+        assert.equal(
+          await page.getByLabel("Name", { exact: true }).isDisabled(),
+          true,
+        );
+        const changes = page.getByRole("checkbox", {
+          name: /Apply this change/,
+        });
+        await changes.first().waitFor({ state: "visible" });
+        for (let i = 0; i < (await changes.count()); i++) {
+          if (!(await changes.nth(i).isEnabled())) continue;
+          await changes.nth(i).click();
+          await page.waitForFunction(
+            () => !window.editorFixture.recovery.store.getState().busy,
+          );
+          assert.equal(await changes.nth(i).isChecked(), true);
+        }
+        await page
+          .getByRole("button", { name: "Apply selected changes", exact: true })
+          .click();
+        await page.waitForFunction(
+          (before) =>
+            document.querySelector("[data-editor-scope]")?.dataset
+              .editorScope !== before,
+          before,
+        );
+        await page
+          .getByLabel("Name", { exact: true })
+          .fill("New controller edit");
+        await frame().waitForFunction(
+          () =>
+            document.querySelector("h1")?.textContent === "New controller edit",
+        );
+        assert.equal(
+          await page
+            .getByRole("button", { name: "Profile", exact: true })
+            .getAttribute("aria-current"),
+          "true",
+        );
+        assert.equal(
+          await page.getByLabel("Email me", { exact: true }).inputValue(),
+          "raw@",
+        );
+      },
+    );
+    await run(
+      "maximal one-MiB strings and dense collections retain cancellation and live rendering",
+      async () => {
+        const draft = structuredClone(fixture);
+        draft.samples = {};
+        draft.profile.bio = "";
+        draft.profile.bio = "x".repeat(
+          1048576 - Buffer.byteLength(JSON.stringify(draft)),
+        );
+        assert.equal(Buffer.byteLength(JSON.stringify(draft)), 1048576);
+        await boot(draft);
+        assert.equal(
+          (await frame().locator(".pf-bio").innerText()).length,
+          draft.profile.bio.length,
+        );
+        await page.evaluate(() => {
+          const c = window.editorFixture.recovery.store.getState().controller;
+          c.edit(["profile", "name"], "Earlier");
+          setTimeout(() => c.edit(["profile", "name"], "Latest"), 1);
+        });
+        await frame().waitForFunction(
+          () => document.querySelector("h1")?.textContent === "Latest",
+        );
+        const dense = structuredClone(fixture);
+        dense.samples = {};
+        const skills = dense.components.find(
+          (component) => component.type === "skills",
+        );
+        skills.data = {
+          categories: [],
+          entries: Array.from({ length: 12000 }, (_, i) => ({
+            id: `s${i}`,
+            name: "",
+          })),
+        };
+        dense.profile.bio = "";
+        dense.profile.bio = "d".repeat(
+          1048576 - Buffer.byteLength(JSON.stringify(dense)),
+        );
+        await boot(dense);
+        assert.equal(
+          await frame()
+            .locator('[data-component-id="skills-1"] .pf-tags li')
+            .count(),
+          12000,
+        );
+        assert.equal(
+          await frame().evaluate(async () => {
+            await document.fonts.ready;
+            return document.fonts.check('16px "DM Sans"');
+          }),
+          true,
+        );
+        assert.equal(await frame().locator("[data-theme-toggle]").count(), 1);
+      },
+    );
+    await run(
+      "protocol rejects stale, untrusted and malformed updates and survives reload and disposal",
+      async () => {
+        await boot();
+        await page.evaluate(() => {
+          const f = window.editorFixture;
+          const iframe = document.createElement("iframe");
+          iframe.id = "protocol-frame";
+          iframe.src = "/private/editor-preview#channel=protocol-fixture";
+          document.body.append(iframe);
+          const states = [];
+          window.protocolStates = states;
+          const bridge = f.connectPreviewBridge({
+            iframe,
+            origin: location.origin,
+            channel: "protocol-fixture",
+            identity: f.scope,
+            onState: (state) => states.push(state),
+            onSelect: () => {},
+          });
+          window.protocolBridge = bridge;
+          bridge.request((signal) =>
+            f.projectPortfolioCancellable(
+              f.recovery.store.getState().controller.store.getState().working,
+              {
+                assetOrigins: [],
+                resolveAsset: () => ({ state: "unavailable" }),
+              },
+              signal,
+            ),
+          );
+        });
+        await page.waitForFunction(
+          () => window.protocolStates.at(-1)?.kind === "displayed",
+        );
+        const child = page
+          .frames()
+          .find((candidate) =>
+            candidate.url().includes("channel=protocol-fixture"),
+          );
+        const original = await child.locator("main").innerText();
+        await child.evaluate(() => {
+          for (const [source, origin, channel] of [
+            [window, location.origin, "protocol-fixture"],
+            [parent, "https://foreign.example", "protocol-fixture"],
+            [parent, location.origin, "wrong"],
+          ])
+            window.dispatchEvent(
+              new MessageEvent("message", {
+                source,
+                origin,
+                data: {
+                  protocol: 1,
+                  channel,
+                  kind: "begin",
+                  sequence: 999,
+                  bytes: 10,
+                },
+              }),
+            );
+          window.dispatchEvent(
+            new MessageEvent("message", {
+              source: parent,
+              origin: location.origin,
+              data: {
+                protocol: 1,
+                channel: "protocol-fixture",
+                kind: "begin",
+                sequence: 0,
+                bytes: 10,
+              },
+            }),
+          );
+        });
+        assert.equal(await child.locator("main").innerText(), original);
+        await page.evaluate(() =>
+          window.protocolBridge.request(async () => ({
+            profile: {
+              name: "Leak",
+              bio: "",
+              avatar: { state: "missing" },
+              banner: { state: "missing" },
+              links: [],
+            },
+            components: [],
+            recipientId: "private",
+          })),
+        );
+        await page.waitForFunction(
+          () => window.protocolStates.at(-1)?.kind === "rejected",
+        );
+        const rejected = await page.evaluate(() =>
+          window.protocolStates.at(-1),
+        );
+        assert.ok(rejected.displayed < rejected.requested);
+        assert.equal(await child.locator("main").innerText(), original);
+        await page.evaluate(() => {
+          const f = window.editorFixture,
+            prepare = (signal) =>
+              f.projectPortfolioCancellable(
+                f.recovery.store.getState().controller.store.getState().working,
+                {
+                  assetOrigins: [],
+                  resolveAsset: () => ({ state: "unavailable" }),
+                },
+                signal,
+              );
+          window.protocolBridge.request(prepare);
+          document
+            .getElementById("protocol-frame")
+            .contentWindow.location.reload();
+        });
+        await page.waitForFunction(
+          () => window.protocolStates.at(-1)?.kind === "displayed",
+        );
+        await page.evaluate(() => {
+          window.protocolBridge.dispose();
+          document.getElementById("protocol-frame").remove();
+          window.editorFixture.root.unmount();
+        });
+        assert.equal(await page.locator("iframe").count(), 0);
+        assert.equal(
+          await page.evaluate(() => window.protocolStates.at(-1).kind),
+          "closed",
+        );
+      },
+    );
+    await run(
+      "Back restores a reauthorized preview with a fresh display acknowledgement",
+      async () => {
+        await boot();
+        const name = await frame().locator("h1").innerText();
+        const beforeSequence = Number(
+          await page
+            .locator("[data-preview-state]")
+            .getAttribute("data-preview-displayed"),
+        );
+        await page.evaluate(() => {
+          window.bfcacheReturned = false;
+          window.addEventListener("pageshow", (event) => {
+            window.bfcacheReturned = event.persisted;
+          });
+          const link = document.createElement("a");
+          link.href = "/empty";
+          link.textContent = "Leave editor fixture";
+          document.body.append(link);
+        });
+        await page
+          .getByRole("link", { name: "Leave editor fixture", exact: true })
+          .click();
+        await page.goBack({ waitUntil: "commit" });
+        await page.waitForFunction((before) => {
+          const state = document.querySelector("[data-preview-state]")?.dataset;
+          return (
+            state?.previewState === "displayed" &&
+            Number(state.previewDisplayed) > before
+          );
+        }, beforeSequence);
+        assert.equal(await page.evaluate(() => window.bfcacheReturned), true);
+        await page.waitForFunction(() =>
+          document
+            .querySelector("iframe")
+            ?.contentDocument?.querySelector("h1"),
+        );
+        assert.equal(
+          await page.evaluate(
+            () =>
+              document
+                .querySelector("iframe")
+                .contentDocument.querySelector("h1").textContent,
+          ),
+          name,
+        );
+      },
+    );
+    await run(
+      "a cached child rechecks identity before restoring its mount",
+      async () => {
+        await boot();
+        await frame().evaluate(() =>
+          window.dispatchEvent(
+            new PageTransitionEvent("pagehide", { persisted: true }),
+          ),
+        );
+        assert.equal(await frame().locator("h1").count(), 0);
+        await context.addCookies([
+          { name: "fixture-session", value: "bob", url: browserOrigin },
+        ]);
+        await frame().evaluate(() =>
+          window.dispatchEvent(
+            new PageTransitionEvent("pageshow", { persisted: true }),
+          ),
+        );
+        await frame().waitForFunction(() =>
+          document.body.textContent.includes("session changed"),
+        );
+        assert.equal(await frame().locator("h1").count(), 0);
+      },
+    );
+    await run(
+      "changed owner cannot receive the previous owner model or private configuration",
+      async () => {
+        await boot();
+        const html = await frame().content();
+        assert.doesNotMatch(
+          html,
+          /recipient-1|avatar-1|banner-1|resume-pdf|includePrivate|sharing-image/,
+        );
+        await context.addCookies([
+          { name: "fixture-session", value: "bob", url: browserOrigin },
+        ]);
+        await frame().evaluate(() => window.dispatchEvent(new Event("focus")));
+        await frame().waitForFunction(() =>
+          document.body.textContent.includes("session changed"),
+        );
+        assert.equal(await frame().locator("h1").count(), 0);
+        await page.waitForFunction(
+          () =>
+            document.querySelector("[data-preview-state]")?.dataset
+              .previewState === "rejected",
+        );
+        await page.evaluate(() =>
+          window.editorFixture.recovery.store
+            .getState()
+            .controller.edit(["profile", "name"], "Must not cross owners"),
+        );
+        await page.waitForTimeout(100);
+        assert.doesNotMatch(
+          await frame().locator("body").innerText(),
+          /Must not cross owners/,
+        );
+        await context.addCookies([
+          { name: "fixture-session", value: "expired", url: browserOrigin },
+        ]);
+        assert.equal(
+          (
+            await context.request.get(`${browserOrigin}/private/editor-preview`)
+          ).status(),
+          401,
+        );
+      },
+    );
+    assert.deepEqual(errors, []);
+    await page.screenshot({
+      path: join(evidence, "editor-final.png"),
+      fullPage: true,
+    });
+    await writeJsonEvidence(
+      pathToFileURL(join(evidence, "editor-results.json")),
+      { checks, requests, errors },
+    );
+    console.log(`Passed ${checks.length} editor browser groups`);
+  } catch (error) {
+    await writeJsonEvidence(
+      pathToFileURL(join(evidence, "editor-failure.json")),
+      { checks, requests, errors, failure: String(error) },
+    );
+    if (page && !page.isClosed())
+      await page
+        .screenshot({ path: join(evidence, "editor-failure.png") })
+        .catch(() => {});
+    throw error;
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+}

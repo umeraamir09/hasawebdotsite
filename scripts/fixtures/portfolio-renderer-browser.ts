@@ -21,12 +21,13 @@ const preview = mountPreview(
 );
 const detach = attachPreviewBridge({
   target: preview,
+  root,
+  identity: { ownerId: "fixture-owner-a", portfolioId: "fixture-portfolio-a" },
   parentWindow: window.parent,
   parentOrigin: location.origin,
   channel: "phase16-fixture",
   assetOrigins: [location.origin],
 });
-window.parent.postMessage({ channel: "phase16-ready" }, location.origin);
 window.addEventListener(
   "pagehide",
   () => {

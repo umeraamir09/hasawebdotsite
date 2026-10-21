@@ -700,23 +700,19 @@ if (process.argv.includes("--serve")) {
       recipientId: "must-reject",
     };
     for (const payload of [
-      { channel: "wrong-channel", revision: 2, model: fixtures.empty.model },
-      { channel: "phase16-fixture", revision: 1, model: fixtures.empty.model },
-      { channel: "phase16-fixture", revision: 2, model: malformed },
       {
+        protocol: 1,
+        kind: "begin",
+        channel: "wrong-channel",
+        sequence: 999,
+        bytes: 10,
+      },
+      {
+        protocol: 1,
+        kind: "begin",
         channel: "phase16-fixture",
-        revision: 2,
-        model: {
-          ...fixtures.complete.model,
-          profile: {
-            ...fixtures.complete.model.profile,
-            avatar: {
-              state: "ready",
-              url: "https://untrusted.test/leak",
-              alt: "Untrusted",
-            },
-          },
-        },
+        sequence: 0,
+        bytes: 10,
       },
     ])
       await previewPage.evaluate(
@@ -726,24 +722,43 @@ if (process.argv.includes("--serve")) {
             .contentWindow.postMessage(payload, location.origin),
         payload,
       );
-    await frame.evaluate(
-      (model) =>
-        window.postMessage(
-          { channel: "phase16-fixture", revision: 99, model },
-          location.origin,
-        ),
-      fixtures.empty.model,
+    await frame.evaluate(() =>
+      window.postMessage(
+        {
+          protocol: 1,
+          kind: "begin",
+          channel: "phase16-fixture",
+          sequence: 999,
+          bytes: 10,
+        },
+        location.origin,
+      ),
     );
-    await previewPage.waitForTimeout(150);
-    assert.equal(await frame.locator("main").innerText(), original);
+    for (const model of [
+      malformed,
+      {
+        ...fixtures.complete.model,
+        profile: {
+          ...fixtures.complete.model.profile,
+          avatar: {
+            state: "ready",
+            url: "https://untrusted.test/leak",
+            alt: "Untrusted",
+          },
+        },
+      },
+    ]) {
+      await previewPage.evaluate(
+        (model) => window.rendererBridge.request(async () => model),
+        model,
+      );
+      await previewPage.waitForFunction(
+        () => window.rendererState?.kind === "rejected",
+      );
+      assert.equal(await frame.locator("main").innerText(), original);
+    }
     await previewPage.evaluate(
-      (model) =>
-        document
-          .querySelector("iframe")
-          .contentWindow.postMessage(
-            { channel: "phase16-fixture", revision: 2, model },
-            location.origin,
-          ),
+      (model) => window.rendererBridge.request(async () => model),
       fixtures.empty.model,
     );
     await frame.waitForFunction(
@@ -751,7 +766,7 @@ if (process.argv.includes("--serve")) {
     );
     checks.push({
       check:
-        "390px iframe and preview bridge source/channel/revision/schema/asset-origin rejection with valid update",
+        "390px iframe and preview bridge source/channel/sequence/schema/asset-origin rejection with valid update",
       passed: true,
     });
     await publicPage.goto(`${origin}/published`);

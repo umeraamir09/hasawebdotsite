@@ -35,20 +35,52 @@ type RecoveryState = {
   busy: boolean;
 };
 export function createRecoveryCoordinator(options: Options) {
+  let disposed = false;
+  const controllers = new Set<DraftController>();
+  if (options.controller) controllers.add(options.controller);
+  function assertActive() {
+    if (disposed) throw new Error("Recovery coordinator is disposed");
+  }
   const storage =
     options.storage ??
     createRecoveryStorage(options.ownerId, options.portfolioId);
-  const transport =
+  const network =
     options.transport ??
     createDraftTransport(options.ownerId, options.portfolioId);
-  const make = (context: Context, id?: string) =>
-    createDraftController({
+  const transport: Transport = {
+    read: () => {
+      assertActive();
+      return network.read();
+    },
+    readProgress: () => {
+      assertActive();
+      return network.readProgress();
+    },
+    download: () => {
+      assertActive();
+      return network.download();
+    },
+    action: (action, body) => {
+      assertActive();
+      return network.action(action, body);
+    },
+  };
+  const make = (context: Context, id?: string) => {
+    assertActive();
+    const controller = createDraftController({
       ...options,
       context,
       ...(id ? { id } : {}),
       storage,
       transport,
     });
+    controllers.add(controller);
+    return controller;
+  };
+  function retire(controller: DraftController) {
+    controller.dispose();
+    controllers.delete(controller);
+  }
   const store = createStore<RecoveryState>()(() => ({
     controller: options.controller ?? make(options.context),
     review: null,
@@ -59,6 +91,7 @@ export function createRecoveryCoordinator(options: Options) {
   }));
   let running = false;
   async function action<T>(work: () => Promise<T>): Promise<T> {
+    assertActive();
     if (running) throw new DraftFailure("recovery_required");
     running = true;
     store.setState({ busy: true, error: null });
@@ -172,13 +205,13 @@ export function createRecoveryCoordinator(options: Options) {
       review = { ...review, review: decision };
       await storage.put(review);
       store.setState({ review });
-      controller.dispose();
+      retire(controller);
       await controller.persist();
       return review;
     } catch (error) {
       if (controller.store.getState().discardJournal)
         store.setState({ controller });
-      else controller.dispose();
+      else retire(controller);
       throw error;
     }
   }
@@ -220,7 +253,7 @@ export function createRecoveryCoordinator(options: Options) {
       // The review copy exists before conditional retirement of either source.
       await storage.put(review);
       remapContinuation(source, review);
-      controller.dispose();
+      retire(controller);
       await controller.persist();
       store.setState({
         review,
@@ -238,10 +271,10 @@ export function createRecoveryCoordinator(options: Options) {
   async function reopen(recordId: string) {
     return action(async () => {
       if (store.getState().review) throw new DraftFailure("recovery_required");
-      let source = await getRecord(recordId);
-      if (!source.review) throw new DraftFailure("recovery_required");
       const previous = store.getState().controller;
       const checkpoint = await previous.quiesce();
+      let source = await getRecord(recordId);
+      if (!source.review) throw new DraftFailure("recovery_required");
       if (
         checkpoint.working &&
         checkpoint.base &&
@@ -309,7 +342,7 @@ export function createRecoveryCoordinator(options: Options) {
             });
             await storage.remove(replacement.id, replacement);
           }
-          previous.dispose();
+          retire(previous);
           await previous.persist();
           store.setState({
             review: refreshed,
@@ -323,7 +356,7 @@ export function createRecoveryCoordinator(options: Options) {
         const controller = make(replacement.context);
         await controller.initialize().catch(() => {});
         await controller.quiesce();
-        previous.dispose();
+        retire(previous);
         await previous.persist();
         store.setState({ controller });
         if (!journal && controller.store.getState().pending)
@@ -362,7 +395,7 @@ export function createRecoveryCoordinator(options: Options) {
       }
       if (!source.review) throw new DraftFailure("recovery_required");
       latest ??= await canonical();
-      previous.dispose();
+      retire(previous);
       await previous.persist();
       const same =
         source.review.canonical.revision === latest.revision &&
@@ -491,7 +524,7 @@ export function createRecoveryCoordinator(options: Options) {
           ).filter((entry) => entry.id !== id),
         });
       } catch (error) {
-        controller.dispose();
+        retire(controller);
         await controller.persist();
         throw error;
       }
@@ -541,6 +574,13 @@ export function createRecoveryCoordinator(options: Options) {
   }
   return {
     store,
+    dispose() {
+      if (disposed) return;
+      disposed = true;
+      store.getState().controller.dispose();
+      for (const controller of controllers) controller.dispose();
+      controllers.clear();
+    },
     start,
     reopen,
     select,

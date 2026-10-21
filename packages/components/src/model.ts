@@ -3,6 +3,7 @@ import {
   type ComponentOf,
   type ComponentType,
   componentRegistry,
+  DRAFT_MAX_BYTES,
   type DraftDoc,
   draftWebUrlSchema,
   idSchema,
@@ -10,8 +11,10 @@ import {
   isWebUrl,
   profileSchema,
   richTextContentSchema,
+  URL_MAX_BYTES,
 } from "@hasaweb/schema";
 import { z } from "zod";
+import { yieldPreviewTask } from "./preview-task";
 
 export const assetSchema = z.discriminatedUnion("state", [
   z.strictObject({ state: z.literal("missing") }),
@@ -150,155 +153,181 @@ type Adapters = {
     component: ComponentOf<K>,
     draft: DraftDoc,
     options: ProjectionOptions,
-  ) => Extract<ComponentModel, { type: K }>;
+  ) => Generator<void, Extract<ComponentModel, { type: K }>>;
 };
-const adapters = {
-  projects: ({ id, data }, _draft, options) => ({
-    id,
-    type: "projects",
-    data: {
-      entries: data.entries.map(
-        ({
-          title,
-          summary,
-          technologies,
-          contribution,
-          codeUrl,
-          demoUrl,
-          image,
-          caseStudy,
-        }) => ({
-          title,
-          summary,
-          technologies,
-          contribution,
-          ...(codeUrl ? { codeUrl } : {}),
-          ...(demoUrl ? { demoUrl } : {}),
-          image: resolveImage(image, "project", options),
-          hasCaseStudy: !!caseStudy,
-        }),
-      ),
-    },
-  }),
-  skills: ({ id, data }) => ({
-    id,
-    type: "skills",
-    data: {
-      groups: [
-        ...data.categories.map((category) => ({
-          name: category.name,
-          skills: data.entries
-            .filter((entry) => entry.categoryId === category.id)
-            .map((entry) => entry.name),
-        })),
-        {
-          name: "",
-          skills: data.entries
-            .filter((entry) => !entry.categoryId)
-            .map((entry) => entry.name),
-        },
-      ].filter((group) => group.skills.length > 0),
-    },
-  }),
-  "work-experience": ({ id, data }) => ({
-    id,
-    type: "work-experience",
-    data: {
-      entries: data.entries.map(
-        ({
-          role,
-          organization,
-          startDate,
-          endDate,
-          current,
-          description,
-          organizationUrl,
-        }) => ({
-          role,
-          organization,
-          startDate,
-          current,
-          description,
-          ...(endDate !== undefined ? { endDate } : {}),
-          ...(organizationUrl !== undefined ? { organizationUrl } : {}),
-        }),
-      ),
-    },
-  }),
-  text: ({ id, data }) => ({
-    id,
-    type: "text",
-    data: { title: data.title, body: data.body },
-  }),
-  "social-links": (component, draft) => ({
-    id: component.id,
-    type: "social-links",
-    data: {
-      links: displayLinks(
-        draft.links.filter((link) => link.showInSocialComponent),
-      ),
-    },
-  }),
-  github: (component) => ({
-    id: component.id,
-    type: "github",
-    data: { available: false, username: component.data.username },
-  }),
-  contact: (component) => ({
-    id: component.id,
-    type: "contact",
-    data: { available: false },
-  }),
-  resume: (component) => ({
-    id: component.id,
-    type: "resume",
-    data: { available: false },
-  }),
-} satisfies Adapters;
-function displayLinks(links: DraftDoc["links"]): ProfileModel["links"] {
-  return links.flatMap((link) => {
-    const href = link.kind === "email" ? `mailto:${link.value}` : link.value;
-    return isSafeLink(href)
-      ? [
-          {
-            label: link.label || (link.kind === "email" ? "Email" : "Link"),
-            href,
-          },
-        ]
-      : [];
-  });
+function* mapRows<T, U>(
+  rows: readonly T[],
+  map: (row: T) => U,
+): Generator<void, U[]> {
+  const result: U[] = [];
+  for (const row of rows) {
+    yield;
+    result.push(map(row));
+  }
+  return result;
 }
-export function projectPortfolio(
+const adapters = {
+  *projects({ id, data }, _draft, options) {
+    const entries = yield* mapRows(
+      data.entries,
+      ({
+        title,
+        summary,
+        technologies,
+        contribution,
+        codeUrl,
+        demoUrl,
+        image,
+        caseStudy,
+      }) => ({
+        title,
+        summary,
+        technologies,
+        contribution,
+        ...(codeUrl ? { codeUrl } : {}),
+        ...(demoUrl ? { demoUrl } : {}),
+        image: resolveImage(image, "project", options),
+        hasCaseStudy: !!caseStudy,
+      }),
+    );
+    return { id, type: "projects", data: { entries } };
+  },
+  *skills({ id, data }) {
+    const groups = yield* mapRows(data.categories, (category) => ({
+      name: category.name,
+      skills: [] as string[],
+    }));
+    const byId = new Map<string, { name: string; skills: string[] }>();
+    for (let i = 0; i < data.categories.length; i++) {
+      yield;
+      const category = data.categories[i];
+      const group = groups[i];
+      if (category && group) byId.set(category.id, group);
+    }
+    const ungrouped = { name: "", skills: [] as string[] };
+    groups.push(ungrouped);
+    for (const entry of data.entries) {
+      yield;
+      const group = entry.categoryId ? byId.get(entry.categoryId) : ungrouped;
+      group?.skills.push(entry.name);
+    }
+    const visible = [];
+    for (const group of groups) {
+      yield;
+      if (group.skills.length) visible.push(group);
+    }
+    return { id, type: "skills", data: { groups: visible } };
+  },
+  *"work-experience"({ id, data }) {
+    const entries = yield* mapRows(
+      data.entries,
+      ({
+        role,
+        organization,
+        startDate,
+        endDate,
+        current,
+        description,
+        organizationUrl,
+      }) => ({
+        role,
+        organization,
+        startDate,
+        current,
+        description,
+        ...(endDate !== undefined ? { endDate } : {}),
+        ...(organizationUrl !== undefined ? { organizationUrl } : {}),
+      }),
+    );
+    return { id, type: "work-experience", data: { entries } };
+  },
+  *text({ id, data }) {
+    yield;
+    return { id, type: "text", data: { title: data.title, body: data.body } };
+  },
+  *"social-links"(component, draft) {
+    return {
+      id: component.id,
+      type: "social-links",
+      data: {
+        links: yield* displayLinks(draft.links, "showInSocialComponent"),
+      },
+    };
+  },
+  *github(component) {
+    yield;
+    return {
+      id: component.id,
+      type: "github",
+      data: { available: false, username: component.data.username },
+    };
+  },
+  *contact(component) {
+    yield;
+    return { id: component.id, type: "contact", data: { available: false } };
+  },
+  *resume(component) {
+    yield;
+    return { id: component.id, type: "resume", data: { available: false } };
+  },
+} satisfies Adapters;
+function* displayLinks(
+  links: DraftDoc["links"],
+  flag: "showInProfile" | "showInSocialComponent",
+): Generator<void, ProfileModel["links"]> {
+  const result: ProfileModel["links"] = [];
+  for (const link of links) {
+    yield;
+    if (!link[flag]) continue;
+    const href = link.kind === "email" ? `mailto:${link.value}` : link.value;
+    if (isSafeLink(href))
+      result.push({
+        label: link.label || (link.kind === "email" ? "Email" : "Link"),
+        href,
+      });
+  }
+  return result;
+}
+function* projectSteps(
   draft: DraftDoc,
   options: ProjectionOptions,
-): PortfolioModel {
-  const components = draft.components
-    .filter((component) => !draft.samples[`components.${component.id}`])
-    .map((component): ComponentModel => {
-      switch (component.type) {
-        case "projects":
-          return adapters.projects(component, draft, options);
-        case "skills":
-          return adapters.skills(component);
-        case "work-experience":
-          return adapters["work-experience"](component);
-        case "text":
-          return adapters.text(component);
-        case "social-links":
-          return adapters["social-links"](component, draft);
-        case "github":
-          return adapters.github(component);
-        case "contact":
-          return adapters.contact(component);
-        case "resume":
-          return adapters.resume(component);
-        default: {
-          const exhaustive: never = component;
-          return exhaustive;
-        }
+): Generator<void, PortfolioModel> {
+  const components: ComponentModel[] = [];
+  for (const component of draft.components) {
+    yield;
+    if (draft.samples[`components.${component.id}`]) continue;
+    switch (component.type) {
+      case "projects":
+        components.push(yield* adapters.projects(component, draft, options));
+        break;
+      case "skills":
+        components.push(yield* adapters.skills(component));
+        break;
+      case "work-experience":
+        components.push(yield* adapters["work-experience"](component));
+        break;
+      case "text":
+        components.push(yield* adapters.text(component));
+        break;
+      case "social-links":
+        components.push(yield* adapters["social-links"](component, draft));
+        break;
+      case "github":
+        components.push(yield* adapters.github(component));
+        break;
+      case "contact":
+        components.push(yield* adapters.contact(component));
+        break;
+      case "resume":
+        components.push(yield* adapters.resume(component));
+        break;
+      default: {
+        const exhaustive: never = component;
+        return exhaustive;
       }
-    });
-  return normalizeDisplayStrings({
+    }
+  }
+  return {
     profile: {
       name: draft.samples["profile.name"] ? "" : draft.profile.name,
       bio: draft.samples["profile.bio"] ? "" : draft.profile.bio,
@@ -315,10 +344,37 @@ export function projectPortfolio(
         "banner",
         options,
       ),
-      links: displayLinks(draft.links.filter((link) => link.showInProfile)),
+      links: yield* displayLinks(draft.links, "showInProfile"),
     },
     components,
-  });
+  };
+}
+export function projectPortfolio(
+  draft: DraftDoc,
+  options: ProjectionOptions,
+): PortfolioModel {
+  const steps = projectSteps(draft, options);
+  let step = steps.next();
+  while (!step.done) step = steps.next();
+  return normalizeDisplayStrings(step.value);
+}
+export async function projectPortfolioCancellable(
+  draft: DraftDoc,
+  options: ProjectionOptions,
+  signal: AbortSignal,
+): Promise<PortfolioModel> {
+  const steps = projectSteps(draft, options);
+  let step = steps.next();
+  let nodes = 0;
+  while (!step.done) {
+    if (++nodes % 256 === 0) {
+      await yieldPreviewTask();
+      signal.throwIfAborted();
+    }
+    step = steps.next();
+  }
+  signal.throwIfAborted();
+  return step.value;
 }
 
 export function normalizeDisplayStrings(model: PortfolioModel): PortfolioModel;
@@ -356,11 +412,20 @@ export type InputBounds = {
   maxBytes: number;
   outputBudget?: { maxBytes: number; fixedMarkupBytes: number };
 };
+const SOURCE_ACCOUNTING_FACTOR = 8;
+const MIN_PROJECT_IMAGE_ENTRY_BYTES = 94;
+const MAX_RESOLVED_ASSETS =
+  Math.floor(DRAFT_MAX_BYTES / MIN_PROJECT_IMAGE_ENTRY_BYTES) + 2;
+const MAX_ASSET_WIRE_BYTES = 2 * URL_MAX_BYTES + 128;
+export const PREVIEW_MAX_BYTES =
+  SOURCE_ACCOUNTING_FACTOR * DRAFT_MAX_BYTES +
+  MAX_RESOLVED_ASSETS * MAX_ASSET_WIRE_BYTES +
+  4096;
 export const PREVIEW_BOUNDS: InputBounds = {
-  maxNodes: 250_000,
+  maxNodes: 2 * DRAFT_MAX_BYTES + 128,
   maxDepth: 64,
   maxString: 1_048_576,
-  maxBytes: 2_097_152,
+  maxBytes: PREVIEW_MAX_BYTES,
 };
 export function withinBounds(input: unknown, bounds: InputBounds): boolean {
   let nodes = 0;

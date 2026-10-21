@@ -9,9 +9,10 @@ import { fileURLToPath } from "node:url";
 
 const allApps = ["web", "site", "jobs"];
 const suites = {
-  renderer: ["test:renderer"],
-  drafts: ["test:draft-api", "test:autosave"],
-  auth: ["test:auth:browser", "test:draft-api", "test:autosave"],
+  renderer: ["test:renderer", "test:editor"],
+  editor: ["test:editor"],
+  drafts: ["test:draft-api", "test:autosave", "test:editor"],
+  auth: ["test:auth:browser", "test:draft-api", "test:autosave", "test:editor"],
   persistence: ["test:persistence"],
   full: [
     "test:renderer",
@@ -19,6 +20,7 @@ const suites = {
     "test:persistence",
     "test:draft-api",
     "test:autosave",
+    "test:editor",
     "test:runtime",
     "test:runtime:smoke",
     "spike:routing",
@@ -43,11 +45,9 @@ export function verificationCommands(profile = "full", builds) {
   if (profile === "checks") return commands;
   const apps =
     builds ??
-    (profile === "renderer"
-      ? ["web"]
-      : profile === "auth" || profile === "drafts"
-        ? ["web", "jobs"]
-        : allApps);
+    (["renderer", "editor", "auth", "drafts"].includes(profile)
+      ? ["web", "jobs"]
+      : allApps);
   commands.push(
     apps.length === allApps.length
       ? ["pnpm", "build"]
