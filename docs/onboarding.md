@@ -1,6 +1,6 @@
 # Initial setup and guided portfolio creation
 
-Status: agreed behavior specification, confirmed October 16, 2026; implementation baseline reviewed October 18. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. The guided UI and authoritative handoff remain pending. This document alone does not mark a roadmap phase complete.
+Status: agreed behavior specification, confirmed October 16, 2026 with the address reservation amended October 21, 2026; implementation baseline reviewed October 18. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. The guided UI and authoritative handoff remain pending. This document alone does not mark a roadmap phase complete.
 
 The interview changed the original optional-onboarding proposal. New owners must complete Address, Profile, and Links before their first editor entry. Skills, Projects, and GitHub are optional. There is no initial Skip onboarding action or route directly into the editor before required setup passes.
 
@@ -19,7 +19,7 @@ Use the roadmap for owner-approved phase status. The owner approved Phase 14's s
 | Area | Implemented baseline | Required work |
 | --- | --- | --- |
 | Authentication | GitHub/Google sign-in, persisted session/deletion checks, sign-out, and a welcome shell that initializes the private portfolio. Normal OAuth success and signed-in `/sign-in` use `/editor`. Phase 15 separately allows fixed `/auth/recovery` and `/auth/recovery/error` for same-tab draft recovery. | Integrate Phase 15 shared selected review/recovery, add setup-aware normal-entry resolution and authoritative handoff in 22A; activate with the full guide in 42E. Reuse permanent milestone storage, keeping current sign-in restrictions. |
-| Portfolio persistence | Version 2 draft with version 1 compatibility, non-reserving candidate, private progress, permanent milestone and owner-scoped storage. Phase 12 provisions once; Phase 13 exposes revision-aware bounded draft/progress APIs. | Reuse these contracts for the client, legacy validation/recovery, route gates and handoff. Do not create a second answer store or provisioning path. |
+| Portfolio persistence | Version 2 draft with version 1 compatibility, exclusive address reservation with a draft mirror, private progress, permanent milestone and owner-scoped storage. Phase 12 provisions once; Phase 13 exposes revision-aware bounded draft/progress APIs. | Reuse these contracts for the client, legacy validation/recovery, route gates and handoff. Do not create a second answer store or provisioning path. |
 | Starting content | Product provisioning inserts empty owner content with approved defaults and no sample profile/project. Legacy sample markers remain supported; development seeds are private fixtures. | Collect explicit accepted answers and ready owned assets through shared controls. Preserve existing content and sample/migration compatibility. |
 | Editor, renderer, uploads | Phase 16 supplies the shared display-only renderer and static fixture parity. Phase 17 adds reusable editor fields, shared recovery controls and an authenticated chunked iframe preview through handoff fixtures. Product `/editor` remains the welcome shell; uploads remain planned. Image references store a cropped asset ID, without source/crop metadata. | Reuse the editor and renderer in private Review after route/asset authorization. Project display fields before messaging, pin the iframe origin/source/channel and use noindex/no-store. Complete upload controls before onboarding adapters. Store only finished crops. |
 | GitHub | Phase 11C verified the separate public credential live. Phase 11D implements safe calendar/credential contracts, generations, conditional persistence and global grant cleanup/consent coordination. | Phases 40–42 integrate fetching/OAuth/endpoints/jobs. Reuse public-or-complete-authorized projection and cleanup fencing; never sum calendars or use sign-in grants as a public baseline. |
@@ -31,13 +31,13 @@ Evidence includes the [draft contracts](../packages/schema/README.md), [persiste
 
 | Order | Screen | Fields and actions | What it creates or updates |
 | --- | --- | --- | --- |
-| 1 | Address, required | Enter a subdomain using the existing 3–30 character rules; check reserved names and current availability. Explain that the address is not reserved. | A saved, non-unique candidate associated with the private draft. No public claim or live site. |
+| 1 | Address, required | Enter a subdomain using the existing 3–30 character rules; check platform-reserved names and current availability. Explain that a successful save reserves the address exclusively, creates no public site, and becomes permanent on first publication. | An exclusive reservation tied to the private draft; no public URL or permanent claim. |
 | 2 | Profile, required | One screen with name, short bio, avatar and banner previews, image selection, provider-photo acceptance, and crop/adjust dialogs. All four fields must be complete. | The fixed profile's owner-confirmed name/bio and ready, owner-selected avatar/banner references. An accepted provider name counts as the owner's confirmation. |
 | 3 | Links, required | At least one labeled social/website HTTP(S) URL or email address. Add, edit, remove, and order entries. Explain when an email becomes public. | Shared link records with profile placement enabled. Do not automatically add a separate social links component. |
 | 4 | Skills, optional | Add, remove, and reorder manually entered skill names. | One skills component with entries in supplied order. Categories remain editable in the editor. No component when no content was entered. |
 | 5 | Projects, optional | Add multiple projects. Title and summary are required for each entry when using Continue. Contribution, technologies, image, and code/demo links are optional. | One projects component containing owner entries. Images use the shared private upload path. Case studies remain in the editor. |
 | 6 | GitHub, optional | Explicitly add a public graph, review or enter the username, optionally authorize private activity, and show connection/fetch status and recovery choices. | One graph component plus separate owner-scoped connection/activity records. Signup alone adds neither a graph nor private consent. |
-| 7 | Review | Render the actual private draft, switch desktop/mobile preview, go Back to revise answers, and Open editor. Explain that publication has not occurred. | A confirmed first editor handoff using the same saved draft. No publication, address claim, or second portfolio. |
+| 7 | Review | Render the actual private draft, switch desktop/mobile preview, go Back to revise answers, and Open editor. Explain that publication has not occurred. | A confirmed first editor handoff using the same saved draft. No publication or permanent claim; the reserved address is already held. |
 
 The profile remains at the top. Initially include optional sections in Skills, Projects, GitHub order, omitting sections with no entered content. Partially entered optional content is retained as described below. The editor can subsequently change component and entry order through its normal controls.
 
@@ -47,7 +47,7 @@ The default appearance comes from the single template and catalog approved in Ph
 
 - New signup starts at Address. Required screens offer Continue and applicable Back navigation, with field errors; they offer no skip or editor bypass.
 - The profile screen remains one step even though cropping opens a dialog. The Links step requires at least one valid, nonempty profile-displayed link.
-- Address continuation requires valid format and a successful current availability check. Later availability changes do not reserve the name or force a completed owner back through onboarding. First Publish checks it again.
+- Address continuation requires valid format, a successful current availability check, and a successful reservation save. Once the name is held, another owner cannot take it, and a later availability change cannot remove a valid reservation. Availability changes do not force a completed owner back through onboarding. First Publish verifies the reservation before converting it to the permanent claim.
 - After required setup, each optional screen offers Skip this step and Skip remaining steps. Skipping an individual screen advances to the next screen; skipping all remaining screens opens Review.
 - Skipping stops questions and preserves entered content and granted access. It is different from explicit Remove, which confirms deletion and applies the GitHub access rules below.
 - Back navigation edits the same stable records. Revisiting, retrying, or repeating a callback must not append duplicate links, components, projects, or portfolios.
@@ -90,9 +90,11 @@ Remote activity-grant deletion affects all tokens for that app/account. Coordina
 
 Content lives in the single canonical private draft. Separate private metadata records navigation/progress and the permanent first-editor-entry milestone. Save validated content and progress under revision-aware ownership checks so stale screens cannot overwrite newer edits or restore older navigation after handoff. No parallel answer document is later replayed over the editor.
 
-The address candidate must not occupy the current unique claimed-subdomain column. Different owners may save the same available candidate; only successful first publication decides ownership. Add a non-reserving contract/storage field before building the Address screen. After first publication the claimed address is authoritative and fixed.
+The confirmed Address save atomically creates an exclusive reservation for the portfolio. The draft's `requestedSubdomain` mirrors the selection for recovery; the unique reservation record is authoritative. A valid replacement reserves the new name and releases the previous one only after the new reservation succeeds. An invalid, unavailable, or failed save leaves the current reservation intact. Clearing the field or keeping a local-only edit does not release a reservation. Reservations last for the life of the account. First publication converts the reservation to the permanent claim; account deletion releases a held address that was never published. Two owners cannot hold the same name.
 
 The shared controller uses Saving, Saved, and Couldn't save with Retry, plus Unsaved input for unfinished local values. `flushValid()` returns a confirmed revision and local-only flag. Never replay old setup progress or convert a prepared setup attempt after handoff; retain applicable input for explicit editor field recovery. Resume the last visited screen with confirmed saved values across devices. Invalid unfinished input, such as a partial URL, remains in local recovery in the same browser; do not label it cloud-saved. Use the same conflict choices and expired-session recovery as the editor. Preserve unsaved work without copying it into another signed-in owner's draft.
+
+Local-only address edits are not reservations. A name is held only after the server confirms the save.
 
 Continue validates a screen's selected content. Skip may leave optional content unfinished. An incomplete project or requested graph configuration remains in the draft, carries an actionable issue in Review/editor, and uses normal publication validation. Review must not claim that onboarding completion guarantees publication readiness.
 
@@ -104,7 +106,7 @@ Open editor flushes valid pending saves and checks the authoritative required co
 | --- | --- |
 | All selected content completed | Owner profile and links plus populated optional sections, in the standard order, with the selected address retained. Graph status reflects actual authorization/fetch state. |
 | All optional steps skipped without input | Actual required profile and links, with no sample projects or empty optional sections. |
-| Some optional input or setup unfinished | The same required profile plus preserved optional entries/configuration, with actionable incomplete statuses and publication checks. |
+| Some optional input or setup unfinished | The same required profile plus preserved optional entries/configuration, with actionable incomplete statuses and publication checks. An incomplete optional setup does not release the reserved address. |
 | Required setup abandoned | No editor handoff. Resume onboarding with saved values and applicable local recovery after returning. |
 | Owner has entered the editor before | Open the latest saved editor draft directly. Do not reopen onboarding or reapply initialization. |
 
