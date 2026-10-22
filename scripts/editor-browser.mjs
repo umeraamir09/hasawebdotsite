@@ -69,7 +69,7 @@ export async function checkEditor({
     ])
       headers.delete(name);
     res.writeHead(response.status, Object.fromEntries(headers));
-    res.end(await response.text());
+    res.end(Buffer.from(await response.arrayBuffer()));
   }
   const server = createServer(async (req, res) => {
     try {
@@ -101,7 +101,13 @@ export async function checkEditor({
           {
             method: req.method,
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type": req.headers["content-type"] ?? "application/json",
+              ...(req.headers["x-asset-purpose"]
+                ? { "X-Asset-Purpose": req.headers["x-asset-purpose"] }
+                : {}),
+              ...(req.headers["x-asset-bytes"]
+                ? { "X-Asset-Bytes": req.headers["x-asset-bytes"] }
+                : {}),
               ...(req.headers["x-expected-owner-id"]
                 ? { "X-Expected-Owner-Id": req.headers["x-expected-owner-id"] }
                 : {}),

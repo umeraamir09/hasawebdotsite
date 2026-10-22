@@ -308,6 +308,14 @@ if (!remote) {
       ...base,
       name: "draft-api-web-local",
       main: join(root, "apps/web/integration/owner-runtime-gateway.ts"),
+      d1_databases: [
+        {
+          binding: "DB",
+          database_name: database,
+          database_id: "00000000-0000-0000-0000-000000000013",
+        },
+      ],
+      r2_buckets: [{ binding: "DRAFT_BUCKET", bucket_name: "draft-api-assets" }],
       services: [
         {
           binding: "OWNER_API",
@@ -316,7 +324,15 @@ if (!remote) {
         },
         { binding: "JOBS", service: "draft-api-jobs-local" },
       ],
-      vars: { RUNTIME_ORIGIN: origin, RUNTIME_ENABLED: "true" },
+      vars: {
+        RUNTIME_ORIGIN: origin,
+        RUNTIME_ENABLED: "true",
+        APP_ENV: "test",
+        GITHUB_CLIENT_ID: "fixture",
+        GITHUB_CLIENT_SECRET: "fixture",
+        GOOGLE_CLIENT_ID: "fixture",
+        GOOGLE_CLIENT_SECRET: "fixture",
+      },
     }),
   );
   await writeFile(
