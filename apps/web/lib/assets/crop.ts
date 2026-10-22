@@ -1,4 +1,4 @@
-import { IMAGE_BYTES } from "./formats";
+import { IMAGE_BYTES, signatureMatches, uploadFormat } from "./formats";
 
 export type CropPurpose = "avatar" | "banner";
 export type CropPosition = { zoom: number; x: number; y: number };
@@ -44,6 +44,22 @@ export function validateImageFile(file: Blob) {
 
 export async function openLocalImage(file: Blob): Promise<LocalImage> {
   validateImageFile(file);
+  const format = uploadFormat(
+    new Headers({
+      "X-Asset-Purpose": "avatar",
+      "Content-Type": file.type,
+      "X-Asset-Bytes": String(file.size),
+    }),
+  );
+  if (
+    !signatureMatches(
+      new Uint8Array(await file.slice(0, 12).arrayBuffer()),
+      format,
+    )
+  )
+    throw new Error(
+      "This image could not be opened. Choose another JPEG, PNG or WebP file.",
+    );
   const url = URL.createObjectURL(file);
   const element = new Image();
   element.src = url;

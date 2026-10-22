@@ -3,6 +3,7 @@ import {
   cropRectangle,
   cropSizes,
   initialCrop,
+  openLocalImage,
   validateImageFile,
 } from "./crop";
 import { IMAGE_BYTES } from "./formats";
@@ -41,6 +42,15 @@ describe("finished profile crops", () => {
     const reset = cropRectangle(source, "banner", initialCrop);
     expect(moved).not.toEqual(reset);
     expect(reset).toEqual({ x: 0, y: 165, width: 900, height: 270 });
+  });
+  it("rejects an unsupported container before browser decoding", async () => {
+    const disguised = new Blob(
+      [new Uint8Array([71, 73, 70, 56, 57, 97, 1, 0, 1, 0])],
+      { type: "image/png" },
+    );
+    await expect(openLocalImage(disguised)).rejects.toThrow(
+      "JPEG, PNG or WebP",
+    );
   });
   it("accepts every supported media type at the exact byte limit", () => {
     for (const type of ["image/jpeg", "image/png", "image/webp"]) {

@@ -12,13 +12,13 @@ Throughput checkpoint. Phase 19 can proceed independently of Phase 21 after thos
 
 The owner pointed out the onboarding crop references during implementation. Read-only Figma MCP inspection covered desktop avatar `330:252`, banner `330:271` and mobile dialog `330:533` on page `325:2`. The implementation uses their DM Sans typography, warm surfaces, lime action, rounded frame, dark excluded regions, native keyboard zoom slider and five downloaded 20-pixel control icons. The avatar frame uses the existing renderer's 212:220 ratio in place of the reference's square frame. Keyboard guidance and the original-file limitation add accessible instructions. Dynamic owner images replace the reference source portrait. Figma remains unchanged.
 
-The crop model stores a zoom and a normalized horizontal/vertical position. A pure source rectangle drives both the dialog preview and the canvas output. Only the resulting image bytes leave the browser. Reset restores the currently open local selection. Reopening an existing crop cannot recover excluded original pixels.
+The crop model stores a zoom and a normalized horizontal/vertical position. A pure source rectangle drives both the dialog preview and the canvas output. The original container signature must match the selected JPEG, PNG or WebP type before decoding. Only the resulting image bytes leave the browser. Reset restores the currently open local selection. Reopening an existing crop cannot recover excluded original pixels.
 
 The preview adapter first uses the shared display projection to collect requested image references, then resolves only those images with at most four concurrent private reads. Samples, disabled photos, SEO images and case-study bodies do not add hidden-file requests. Cancellation interrupts superseded preparation.
 
 ## Results
 
-Focused TypeScript checking and nine geometry/file-boundary/display-preparation tests pass. The browser acceptance module drives production components and the real private upload routes through the shared editor harness. Commands run locally were `tsc --noEmit -p apps/web/tsconfig.json`, focused Biome checks and `vitest run apps/web/lib/assets/crop.test.ts apps/web/lib/assets/browser.test.ts`. Integrated browser execution and the applicable local gate are pending with the coordinator. Owner phase approval remains pending.
+Focused TypeScript checking and ten geometry/file-boundary/display-preparation tests pass. The browser acceptance module drives production components and the real private upload routes through the shared editor harness. Commands run locally were `tsc --noEmit -p apps/web/tsconfig.json`, focused Biome checks and `vitest run apps/web/lib/assets/crop.test.ts apps/web/lib/assets/browser.test.ts`. Integrated browser execution and the applicable local gate are pending with the coordinator. Owner phase approval remains pending.
 
 ## Documentation impact
 
