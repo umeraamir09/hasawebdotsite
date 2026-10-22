@@ -18,7 +18,9 @@ A qualifying setup link needs a nonempty understandable label, a valid nonempty 
 
 ## Results
 
-Focused checks pass on the implementation working tree. `vitest run apps/web/lib/editor/social-links.test.ts` passes four behavior tests. Web and jobs TypeScript checks pass, changed source passes Biome, and `git diff --check HEAD` passes.
+Focused checks pass on the implementation working tree. `vitest run apps/web/lib/editor/social-links.test.ts` passes seven behavior tests. Web and jobs TypeScript checks pass, changed source passes Biome, and `git diff --check HEAD` passes.
+
+A follow-up exact-limit reproduction exposed uncaught `Draft exceeds 1048576 UTF-8 bytes` errors for additions and valid paired kind/destination changes. Both focused regression tests failed before the fix. Candidate links now pass the complete bounded draft schema before an update. Rejected destination/type text stays in stable controller inputs, rejected additions show a shorten-or-remove message, and placement controls render raw booleans when a one-byte expansion cannot fit. Existing working content and IDs remain unchanged. Seven focused tests and the web TypeScript check pass after this repair. The coordinator owns the added production-control browser check at the same limit.
 
 The real browser hook is `scripts/social-links-browser.mjs` exported as `checkSocialLinks`. The coordinator will wire and run it against the production component, signed sessions, real owner API, D1, and preview iframe. It checks email suggestion authority, both placements, stable order and IDs, raw kind/destination recovery after reload, explicit email consent, no duplicate email or automatic component, removal confirmation, keyboard navigation, and mobile width. This hook is not yet executed in this worker record.
 

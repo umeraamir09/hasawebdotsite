@@ -1,4 +1,9 @@
-import { createComponent, type SocialLink } from "@hasaweb/schema";
+import {
+  createComponent,
+  DRAFT_MAX_BYTES,
+  type DraftDoc,
+  type SocialLink,
+} from "@hasaweb/schema";
 import { afterEach, describe, expect, it } from "vitest";
 import { createDraftController } from "../draft/controller";
 import { fixtureTransport, memoryStorage } from "../draft/test-fixtures";
@@ -8,6 +13,7 @@ import {
   editSocialDestination,
   hasQualifyingProfileLink,
   moveSocialLink,
+  readSocialPlacement,
   removeSocialLink,
 } from "./social-links";
 
@@ -46,6 +52,90 @@ describe("social and contact identity", () => {
     showInProfile: true,
     showInSocialComponent: true,
   };
+  function maximumDraft(draft: DraftDoc): DraftDoc {
+    const next = { ...draft, links: [link] };
+    const bytes = new TextEncoder().encode(JSON.stringify(next)).byteLength;
+    next.profile.bio += "x".repeat(DRAFT_MAX_BYTES - bytes);
+    expect(new TextEncoder().encode(JSON.stringify(next)).byteLength).toBe(
+      DRAFT_MAX_BYTES,
+    );
+    return next;
+  }
+  it("retains paired kind and valid URL text when the complete draft cannot fit them", async () => {
+    const { controller, storage } = await setup();
+    const draft = controller.store.getState().working;
+    if (!draft) throw new Error("Missing draft");
+    const full = maximumDraft(structuredClone(draft));
+    controller.update(full);
+    expect(editSocialDestination(controller, link.id, "kind", "mastodon")).toBe(
+      false,
+    );
+    expect(
+      editSocialDestination(
+        controller,
+        link.id,
+        "value",
+        "https://example.com/a-longer-destination",
+      ),
+    ).toBe(false);
+    expect(controller.store.getState().working).toEqual(full);
+    expect(
+      readEditorField(controller.store.getState(), [
+        "links",
+        { id: link.id },
+        "kind",
+      ]),
+    ).toBe("mastodon");
+    expect(
+      readEditorField(controller.store.getState(), [
+        "links",
+        { id: link.id },
+        "value",
+      ]),
+    ).toBe("https://example.com/a-longer-destination");
+    await controller.quiesce();
+    const [record] = await storage.list("owner-a", "portfolio-a");
+    expect(record?.inputs['["links",{"id":"contact"},"kind"]']?.value).toBe(
+      "mastodon",
+    );
+    expect(record?.inputs['["links",{"id":"contact"},"value"]']?.value).toBe(
+      "https://example.com/a-longer-destination",
+    );
+  });
+  it("declines new links at the byte limit without changing accepted data", async () => {
+    const { controller } = await setup();
+    const draft = controller.store.getState().working;
+    if (!draft) throw new Error("Missing draft");
+    const full = maximumDraft(structuredClone(draft));
+    controller.update(full);
+    expect(addSocialLink(controller)).toBe(null);
+    expect(addSocialLink(controller, "owner@example.com")).toBe(null);
+    expect(controller.store.getState().working).toEqual(full);
+    expect(controller.store.getState().inputs).toEqual({});
+  });
+  it("displays a recoverable placement edit when changing true to false exceeds the byte limit", async () => {
+    const { controller } = await setup();
+    const draft = controller.store.getState().working;
+    if (!draft) throw new Error("Missing draft");
+    const full = maximumDraft(structuredClone(draft));
+    controller.update(full);
+    expect(
+      controller.edit(["links", { id: link.id }, "showInProfile"], false),
+    ).toBe(false);
+    expect(
+      readSocialPlacement(controller.store.getState(), link, "showInProfile"),
+    ).toBe(false);
+    expect(controller.store.getState().working?.links[0]?.showInProfile).toBe(
+      true,
+    );
+    expect(
+      controller.edit(["links", { id: link.id }, "showInProfile"], true),
+    ).toBe(true);
+    expect(
+      readSocialPlacement(controller.store.getState(), link, "showInProfile"),
+    ).toBe(true);
+    expect(controller.store.getState().inputs).toEqual({});
+  });
   it("requires a labeled, nonempty, valid profile link without counting a contact form", () => {
     expect(hasQualifyingProfileLink({ links: [] })).toBe(false);
     expect(hasQualifyingProfileLink({ links: [link] })).toBe(true);

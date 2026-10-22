@@ -1,10 +1,12 @@
 import {
   type DraftDoc,
+  draftSchema,
   emailSchema,
   type SocialLink,
   webUrlSchema,
 } from "@hasaweb/schema";
 import type { DraftController } from "../draft/controller";
+import type { DraftState } from "../draft/types";
 import { readEditorField } from "./fields";
 
 export function validLinkDestination(kind: string, value: string): boolean {
@@ -21,6 +23,16 @@ export function hasQualifyingProfileLink(
       link.label.trim().length > 0 &&
       validLinkDestination(link.kind, link.value),
   );
+}
+
+export function readSocialPlacement(
+  state: DraftState,
+  link: SocialLink,
+  placement: "showInProfile" | "showInSocialComponent",
+): boolean {
+  const input =
+    state.inputs[JSON.stringify(["links", { id: link.id }, placement])];
+  return typeof input?.value === "boolean" ? input.value : link[placement];
 }
 
 export function addSocialLink(
@@ -44,7 +56,12 @@ export function addSocialLink(
     showInProfile: true,
     showInSocialComponent: false,
   };
-  controller.update({ ...draft, links: [...draft.links, link] });
+  const next = draftSchema.safeParse({
+    ...draft,
+    links: [...draft.links, link],
+  });
+  if (!next.success) return null;
+  controller.update(next.data);
   return link.id;
 }
 
@@ -63,17 +80,18 @@ export function editSocialDestination(
   const kind = field === "kind" ? value : readEditorField(state, kindPath);
   const destination =
     field === "value" ? value : readEditorField(state, valuePath);
-  if (destination !== "" && !validLinkDestination(kind, destination)) {
-    controller.setInput(kindPath, kind);
-    controller.setInput(valuePath, destination);
-    return false;
-  }
-  controller.update({
+  const next = draftSchema.safeParse({
     ...draft,
     links: draft.links.map((item) =>
       item.id === id ? { ...item, kind, value: destination } : item,
     ),
   });
+  if (!next.success) {
+    controller.setInput(kindPath, kind);
+    controller.setInput(valuePath, destination);
+    return false;
+  }
+  controller.update(next.data);
   controller.clearInput(kindPath);
   controller.clearInput(valuePath);
   return true;

@@ -10,6 +10,7 @@ import {
   editSocialDestination,
   hasQualifyingProfileLink,
   moveSocialLink,
+  readSocialPlacement,
   removeSocialLink,
   validLinkDestination,
 } from "../lib/editor/social-links";
@@ -52,7 +53,13 @@ function LinksControl({ controller, disabled }: Props) {
     (component) => component.type === "social-links",
   );
   function focusLink(id: string | null) {
-    if (!id) return;
+    if (!id) {
+      setAnnouncement(
+        "This draft cannot fit another link. Shorten text or remove unused content, then add the link again.",
+      );
+      return;
+    }
+    setAnnouncement("Link ready to edit.");
     requestAnimationFrame(() => {
       section.current
         ?.querySelector<HTMLInputElement>(`[data-link-id="${id}"] input`)
@@ -119,6 +126,23 @@ function LinksControl({ controller, disabled }: Props) {
           const destination = readEditorField(state, [...path, "value"]);
           const label = readEditorField(state, [...path, "label"]);
           const invalid = !validLinkDestination(kind, destination);
+          const profilePlacement = readSocialPlacement(
+            state,
+            link,
+            "showInProfile",
+          );
+          const socialPlacement = readSocialPlacement(
+            state,
+            link,
+            "showInSocialComponent",
+          );
+          const localPlacement = Boolean(
+            state.inputs[JSON.stringify([...path, "showInProfile"])] ||
+              state.inputs[JSON.stringify([...path, "showInSocialComponent"])],
+          );
+          const localDestination = Boolean(
+            state.inputs[JSON.stringify([...path, "value"])],
+          );
           const id = `${prefix}-${link.id}`;
           return (
             <li key={link.id} data-link-id={link.id} className={styles.entry}>
@@ -195,16 +219,18 @@ function LinksControl({ controller, disabled }: Props) {
                   }
                 />
                 <p id={`${id}-destination-help`} className={styles.help}>
-                  {invalid
-                    ? `Enter ${kind === "email" ? "a valid email address" : "an HTTP(S) URL"}. Unfinished input stays in this browser; the preview keeps the last valid destination.`
-                    : kind === "email"
-                      ? "Displaying this link makes the email address public after Publish."
-                      : "This destination becomes public after Publish."}
+                  {localDestination && !invalid
+                    ? "This change does not fit in the draft. Shorten text or remove unused content, then edit the destination again. Your input stays in this browser; the preview keeps the last valid destination."
+                    : invalid
+                      ? `Enter ${kind === "email" ? "a valid email address" : "an HTTP(S) URL"}. Unfinished input stays in this browser; the preview keeps the last valid destination.`
+                      : kind === "email"
+                        ? "Displaying this link makes the email address public after Publish."
+                        : "This destination becomes public after Publish."}
                 </p>
                 <label className={styles.checkbox}>
                   <input
                     type="checkbox"
-                    checked={link.showInProfile}
+                    checked={profilePlacement}
                     onChange={(event) =>
                       controller.edit(
                         [...path, "showInProfile"],
@@ -217,7 +243,7 @@ function LinksControl({ controller, disabled }: Props) {
                 <label className={styles.checkbox}>
                   <input
                     type="checkbox"
-                    checked={link.showInSocialComponent}
+                    checked={socialPlacement}
                     onChange={(event) =>
                       controller.edit(
                         [...path, "showInSocialComponent"],
@@ -227,7 +253,14 @@ function LinksControl({ controller, disabled }: Props) {
                   />
                   Show in social links component
                 </label>
-                {link.showInSocialComponent && !hasSocialComponent && (
+                {localPlacement && (
+                  <p className={styles.help}>
+                    This placement change stays in this browser. Shorten text or
+                    remove unused content, then select the placement again. The
+                    preview keeps the last saved placement.
+                  </p>
+                )}
+                {socialPlacement && !hasSocialComponent && (
                   <p className={styles.help}>
                     Add a Social links component to display this placement. Your
                     link is already stored here.
@@ -322,7 +355,9 @@ function LinksControl({ controller, disabled }: Props) {
             type="button"
             disabled={inactive}
             onClick={() => {
-              focusLink(addSocialLink(controller, suggestion.email));
+              const id = addSocialLink(controller, suggestion.email);
+              focusLink(id);
+              if (!id) return;
               setSuggestion({ kind: "idle" });
               setAnnouncement(
                 "Account email accepted as a public profile link after Publish.",

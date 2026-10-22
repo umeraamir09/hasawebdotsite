@@ -349,4 +349,81 @@ export async function checkSocialLinks({
       await page.setViewportSize({ width: 1500, height: 1000 });
     },
   );
+  await run(
+    "social links preserve edits at the complete draft byte limit",
+    async () => {
+      await clean();
+      const full = await getPage().evaluate(() => {
+        const draft = structuredClone(
+          window.editorFixture.recovery.store
+            .getState()
+            .controller.store.getState().working,
+        );
+        draft.links = [
+          {
+            id: "maximum-link",
+            kind: "website",
+            label: "My website",
+            value: "https://example.com",
+            showInProfile: true,
+            showInSocialComponent: true,
+          },
+        ];
+        draft.profile.bio = "";
+        const size = new TextEncoder().encode(JSON.stringify(draft)).byteLength;
+        draft.profile.bio = "x".repeat(1_048_576 - size);
+        return draft;
+      });
+      await boot(full);
+      const page = getPage();
+      await control()
+        .getByRole("button", { name: "Add link", exact: true })
+        .click();
+      await control()
+        .getByRole("status")
+        .filter({ hasText: "Shorten text or remove unused content" })
+        .waitFor();
+      assert.equal(await entries().count(), 1);
+      const entry = entries().first();
+      await entry
+        .getByLabel("Link type", { exact: true })
+        .selectOption("mastodon");
+      await entry
+        .getByLabel("Destination URL", { exact: true })
+        .fill("https://example.com/a-longer-destination");
+      await entry.getByText(/This change does not fit in the draft/).waitFor();
+      await entry.getByLabel("Show in profile", { exact: true }).uncheck();
+      assert.equal(
+        await entry.getByLabel("Show in profile", { exact: true }).isChecked(),
+        false,
+      );
+      await entry
+        .getByText(/This placement change stays in this browser/)
+        .waitFor();
+      assert.equal((await flush()).hasLocalOnlyInput, true);
+      assert.deepEqual(await storedLinks(), full.links);
+      assert.equal(
+        await entry.getByLabel("Destination URL", { exact: true }).inputValue(),
+        "https://example.com/a-longer-destination",
+      );
+      await page
+        .getByRole("textbox", { name: "Bio", exact: true })
+        .fill("Room for links again.");
+      await entry
+        .getByLabel("Destination URL", { exact: true })
+        .fill("https://example.com/recovered");
+      await entry.getByLabel("Show in profile", { exact: true }).check();
+      await entry.getByLabel("Show in profile", { exact: true }).uncheck();
+      await flush();
+      const links = await storedLinks();
+      assert.equal(links[0].id, "maximum-link");
+      assert.equal(links[0].value, "https://example.com/recovered");
+      assert.equal(links[0].kind, "mastodon");
+      assert.equal(links[0].showInProfile, false);
+      await control()
+        .getByRole("button", { name: "Add link", exact: true })
+        .click();
+      assert.equal(await entries().count(), 2);
+    },
+  );
 }
