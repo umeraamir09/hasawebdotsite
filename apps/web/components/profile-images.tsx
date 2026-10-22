@@ -24,6 +24,9 @@ export function ProfileImages({
           purpose={purpose}
           value={state.working?.profile[purpose]}
           description={readEditorField(state, ["profile", purpose, "alt"])}
+          descriptionInvalid={Boolean(
+            state.inputs[JSON.stringify(["profile", purpose, "alt"])],
+          )}
           ownerId={controller.identity.ownerId}
           disabled={disabled}
           onReady={(assetId) => {

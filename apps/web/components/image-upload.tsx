@@ -29,6 +29,7 @@ export function ImageUpload({
   purpose,
   value,
   description,
+  descriptionInvalid = false,
   ownerId,
   disabled,
   onReady,
@@ -39,6 +40,7 @@ export function ImageUpload({
   purpose: CropPurpose;
   value: ImageReference | undefined;
   description: string;
+  descriptionInvalid?: boolean;
   ownerId: string;
   disabled: boolean;
   onReady(assetId: string): void;
@@ -216,12 +218,19 @@ export function ImageUpload({
             value={description}
             disabled={disabled}
             onChange={(event) => onDescription(event.target.value)}
-            aria-describedby={`${id}-description-note`}
+            aria-invalid={descriptionInvalid}
+            aria-describedby={`${id}-description-note${descriptionInvalid ? ` ${id}-description-local` : ""}`}
           />
           <p className="profile-image-note" id={`${id}-description-note`}>
             Describe meaningful content. Leave this empty if the image is
             decorative.
           </p>
+          {descriptionInvalid && (
+            <p className="editor-input-note" id={`${id}-description-local`}>
+              Unfinished input stays in this browser. The preview keeps the last
+              valid description.
+            </p>
+          )}
         </div>
       )}
       <div aria-live="polite" role="status">
