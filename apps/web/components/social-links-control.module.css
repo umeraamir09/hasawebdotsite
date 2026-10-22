@@ -132,7 +132,7 @@
   padding: 20px;
   background: #f7f8f5;
 }
-.suggestion button {
+.control .suggestion button {
   border-radius: 999px;
 }
 .suggestion button:first-of-type {

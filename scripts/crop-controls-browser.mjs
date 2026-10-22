@@ -128,9 +128,15 @@ export async function checkCropControls({
         "avatar selection matches renderer ratio",
       );
       assert.equal(geometry.padding, "0px");
-      await page.screenshot({
+      const action = await page
+        .getByRole("button", { name: "Apply crop", exact: true })
+        .evaluate((element) => ({
+          height: element.getBoundingClientRect().height,
+          radius: Number.parseFloat(getComputedStyle(element).borderRadius),
+        }));
+      assert.ok(action.height >= 48 && action.radius >= action.height / 2);
+      await page.getByRole("dialog").screenshot({
         path: join(evidence, "crop-avatar-desktop.png"),
-        fullPage: true,
       });
       const reference = await apply("avatar");
       assert.equal(reference.accepted, true);
@@ -244,15 +250,14 @@ export async function checkCropControls({
         .getByRole("button", { name: "Close crop dialog", exact: true })
         .evaluate((el) => el === document.activeElement),
       true,
-      "native modal wraps keyboard focus",
+      "crop dialog wraps keyboard focus",
     );
     const overflow = await page
       .getByRole("dialog")
       .evaluate((el) => el.scrollWidth > el.clientWidth);
     assert.equal(overflow, false, "mobile modal has no horizontal overflow");
-    await page.screenshot({
+    await page.getByRole("dialog").screenshot({
       path: join(evidence, "crop-banner-mobile.png"),
-      fullPage: true,
     });
     const reference = await apply("banner");
     const saved = await pixels(

@@ -79,6 +79,21 @@ export function ImageCropDialog({
       className={`image-crop-dialog image-crop-${purpose}`}
       aria-labelledby={`${id}-title`}
       aria-describedby={`${id}-help ${id}-retention`}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const controls = event.currentTarget.querySelectorAll<HTMLElement>(
+          "button:not(:disabled), input:not(:disabled)",
+        );
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        const destination = event.shiftKey
+          ? document.activeElement === first && last
+          : document.activeElement === last && first;
+        if (destination) {
+          event.preventDefault();
+          destination.focus();
+        }
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onCancel();

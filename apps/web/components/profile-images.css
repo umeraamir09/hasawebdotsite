@@ -231,18 +231,18 @@
   display: flex;
   gap: 12px;
 }
-.image-crop-footer button {
+.image-crop-dialog .image-crop-footer button {
   min-height: 48px;
   padding: 10px 24px;
   border: 1px solid #7a856e;
   border-radius: 999px;
   background: #fcfdf9;
 }
-.image-crop-footer .image-crop-apply {
+.image-crop-dialog .image-crop-footer .image-crop-apply {
   background: #bdeb70;
   border-color: #bdeb70;
 }
-.image-crop-footer .image-crop-reset {
+.image-crop-dialog .image-crop-footer .image-crop-reset {
   border: 0;
   background: transparent;
   padding-inline: 12px;
@@ -284,10 +284,10 @@
   .image-crop-footer > div {
     gap: 8px;
   }
-  .image-crop-footer button {
+  .image-crop-dialog .image-crop-footer button {
     padding-inline: 16px;
   }
-  .image-crop-footer .image-crop-reset {
+  .image-crop-dialog .image-crop-footer .image-crop-reset {
     padding-inline: 4px;
   }
 }
@@ -295,7 +295,7 @@
   .image-crop-dialog {
     padding: 16px;
   }
-  .image-crop-footer button {
+  .image-crop-dialog .image-crop-footer button {
     padding-inline: 12px;
   }
 }

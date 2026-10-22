@@ -49,6 +49,7 @@ export function ImageUpload({
 }) {
   const id = useId();
   const file = useRef<HTMLInputElement>(null);
+  const trigger = useRef<HTMLElement | null>(null);
   const attempt = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const [state, setState] = useState<UploadState>({ kind: "idle" });
@@ -74,7 +75,10 @@ export function ImageUpload({
     generation.current++;
     attempt.current?.abort();
     setState({ kind: "idle" });
-    file.current?.focus();
+    requestAnimationFrame(() => {
+      if (trigger.current?.isConnected) trigger.current.focus();
+      else file.current?.focus();
+    });
   }
   async function select(blob: Blob) {
     const expected = ++generation.current;
@@ -95,6 +99,10 @@ export function ImageUpload({
   }
   async function cropExisting() {
     if (!value) return;
+    trigger.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const expected = ++generation.current;
     const request = new AbortController();
     attempt.current = request;
@@ -180,6 +188,7 @@ export function ImageUpload({
           disabled={disabled || busy}
           aria-describedby={`${id}-formats`}
           onChange={(event) => {
+            trigger.current = event.currentTarget;
             const selected = event.target.files?.[0];
             event.target.value = "";
             if (selected) void select(selected);
