@@ -14,10 +14,12 @@ const suites = {
   drafts: ["test:draft-api", "test:autosave", "test:editor"],
   auth: ["test:auth:browser", "test:draft-api", "test:autosave", "test:editor"],
   persistence: ["test:persistence"],
+  uploads: ["test:uploads"],
   full: [
     "test:renderer",
     "test:auth:browser",
     "test:persistence",
+    "test:uploads",
     "test:draft-api",
     "test:autosave",
     "test:editor",

@@ -1,4 +1,5 @@
 import type {
+  AddressCommand,
   DraftDoc,
   DraftPath,
   DraftReadResult,
@@ -49,12 +50,11 @@ export type PlannedCommand =
   | { action: "string-start"; path: DraftPath }
   | { action: "piece"; text: string }
   | { action: "string-finish" };
-export type Batch = {
+type BatchData = {
   base: DraftReadResult;
   target: DraftDoc;
   progress: SetupProgress;
   commands: PlannedCommand[];
-  mode: "patch" | "progress" | "staged";
   attemptId?: string;
   sequence: number;
   index: number;
@@ -63,6 +63,11 @@ export type Batch = {
   confirmedRevision?: number;
   resume?: number;
 };
+export type Batch = BatchData &
+  (
+    | { mode: "patch" | "progress" | "staged"; address?: never }
+    | { mode: "address"; address: AddressCommand }
+  );
 export type DiscardJournal = {
   id: string | null;
   revision: number;

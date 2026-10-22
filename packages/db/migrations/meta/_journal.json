@@ -43,6 +43,13 @@
       "when": 1792256993564,
       "tag": "0005_owner_draft_api",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792595661312,
+      "tag": "0006_address_reservations",
+      "breakpoints": true
     }
   ]
 }

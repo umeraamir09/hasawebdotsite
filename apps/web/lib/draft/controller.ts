@@ -1,9 +1,13 @@
 import {
+  type AddressAvailability,
+  type AddressReceipt,
+  type AddressState,
   type DraftDoc,
   type DraftReadResult,
   draftSchema,
   encodeJson,
   type LegacyValidationResult,
+  requestedSubdomainSchema,
   type SaveAttemptStatus,
   type SetupProgress,
   setupProgressSchema,
@@ -535,6 +539,33 @@ export function createDraftController(options: Options) {
       await acknowledge(batch, batch.confirmedRevision);
       return;
     }
+    if (batch.mode === "address") {
+      const result = await send<AddressReceipt>(
+        batch,
+        "address",
+        batch.address,
+      );
+      let canonical: DraftReadResult | undefined;
+      if (result.replayed) {
+        canonical = checkPortfolio(await transport.read());
+        if (
+          canonical.revision !== result.revision ||
+          !equal(canonical.draft, batch.target) ||
+          (options.context === "setup" &&
+            !equal(canonical.progress, batch.progress))
+        )
+          throw new DraftFailure("revision_conflict");
+      }
+      const working = state().working;
+      if (working)
+        store.setState({
+          working: { ...working, requestedSubdomain: result.name },
+        });
+      const raw = state().inputs[JSON.stringify(["requestedSubdomain"])];
+      if (raw?.value === result.name) clearInput(["requestedSubdomain"]);
+      await acknowledge(batch, result.revision, canonical);
+      return;
+    }
     if (batch.mode === "patch" || batch.mode === "progress") {
       const command = batch.commands[0];
       const body =
@@ -637,7 +668,70 @@ export function createDraftController(options: Options) {
   function flushValid() {
     return flush(true);
   }
+  async function confirmAddress(name: string) {
+    requestedSubdomainSchema.parse(name);
+    if (
+      ["address_unavailable", "address_reserved", "address_locked"].includes(
+        state().error ?? "",
+      )
+    ) {
+      store.setState({ error: null });
+      status();
+    }
+    await flushValid();
+    return exclusive(async () => {
+      if (state().batch || state().pending || state().error || dirty())
+        throw new DraftFailure("recovery_required");
+      const base = state().confirmed;
+      if (!base) throw new DraftFailure("not_found");
+      const address = {
+        id: crypto.randomUUID(),
+        portfolioId: options.portfolioId,
+        revision: base.revision,
+        name,
+        ...(options.context === "setup"
+          ? {
+              context: "setup" as const,
+              progress: structuredClone(state().progress ?? base.progress),
+            }
+          : { context: "content" as const }),
+      };
+      const batch: Batch = {
+        base: structuredClone(base),
+        target: { ...structuredClone(base.draft), requestedSubdomain: name },
+        progress: structuredClone(state().progress ?? base.progress),
+        commands: [],
+        mode: "address",
+        address,
+        sequence: 0,
+        index: 0,
+      };
+      await checkpoint(batch);
+      try {
+        await execute(batch);
+      } catch (error) {
+        if (
+          error instanceof DraftFailure &&
+          [
+            "address_unavailable",
+            "address_reserved",
+            "address_locked",
+            "invalid_input",
+          ].includes(error.code) &&
+          !error.uncertain
+        ) {
+          store.setState({ batch: null });
+          await persist();
+        }
+        throw error;
+      }
+    });
+  }
   async function reconcileDirect(batch: Batch) {
+    if (batch.mode === "address") {
+      await execute(batch);
+      return true;
+    }
     const canonical = checkPortfolio(await transport.read());
     if (
       equal(canonical.draft, batch.target) &&
@@ -1310,6 +1404,11 @@ export function createDraftController(options: Options) {
     clearValidationInput,
     changeProgress,
     flushValid,
+    confirmAddress,
+    addressState: async () =>
+      transport.action<AddressState>("address-state", {}),
+    addressAvailability: async (name: string) =>
+      transport.action<AddressAvailability>("address-availability", { name }),
     retry,
     restore,
     discardRecovery,

@@ -44,7 +44,8 @@
     "generate:renderer-assets": "node scripts/generate-renderer-avatar.mjs",
     "verify": "node scripts/verify.mjs",
     "test:runtime:smoke": "node scripts/app-runtime-benchmark.mjs --smoke",
-    "test:editor": "node scripts/owner-draft-api.mjs --editor"
+    "test:editor": "node scripts/owner-draft-api.mjs --editor",
+    "test:uploads": "node scripts/private-uploads.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

@@ -31,6 +31,17 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("shared autosave controller", () => {
+  it("rejects paused address reads through their promised results", async () => {
+    const { controller } = setup();
+    await controller.initialize();
+    await controller.quiesce();
+    await expect(controller.addressState()).rejects.toMatchObject({
+      code: "recovery_required",
+    });
+    await expect(
+      controller.addressAvailability("local-candidate"),
+    ).rejects.toMatchObject({ code: "recovery_required" });
+  });
   it("retries a failed initial read before claiming the canonical snapshot is saved", async () => {
     const { controller, transport } = setup();
     vi.spyOn(transport.transport, "read").mockRejectedValueOnce(

@@ -29,4 +29,4 @@ Preconditions: `pnpm verify --profile=editor` checks/builds web/jobs and runs `s
 
 - `/editor` is still the account shell. It cannot reach these controls. Report that production entry as unavailable until the complete setup activation lands; do not replace it with a fixture and claim production coverage.
 - The fixture seeds real initial draft state and uses some direct controller assertions for boundary tests. Only actual control interactions prove those UI paths.
-- Ready asset uploads, full component tools, saved appearance controls and publication remain later phases. The limited Customization panel is not proof of those capabilities.
+- Private upload storage exists through the separate uploads recipe. Upload/crop controls and editor image integration, full component tools, saved appearance controls and publication remain later work. The limited Customization panel is not proof of those capabilities.

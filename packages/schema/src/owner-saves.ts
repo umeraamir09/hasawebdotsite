@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { DraftDoc } from "./draft";
+import { type DraftDoc, requestedSubdomainSchema } from "./draft";
 import { JSON_MAX_DEPTH } from "./json";
 import { type SetupProgress, setupProgressSchema } from "./setup";
 
@@ -31,7 +31,39 @@ const start = {
 };
 const attempt = { id: z.uuid() };
 const continuation = { ...attempt, sequence: saveRevisionSchema };
+export const addressCommandSchema = z.discriminatedUnion("context", [
+  z.strictObject({
+    id: z.uuid(),
+    portfolioId: z.string().min(1),
+    revision: saveRevisionSchema,
+    context: z.literal("setup"),
+    name: requestedSubdomainSchema,
+    progress: setupProgressSchema,
+  }),
+  z.strictObject({
+    id: z.uuid(),
+    portfolioId: z.string().min(1),
+    revision: saveRevisionSchema,
+    context: z.literal("content"),
+    name: requestedSubdomainSchema,
+  }),
+]);
+export type AddressCommand = z.infer<typeof addressCommandSchema>;
+export type AddressState = { name: string; state: "held" | "claimed" } | null;
+export type AddressReceipt = {
+  revision: number;
+  name: string;
+  state: "held" | "claimed";
+  replayed?: true;
+};
+export type AddressAvailability = {
+  name: string;
+  status: "available" | "reserved" | "unavailable" | "held" | "claimed";
+};
 export const ownerSaveActions = {
+  address: addressCommandSchema,
+  "address-state": z.strictObject({}),
+  "address-availability": z.strictObject({ name: requestedSubdomainSchema }),
   patch: z.discriminatedUnion("context", [
     z.strictObject({
       ...start,
@@ -111,6 +143,10 @@ export type SaveAttemptStatus = {
   validationIssue: LegacyValidationIssue | null;
 };
 export type SaveErrorCode =
+  | "address_unavailable"
+  | "address_reserved"
+  | "address_locked"
+  | "command_conflict"
   | "owner_changed"
   | "revision_conflict"
   | "attempt_conflict"

@@ -10,6 +10,12 @@ import {
 import "./draft-status.css";
 
 const messages: Record<string, string> = {
+  address_unavailable:
+    "That address is unavailable. Choose another name in Address.",
+  address_reserved: "That name is reserved. Choose another name in Address.",
+  address_locked: "Your published address is permanent.",
+  command_conflict:
+    "This confirmation ID has different saved content. Review the preserved input.",
   invalid_input:
     "The value does not match this field's requirements. Correct it and retry.",
   revision_conflict:

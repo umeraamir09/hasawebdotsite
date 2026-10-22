@@ -7,6 +7,7 @@ import { ownerApi, privateJson } from "../src/owner-api";
 import { ownerRepositories, type SessionIdentity } from "../src/repositories";
 import { RESERVED_SUBDOMAINS } from "../src/reserved-subdomains";
 import * as schema from "../src/schema";
+import { runAddressChecks } from "./addresses";
 import { runGitHubChecks, verifyGitHubRestart } from "./github";
 import { runProvisionChecks, verifyProvisionRestart } from "./provision";
 import { runSetupChecks } from "./setup";
@@ -153,6 +154,7 @@ export default {
         },
       );
       await runSetupChecks(env.DB, check);
+      await runAddressChecks(env.DB, check);
       await check("reserved table matches the platform constant", async () => {
         equal(
           (await db.select().from(schema.reservedSubdomain))
@@ -942,7 +944,13 @@ export default {
               .from(schema.subdomainClaim)
               .where(eq(schema.subdomainClaim.name, "bob-site"))
               .get(),
-            { name: "bob-site", portfolioId: null },
+            {
+              state: "claimed",
+              heldAt: null,
+              claimedAt: null,
+              name: "bob-site",
+              portfolioId: null,
+            },
           );
           await rejects(() =>
             db

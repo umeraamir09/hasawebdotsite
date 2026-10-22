@@ -1,5 +1,6 @@
 import {
   legacyValidation,
+  ownerAddresses,
   ownerDrafts,
   privateJson,
   publicAttempt,
@@ -83,6 +84,20 @@ export function addDraftRoutes(app: Hono<OwnerBindings>) {
     try {
       let result: unknown;
       switch (action) {
+        case "address":
+          result = await ownerAddresses(c.env.DB, identity).confirm(
+            ownerSaveActions.address.parse(raw),
+          );
+          break;
+        case "address-state":
+          ownerSaveActions["address-state"].parse(raw);
+          result = await ownerAddresses(c.env.DB, identity).state();
+          break;
+        case "address-availability":
+          result = await ownerAddresses(c.env.DB, identity).availability(
+            ownerSaveActions["address-availability"].parse(raw).name,
+          );
+          break;
         case "patch": {
           const v = ownerSaveActions.patch.parse(raw);
           result = await drafts
@@ -199,6 +214,8 @@ export function addDraftRoutes(app: Hono<OwnerBindings>) {
     } catch (error) {
       if (error instanceof SaveError)
         return privateJson({ error: error.code }, error.status);
+      if (error instanceof Error && error.message.includes("address_locked"))
+        return privateJson({ error: "address_locked" }, 409);
       // Storage failures stay private and retryable. Validation errors never
       // include submitted content, schema internals or exception messages.
       const storage =

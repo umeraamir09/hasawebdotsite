@@ -1270,6 +1270,141 @@ try {
     });
   });
   await check(
+    "address confirmations enforce real auth, immutable replay and atomic swaps",
+    async () => {
+      const initial = await read();
+      const command = {
+        id: crypto.randomUUID(),
+        portfolioId: initial.portfolioId,
+        context: "content",
+        revision: initial.revision,
+        name: "same-candidate",
+      };
+      assert.equal(await request("address-state"), null);
+      assert.equal((await request("address", command)).state, "held");
+      const replay = await request("address", command);
+      assert.equal(replay.replayed, true);
+      assert.equal(replay.revision, initial.revision + 1);
+      assert.equal(
+        (
+          await request(
+            "address",
+            { ...command, name: "changed-command" },
+            { status: 409 },
+          )
+        ).error,
+        "command_conflict",
+      );
+      const current = await read();
+      const before = await sql(
+        "SELECT name,portfolio_id,state,held_at,claimed_at FROM subdomain_claim ORDER BY name",
+      );
+      const swap = {
+        ...command,
+        id: crypto.randomUUID(),
+        revision: current.revision,
+        name: "attempted-swap",
+      };
+      await request("address", swap, { owner: null, status: 401 });
+      await request("address", swap, {
+        headers: { "X-Expected-Owner-Id": "draft-bob" },
+        status: 409,
+      });
+      await request("address", swap, {
+        headers: { Origin: "https://foreign.invalid" },
+        status: 403,
+      });
+      await request("address", swap, {
+        headers: { "Content-Type": "text/plain" },
+        status: 415,
+      });
+      await request("address", swap, { owner: "bob", status: 409 });
+      assert.deepEqual(
+        await sql(
+          "SELECT name,portfolio_id,state,held_at,claimed_at FROM subdomain_claim ORDER BY name",
+        ),
+        before,
+      );
+      const bob = await read("bob");
+      assert.equal(
+        (
+          await request(
+            "address",
+            {
+              ...command,
+              id: crypto.randomUUID(),
+              portfolioId: bob.portfolioId,
+              revision: bob.revision,
+            },
+            { owner: "bob", status: 409 },
+          )
+        ).error,
+        "address_unavailable",
+      );
+      await sql(
+        "INSERT INTO reserved_subdomain(name) VALUES('dynamic-address')",
+      );
+      assert.equal(
+        (await request("address-availability", { name: "dynamic-address" }))
+          .status,
+        "reserved",
+      );
+      assert.equal(
+        (
+          await request(
+            "address",
+            { ...swap, name: "dynamic-address" },
+            { status: 422 },
+          )
+        ).error,
+        "address_reserved",
+      );
+      assert.equal(
+        (
+          await request(
+            "address",
+            { ...swap, revision: command.revision },
+            { status: 409 },
+          )
+        ).error,
+        "revision_conflict",
+      );
+      assert.deepEqual(await read(), current);
+      assert.equal(
+        (await request("address", swap)).revision,
+        current.revision + 1,
+      );
+      assert.equal((await request("address-state")).name, "attempted-swap");
+      assert.equal(
+        (
+          await request(
+            "address-availability",
+            { name: "same-candidate" },
+            { owner: "bob" },
+          )
+        ).status,
+        "available",
+      );
+      const latest = await read();
+      assert.equal(
+        (
+          await patch(
+            latest.revision,
+            ["requestedSubdomain"],
+            "generic-bypass",
+            { status: 409 },
+          )
+        ).error,
+        "address_locked",
+      );
+      await sql(
+        "DELETE FROM subdomain_claim WHERE portfolio_id=? AND state='held'",
+        [initial.portfolioId],
+      );
+      await sql("DELETE FROM reserved_subdomain WHERE name='dynamic-address'");
+    },
+  );
+  await check(
     "saves preserve existing publications, assets and services",
     async () => {
       const { portfolioId } = await read();

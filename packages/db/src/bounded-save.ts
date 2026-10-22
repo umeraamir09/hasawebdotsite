@@ -563,6 +563,7 @@ export function boundedSaves(
     return { pieces: pieces.meta.changes, attempts: attempts.meta.changes };
   }
   return {
+    rejectSave,
     saveProgress,
     pending,
     resume,

@@ -198,7 +198,8 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 10, 11A, 13.
 - Accept JPEG, PNG, WebP, and PDF under the confirmed limits. Check signatures and size server-side, track pending/ready/failed states, and serve drafts only through owner-authorized routes usable during setup and editing.
-- [ ] Complete when exact-limit files pass, oversized/disguised files fail, and visitors/other owners cannot fetch assets. Pending/failed/foreign assets cannot satisfy required setup or publication.
+- October 22, 2026: [implementation and local verification](../specs/2026-10-21-private-uploads/results.md) records private upload storage. The owner approved Phase 18 completion on October 22, 2026. Upload/crop controls, editor image integration and jobs source transfer remain separate work.
+- [x] Complete when exact-limit files pass, oversized/disguised files fail, and visitors/other owners cannot fetch assets. Pending/failed/foreign assets cannot satisfy required setup or publication.
 
 ### Phase 19. Add shared upload controls and image cropping
 
@@ -224,7 +225,8 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 - Add a forward migration for the unique address reservation: one namespace record per name with a `held`/`claimed` state and its timestamps, extending the existing `subdomain_claim` record rather than adding a second uniqueness domain. Rewrite the existing delete trigger so a `held` row can be released while a `claimed` row stays permanent; the existing name, platform-reserved and format triggers already cover held rows. Do not bulk-promote existing `requestedSubdomain` values; the next confirmed Address save attempts the reservation.
 - Add format/platform-reserved/availability validation and an atomic reservation save in Address/editor. Reserve in the same D1 batch as the draft revision CAS; when the insert conflicts, return an actionable unavailable-name result and leave both the draft and the previous hold unchanged. Only a confirmed Address save reserves: staged attempts and legacy validation commits do not. Explain that a successful save holds the name and creates no public site. Allow a confirmed replacement until first publication: delete only the portfolio's current `held` row, then insert the new hold in the same atomic D1 batch as the draft revision CAS. Constraint or CAS failure must abort the whole batch and restore the old hold and draft, including when the CAS matches zero rows. Keep the draft's `requestedSubdomain` as a mirror; the reservation record is authoritative.
 - Update the schema and database package READMEs, fixtures and migration tests with the migration, including the reservation and trigger semantics that the current READMEs describe as claim-only.
-- [ ] Complete when boundary/platform-reserved checks pass, concurrent saves produce one holder, a held address serves no public URL, a failed replacement keeps the old hold, and account deletion releases a never-published hold. Do not rewrite Phase 11B's historical non-reserving completion; record the October 21 supersession here.
+- October 22, 2026: [implementation and local verification](../specs/2026-10-21-address-reservations/results.md) records the forward migration, explicit confirmation and durable retry receipts. This implements the October 21 supersession of the earlier non-reserving behavior while preserving Phase 11B's historical approval. The owner approved Phase 22 completion on October 22, 2026.
+- [x] Complete when boundary/platform-reserved checks pass, concurrent saves produce one holder, a held address serves no public URL, a failed replacement keeps the old hold, and account deletion releases a never-published hold. Do not rewrite Phase 11B's historical non-reserving completion; record the October 21 supersession here.
 
 ### Phase 22A. Add setup-aware account entry and handoff services
 
