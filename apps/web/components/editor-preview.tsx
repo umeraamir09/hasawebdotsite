@@ -8,7 +8,8 @@ import {
 } from "@hasaweb/components/browser";
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
 import type { DraftDoc } from "@hasaweb/schema";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { resolvePreviewImages } from "../lib/assets/browser";
 
 export function EditorPreview({
   owner,
@@ -35,6 +36,10 @@ export function EditorPreview({
     null,
   );
   const { ownerId, portfolioId } = owner;
+  const images = useMemo(
+    () => ({ ownerId, portfolioId, cache: new Map<string, string>() }),
+    [ownerId, portfolioId],
+  );
   const currentSelection = useRef(selection);
   currentSelection.current = selection;
   const latestDraft = useRef(draft);
@@ -56,27 +61,32 @@ export function EditorPreview({
       onSelect: (value) => select.current(value),
     });
     connection.current = bridge;
-    bridge.request((signal) =>
-      projectPortfolioCancellable(
-        latestDraft.current,
-        { assetOrigins: [], resolveAsset: () => ({ state: "unavailable" }) },
+    bridge.request(async (signal) => {
+      const current = latestDraft.current;
+      const assets = await resolvePreviewImages({
+        ownerId,
+        draft: current,
         signal,
-      ),
-    );
+        cache: images.cache,
+      });
+      return projectPortfolioCancellable(current, assets, signal);
+    });
     return () => {
       connection.current = null;
       bridge.dispose();
     };
-  }, [channel, ownerId, portfolioId]);
+  }, [channel, ownerId, portfolioId, images]);
   useEffect(() => {
-    connection.current?.request((signal) =>
-      projectPortfolioCancellable(
+    connection.current?.request(async (signal) => {
+      const assets = await resolvePreviewImages({
+        ownerId,
         draft,
-        { assetOrigins: [], resolveAsset: () => ({ state: "unavailable" }) },
         signal,
-      ),
-    );
-  }, [draft]);
+        cache: images.cache,
+      });
+      return projectPortfolioCancellable(draft, assets, signal);
+    });
+  }, [draft, ownerId, images]);
   useEffect(() => {
     connection.current?.select(selection);
   }, [selection]);

@@ -43,7 +43,10 @@
       "assist": { "enabled": false }
     },
     {
-      "includes": ["apps/web/public/auth/*.svg"],
+      "includes": [
+        "apps/web/public/auth/*.svg",
+        "apps/web/public/assets/crop/*.svg"
+      ],
       "linter": {
         "rules": {
           "a11y": {
@@ -53,6 +56,19 @@
       },
       "formatter": {
         "enabled": false
+      }
+    },
+    {
+      "includes": [
+        "apps/web/components/image-crop-dialog.tsx",
+        "apps/web/components/image-upload.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noImgElement": "off"
+          }
+        }
       }
     }
   ]

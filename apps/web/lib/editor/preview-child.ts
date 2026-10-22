@@ -91,7 +91,7 @@ export async function openEditorPreview(root: HTMLElement) {
           },
           components: [],
         },
-        { assetOrigins: [] },
+        { assetOrigins: [location.origin] },
       );
       const detach = attachPreviewBridge({
         target: preview,

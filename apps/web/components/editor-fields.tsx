@@ -7,6 +7,8 @@ import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import type { FieldPath } from "../lib/draft/types";
 import { editEditorField, readEditorField } from "../lib/editor/fields";
+import { ProfileImages } from "./profile-images";
+import { SocialLinksControl } from "./social-links-control";
 
 export function EditorFields({
   controller,
@@ -59,26 +61,18 @@ export function EditorFields({
         {field("Name", ["profile", "name"])}
         {field("Bio", ["profile", "bio"], true)}
         {field("Location", ["profile", "location"])}
-        {draft.links.length > 0 && (
-          <>
-            <h3>Your links</h3>
-            {draft.links.map((link) =>
-              field(link.label || "Link destination", [
-                "links",
-                { id: link.id },
-                "value",
-              ]),
-            )}
-          </>
-        )}
+        <ProfileImages controller={controller} disabled={disabled} />
+        <SocialLinksControl controller={controller} disabled={disabled} />
         <p className="editor-muted">
-          Image uploads and provider suggestions will be available with the
-          profile tools.
+          Provider name and photo suggestions will be available with the profile
+          tools.
         </p>
       </section>
     );
   const component = draft.components.find((item) => item.id === selection.id);
   if (!component) return null;
+  if (component.type === "social-links")
+    return <SocialLinksControl controller={controller} disabled={disabled} />;
   const definition = componentRegistry[component.type];
   return (
     <section aria-label={`${definition.picker.title} controls`}>

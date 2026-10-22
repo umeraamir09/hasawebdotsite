@@ -6,7 +6,7 @@ Read the [skill](../SKILL.md) for launch, doctor, locking, evidence and cleanup.
 
 - `entry` uses fresh migrated storage, no session, no provider credentials and a new browser context. The executable helper owns launch and teardown.
 - Other recipes use existing suites and their own seeded users, sessions and draft records. Run one locked profile at a time. Do not replace their seeds with `pnpm local:seed`, which creates no usable sessions.
-- `/editor` currently mounts the account shell. Editor controls and private iframe routes exist only in the handoff fixture. Private upload HTTP access is implemented; upload/crop controls remain Phase 19. Public portfolio serving, publication and the required setup guide remain pending.
+- `/editor` currently mounts the account shell. Editor controls, shared image crop/upload controls, social/contact links, and private iframe routes exist in the handoff fixture. Public portfolio serving, publication, provider-photo import, and the required setup guide remain pending.
 - An unmet precondition is a failed or blocked journey with its reason, never permission to omit an entry point or weaken the assertion.
 
 ## Driving and proof conventions
@@ -23,6 +23,6 @@ The initial deliverable proves only `entry` end to end. The other recipes route 
 | [Sign-in and private account](account.md) | Both provider buttons, returning sign-in, shell retry and sign-out; auth profile | Provider consent/HTTP fixtures; real auth and owner APIs |
 | [Draft saving and recovery](recovery.md) | Recovery controls, reload, `/auth/recovery` and `/auth/recovery/error`; drafts and auth profiles | Isolated editing fixtures plus real callback route |
 | [Editor and private live preview](editor-preview.md) | Profile/component controls, preview selection, desktop/mobile; editor profile | Handoff fixture only |
-| [Private uploads](uploads.md) | `PUT /api/assets`, `GET /api/assets/{id}`; uploads profile | Production web handler with real D1/R2, signed-cookie fixtures and browser File requests; no upload control yet |
+| [Private uploads](uploads.md) | `PUT /api/assets`, `GET /api/assets/{id}`; uploads profile for transport, editor profile for controls | Production web handler with real D1/R2, signed-cookie fixtures, and shared crop controls in the handoff fixture |
 | [Reserved address selection](addresses.md) | Address controls in the editor fixture and explicit owner draft actions; drafts profile | Reusable controls and real owner API; required guide activation remains pending |
 | [Portfolio rendering and theme](portfolio.md) | Browser preview and static portfolio fixtures, theme toggle; renderer profile | Offline rendering fixtures; no published serving or additional pages |

@@ -1,0 +1,301 @@
+.profile-images {
+  display: grid;
+  gap: 28px;
+  margin-block: 28px;
+}
+.profile-image-control h3 {
+  margin-block: 0 12px;
+  font-size: 1rem;
+  font-weight: 500;
+}
+.profile-image-preview {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #dde2d8;
+  border-radius: 16px;
+  background: #eff2eb;
+  color: #596053;
+}
+.profile-image-preview-avatar {
+  width: 106px;
+  aspect-ratio: 212 / 220;
+  border-radius: 18px;
+}
+.profile-image-preview-banner {
+  aspect-ratio: 10 / 3;
+}
+.profile-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.profile-image-preview span {
+  padding: 12px;
+  font-size: 12px;
+  text-align: center;
+}
+.profile-image-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+.profile-image-actions button,
+.profile-image-file,
+.profile-image-control button {
+  min-height: 44px;
+  border: 1px solid #7a856e;
+  border-radius: 999px;
+  background: #fcfdf9;
+  color: #20241e;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.profile-image-file {
+  display: inline-flex;
+  align-items: center;
+}
+.profile-image-actions input[type="file"] {
+  width: 100%;
+  max-width: 100%;
+  font: inherit;
+  font-size: 12px;
+}
+.profile-image-note {
+  color: #596053;
+  font-size: 12px;
+  line-height: 1.5;
+  margin-block: 8px 12px;
+}
+.profile-image-control progress {
+  display: block;
+  width: 100%;
+  accent-color: #536348;
+  margin-block: 8px;
+}
+.image-crop-dialog {
+  box-sizing: border-box;
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 32px;
+  border: 1px solid #dde2d8;
+  border-radius: 24px;
+  background: #f7f8f5;
+  color: #20241e;
+  font-family: "DM Sans", sans-serif;
+  box-shadow: 0 16px 32px -8px #5363481f;
+}
+.image-crop-dialog::backdrop {
+  background: #20241e99;
+}
+.image-crop-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.image-crop-dialog .image-crop-header h2 {
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 36px;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+.image-crop-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: inherit;
+  cursor: pointer;
+}
+.image-crop-dialog .image-crop-icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #dde2d8;
+  border-radius: 999px;
+  background: #fcfdf9;
+}
+.image-crop-dialog button:disabled,
+.profile-image-control button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.image-crop-stage {
+  height: 360px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #eff2eb;
+}
+.image-crop-banner .image-crop-stage {
+  height: 300px;
+}
+.image-crop-dialog button.image-crop-boundary {
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  min-height: 0;
+  width: 288px;
+  max-width: calc(100% - 52px);
+  flex: none;
+  touch-action: none;
+  cursor: grab;
+  border-radius: 36px;
+}
+.image-crop-dialog.image-crop-banner button.image-crop-boundary {
+  width: calc(100% - 48px);
+  max-width: none;
+  border-radius: 16px;
+}
+.image-crop-boundary:active {
+  cursor: grabbing;
+}
+.image-crop-source {
+  position: absolute;
+  max-width: none;
+  pointer-events: none;
+  user-select: none;
+}
+.image-crop-mask {
+  position: absolute;
+  inset: 0;
+  border: 4px solid #fcfdf9;
+  border-radius: inherit;
+  box-shadow: 0 0 0 100vmax #0009;
+  pointer-events: none;
+}
+.image-crop-help {
+  color: #596053;
+  font-size: 12px;
+  line-height: 18px;
+  margin-block: 10px 0;
+}
+.image-crop-zoom {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-block: 16px 20px;
+}
+.image-crop-zoom input {
+  min-width: 0;
+  width: 100%;
+  height: 44px;
+  accent-color: #536348;
+}
+.image-crop-zoom output {
+  flex: none;
+  color: #596053;
+  font-size: 14px;
+  width: 44px;
+  text-align: right;
+}
+.image-crop-retention {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #eff2eb;
+  color: #596053;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 0 0 20px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.image-crop-retention img,
+.image-crop-dialog button img {
+  flex: none;
+}
+.image-crop-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.image-crop-footer > div {
+  display: flex;
+  gap: 12px;
+}
+.image-crop-dialog .image-crop-footer button {
+  min-height: 48px;
+  padding: 10px 24px;
+  border: 1px solid #7a856e;
+  border-radius: 999px;
+  background: #fcfdf9;
+}
+.image-crop-dialog .image-crop-footer .image-crop-apply {
+  background: #bdeb70;
+  border-color: #bdeb70;
+}
+.image-crop-dialog .image-crop-footer .image-crop-reset {
+  border: 0;
+  background: transparent;
+  padding-inline: 12px;
+}
+.image-crop-dialog :focus-visible,
+.profile-image-control :focus-visible {
+  outline: 3px solid #536348;
+  outline-offset: 3px;
+}
+.image-crop-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 600px) {
+  .image-crop-dialog {
+    padding: 24px;
+    width: min(390px, calc(100vw - 16px));
+    max-height: calc(100dvh - 16px);
+  }
+  .image-crop-stage {
+    height: 340px;
+  }
+  .image-crop-banner .image-crop-stage {
+    height: 220px;
+  }
+  .image-crop-zoom {
+    gap: 8px;
+  }
+  .image-crop-zoom output {
+    display: none;
+  }
+  .image-crop-footer,
+  .image-crop-footer > div {
+    gap: 8px;
+  }
+  .image-crop-dialog .image-crop-footer button {
+    padding-inline: 16px;
+  }
+  .image-crop-dialog .image-crop-footer .image-crop-reset {
+    padding-inline: 4px;
+  }
+}
+@media (max-width: 360px) {
+  .image-crop-dialog {
+    padding: 16px;
+  }
+  .image-crop-dialog .image-crop-footer button {
+    padding-inline: 12px;
+  }
+}

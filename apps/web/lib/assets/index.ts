@@ -6,7 +6,7 @@ import {
   type SessionIdentity,
 } from "@hasaweb/db";
 import type { AssetPurpose } from "@hasaweb/schema";
-import { UploadError, uploadFormat } from "./formats";
+import { isAssetPurpose, UploadError, uploadFormat } from "./formats";
 import { type AssetBucket, storeUpload } from "./stream";
 
 export type PrivateAssetEnvironment = AuthEnvironment & {
@@ -76,7 +76,12 @@ export async function privateAssetRequest(
     if (read) {
       const id = url.pathname.slice("/api/assets/".length);
       if (!/^[a-f0-9-]{36}$/.test(id)) return response(404);
-      const row = await privateAssets(env.DB, identity).ready(id);
+      const purpose = url.searchParams.get("purpose");
+      if (purpose !== null && !isAssetPurpose(purpose)) return response(404);
+      const row = await privateAssets(env.DB, identity).ready(
+        id,
+        purpose ?? undefined,
+      );
       if (!row) return response(404);
       const resolved = await resolvePrivateAsset(env, identity, id, row.kind);
       if (!resolved) return response(404);

@@ -8,6 +8,8 @@ type Env = {
   RUNTIME_KEY: string;
   OWNER_API: Fetcher;
   JOBS: Fetcher;
+  DB: D1Database;
+  DRAFT_BUCKET: R2Bucket;
 };
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext) {

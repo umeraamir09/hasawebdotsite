@@ -8,6 +8,8 @@ Owners select profile or component controls and see valid edits immediately in a
 - `editor-selection` selects a component from controls or preview using pointer/keyboard.
 - `editor-widths` switches between desktop and mobile preview viewports.
 - `editor-private` stops preview display after session/owner changes.
+- `editor-images` selects, crops, uploads, describes, replaces, and removes avatar/banner images through the private asset API.
+- `editor-links` manages stable link entries, placement, ordering, invalid input, and deliberate public-email acceptance.
 
 ## How to get to it (user POV)
 
@@ -24,9 +26,10 @@ Preconditions: `pnpm verify --profile=editor` checks/builds web/jobs and runs `s
 - Click `Desktop` and `Mobile`. Require iframe `innerWidth` to equal 1120 and 390 respectively at parent widths 1500 and 520. Use `View preview` at the narrow width. Preserve the four `editor-<parent-width>-<mode>.png` artifacts alongside `editor-results.json`.
 - Click preview `[data-component-id="projects-1"]` or focus `[data-component-id="skills-1"]` and press Enter. Require regions `Projects controls` or `Skills and technologies controls`. Use the `Text section` button and labeled `Section title` for text editing.
 - Run the suite's changed-session/owner checks and require the prior owner's preview content to disappear and unauthorized private preview reads to return 401. Fixture session changes establish the test condition; they do not prove a user sign-out path. Use the account recipe for that path.
+- The [shared link checks](../../../../scripts/social-links-browser.mjs) drive `Add link`, `Link label`, `Link type`, `Destination URL` or `Email address`, both placement checkboxes, and ordering/removal controls. `Suggest account email` only reads the suggestion. `Use email as public link` is the separate draft mutation. Require matching D1 entries and preview destinations, with raw invalid input preserved after reload.
 
 ## Gotchas
 
 - `/editor` is still the account shell. It cannot reach these controls. Report that production entry as unavailable until the complete setup activation lands; do not replace it with a fixture and claim production coverage.
 - The fixture seeds real initial draft state and uses some direct controller assertions for boundary tests. Only actual control interactions prove those UI paths.
-- Private upload storage exists through the separate uploads recipe. Upload/crop controls and editor image integration, full component tools, saved appearance controls and publication remain later work. The limited Customization panel is not proof of those capabilities.
+- Shared upload/crop and link controls use the real owner and private asset APIs in the handoff fixture. Provider-photo import, full component tools, saved appearance controls, and publication remain later work. The limited Customization panel is not proof of those capabilities.
