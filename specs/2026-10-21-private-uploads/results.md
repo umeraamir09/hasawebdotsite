@@ -29,7 +29,7 @@ Coordinator diff/comment review covered the upload handler, stream handling, typ
 
 October 22 integrated verification passed `pnpm verify --profile=full` on `feat/uploads-address-reservations` at `8fd2d8e8b9b6d9c03ab470b7aa262779593e798b`, with the shared guidance and CI changes present. The integration worktree is `/home/umer/.codex/worktrees/phase18-22-integration/hasawebdotsite`. Its `.wrangler/verification/2026-10-22T03-28-20.605Z-h6mi6e/summary.json` records all 12 commands passing, including all application builds, 355 unit tests, renderer, authentication, persistence, upload, draft, autosave, editor, runtime and routing suites. Integration reconciled the database README by preserving both lifecycle contracts. Later result-record edits are documentation-only.
 
-No deployment, public promotion or production CPU feasibility is asserted. Jobs source transfer, crop controls, activation and durable orphan reconciliation retain their later phases. Owner completion approval remains pending and the roadmap remains unchecked.
+No deployment, public promotion or production CPU feasibility is asserted. Jobs source transfer, crop controls, activation and durable orphan reconciliation retain their later phases. The owner approved Phase 18 completion on October 22, 2026 after reviewing this record and the integrated verification. The [roadmap checkbox](../../docs/roadmap.md#phase-18-implement-private-upload-storage) is checked with a dated approval note, and the implementation-status baseline records the approval instead of a pending decision. No implementation, contract or verification result changed.
 
 ## Documentation impact
 

@@ -18,7 +18,7 @@ Throughput checkpoint. First prove SQL rollback in the real D1 fixture, then imp
 
 ## Results
 
-Implementation and focused local verification are complete. Owner phase approval is pending. Local reports are under this worktree's `.wrangler/verification/` directory.
+Implementation and focused local verification are complete. Local reports are under this worktree's `.wrangler/verification/` directory. The owner approved Phase 22 completion on October 22, 2026 after reviewing this record and the integrated verification.
 
 | Verification | Result | Report |
 | --- | --- | --- |
@@ -32,7 +32,7 @@ Earlier failures remain recorded in ignored reports. Persistence fixture fixes c
 
 October 22 integrated verification passed `pnpm verify --profile=full` on `feat/uploads-address-reservations` at `8fd2d8e8b9b6d9c03ab470b7aa262779593e798b`, with the shared guidance and CI changes present. The integration worktree is `/home/umer/.codex/worktrees/phase18-22-integration/hasawebdotsite`. Its `.wrangler/verification/2026-10-22T03-28-20.605Z-h6mi6e/summary.json` records all 12 commands passing, including all application builds, 355 unit tests and every foundation profile suite. Separate boundary review covered SQL ownership, failed-CAS rollback, permanent claims and receipt recovery. The coordinator checked the subsequent async-adapter correction against both prepared-restoration cases and the full editor run. No finding remains open. Reviews used the configured `gpt-6.1-sol` model family. Later result-record edits are documentation-only.
 
-The editor remains an isolated handoff fixture. Production guide/editor activation, publication conversion, required-setup handoff validation, deployment, and production CPU feasibility remain outside this evidence. Roadmap completion stays unchecked until explicit owner approval.
+The editor remains an isolated handoff fixture. Production guide/editor activation, publication conversion, required-setup handoff validation, deployment, and production CPU feasibility remain outside this evidence. The [roadmap checkbox](../../docs/roadmap.md#phase-22-implement-reserved-address-selection) is checked after the owner approved Phase 22 completion on October 22, 2026. The implementation-status baseline records the approval instead of a pending decision; no implementation, contract or verification result changed.
 
 ## Documentation impact
 
