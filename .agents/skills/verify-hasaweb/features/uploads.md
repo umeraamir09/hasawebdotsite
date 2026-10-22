@@ -1,12 +1,14 @@
 # Private upload storage
 
-Owners can upload private image or resume bytes and read ready assets during setup or editing. The upload and crop controls remain Phase 19.
+Owners can upload private image or resume bytes and read ready assets during setup or editing. Shared avatar/banner upload and crop controls are exercised through the editor handoff fixture.
 
 ## Entry points and prerequisites
 
 Run `pnpm verify --profile=uploads` for checks, builds and `scripts/private-uploads.mjs`. The suite starts its own fixture at port 8834. It uses the production web Worker, real D1/R2 and signed session cookies. Serialize it with all other heavy suites through the verification runner.
 
-The fixture's browser File fetch and XMLHttpRequest calls prove browser framing through the HTTP handler. They do not prove a product upload button, crop dialog, provider-photo import, editor image display or publication.
+The upload suite's browser File fetch and XMLHttpRequest calls prove browser framing through the HTTP handler. The editor profile additionally drives shared image controls, crop dialogs, and private image preview. Provider-photo import and publication remain separate.
+
+Run `pnpm verify --profile=editor` to drive [the crop-control checks](../../../../scripts/crop-controls-browser.mjs) through the handoff fixture. Select a file with `Upload avatar` or `Replace avatar`, then use dialog `Adjust avatar`. Focus `Reposition image` and use arrow keys, adjust `Zoom`, and exercise `Reset`, `Apply crop`, and `Cancel`. The banner uses the same controls in `Adjust banner`. Require a ready upload, the persisted draft reference, the private image bytes, and the matching preview image. Cancellation and retry must preserve earlier ready bytes.
 
 ## Read the evidence
 

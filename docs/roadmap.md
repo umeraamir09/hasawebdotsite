@@ -205,6 +205,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 14, 17, 18.
 - Provide upload progress, descriptions, retry, crop/replace/remove, and shared avatar/banner dialogs with repositioning, zoom, Reset, Apply crop, and Cancel. Re-encode locally and reference replacements only after readiness. Store only finished crops, with original-file reselection required to recover excluded regions after returning.
+- The [Phase 19 implementation record](../specs/2026-10-22-upload-crop-controls/results.md) tracks the shared controls and combined verification. Owner completion approval remains pending.
 - [ ] Complete when preview matches saved crops, profile controls are usable by keyboard/mobile, cancelled/failed replacements preserve the previous asset, and interruption/retry affects no published file. Reset must not promise durable original retention.
 
 ### Phase 20. Edit the required profile and accept provider suggestions
@@ -217,6 +218,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 11, 13–15, 17. Link controls and deliberate public-email acceptance do not require avatar/profile-photo import from 20.
 - Add, edit, remove, and order labeled links with valid HTTP(S) destinations or email addresses. Store profile/social-component placement against one entry. Suggest account email only for deliberate public acceptance; explain its visibility.
+- The [Phase 21 implementation record](../specs/2026-10-22-social-contact-identity/results.md) tracks shared link controls, opt-in account email suggestions, and combined verification. Owner completion approval remains pending.
 - [ ] Complete when one valid profile-displayed email/social/website link satisfies setup/profile requirements, invalid links fail, and a contact form alone cannot substitute. The same controls/data are reused in onboarding.
 
 ### Phase 22. Implement reserved address selection
