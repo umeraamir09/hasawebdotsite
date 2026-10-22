@@ -16,7 +16,7 @@ Both APIs return validated copies. `draftSchema.safeParse` returns Zod issues wi
 
 ## Private setup contracts
 
-Version 2 adds optional `requestedSubdomain`, a non-reserving candidate with the existing 3–30 lowercase ASCII letter/digit/hyphen format. Missing candidates remain absent. Format validation does not check availability or reserve a name. The database's unique `portfolio.subdomain` and permanent claims remain separate.
+Version 2 adds optional `requestedSubdomain` with the existing 3–30 lowercase ASCII letter/digit/hyphen format. Missing values remain absent. Format validation and generic draft saves do not check availability or reserve a name. Explicit Address confirmation creates the held registry row and saves this field as its private mirror. The registry is authoritative; `portfolio.subdomain` remains the published address.
 
 `setupProgressSchema` is a separate private version 1 navigation contract with a `step` of address, profile, links, skills, projects, github or review. Its initial value is Address. Progress proves no required completion and accepts no milestone flag or duplicated answers. `firstEditorEnteredAt` belongs to private persistence, outside the draft.
 
@@ -84,3 +84,9 @@ The full reader/serializer examples above are browser/offline helpers, not a Fre
 ## Browser save integration
 
 The [Phase 14 client](../../apps/web/lib/draft/README.md) uses the shared action/path/value schemas and limits. `SaveErrorCode` includes `owner_changed` for the expected-owner HTTP precondition. Future schema changes must update the bounded server validator, browser skeleton/diff planner and equivalence/production API fixtures together. No schema version or validation generation changes in Phase 14.
+
+## Explicit Address commands
+
+`ownerSaveActions.address` confirms an exclusive reservation. Its immutable body includes `id`, `portfolioId`, `revision`, `context`, and the shared 3 through 30 character `name`. Setup commands also require `progress`; content commands reject it. `address-state` returns the authoritative held/claimed row, and `address-availability` returns advisory availability against the current registry and dynamic platform blocklist. These actions retain the owner/session and expected-owner boundaries of the draft API.
+
+Generic `requestedSubdomain` changes remain non-reserving candidates. Once a registry row exists, canonical mirror changes must match that row; unchanged historical mismatches and repair to the registry name remain valid. Address failures distinguish `address_reserved`, `address_unavailable`, and `address_locked` from `revision_conflict`, `setup_closed`, authentication failures, and `command_conflict`. A successful `AddressReceipt` reports the accepted revision, name, and held/claimed state without a public URL.

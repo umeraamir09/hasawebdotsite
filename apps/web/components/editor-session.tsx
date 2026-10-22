@@ -12,6 +12,7 @@ import {
   createRecoveryCoordinator,
   type RecoveryCoordinator,
 } from "../lib/draft/recovery-coordinator";
+import { AddressControl } from "./address-control";
 import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
 import { EditorFields } from "./editor-fields";
@@ -193,6 +194,7 @@ function Scope({
                   </button>
                 ))}
               </nav>
+              <AddressControl controller={controller} disabled={disabled} />
               <EditorFields
                 controller={controller}
                 selection={active}

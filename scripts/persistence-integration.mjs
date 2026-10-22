@@ -81,7 +81,11 @@ async function start() {
     });
   for (let attempt = 0; attempt < 100; attempt++) {
     try {
-      if ((await fetch(`${base}/health`)).ok) return;
+      if (
+        (await fetch(`${base}/health`, { signal: AbortSignal.timeout(2000) }))
+          .ok
+      )
+        return;
     } catch {
       /* Wait for local workerd. */
     }

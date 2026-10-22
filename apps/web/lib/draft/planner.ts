@@ -329,7 +329,9 @@ export function planChanges(
     throw new Error("Planner did not reproduce the target");
   return commands;
 }
-export function batchMode(commands: PlannedCommand[]): Batch["mode"] {
+export function batchMode(
+  commands: PlannedCommand[],
+): Exclude<Batch["mode"], "address"> {
   return commands.length === 0
     ? "progress"
     : commands.length === 1 && commands[0]?.action === "change"

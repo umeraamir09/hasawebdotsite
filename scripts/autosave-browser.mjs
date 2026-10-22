@@ -191,6 +191,123 @@ export async function checkAutosave({
     );
   try {
     await run(
+      "address confirmation flushes earlier edits and replays lost replies after reload",
+      async () => {
+        await reset();
+        await edit(["profile", "name"], "Before reservation");
+        await page.evaluate(async () => {
+          const f = window.fixture;
+          f.fault.action = "address";
+          f.fault.mode = "after";
+          await f.controller
+            .confirmAddress("autosave-reserved")
+            .catch(() => {});
+        });
+        const interrupted = await snapshot();
+        assert.equal(interrupted.batch.mode, "address");
+        assert.equal(interrupted.batch.address.revision, 1);
+        assert.equal((await getDraft()).profile.name, "Before reservation");
+        assert.equal(
+          (await getDraft()).requestedSubdomain,
+          "autosave-reserved",
+        );
+        const commandId = interrupted.batch.address.id;
+        await page.reload();
+        await page.waitForFunction(() => window.fixture?.ready);
+        await page.evaluate(async () => {
+          const f = window.fixture;
+          const record = f.controller.store
+            .getState()
+            .recoveries.find((r) => r.batch?.mode === "address");
+          if (!record) throw new Error("Missing durable address journal");
+          await f.controller.restore(record.id);
+          await f.controller.retry();
+        });
+        assert.equal((await snapshot()).confirmed.revision, 2);
+        assert.equal(
+          (await snapshot()).working.requestedSubdomain,
+          "autosave-reserved",
+        );
+        const receipts = await sql(
+          "SELECT id,revision FROM address_confirmation WHERE id=?",
+          [commandId],
+        );
+        assert.deepEqual(receipts, [{ id: commandId, revision: 2 }]);
+      },
+    );
+    for (const reload of [false, true]) {
+      await run(
+        `address historical receipt after newer device save ${reload ? "after reload" : "in same tab"}`,
+        async () => {
+          await reset();
+          await page.evaluate(async () => {
+            const f = window.fixture;
+            f.controller.setInput(["requestedSubdomain"], "first-device-name");
+            f.fault.action = "address";
+            f.fault.mode = "after";
+            await f.controller
+              .confirmAddress("first-device-name")
+              .catch(() => {});
+            const saved = await (
+              await fetch("/api/owner/draft", {
+                headers: { "X-Expected-Owner-Id": "draft-alice" },
+              })
+            ).json();
+            const response = await fetch("/api/owner/draft/address", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "X-Expected-Owner-Id": "draft-alice",
+              },
+              body: JSON.stringify({
+                id: crypto.randomUUID(),
+                portfolioId: saved.portfolioId,
+                revision: saved.revision,
+                context: "content",
+                name: "second-device-name",
+              }),
+            });
+            if (!response.ok) throw new Error(await response.text());
+          });
+          if (reload) {
+            await page.reload();
+            await page.waitForFunction(() => window.fixture?.ready);
+            await page.evaluate(async () => {
+              const f = window.fixture;
+              const record = f.controller.store
+                .getState()
+                .recoveries.find((r) => r.batch?.mode === "address");
+              if (!record) throw new Error("Missing address journal");
+              await f.controller.restore(record.id).catch(() => {});
+            });
+          }
+          await page.evaluate(() =>
+            window.fixture.controller.retry().catch(() => {}),
+          );
+          const local = await snapshot();
+          assert.equal(local.error, "revision_conflict");
+          assert.notEqual(local.status, "saved");
+          assert.equal(local.batch.address.name, "first-device-name");
+          assert.equal(
+            local.inputs['["requestedSubdomain"]'].value,
+            "first-device-name",
+          );
+          assert.equal(
+            (await getDraft()).requestedSubdomain,
+            "second-device-name",
+          );
+          assert.equal(
+            (
+              await sql(
+                "SELECT name FROM subdomain_claim WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+              )
+            )[0].name,
+            "second-device-name",
+          );
+        },
+      );
+    }
+    await run(
       "all component types and exact one-MiB staging with bounded cleanup",
       async () => {
         const minimal = {

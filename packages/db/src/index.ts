@@ -1,3 +1,4 @@
+export * from "./addresses";
 export * from "./bounded-save";
 export * from "./draft-api";
 export * from "./github";

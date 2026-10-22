@@ -284,10 +284,111 @@ export async function checkEditor({
   }
   try {
     await run(
+      "address local typing, explicit reservation, reload, keyboard and mobile",
+      async () => {
+        await boot();
+        const control = page.getByRole("form", { name: "Portfolio address" });
+        const input = control.getByRole("textbox", { name: "Address name" });
+        await input.fill("raw INVALID");
+        await page.waitForTimeout(2200);
+        assert.equal(
+          (
+            await sql(
+              "SELECT count(*) n FROM subdomain_claim WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+            )
+          )[0].n,
+          0,
+        );
+        assert.equal(await input.inputValue(), "raw INVALID");
+        await input.fill("editor-reservation");
+        await input.press("Tab");
+        await control
+          .getByRole("button", { name: "Save address", exact: true })
+          .click();
+        await control
+          .getByRole("status")
+          .filter({ hasText: "Reserved for your portfolio" })
+          .waitFor();
+        const row = (
+          await sql(
+            "SELECT p.subdomain,json_extract(p.draft,'$.requestedSubdomain') name,c.state FROM portfolio p JOIN subdomain_claim c ON c.portfolio_id=p.id WHERE p.user_id='draft-alice'",
+          )
+        )[0];
+        assert.deepEqual(row, {
+          subdomain: null,
+          name: "editor-reservation",
+          state: "held",
+        });
+        await page.reload();
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        await page
+          .getByRole("form", { name: "Portfolio address" })
+          .getByRole("status")
+          .filter({ hasText: "Reserved for your portfolio" })
+          .waitFor();
+        assert.equal(
+          await page
+            .getByRole("textbox", { name: "Address name" })
+            .inputValue(),
+          "editor-reservation",
+        );
+        await page.evaluate(() => {
+          window.editorFixture.recovery.store
+            .getState()
+            .controller.setInput(["requestedSubdomain"], "restored-candidate");
+        });
+        await page.waitForFunction(
+          () =>
+            document.querySelector('form[aria-label="Portfolio address"] input')
+              ?.value === "restored-candidate",
+        );
+        assert.doesNotMatch(
+          await control.getByRole("status").innerText(),
+          /Reserved for your portfolio/,
+        );
+        assert.match(
+          await control.innerText(),
+          /Current reservation: editor-reservation\.hasaweb\.site/,
+        );
+        await page.setViewportSize({ width: 390, height: 844 });
+        assert.equal(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          true,
+        );
+        await page
+          .getByRole("textbox", { name: "Address name" })
+          .fill("editor-replacement");
+        await page
+          .getByRole("textbox", { name: "Address name" })
+          .press("Enter");
+        await page
+          .getByRole("form", { name: "Portfolio address" })
+          .getByRole("status")
+          .filter({ hasText: "Reserved for your portfolio" })
+          .waitFor();
+        assert.equal(
+          (
+            await sql(
+              "SELECT name FROM subdomain_claim WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+            )
+          )[0].name,
+          "editor-replacement",
+        );
+        await page.screenshot({
+          path: join(evidence, "address-mobile.png"),
+          fullPage: true,
+        });
+        await page.setViewportSize({ width: 1500, height: 1000 });
+      },
+    );
+    await run(
       "authorized preview document and inactive production route",
       async () => {
         const anonymous = await context.request.get(
           `${browserOrigin}/private/editor-preview`,
+          { headers: { Cookie: "fixture-session=none" } },
         );
         assert.equal(anonymous.status(), 401);
         await boot();
@@ -500,7 +601,10 @@ export async function checkEditor({
               { id, kind },
             );
             await page.waitForFunction(
-              () => document.querySelector("input")?.disabled,
+              () =>
+                document.querySelector(
+                  'section[aria-label="Profile controls"] input',
+                )?.disabled,
             );
             assert.equal(
               await page.evaluate(() => {
@@ -533,7 +637,9 @@ export async function checkEditor({
             if (!fail) {
               await page.waitForFunction(
                 () =>
-                  document.querySelector("input")?.value === "Restored owner",
+                  document.querySelector(
+                    'section[aria-label="Profile controls"] input',
+                  )?.value === "Restored owner",
               );
               assert.equal(
                 await page.getByLabel("Bio", { exact: true }).inputValue(),
@@ -541,7 +647,10 @@ export async function checkEditor({
               );
             }
             await page.waitForFunction(
-              () => !document.querySelector("input")?.disabled,
+              () =>
+                !document.querySelector(
+                  'section[aria-label="Profile controls"] input',
+                )?.disabled,
             );
             await page
               .getByLabel("Name", { exact: true })

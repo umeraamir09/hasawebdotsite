@@ -269,11 +269,32 @@ export const reservedSubdomain = sqliteTable("reserved_subdomain", {
   name: text("name").primaryKey(),
 });
 export const subdomainClaim = sqliteTable("subdomain_claim", {
+  state: text("state", { enum: ["held", "claimed"] })
+    .notNull()
+    .default("claimed"),
+  heldAt: integer("held_at"),
+  claimedAt: integer("claimed_at"),
   name: text("name").primaryKey(),
   portfolioId: text("portfolio_id")
     .unique()
     .references(() => portfolio.id, { onDelete: "set null" }),
 });
+export const addressConfirmation = sqliteTable(
+  "address_confirmation",
+  {
+    id: text("id").primaryKey(),
+    portfolioId: text("portfolio_id")
+      .notNull()
+      .references(() => portfolio.id, { onDelete: "cascade" }),
+    payloadHash: text("payload_hash").notNull(),
+    name: text("name").notNull(),
+    state: text("state", { enum: ["held", "claimed"] }).notNull(),
+    revision: integer("revision").notNull(),
+    createdAt: integer("created_at").notNull(),
+    applied: integer("applied").notNull(),
+  },
+  (t) => [check("address_confirmation_applied", sql`${t.applied} = 1`)],
+);
 export const githubConnection = sqliteTable(
   "github_connection",
   {
@@ -451,6 +472,7 @@ export const schema = {
   publishVersion,
   reservedSubdomain,
   subdomainClaim,
+  addressConfirmation,
   githubConnection,
   githubActivity,
   githubGrant,
