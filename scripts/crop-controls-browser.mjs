@@ -408,6 +408,16 @@ export async function checkCropControls({
           message: "Choose an image of 5 MiB or less.",
         },
         {
+          name: "renamed-gif.png",
+          mimeType: "image/png",
+          buffer: Buffer.from(
+            "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+            "base64",
+          ),
+          message:
+            "This image could not be opened. Choose another JPEG, PNG or WebP file.",
+        },
+        {
           name: "broken.png",
           mimeType: "image/png",
           buffer: Buffer.from("not actually pixels"),
