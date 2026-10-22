@@ -234,7 +234,14 @@ export function ImageUpload({
         </div>
       )}
       <div aria-live="polite" role="status">
-        {state.kind === "loading" && <p>Opening image...</p>}
+        {state.kind === "loading" && (
+          <>
+            <p>Opening image...</p>
+            <button type="button" onClick={cancel}>
+              Cancel image selection
+            </button>
+          </>
+        )}
         {state.kind === "uploading" && (
           <>
             <label htmlFor={`${id}-progress`}>
