@@ -30,8 +30,10 @@ The connected read-only Figma reference [Add an email link](https://www.figma.co
 
 The coordinator performed a separate self-review of authorization and privacy. Both owner entry paths authenticate without cookie caching and check persisted owner access before the shared summary helper. The default response omits email. Opt-in suggestions require a matching expected owner and retain private/no-store responses. Suggesting or dismissing an email changes no draft; acceptance uses the existing controller. The iframe receives display links only, excluding the account suggestion and private contact recipient configuration. The runtime checks cover missing/wrong owners, sign-out, expiry, deletion, and revocation. No unresolved implementation defects remain from this review.
 
-Owner phase completion approval remains pending. Production editor/onboarding activation and authoritative required-setup/publication validation remain later work.
+Owner phase completion approval was pending at this verification checkpoint. Production editor/onboarding activation and authoritative required-setup/publication validation remain later work.
+
+The owner approved PR #28 and completion of this phase on October 22, 2026. The roadmap now records that approval. This approval follow-up changes documentation only; the existing application verification remains applicable. Documentation checks reviewed the changed links and final diff and passed `git diff --check`.
 
 ## Documentation impact
 
-Authentication and draft guidance now describe opt-in email suggestions, deliberate public acceptance, stable shared links, and raw-input recovery. The baseline, onboarding guidance, root README, and verification recipes describe handoff-only integration and remaining authoritative setup/publication prerequisites. Roadmap links point to this record without checking off the phase. Historical evidence and existing approvals remain intact.
+Authentication and draft guidance now describe opt-in email suggestions, deliberate public acceptance, stable shared links, and raw-input recovery. The baseline, onboarding guidance, root README, and verification recipes describe handoff-only integration and remaining authoritative setup/publication prerequisites. The original implementation added roadmap links without phase checkoff. The October 22 owner approval follow-up checks off the phase and updates the baseline approval status; later integration prerequisites remain unchanged. Historical evidence and existing approvals remain intact.
