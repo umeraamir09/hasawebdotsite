@@ -143,6 +143,9 @@ function LinksControl({ controller, disabled }: Props) {
           const localDestination = Boolean(
             state.inputs[JSON.stringify([...path, "value"])],
           );
+          const localLabel = Boolean(
+            state.inputs[JSON.stringify([...path, "label"])],
+          );
           const id = `${prefix}-${link.id}`;
           return (
             <li key={link.id} data-link-id={link.id} className={styles.entry}>
@@ -159,17 +162,19 @@ function LinksControl({ controller, disabled }: Props) {
                   id={`${id}-label`}
                   value={label}
                   placeholder="My website"
-                  aria-invalid={!label.trim()}
+                  aria-invalid={!label.trim() || localLabel}
                   aria-describedby={
-                    !label.trim() ? `${id}-label-help` : undefined
+                    !label.trim() || localLabel ? `${id}-label-help` : undefined
                   }
                   onChange={(event) =>
                     controller.edit([...path, "label"], event.target.value)
                   }
                 />
-                {!label.trim() && (
+                {(!label.trim() || localLabel) && (
                   <p id={`${id}-label-help`} className={styles.help}>
-                    Add an understandable label, such as My website or Email.
+                    {!label.trim()
+                      ? "Add an understandable label, such as My website or Email."
+                      : "This label change does not fit in the draft. Shorten text or remove unused content, then edit the label again. Your input stays in this browser; the preview keeps the last valid label."}
                   </p>
                 )}
                 <label htmlFor={`${id}-kind`}>Link type</label>
@@ -204,7 +209,7 @@ function LinksControl({ controller, disabled }: Props) {
                   autoCapitalize="none"
                   autoCorrect="off"
                   spellCheck={false}
-                  aria-invalid={invalid}
+                  aria-invalid={invalid || localDestination}
                   aria-describedby={`${id}-destination-help`}
                   placeholder={
                     kind === "email" ? "you@example.com" : "https://example.com"

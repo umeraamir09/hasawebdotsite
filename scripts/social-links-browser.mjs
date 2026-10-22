@@ -385,6 +385,18 @@ export async function checkSocialLinks({
         .waitFor();
       assert.equal(await entries().count(), 1);
       const entry = entries().first();
+      const label = entry.getByLabel("Link label", { exact: true });
+      await label.fill("My longer website label");
+      const labelHelp = entry.getByText(
+        /This label change does not fit in the draft/,
+      );
+      await labelHelp.waitFor();
+      assert.equal(await label.getAttribute("aria-invalid"), "true");
+      assert.equal(
+        await label.getAttribute("aria-describedby"),
+        await labelHelp.getAttribute("id"),
+      );
+      assert.equal(await label.inputValue(), "My longer website label");
       await entry
         .getByLabel("Link type", { exact: true })
         .selectOption("mastodon");
@@ -392,6 +404,12 @@ export async function checkSocialLinks({
         .getByLabel("Destination URL", { exact: true })
         .fill("https://example.com/a-longer-destination");
       await entry.getByText(/This change does not fit in the draft/).waitFor();
+      assert.equal(
+        await entry
+          .getByLabel("Destination URL", { exact: true })
+          .getAttribute("aria-invalid"),
+        "true",
+      );
       await entry.getByLabel("Show in profile", { exact: true }).uncheck();
       assert.equal(
         await entry.getByLabel("Show in profile", { exact: true }).isChecked(),
@@ -409,6 +427,9 @@ export async function checkSocialLinks({
       await page
         .getByRole("textbox", { name: "Bio", exact: true })
         .fill("Room for links again.");
+      await label.fill("My recovered website label");
+      assert.equal(await label.getAttribute("aria-invalid"), "false");
+      assert.equal(await label.getAttribute("aria-describedby"), null);
       await entry
         .getByLabel("Destination URL", { exact: true })
         .fill("https://example.com/recovered");
@@ -418,6 +439,7 @@ export async function checkSocialLinks({
       const links = await storedLinks();
       assert.equal(links[0].id, "maximum-link");
       assert.equal(links[0].value, "https://example.com/recovered");
+      assert.equal(links[0].label, "My recovered website label");
       assert.equal(links[0].kind, "mastodon");
       assert.equal(links[0].showInProfile, false);
       await control()
