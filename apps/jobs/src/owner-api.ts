@@ -3,6 +3,7 @@ import {
   authSettings,
   currentOwner,
   currentSessionIdentity,
+  ownerSummaryResponse,
 } from "@hasaweb/auth";
 import {
   assertSaveSession,
@@ -155,14 +156,7 @@ export function createOwnerRouter() {
     c.header("X-Robots-Tag", "noindex");
     c.header("Vary", "Cookie");
   });
-  app.get("/api/owner", async (c) => {
-    const owner = c.get("owner");
-    const portfolio = await owner.repositories.portfolio.summary();
-    return privateJson({
-      user: { id: owner.identity.user.id, name: owner.identity.user.name },
-      portfolio: portfolio ? { id: portfolio.id } : null,
-    });
-  });
+  app.get("/api/owner", (c) => ownerSummaryResponse(c.req.raw, c.get("owner")));
   app.all("/api/owner", () => privateJson(null, 405));
   app.post("/api/owner/portfolio", async (c) => {
     const invalid = await initializationBody(c.req.raw);

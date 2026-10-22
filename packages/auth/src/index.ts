@@ -186,14 +186,31 @@ export async function ownerResponse(
   try {
     const owner = await currentOwner(env, request.headers, auth);
     if (!owner) return privateJson(null, 401);
-    const portfolio = await owner.repositories.portfolio.summary();
-    return privateJson({
-      user: { id: owner.identity.user.id, name: owner.identity.user.name },
-      portfolio: portfolio ? { id: portfolio.id } : null,
-    });
+    return await ownerSummaryResponse(request, owner);
   } catch (error) {
     return privateJson(null, error instanceof OwnerAccessError ? 401 : 503);
   }
+}
+
+export async function ownerSummaryResponse(
+  request: Request,
+  owner: NonNullable<Awaited<ReturnType<typeof currentOwner>>>,
+) {
+  const suggestEmail =
+    new URL(request.url).searchParams.get("include") === "email-suggestion";
+  if (suggestEmail) {
+    const expected = request.headers.get("X-Expected-Owner-Id");
+    if (!expected)
+      return privateJson({ error: "expected_owner_required" }, 400);
+    if (expected !== owner.identity.user.id)
+      return privateJson({ error: "owner_changed" }, 409);
+  }
+  const portfolio = await owner.repositories.portfolio.summary();
+  return privateJson({
+    user: { id: owner.identity.user.id, name: owner.identity.user.name },
+    portfolio: portfolio ? { id: portfolio.id } : null,
+    ...(suggestEmail ? { emailSuggestion: owner.identity.user.email } : {}),
+  });
 }
 
 export async function authResponse(
