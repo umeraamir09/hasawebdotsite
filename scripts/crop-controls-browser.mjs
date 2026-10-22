@@ -308,6 +308,54 @@ export async function checkCropControls({
       await flush();
       const retried = await current("avatar");
       assert.notEqual(retried.assetId, previous.assetId);
+      const cropRead = (url) =>
+        url.pathname === `/api/assets/${retried.assetId}` &&
+        url.searchParams.get("purpose") === "avatar";
+      let releaseRead;
+      let startedRead;
+      let finishedRead;
+      const heldRead = new Promise((resolve) => {
+        releaseRead = resolve;
+      });
+      const reading = new Promise((resolve) => {
+        startedRead = resolve;
+      });
+      const readDone = new Promise((resolve) => {
+        finishedRead = resolve;
+      });
+      await page.route(cropRead, async (route) => {
+        startedRead();
+        await heldRead;
+        await route.abort().catch(() => {});
+        finishedRead();
+      });
+      await page
+        .getByRole("button", { name: "Crop avatar", exact: true })
+        .click();
+      await reading;
+      await page
+        .getByRole("button", { name: "Cancel image selection", exact: true })
+        .click();
+      assert.equal((await current("avatar")).assetId, retried.assetId);
+      releaseRead();
+      await readDone;
+      await page.unroute(cropRead);
+      await page.evaluate(
+        () =>
+          new Promise((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(resolve)),
+          ),
+      );
+      assert.equal(
+        await page.getByRole("dialog").count(),
+        0,
+        "a cancelled read cannot open a late crop dialog",
+      );
+      assert.equal(
+        (await current("avatar")).assetId,
+        retried.assetId,
+        "cancelling image preparation preserves the ready reference",
+      );
       let finish;
       const held = new Promise((resolve) => {
         finish = resolve;
