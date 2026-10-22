@@ -171,12 +171,21 @@ export function ImageUpload({
         ) : (
           <span>
             {value
-              ? "Image unavailable. Replace it to try again."
+              ? "Image unavailable. Retry the preview or replace it."
               : `Add your ${purpose}`}
           </span>
         )}
       </div>
       <div className="profile-image-actions">
+        {value && unavailable === value.assetId && (
+          <button
+            type="button"
+            disabled={disabled || busy}
+            onClick={() => setUnavailable(null)}
+          >
+            Retry {purpose} preview
+          </button>
+        )}
         <label className="profile-image-file" htmlFor={`${id}-file`}>
           {value ? `Replace ${purpose}` : `Upload ${purpose}`}
         </label>

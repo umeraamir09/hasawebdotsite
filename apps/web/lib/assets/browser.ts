@@ -135,10 +135,12 @@ export async function resolvePreviewImages({
   ownerId,
   draft,
   signal,
+  cache = new Map<string, string>(),
 }: {
   ownerId: string;
   draft: DraftDoc;
   signal: AbortSignal;
+  cache?: Map<string, string>;
 }) {
   const requested = new Map<
     string,
@@ -165,6 +167,12 @@ export async function resolvePreviewImages({
       if (!image) return;
       const { assetId, purpose } = image;
       if (signal.aborted) throw signal.reason;
+      const key = `${purpose}:${assetId}`;
+      const cached = cache.get(key);
+      if (cached) {
+        ready.set(key, cached);
+        continue;
+      }
       try {
         const response = await fetch(privateImageUrl(assetId, purpose), {
           headers: { "X-Expected-Owner-Id": ownerId },
@@ -187,6 +195,9 @@ export async function resolvePreviewImages({
     }
   }
   await Promise.all(Array.from({ length: Math.min(4, images.length) }, read));
+  signal.throwIfAborted();
+  cache.clear();
+  for (const [key, url] of ready) cache.set(key, url);
   return {
     assetOrigins: [location.origin],
     resolveAsset: ({

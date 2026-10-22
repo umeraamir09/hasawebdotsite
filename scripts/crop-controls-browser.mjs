@@ -89,6 +89,77 @@ export async function checkCropControls({
     }, url);
   }
   await run(
+    "private image preview retries a transient read failure",
+    async () => {
+      await boot();
+      const page = getPage();
+      const failImages = (route) =>
+        route.request().resourceType() === "image"
+          ? route.fulfill({ status: 503, body: "" })
+          : route.continue();
+      await page.route("**/api/assets/*?purpose=avatar", failImages);
+      await select("avatar", await original());
+      const reference = await apply("avatar");
+      const control = page.getByRole("region", {
+        name: "Avatar image",
+        exact: true,
+      });
+      await control.getByText(/Image unavailable/).waitFor();
+      await page.unroute("**/api/assets/*?purpose=avatar", failImages);
+      const retry = control.getByRole("button", {
+        name: "Retry avatar preview",
+        exact: true,
+      });
+      assert.equal(
+        await retry.count(),
+        1,
+        "a failed ready image offers an explicit retry",
+      );
+      await retry.click();
+      await page.waitForFunction(() => {
+        const image = document.querySelector(
+          ".profile-image-preview-avatar img",
+        );
+        return image?.complete && image.naturalWidth > 0;
+      });
+      assert.deepEqual(
+        await current("avatar"),
+        reference,
+        "retry preserves the saved reference",
+      );
+    },
+  );
+  await run(
+    "private image resolutions survive text-only preview updates",
+    async () => {
+      await boot();
+      await select("avatar", await original());
+      await apply("avatar");
+      const page = getPage();
+      const probes = [];
+      page.on("request", (request) => {
+        if (
+          request.resourceType() === "fetch" &&
+          new URL(request.url()).pathname.startsWith("/api/assets/")
+        )
+          probes.push(request.url());
+      });
+      for (const name of [
+        "Image reuse first edit",
+        "Image reuse second edit",
+      ]) {
+        await page.getByLabel("Name", { exact: true }).fill(name);
+        await frame().getByRole("heading", { name, exact: true }).waitFor();
+        await displayed();
+      }
+      assert.deepEqual(
+        probes,
+        [],
+        "text edits do not repeat authenticated asset probes",
+      );
+    },
+  );
+  await run(
     "crop avatar keyboard geometry, Reset, ready save and private preview",
     async () => {
       await boot();
@@ -214,6 +285,9 @@ export async function checkCropControls({
         "reopening contains only the saved crop",
       );
       await page.keyboard.press("Escape");
+      await page.waitForFunction(
+        () => document.activeElement?.textContent?.trim() === "Crop avatar",
+      );
       assert.equal((await current("avatar")).assetId, reference.assetId);
       assert.equal(
         await page

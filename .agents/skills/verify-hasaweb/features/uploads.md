@@ -8,6 +8,8 @@ Run `pnpm verify --profile=uploads` for checks, builds and `scripts/private-uplo
 
 The upload suite's browser File fetch and XMLHttpRequest calls prove browser framing through the HTTP handler. The editor profile additionally drives shared image controls, crop dialogs, and private image preview. Provider-photo import and publication remain separate.
 
+The editor suite also fails a private image load temporarily, then uses `Retry avatar preview` to load the same saved asset. Text-only name edits must update the iframe without repeating authenticated asset probes. Crop cancellation checks wait for the scheduled focus restoration before asserting the invoking control is focused.
+
 Run `pnpm verify --profile=editor` to drive [the crop-control checks](../../../../scripts/crop-controls-browser.mjs) through the handoff fixture. Select a file with `Upload avatar` or `Replace avatar`, then use dialog `Adjust avatar`. Focus `Reposition image` and use arrow keys, adjust `Zoom`, and exercise `Reset`, `Apply crop`, and `Cancel`. The banner uses the same controls in `Adjust banner`. Require a ready upload, the persisted draft reference, the private image bytes, and the matching preview image. Cancellation and retry must preserve earlier ready bytes.
 
 ## Read the evidence

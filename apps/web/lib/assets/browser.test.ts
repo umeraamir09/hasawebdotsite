@@ -25,6 +25,84 @@ function images() {
 
 afterEach(() => vi.unstubAllGlobals());
 describe("private preview image preparation", () => {
+  it("reuses successful resolutions for text edits and reads new asset IDs", async () => {
+    const draft = images();
+    const cache = new Map<string, string>();
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, { headers: { "Content-Type": "image/png" } }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    vi.stubGlobal("location", new URL("https://hasaweb.site"));
+    const prepare = () =>
+      resolvePreviewImages({
+        ownerId: "owner",
+        draft,
+        cache,
+        signal: new AbortController().signal,
+      });
+    await prepare();
+    const firstReads = fetcher.mock.calls.length;
+    expect(firstReads).toBeGreaterThan(0);
+    draft.profile.name = "Changed name";
+    await prepare();
+    expect(fetcher).toHaveBeenCalledTimes(firstReads);
+    draft.profile.avatar = {
+      assetId: uuid(999),
+      alt: "Replacement",
+      accepted: true,
+    };
+    const options = await prepare();
+    expect(fetcher).toHaveBeenCalledTimes(firstReads + 1);
+    expect(
+      options.resolveAsset({ assetId: uuid(999), purpose: "avatar" }).state,
+    ).toBe("ready");
+    expect(
+      options.resolveAsset({ assetId: uuid(999), purpose: "banner" }).state,
+    ).toBe("unavailable");
+    const removed = draft.profile.avatar.assetId;
+    delete draft.profile.avatar;
+    const withoutAvatar = await prepare();
+    expect(fetcher).toHaveBeenCalledTimes(firstReads + 1);
+    expect(
+      withoutAvatar.resolveAsset({ assetId: removed, purpose: "avatar" }).state,
+    ).toBe("unavailable");
+    draft.profile.avatar = {
+      assetId: removed,
+      alt: "Restored",
+      accepted: true,
+    };
+    await prepare();
+    expect(fetcher).toHaveBeenCalledTimes(firstReads + 2);
+  });
+  it("retries failed resolutions rather than caching unavailability", async () => {
+    const draft = images();
+    const cache = new Map<string, string>();
+    const fetcher = vi.fn(async () => new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetcher);
+    vi.stubGlobal("location", new URL("https://hasaweb.site"));
+    const prepare = () =>
+      resolvePreviewImages({
+        ownerId: "owner",
+        draft,
+        cache,
+        signal: new AbortController().signal,
+      });
+    await prepare();
+    const failedReads = fetcher.mock.calls.length;
+    fetcher.mockImplementation(
+      async () =>
+        new Response(null, { headers: { "Content-Type": "image/png" } }),
+    );
+    const options = await prepare();
+    expect(fetcher).toHaveBeenCalledTimes(failedReads * 2);
+    expect(
+      options.resolveAsset({
+        assetId: draft.profile.avatar?.assetId ?? "",
+        purpose: "avatar",
+      }).state,
+    ).toBe("ready");
+  });
   it("reads only the exact images requested by the shared display projection", async () => {
     const draft = images();
     const projects = draft.components.find(

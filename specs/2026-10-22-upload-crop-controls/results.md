@@ -10,6 +10,8 @@ Throughput checkpoint. Phase 19 can proceed independently of Phase 21 after thos
 
 The coordinator integrated both workers sequentially on `feat/19-21-upload-links` in `/home/umer/hasawebdotsite`. The coordinator completed the remaining crop browser fixes after the Phase 19 worker became unavailable. No replacement worker was added.
 
+October 22 PR #28 follow-up. The owner authorized regression tests and concise fixes for both P2 review findings, followed by investigation of the failing CI editor step. Work continues in the same integration worktree/branch from `cb548aa`. Write boundaries are image upload/preview controls, browser asset resolution, their tests and affected guidance. Approved prerequisites and phase completion status are unchanged.
+
 ## Decisions
 
 The owner pointed out the onboarding crop references during implementation. Read-only Figma MCP inspection covered desktop avatar `330:252`, banner `330:271` and mobile dialog `330:533` on page `325:2`. The implementation uses their DM Sans typography, warm surfaces, lime action, rounded frame, dark excluded regions, native keyboard zoom slider and five downloaded 20-pixel control icons. The avatar frame uses the existing renderer's 212:220 ratio in place of the reference's square frame. Keyboard guidance and the original-file limitation add accessible instructions. Dynamic owner images replace the reference source portrait. Figma remains unchanged.
@@ -17,6 +19,8 @@ The owner pointed out the onboarding crop references during implementation. Read
 The crop model stores a zoom and a normalized horizontal/vertical position. A pure source rectangle drives both the dialog preview and the canvas output. The original container signature must match the selected JPEG, PNG or WebP type before decoding. Only the resulting image bytes leave the browser. Reset restores the currently open local selection. Reopening an existing crop cannot recover excluded original pixels.
 
 The preview adapter first uses the shared display projection to collect requested image references, then resolves only those images with at most four concurrent private reads. Samples, disabled photos, SEO images and case-study bodies do not add hidden-file requests. Cancellation interrupts superseded preparation.
+
+The PR #28 follow-up retains successful resolutions by purpose/asset ID within the mounted owner/portfolio preview scope. Text edits reuse them, changed IDs require fresh reads, and failed reads remain retryable. Unreferenced entries are removed and aborted preparation cannot commit its cache. Private image URLs continue to authorize every HTTP request. Failed profile image loads offer an explicit preview retry without changing the draft reference.
 
 The existing imported-SVG lint exception also covers the five unchanged Figma control icons. Only the two private/blob image controls bypass the Next Image lint recommendation. Their images require current owner cookies or local object URLs.
 
@@ -30,6 +34,12 @@ The first browser run reproduced focus loss after reopening and cancelling an up
 
 The coordinator performed a separate self-review of upload readiness, exact-purpose private reads, stale callbacks, controller replacement, immutable replacement/removal, and source retention. No unresolved implementation defects remain from that review. Provider import, production editor/onboarding activation, publication, jobs source transfer, and deployed CPU/browser release coverage remain their existing prerequisites. This local gate proves no deployed publication behavior. Owner phase completion approval remains pending.
 
+PR #28 follow-up verification starts from `cb548aa`. Both new browser tests failed before their fixes: the preview offered no retry action, and two text edits issued two extra private asset probes. The resolution unit test also failed with six reads instead of three after a text edit. [Selected failing proof](proof/pr28-regressions-before.json) records these results and the original CI failure. The CI failure was an immediate focus assertion racing the next-animation-frame restoration after Escape; the test now waits for the expected invoking-control focus. It retains the same focus assertion and adds no fixed sleep.
+
+`pnpm verify --profile=editor` passes with the follow-up working changes. This profile covers the changed browser controls/resolver without changing server authentication, storage or shared schemas. All three commands pass: lint/type checks and 374 unit tests, web/jobs builds, and 28 editor browser groups plus two production API groups. Evidence is in `.wrangler/verification/2026-10-22T18-32-54.029Z-TfYE28/summary.json`; browser results are in `suite-3/editor-results.json`. Both regressions pass after the fixes, including zero additional asset probes for the text edits. Replacement/removal, purpose separation, failed-read retry, changed-owner denial, crop focus and link/recovery checks pass. The final diff review checked cache ownership, cancellation before cache commit, immutable asset URLs and unchanged HTTP authorization. Changed documentation links and `git diff --check` pass. Phase completion approval remains pending.
+
 ## Documentation impact
+
+PR #28 follow-up: image preparation no longer probes unchanged assets on every edit. The draft-client contract and upload verification recipe describe scoped reuse and explicit preview retry. The CI focus check must observe the scheduled focus restoration. Production activation, provider import and publication prerequisites remain unchanged.
 
 The change replaces the previous editor assumption that all asset references are unavailable with owner-authorized ready image display. Private-assets, renderer/draft-client guidance, the implementation baseline, onboarding guidance, verification recipes, and root README now describe the controls and their handoff-only integration. UI direction records the newer Figma onboarding page and crop references. Roadmap links point to this record without checking off the phase. Historical evidence, the original-file limitation, and production activation gates remain intact.
