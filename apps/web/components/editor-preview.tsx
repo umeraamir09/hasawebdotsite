@@ -9,6 +9,7 @@ import {
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
 import type { DraftDoc } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
+import { resolvePreviewImages } from "../lib/assets/browser";
 
 export function EditorPreview({
   owner,
@@ -56,27 +57,26 @@ export function EditorPreview({
       onSelect: (value) => select.current(value),
     });
     connection.current = bridge;
-    bridge.request((signal) =>
-      projectPortfolioCancellable(
-        latestDraft.current,
-        { assetOrigins: [], resolveAsset: () => ({ state: "unavailable" }) },
+    bridge.request(async (signal) => {
+      const current = latestDraft.current;
+      const assets = await resolvePreviewImages({
+        ownerId,
+        draft: current,
         signal,
-      ),
-    );
+      });
+      return projectPortfolioCancellable(current, assets, signal);
+    });
     return () => {
       connection.current = null;
       bridge.dispose();
     };
   }, [channel, ownerId, portfolioId]);
   useEffect(() => {
-    connection.current?.request((signal) =>
-      projectPortfolioCancellable(
-        draft,
-        { assetOrigins: [], resolveAsset: () => ({ state: "unavailable" }) },
-        signal,
-      ),
-    );
-  }, [draft]);
+    connection.current?.request(async (signal) => {
+      const assets = await resolvePreviewImages({ ownerId, draft, signal });
+      return projectPortfolioCancellable(draft, assets, signal);
+    });
+  }, [draft, ownerId]);
   useEffect(() => {
     connection.current?.select(selection);
   }, [selection]);
