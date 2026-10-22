@@ -102,6 +102,18 @@ export async function checkSocialLinks({
         .getByRole("button", { name: "Add link", exact: true })
         .click();
       const first = entries().first();
+      assert.equal(
+        await first
+          .getByLabel("Link label", { exact: true })
+          .getAttribute("aria-invalid"),
+        "true",
+      );
+      await first
+        .getByText(
+          "Add an understandable label, such as My website or Email.",
+          { exact: true },
+        )
+        .waitFor();
       await first.getByLabel("Link label", { exact: true }).fill("My work");
       await first
         .getByLabel("Destination URL", { exact: true })
@@ -214,11 +226,15 @@ export async function checkSocialLinks({
         .first()
         .getByLabel("Link label", { exact: true })
         .fill("Work contact");
-      await frame().waitForFunction(() =>
-        [
+      await frame().waitForFunction(() => {
+        const links = [
           ...document.querySelectorAll('a[href="mailto:work@example.com"]'),
-        ].every((link) => link.textContent === "Work contact"),
-      );
+        ];
+        return (
+          links.length === 2 &&
+          links.every((link) => link.textContent === "Work contact")
+        );
+      });
       await entries()
         .first()
         .getByLabel("Show in profile", { exact: true })

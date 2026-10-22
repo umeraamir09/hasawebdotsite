@@ -136,10 +136,18 @@ function LinksControl({ controller, disabled }: Props) {
                   value={label}
                   placeholder="My website"
                   aria-invalid={!label.trim()}
+                  aria-describedby={
+                    !label.trim() ? `${id}-label-help` : undefined
+                  }
                   onChange={(event) =>
                     controller.edit([...path, "label"], event.target.value)
                   }
                 />
+                {!label.trim() && (
+                  <p id={`${id}-label-help`} className={styles.help}>
+                    Add an understandable label, such as My website or Email.
+                  </p>
+                )}
                 <label htmlFor={`${id}-kind`}>Link type</label>
                 <select
                   id={`${id}-kind`}
