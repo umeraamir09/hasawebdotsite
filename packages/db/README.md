@@ -92,6 +92,8 @@ Cleanup coordination survives portfolio deletion through a nullable reference. L
 
 `privateAssets(binding, identity)` adds the web upload lifecycle without changing the asset schema. Its identity comes from Better Auth. Pending insertion, ready lookup and conditional pending-to-ready finalization repeat persisted session expiry/revocation, account deletion, portfolio ownership and portfolio deletion checks. The web handler supplies a fresh server-generated ID. It records actual bytes only after a complete R2 write.
 
+`authorizedPortfolio()` returns only the active owned portfolio ID under those same predicates. Provider-photo retrieval checks it before and after remote HTTP without allocating an asset or retaining source bytes.
+
 `failPrivateAsset` changes only a matching immutable pending row to failed and returns its persisted state. The caller must confirm failed or absent metadata before deleting the matching object. A ready row survives an uncertain finalization response. Unavailable reconciliation leaves bytes private for later recovery. This is an internal cleanup capability, not an owner API or a general status setter.
 
 The [private asset adapter](../../apps/web/lib/assets/README.md) owns binary validation, R2 writes and owned-ready-purpose/object-existence resolution. Existing generic asset repository methods are not proof of upload readiness. Future setup and publication must use the authoritative resolver. Jobs has no draft-bucket access or source-transfer permission from this module.

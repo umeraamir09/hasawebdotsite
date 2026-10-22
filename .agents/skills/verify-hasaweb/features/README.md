@@ -6,7 +6,7 @@ Read the [skill](../SKILL.md) for launch, doctor, locking, evidence and cleanup.
 
 - `entry` uses fresh migrated storage, no session, no provider credentials and a new browser context. The executable helper owns launch and teardown.
 - Other recipes use existing suites and their own seeded users, sessions and draft records. Run one locked profile at a time. Do not replace their seeds with `pnpm local:seed`, which creates no usable sessions.
-- `/editor` currently mounts the account shell. Editor controls, shared image crop/upload controls, social/contact links, and private iframe routes exist in the handoff fixture. Public portfolio serving, publication, provider-photo import, and the required setup guide remain pending.
+- `/editor` currently mounts the account shell. Editor controls, shared image crop/upload controls, social/contact links, and private iframe routes exist in the handoff fixture. Phase 20 provider suggestions and photo import run through these controls. Public portfolio serving, publication and the required setup guide remain pending.
 - An unmet precondition is a failed or blocked journey with its reason, never permission to omit an entry point or weaken the assertion.
 
 ## Driving and proof conventions

@@ -29,6 +29,7 @@ export function privateAssets(binding: D1Database, identity: SessionIdentity) {
       );
   const owned = () => sql`${asset.portfolioId} in (${ownedPortfolio()})`;
   return {
+    authorizedPortfolio: () => ownedPortfolio().get(),
     async createPending(
       input: Pick<PrivateAsset, "id" | "kind" | "contentType" | "bytes">,
     ) {

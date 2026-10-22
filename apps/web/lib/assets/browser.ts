@@ -1,6 +1,35 @@
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
 import type { AssetPurpose, DraftDoc } from "@hasaweb/schema";
+import { profileSuggestions } from "../editor/provider-suggestions";
 import { validateImageFile } from "./crop";
+
+export async function readProviderPhoto({
+  ownerId,
+  portfolioId,
+  signal,
+}: {
+  ownerId: string;
+  portfolioId: string;
+  signal: AbortSignal;
+}): Promise<Blob> {
+  const suggestion = await profileSuggestions({ ownerId, portfolioId, signal });
+  if (!suggestion.photoAvailable)
+    throw new Error(
+      "Your account has no supported photo. Upload an image instead.",
+    );
+  const response = await fetch("/api/assets/provider-photo", {
+    headers: { "X-Expected-Owner-Id": ownerId },
+    cache: "no-store",
+    signal,
+  });
+  if (!response.ok)
+    throw new Error(
+      "Your account photo could not be imported. Try again or upload an image instead.",
+    );
+  const blob = await response.blob();
+  validateImageFile(blob);
+  return blob;
+}
 
 export function privateImageUrl(id: string, purpose: AssetPurpose) {
   return `/api/assets/${encodeURIComponent(id)}?purpose=${purpose}`;

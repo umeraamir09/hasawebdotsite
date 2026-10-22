@@ -9,9 +9,11 @@ import { ImageUpload } from "./image-upload";
 export function ProfileImages({
   controller,
   disabled,
+  providerPhotoAvailable = false,
 }: {
   controller: DraftController;
   disabled: boolean;
+  providerPhotoAvailable?: boolean;
 }) {
   const state = useStore(controller.store);
   if (!state.working) return null;
@@ -28,6 +30,9 @@ export function ProfileImages({
             state.inputs[JSON.stringify(["profile", purpose, "alt"])],
           )}
           ownerId={controller.identity.ownerId}
+          {...(purpose === "avatar" && providerPhotoAvailable
+            ? { providerPortfolioId: controller.identity.portfolioId }
+            : {})}
           disabled={disabled}
           onReady={(assetId) => {
             const previous =

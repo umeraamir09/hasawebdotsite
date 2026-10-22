@@ -9,6 +9,7 @@ Owners select profile or component controls and see valid edits immediately in a
 - `editor-widths` switches between desktop and mobile preview viewports.
 - `editor-private` stops preview display after session/owner changes.
 - `editor-images` selects, crops, uploads, describes, replaces, and removes avatar/banner images through the private asset API.
+- `editor-profile` edits required profile values, accepts provider names explicitly and imports provider photos through the shared crop workflow.
 - `editor-links` manages stable link entries, placement, ordering, invalid input, and deliberate public-email acceptance.
 
 ## How to get to it (user POV)
@@ -32,4 +33,4 @@ Preconditions: `pnpm verify --profile=editor` checks/builds web/jobs and runs `s
 
 - `/editor` is still the account shell. It cannot reach these controls. Report that production entry as unavailable until the complete setup activation lands; do not replace it with a fixture and claim production coverage.
 - The fixture seeds real initial draft state and uses some direct controller assertions for boundary tests. Only actual control interactions prove those UI paths.
-- Shared upload/crop and link controls use the real owner and private asset APIs in the handoff fixture. Provider-photo import, full component tools, saved appearance controls, and publication remain later work. The limited Customization panel is not proof of those capabilities.
+- Shared upload/crop and link controls use the real owner and private asset APIs in the handoff fixture. Provider-photo HTTP uses controlled external fixtures. Full component tools, saved appearance controls and publication remain later work. The limited Customization panel is not proof of those capabilities.

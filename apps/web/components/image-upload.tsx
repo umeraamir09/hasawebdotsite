@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import {
   privateImageUrl,
   readPrivateImage,
+  readProviderPhoto,
   uploadImage,
 } from "../lib/assets/browser";
 import {
@@ -31,6 +32,7 @@ export function ImageUpload({
   description,
   descriptionInvalid = false,
   ownerId,
+  providerPortfolioId,
   disabled,
   onReady,
   onRemove,
@@ -42,6 +44,7 @@ export function ImageUpload({
   description: string;
   descriptionInvalid?: boolean;
   ownerId: string;
+  providerPortfolioId?: string;
   disabled: boolean;
   onReady(assetId: string): void;
   onRemove(): void;
@@ -126,6 +129,34 @@ export function ImageUpload({
         });
     }
   }
+  async function importPhoto() {
+    if (!providerPortfolioId) return;
+    trigger.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    const expected = ++generation.current;
+    const request = new AbortController();
+    attempt.current = request;
+    setState({ kind: "loading" });
+    try {
+      const blob = await readProviderPhoto({
+        ownerId,
+        portfolioId: providerPortfolioId,
+        signal: request.signal,
+      });
+      if (expected === generation.current) await select(blob);
+    } catch (cause) {
+      if (expected === generation.current)
+        setState({
+          kind: "error",
+          message:
+            cause instanceof Error
+              ? cause.message
+              : "Upload an image or try importing your account photo again.",
+        });
+    }
+  }
   async function upload(blob: Blob) {
     const expected = ++generation.current;
     const request = new AbortController();
@@ -177,6 +208,15 @@ export function ImageUpload({
         )}
       </div>
       <div className="profile-image-actions">
+        {providerPortfolioId && (
+          <button
+            type="button"
+            disabled={disabled || busy}
+            onClick={() => void importPhoto()}
+          >
+            Use my account photo
+          </button>
+        )}
         {value && unavailable === value.assetId && (
           <button
             type="button"
@@ -228,6 +268,12 @@ export function ImageUpload({
       <p id={`${id}-formats`} className="profile-image-note">
         JPEG, PNG or WebP. Up to 5 MiB. Only the finished crop is saved.
       </p>
+      {providerPortfolioId && (
+        <p className="profile-image-note">
+          Review your sign-in photo in the crop dialog. Apply crop accepts it
+          for your avatar. Cancel keeps your current image.
+        </p>
+      )}
       {value && (
         <div className="editor-field">
           <label htmlFor={`${id}-description`}>{label} description</label>

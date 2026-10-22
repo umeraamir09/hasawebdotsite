@@ -1,6 +1,6 @@
 # Private assets
 
-The web Worker dispatches `/api/assets` before OpenNext. `DRAFT_BUCKET` remains web-only. Shared upload/crop controls and the private editor preview use these routes. Production editor/guide routing, provider import and source-transfer RPC activation remain separate work.
+The web Worker dispatches `/api/assets` before OpenNext. `DRAFT_BUCKET` remains web-only. Shared upload/crop controls and the private editor preview use these routes. Production editor/guide routing and source-transfer RPC activation remain separate work. Phase 20 adds private provider-photo retrieval for the shared crop controls.
 
 ## Upload contract
 
@@ -45,3 +45,17 @@ The source image's container signature must match its selected media type before
 Only HTTP 201 with a matching ready receipt can replace a reference. Cancellation, network failure, unsupported/oversize/undecodable files and failed encoding retain the previous reference. Retry resends the prepared crop to a new immutable asset. Reopening Crop fetches only the saved crop. Recovering excluded pixels requires selecting the original file again. Source files and crop coordinates do not enter draft JSON, IndexedDB journals or private storage.
 
 `resolvePreviewImages` checks owner, purpose, readiness and existence through private GET before returning trusted same-origin URLs to the display projection. The preview iframe reauthorizes its owner before mounting and after browser restoration. Publication still requires its separate readiness validation, immutable promotion and serving contracts.
+
+## Provider photo import
+
+`GET /api/assets/provider-photo` accepts no caller URL, asset ID or purpose. It uses the authenticated account's stored sign-in image. `X-Expected-Owner-Id` is mandatory. Before and after retrieval, the repository requires a live persisted session, an account outside deletion, and an owned portfolio outside deletion. Unavailable, foreign, expired, revoked and malformed requests return the same empty private 404. Responses retain the private image cache, origin and content-type headers.
+
+Only HTTPS on exact hosts `avatars.githubusercontent.com`, `lh3.googleusercontent.com`, `lh4.googleusercontent.com`, `lh5.googleusercontent.com` and `lh6.googleusercontent.com` is permitted. URLs with credentials, fragments or nondefault ports are rejected. Redirects are refused. The outbound request sends only an image Accept header and omits credentials. Other stored hosts require manual upload. No request value can select a remote target.
+
+Retrieval has a fifteen-second total abort deadline. The handler accepts JPEG, PNG and WebP, counts actual streamed bytes against 5,242,880 bytes, validates any declared Content-Length and checks container signatures. The browser must also decode the image through `openLocalImage`. A valid signature alone cannot prove decodability. This route creates no asset metadata or R2 object and returns no remote URL.
+
+`ProfileControls` requests private account suggestions only after Check my account suggestions. Use my account photo appears only when a supported photo is reported. It repeats the owner/portfolio-scoped lookup before retrieval. The downloaded source enters the same crop dialog as local selection. Apply crop encodes and uploads through `PUT /api/assets`; only the matching ready receipt can replace the avatar and clear its sample marker. Cancel, a failed import or upload, controller replacement and suspension preserve the previous reference. Failed imports offer retry or manual upload. Neither sources nor suggestions enter draft JSON or recovery journals. Account email remains a separate deliberate public-link choice.
+
+Reimporting retrieves the current account photo again. It does not restore a retained original, a previous provider image or earlier crop coordinates.
+
+The editor browser suite drives these controls with production authentication, D1/R2, retrieval validation and cropping. Its isolated gateway replaces external provider image HTTP with fixtures and refuses unexpected egress. It does not prove live provider availability or deployed CPU limits.

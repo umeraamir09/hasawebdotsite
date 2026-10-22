@@ -11,6 +11,9 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
+import { providerPhotoUrl } from "./provider-photo";
+
+export { providerPhotoUrl } from "./provider-photo";
 
 export type AuthEnvironment = {
   APP_ENV: string;
@@ -196,9 +199,10 @@ export async function ownerSummaryResponse(
   request: Request,
   owner: NonNullable<Awaited<ReturnType<typeof currentOwner>>>,
 ) {
-  const suggestEmail =
-    new URL(request.url).searchParams.get("include") === "email-suggestion";
-  if (suggestEmail) {
+  const include = new URL(request.url).searchParams.get("include");
+  const suggestEmail = include === "email-suggestion";
+  const suggestProfile = include === "profile-suggestions";
+  if (suggestEmail || suggestProfile) {
     const expected = request.headers.get("X-Expected-Owner-Id");
     if (!expected)
       return privateJson({ error: "expected_owner_required" }, 400);
@@ -210,6 +214,15 @@ export async function ownerSummaryResponse(
     user: { id: owner.identity.user.id, name: owner.identity.user.name },
     portfolio: portfolio ? { id: portfolio.id } : null,
     ...(suggestEmail ? { emailSuggestion: owner.identity.user.email } : {}),
+    ...(suggestProfile
+      ? {
+          profileSuggestions: {
+            name: owner.identity.user.name,
+            photoAvailable:
+              providerPhotoUrl(owner.identity.user.image) !== null,
+          },
+        }
+      : {}),
   });
 }
 
