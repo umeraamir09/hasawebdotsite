@@ -1393,6 +1393,10 @@ export function createDraftController(options: Options) {
     void persist();
   }
   return {
+    identity: Object.freeze({
+      ownerId: options.ownerId,
+      portfolioId: options.portfolioId,
+    }),
     scopeKey: JSON.stringify([options.ownerId, options.portfolioId, id]),
     store,
     initialize,
