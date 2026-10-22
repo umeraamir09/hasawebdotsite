@@ -2,7 +2,7 @@
 
 ## Scope and acceptance
 
-Implement reusable link controls for [product section 4](../../docs/product.md#4-required-profile-images-and-social-identity), [acceptance criteria 4.3 through 4.7](../../docs/acceptance-criteria.md#4-required-profile-images-and-social-identity), and [the required onboarding Links step](../../docs/onboarding.md#3-step-sequence-and-mapping).
+Implement reusable link controls for [product section 4](../../docs/product.md#4-required-profile-images-and-social-identity), [acceptance criteria 4.3 through 4.7](../../docs/acceptance-criteria.md#4-required-profile-images-and-social-identity), and [the required onboarding Links step](../../docs/onboarding.md#screen-sequence-and-content-mapping).
 
 Prerequisites 11, 13 through 15, and 17 are owner-approved and integrated in shared base `7debdbd`. Work uses branch `feat/21-social-identity` in `/home/umer/.codex/worktrees/phase21-social-identity/hasawebdotsite`. Phase 20 is not a prerequisite.
 
