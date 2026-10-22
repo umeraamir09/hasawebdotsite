@@ -24,6 +24,7 @@ jobs:
       - run: RENDERER_EVIDENCE=.wrangler/ci-renderer pnpm test:renderer
       - run: pnpm test:auth:browser --evidence-dir=.wrangler/ci-auth
       - run: pnpm test:persistence
+      - run: pnpm test:uploads
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-draft-api pnpm test:draft-api
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-autosave pnpm test:autosave
       - run: DRAFT_API_EVIDENCE=.wrangler/ci-editor pnpm test:editor

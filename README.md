@@ -64,4 +64,8 @@ After building, run `DRAFT_API_EVIDENCE=.wrangler/draft-api-review pnpm test:dra
 
 ## Editor and live preview checks
 
-Run `pnpm verify --profile=editor` for checks, web/jobs builds and the real owner-API editor fixture. `pnpm test:editor` runs only that browser suite after the applications have been built. It covers immediate valid edits, raw stable-path input, both preview widths, selected recovery and private iframe transport. See [Phase 17 results](specs/2026-10-20-editor-live-preview/results.md) and the [draft client contract](apps/web/lib/draft/README.md#editor-integration). These fixtures do not activate `/editor`, setup routing, uploads or publication.
+Run `pnpm verify --profile=editor` for checks, web/jobs builds and the real owner-API editor fixture. `pnpm test:editor` runs only that browser suite after the applications have been built. It covers immediate valid edits, raw stable-path input, both preview widths, selected recovery, private iframe transport and explicit Address confirmation. See [Phase 17 results](specs/2026-10-20-editor-live-preview/results.md), [Phase 22 results](specs/2026-10-21-address-reservations/results.md) and the [draft client contract](apps/web/lib/draft/README.md#editor-integration). These fixtures do not activate `/editor`, setup routing, upload/crop controls or publication.
+
+## Private upload checks
+
+Run `pnpm verify --profile=uploads` for checks, builds and the real D1/R2 upload suite. The [private asset protocol](apps/web/lib/assets/README.md) describes binary `PUT /api/assets`, owner-only reads, framing headers and lifecycle failures. [Phase 18 results](specs/2026-10-21-private-uploads/results.md) distinguish verified local transport behavior from later crop controls, editor image integration, jobs source transfer and deployed CPU requirements.

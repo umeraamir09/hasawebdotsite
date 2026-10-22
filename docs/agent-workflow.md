@@ -67,6 +67,7 @@ During coding, run the smallest checks that answer the current question. At comp
 | `drafts` | Check, web/jobs builds, draft API, autosave and editor browser suites. Draft/recovery integration. |
 | `auth` | Check, web/jobs builds, auth browser, draft API, autosave and editor suites. Owner/session boundaries. |
 | `persistence` | Check, all application builds and persistence suite. Add draft/auth suites when their contracts change; shared schema/migrations select full. |
+| `uploads` | Check, all application builds and private upload HTTP/browser suite. Upload framing, private R2 reads and lifecycle failures. Shared storage/auth contract changes still select full. |
 | `runtime` / `full` | Check, all builds and every existing foundation regression suite, including runtime smoke and routing. Infrastructure, shared contracts, dependencies, uncertain impact. |
 
 Examples:

@@ -24,7 +24,7 @@ The callback mounts shared recovery controls and requires explicit continuation 
 
 ## Dormant editor preview authorization
 
-`serveEditorPreview` verifies the original cookie with the owner API before serving a private/no-store, noindex boot shell. The shell contains no draft data. `openEditorPreview` checks uncached owner/portfolio identity before mounting the child and reports that identity to the pinned parent connection. Focus and browser restoration recheck the original identity before resuming; an account change disposes the old display. Neither preview adapter resolves raw asset IDs. Actual ready-asset access belongs to Phase 18.
+`serveEditorPreview` verifies the original cookie with the owner API before serving a private/no-store, noindex boot shell. The shell contains no draft data. `openEditorPreview` checks uncached owner/portfolio identity before mounting the child and reports that identity to the pinned parent connection. Focus and browser restoration recheck the original identity before resuming; an account change disposes the old display. Neither preview adapter resolves raw asset IDs. Phase 18 supplies private asset HTTP access and a server resolver that checks ownership, purpose, readiness and object existence. Connecting that resolver to editor image controls remains separate from the preview adapter's authorization.
 
 These adapters are exercised by the Phase 17 handoff fixture. They are not registered as production routes. Normal OAuth and `/editor` still use the account shell until the complete setup entry resolver is activated.
 
