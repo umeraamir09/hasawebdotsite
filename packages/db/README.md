@@ -87,3 +87,11 @@ Cleanup coordination survives portfolio deletion through a nullable reference. L
 ## Verification
 
 `test:persistence` starts an isolated local Worker, applies migrations 0000–0002, populates version 1 content with an asset, permanent claim and legacy GitHub cache/credential, applies the additive migrations, reapplies tracked migrations, and reseeds twice, and exercises the repositories in workerd/D1 with multiple owners and controlled session states. It uses the real Better Auth adapter and signed cookies, including an actual cached session cookie after D1 revocation. It also checks draft byte boundaries, concurrent inserts/counters, relational constraints, account-deletion cascades, permanent claims, failed dependencies, and restart persistence. It removes only its own ignored test state on the next run and writes evidence to `.wrangler/persistence-integration/evidence.json`. CI runs it alongside the existing three-Worker smoke test. The test Worker is separate from application entrypoints and accepts only local loopback requests.
+
+## Private upload lifecycle
+
+`privateAssets(binding, identity)` adds the web upload lifecycle without changing the asset schema. Its identity comes from Better Auth. Pending insertion, ready lookup and conditional pending-to-ready finalization repeat persisted session expiry/revocation, account deletion, portfolio ownership and portfolio deletion checks. The web handler supplies a fresh server-generated ID. It records actual bytes only after a complete R2 write.
+
+`failPrivateAsset` changes only a matching immutable pending row to failed and returns its persisted state. The caller must confirm failed or absent metadata before deleting the matching object. A ready row survives an uncertain finalization response. Unavailable reconciliation leaves bytes private for later recovery. This is an internal cleanup capability, not an owner API or a general status setter.
+
+The [private asset adapter](../../apps/web/lib/assets/README.md) owns binary validation, R2 writes and owned-ready-purpose/object-existence resolution. Existing generic asset repository methods are not proof of upload readiness. Future setup and publication must use the authoritative resolver. Jobs has no draft-bucket access or source-transfer permission from this module.
