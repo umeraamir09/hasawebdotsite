@@ -315,7 +315,9 @@ if (!remote) {
           database_id: "00000000-0000-0000-0000-000000000013",
         },
       ],
-      r2_buckets: [{ binding: "DRAFT_BUCKET", bucket_name: "draft-api-assets" }],
+      r2_buckets: [
+        { binding: "DRAFT_BUCKET", bucket_name: "draft-api-assets" },
+      ],
       services: [
         {
           binding: "OWNER_API",

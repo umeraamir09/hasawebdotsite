@@ -73,6 +73,7 @@ export async function checkSocialLinks({
           ]);
         } else assert.equal("emailSuggestion" in body, false);
       }
+      await sql("DELETE FROM session WHERE id='draft-session-revoked'");
       for (const [session, status] of [
         ["bob", 409],
         ["none", 401],

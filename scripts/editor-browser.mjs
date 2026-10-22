@@ -4,7 +4,9 @@ import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+import { checkSocialLinks } from "./social-links-browser.mjs";
 
 export async function checkEditor({
   root,
@@ -127,6 +129,11 @@ export async function checkEditor({
           url.pathname.endsWith(".js") ? "text/javascript" : "text/css",
         );
         res.end(await readFile(join(directory, url.pathname.slice(1))));
+        return;
+      }
+      if (/^\/assets\/crop\/[a-z-]+\.svg$/.test(url.pathname)) {
+        res.setHeader("Content-Type", "image/svg+xml");
+        res.end(await readFile(join(root, "apps/web/public", url.pathname)));
         return;
       }
       if (
@@ -486,10 +493,12 @@ export async function checkEditor({
         await frame().waitForFunction(
           () => document.querySelector("h1")?.textContent === "Accepted name",
         );
-        await page.getByLabel("Email me", { exact: true }).fill("unfinished@");
+        await page
+          .getByLabel("Email address", { exact: true })
+          .fill("unfinished@");
         assert.equal(
           await page
-            .getByLabel("Email me", { exact: true })
+            .getByLabel("Email address", { exact: true })
             .getAttribute("aria-invalid"),
           "true",
         );
@@ -501,7 +510,7 @@ export async function checkEditor({
           c.update(d);
         });
         assert.equal(
-          await page.getByLabel("Email me", { exact: true }).inputValue(),
+          await page.getByLabel("Email address", { exact: true }).inputValue(),
           "unfinished@",
         );
         await page
@@ -842,7 +851,7 @@ export async function checkEditor({
         await page
           .getByLabel("Name", { exact: true })
           .fill("Local review edit");
-        await page.getByLabel("Email me", { exact: true }).fill("raw@");
+        await page.getByLabel("Email address", { exact: true }).fill("raw@");
         const before = await page
           .locator("[data-editor-scope]")
           .getAttribute("data-editor-scope");
@@ -886,7 +895,7 @@ export async function checkEditor({
           "true",
         );
         assert.equal(
-          await page.getByLabel("Email me", { exact: true }).inputValue(),
+          await page.getByLabel("Email address", { exact: true }).inputValue(),
           "raw@",
         );
       },
@@ -1189,6 +1198,19 @@ export async function checkEditor({
         );
       },
     );
+    const controls = {
+      getPage: () => page,
+      context,
+      boot,
+      displayed,
+      frame,
+      sql,
+      run,
+      evidence,
+      browserOrigin,
+    };
+    await checkCropControls(controls);
+    await checkSocialLinks(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),
