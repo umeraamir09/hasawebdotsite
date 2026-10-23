@@ -187,7 +187,7 @@ export async function checkPublicationApi({
   draft.components[0].data.includePrivate = true;
   assert.ok((await issues()).some((issue) => issue.code === "github"));
   draft.components[0].data.includePrivate = false;
-  await sql("UPDATE github_activity SET generation=1 WHERE portfolio_id=?", [
+  await sql("UPDATE github_connection SET generation=1 WHERE portfolio_id=?", [
     portfolioId,
   ]);
   assert.ok((await issues()).some((issue) => issue.code === "github"));

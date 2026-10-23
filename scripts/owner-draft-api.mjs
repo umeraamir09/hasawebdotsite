@@ -192,6 +192,16 @@ async function request(action, body = {}, options = {}) {
   return result;
 }
 async function check(name, action) {
+  const filter = process.argv
+    .find((argument) => argument.startsWith("--api-filter="))
+    ?.slice("--api-filter=".length);
+  if (
+    filter &&
+    !name.startsWith("real session") &&
+    !new RegExp(filter).test(name)
+  )
+    return;
+
   if (
     (process.argv.includes("--autosave") ||
       process.argv.includes("--editor")) &&
