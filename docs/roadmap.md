@@ -339,7 +339,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 11E, 16 for the approved catalog and renderer token contract. Palette generation and contrast tests can start before preset UI is complete.
 - Integration before full completion: 23–25, 35 for preset reset/preview controls, all page types and generated token delivery under the final CSP.
 - Generate both mode palettes from one selected color, explain automatic adjustments, and allow reset to the selected preset. Deliver generated tokens under the shared renderer CSP using retained generated CSS or an explicit reviewed hash. Do not accept owner CSS or weaken inline-script restrictions.
-- [ ] Complete when supported presets and a seed-color sweep meet the confirmed contrast standard and all tokens update immediately in preview. Individual palette editing remains absent.
+- [x] Complete when supported presets and a seed-color sweep meet the confirmed contrast standard and all tokens update immediately in preview. Individual palette editing remains absent.
+- Owner approved completion on October 23, 2026 for the implementation in [PR #30](https://github.com/umeraamir09/hasawebdotsite/pull/30). The approved scope is pure palette generation, contrast checks, adjustment data and preset resolution. Preview controls and final page/CSP delivery remain integration work in Phases 23–25 and 35.
 
 ### Phase 37. Add decorations and Face Reveal setup
 

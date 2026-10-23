@@ -6,7 +6,7 @@ Implement the startable palette-generation increment from [Phase 36](../../docs/
 
 Phases 11E and 16 are owner-approved and integrated in shared base `598d3a5`. Work uses branch `feat/36-custom-colors` in `.wrangler/worktrees/phase36`. Write boundaries are the theme package, its dependency lock, focused verification, and affected guidance. No schema, renderer projection, editor activation, or publication change belongs to this increment.
 
-Workflow steps are contract tracing, API design, implementation, self-review, local verification, and documentation review. The owner authorized committing, pushing, and opening a PR on October 23, 2026. Deployment and phase completion approval remain separate.
+Workflow steps are contract tracing, API design, implementation, self-review, local verification, and documentation review. The owner authorized committing, pushing, and opening a PR on October 23, 2026. The owner approved Phase 36 completion for PR #30 on October 23, 2026. Deployment remains separate.
 
 Throughput checkpoint. Generation and contrast verification can proceed with approved prerequisites. Preset controls and preview activation depend on Phase 35. Final validation, page delivery, and CSP integration depend on Phases 23 through 25. Generation, contrast checks, and reset resolution run sequentially in this session. The catalog and lockfile have one writer.
 
@@ -20,7 +20,7 @@ Compare two approaches. Independent RGB channel shifts can change hue and do not
 
 ## Results
 
-The pure generation increment is implemented. Full phase completion remains blocked on the integration phases above. No phase checkoff or reusable milestone approval has been requested or recorded.
+The pure generation increment is implemented. The owner explicitly approved Phase 36 completion for [PR #30](https://github.com/umeraamir09/hasawebdotsite/pull/30) on October 23, 2026 and requested roadmap checkoff, commit and push. The roadmap records that approval. The integration checks below remain pending; approval does not establish that preview controls or final page/CSP delivery are implemented.
 
 | Acceptance boundary | Result |
 | --- | --- |
@@ -44,3 +44,5 @@ Relative file links and anchors resolve in the affected guidance. `git diff --ch
 ## Documentation impact
 
 The theme package adds pure palette generation through a separate entry while preserving catalog-only imports. Its README, the architecture theme contract, appearance catalog guidance, and implementation baseline now describe that boundary. Historical Phase 11E and Phase 16 evidence remains unchanged. Final CSP delivery, immediate owner preview, all page types, and rendered axe checks remain pending their integration prerequisites.
+
+Approval documentation update, October 23, 2026: recorded the owner approval in the roadmap and implementation baseline while retaining the pending integration boundaries. Documentation-only verification uses the `docs` profile and final diff review.
