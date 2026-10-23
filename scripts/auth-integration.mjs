@@ -106,7 +106,7 @@ async function begin(
     jar,
     {
       provider,
-      callbackURL: `${origin}${recovery ? "/auth/recovery" : "/editor"}`,
+      callbackURL: `${origin}${recovery ? "/auth/recovery" : "/auth/entry"}`,
       errorCallbackURL: recovery
         ? `${origin}/auth/recovery/error`
         : `${origin}/sign-in?provider=${provider}`,
@@ -387,6 +387,22 @@ try {
         callbackURL: "https://evil.example",
       });
       assert.equal(response.status, 403);
+      for (const callbackURL of [
+        `${origin}/editor`,
+        `${origin}/auth/entry?return=/editor`,
+      ]) {
+        assert.equal(
+          (
+            await request("/api/auth/sign-in/social", new Jar(), {
+              provider: "github",
+              callbackURL,
+              errorCallbackURL: `${origin}/sign-in?provider=github`,
+            })
+          ).status,
+          403,
+        );
+      }
+
       assert.equal(
         (
           await request("/api/auth/get-session", owner.jar, undefined, {

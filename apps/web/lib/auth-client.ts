@@ -1,25 +1,14 @@
+import { type AccountEntry, accountEntryResponseSchema } from "@hasaweb/schema";
 export type Provider = "github" | "google";
 export const providerNames = { github: "GitHub", google: "Google" } as const;
 export type Owner = {
   user: { id: string; name: string };
   portfolio: { id: string } | null;
 };
-
-export async function readOwner(signal?: AbortSignal): Promise<Owner | null> {
-  const response = await fetch("/api/owner", {
-    cache: "no-store",
-    signal: signal ?? null,
-  });
-  if (response.status === 401) return null;
-  if (!response.ok) throw new Error("Could not check your session");
-  return response.json() as Promise<Owner>;
-}
-// Account entry is an explicit idempotent mutation. Sign-in/session probes
-// continue using readOwner without creating a portfolio as a side effect.
-export async function openOwnerPortfolio(
+export async function resolveAccountEntry(
   signal?: AbortSignal,
-): Promise<Owner | null> {
-  const response = await fetch("/api/owner/portfolio", {
+): Promise<(Owner & { entry: AccountEntry }) | null> {
+  const response = await fetch("/api/owner/entry", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{}",
@@ -28,6 +17,17 @@ export async function openOwnerPortfolio(
   });
   if (response.status === 401) return null;
   if (!response.ok) throw new Error("Could not open your portfolio");
+  const result: unknown = await response.json();
+  return accountEntryResponseSchema.parse(result);
+}
+
+export async function readOwner(signal?: AbortSignal): Promise<Owner | null> {
+  const response = await fetch("/api/owner", {
+    cache: "no-store",
+    signal: signal ?? null,
+  });
+  if (response.status === 401) return null;
+  if (!response.ok) throw new Error("Could not check your session");
   return response.json() as Promise<Owner>;
 }
 export async function startSignIn(
@@ -40,7 +40,7 @@ export async function startSignIn(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       provider,
-      callbackURL: `${origin}${mode === "draft-recovery" ? "/auth/recovery" : "/editor"}`,
+      callbackURL: `${origin}${mode === "draft-recovery" ? "/auth/recovery" : "/auth/entry"}`,
       errorCallbackURL:
         mode === "draft-recovery"
           ? `${origin}/auth/recovery/error`

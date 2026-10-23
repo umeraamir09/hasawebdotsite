@@ -191,6 +191,198 @@ export async function checkAutosave({
     );
   try {
     await run(
+      "authoritative handoff retains optional recovery and retries a lost successful reply",
+      async () => {
+        await reset();
+        await boot(page, "?handoff&recovery");
+        const geometry = await page
+          .getByRole("button", { name: "Open editor", exact: true })
+          .evaluate((button) => ({
+            height: button.getBoundingClientRect().height,
+            width: button.getBoundingClientRect().width,
+            color: getComputedStyle(button).backgroundColor,
+          }));
+        assert.equal(geometry.height, 48);
+        assert.ok(geometry.width <= 520);
+        assert.equal(geometry.color, "rgb(189, 235, 112)");
+        await page
+          .getByRole("button", { name: "Open editor", exact: true })
+          .click();
+        await page
+          .getByRole("alert")
+          .filter({ hasText: "Complete address" })
+          .waitFor();
+        assert.equal(
+          (
+            await sql(
+              "SELECT first_editor_entered_at FROM portfolio WHERE user_id='draft-alice'",
+            )
+          )[0].first_editor_entered_at,
+          null,
+        );
+        const ready = structuredClone(fixture);
+        ready.samples = {};
+        const png = Buffer.from(
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+          "base64",
+        );
+        for (const purpose of ["avatar", "banner"]) {
+          const response = await fetch(`${origin}/api/assets`, {
+            method: "PUT",
+            headers: {
+              "X-Runtime-Key": secrets.RUNTIME_KEY,
+              Origin: origin,
+              Cookie: cookie("alice"),
+              "Content-Type": "image/png",
+              "X-Asset-Purpose": purpose,
+              "X-Expected-Owner-Id": "draft-alice",
+              "X-Asset-Bytes": String(png.length),
+            },
+            body: png,
+          });
+          assert.equal(response.status, 201, await response.clone().text());
+          const asset = await response.json();
+          ready.profile[purpose] = {
+            assetId: asset.id,
+            ...(purpose === "avatar" ? { accepted: true } : {}),
+          };
+        }
+        await sql(
+          "UPDATE portfolio SET draft=?,draft_rev=draft_rev+1 WHERE user_id='draft-alice'",
+          [JSON.stringify(ready)],
+        );
+        await boot(page, "?handoff&recovery");
+        await page.evaluate(() =>
+          window.fixture.controller.confirmAddress("browser-handoff"),
+        );
+        await page.getByLabel("Name", { exact: true }).fill("Final setup name");
+        await page.evaluate(() => {
+          window.fixture.controller.setInput(
+            [
+              "components",
+              { id: "projects-1" },
+              "data",
+              "entries",
+              { id: "project-1" },
+              "codeUrl",
+            ],
+            "https://",
+          );
+          window.fixture.fault.action = "handoff";
+          window.fixture.fault.mode = "after";
+        });
+        await page
+          .getByRole("button", { name: "Open editor", exact: true })
+          .click();
+        await page
+          .getByRole("alert")
+          .filter({ hasText: "We couldn't open the editor" })
+          .waitFor();
+        const entered = (
+          await sql(
+            "SELECT first_editor_entered_at,draft_rev,setup_progress FROM portfolio WHERE user_id='draft-alice'",
+          )
+        )[0];
+        assert.ok(entered.first_editor_entered_at);
+        assert.equal((await getDraft()).profile.name, "Final setup name");
+        await page
+          .getByRole("button", { name: "Open editor", exact: true })
+          .click();
+        await page
+          .getByRole("status")
+          .filter({ hasText: "Editor opened. Unsaved input remains" })
+          .waitFor();
+        const after = (
+          await sql(
+            "SELECT first_editor_entered_at,draft_rev,setup_progress FROM portfolio WHERE user_id='draft-alice'",
+          )
+        )[0];
+        assert.deepEqual(after, entered);
+        assert.equal((await snapshot()).suspended, true);
+        const records = await page.evaluate(() =>
+          window.fixture.storage.list(
+            "draft-alice",
+            window.fixture.portfolioId,
+          ),
+        );
+        assert.ok(
+          records.some(
+            (v) => v.context === "setup" && Object.keys(v.inputs).length > 0,
+          ),
+        );
+        await page.screenshot({
+          path: join(evidence, "setup-handoff.png"),
+          fullPage: true,
+        });
+        await page.setViewportSize({ width: 390, height: 844 });
+        const mobile = await page
+          .getByRole("button", { name: "Open editor", exact: true })
+          .boundingBox();
+        assert.ok(
+          mobile &&
+            mobile.x >= 0 &&
+            mobile.x + mobile.width <= 390 &&
+            mobile.height === 48,
+        );
+        await page.screenshot({
+          path: join(evidence, "setup-handoff-mobile.png"),
+          fullPage: true,
+        });
+        const recoveryStart = requests.length;
+        await boot(page, "?context=content&recovery");
+        await page
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await page
+          .getByRole("heading", {
+            name: "Review your preserved edits",
+            exact: true,
+          })
+          .waitFor();
+        await page.waitForFunction(
+          () => !window.fixture.recovery.store.getState().busy,
+        );
+        await page
+          .getByRole("button", { name: "Apply selected changes", exact: true })
+          .click();
+        await page.waitForFunction(
+          () =>
+            !window.fixture.recovery.store.getState().review &&
+            window.fixture.controller.store.getState().status === "unsaved",
+        );
+        const recovered = await snapshot();
+        assert.equal(
+          recovered.confirmed.firstEditorEnteredAt,
+          entered.first_editor_entered_at,
+        );
+        assert.ok(
+          Object.values(recovered.inputs).some(
+            (input) => input.value === "https://",
+          ),
+        );
+        assert.deepEqual(
+          (
+            await sql(
+              "SELECT first_editor_entered_at,draft_rev,setup_progress FROM portfolio WHERE user_id='draft-alice'",
+            )
+          )[0],
+          entered,
+        );
+        assert.ok(
+          !requests
+            .slice(recoveryStart)
+            .some((request) =>
+              ["/api/owner/draft/progress", "/api/owner/draft/begin"].includes(
+                request.path,
+              ),
+            ),
+        );
+      },
+    );
+    await run(
       "address confirmation flushes earlier edits and replays lost replies after reload",
       async () => {
         await reset();
@@ -406,11 +598,14 @@ export async function checkAutosave({
         await boot();
         assert.equal((await snapshot()).error, "recovery_required");
         await page.getByRole("button", { name: "Restore input" }).click();
-        await page.waitForFunction(
-          () =>
-            Object.keys(window.fixture.controller.store.getState().inputs)
-              .length === 1,
-        );
+        await page.waitForFunction(() => {
+          const state = window.fixture.controller.store.getState();
+          return (
+            Object.keys(state.inputs).length === 1 &&
+            state.error === null &&
+            state.status === "unsaved"
+          );
+        });
         assert.equal((await snapshot()).status, "unsaved");
         assert.equal((await getDraft()).requestedSubdomain, undefined);
       },

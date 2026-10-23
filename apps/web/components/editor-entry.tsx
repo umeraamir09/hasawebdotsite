@@ -2,10 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { type Owner, openOwnerPortfolio } from "../lib/auth-client";
+import { type Owner, resolveAccountEntry } from "../lib/auth-client";
 import { Brand } from "./brand";
 
-export function EditorEntry() {
+export function EditorEntry({ entry = false }: { entry?: boolean }) {
   const router = useRouter();
   const [owner, setOwner] = useState<Owner | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,12 +17,20 @@ export function EditorEntry() {
     const controller = new AbortController();
     async function check() {
       try {
-        const current = await openOwnerPortfolio(controller.signal);
+        const current = await resolveAccountEntry(controller.signal);
         if (controller.signal.aborted) return;
         if (!current) {
           setOwner(null);
           router.replace("/sign-in?reason=session_expired");
         } else {
+          if (current.entry.kind === "setup" && !entry) {
+            router.replace("/auth/entry");
+            return;
+          }
+          if (current.entry.kind === "editor" && entry) {
+            router.replace("/editor");
+            return;
+          }
           setOwner(current);
           setError(null);
         }
@@ -48,7 +56,7 @@ export function EditorEntry() {
       window.removeEventListener("pageshow", resume);
       document.removeEventListener("visibilitychange", resume);
     };
-  }, [router, attempt]);
+  }, [router, attempt, entry]);
 
   async function signOut() {
     if (signingOut) return;

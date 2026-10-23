@@ -65,7 +65,7 @@ async function fixture(path, options = {}) {
     },
     signal: AbortSignal.timeout(30000),
   });
-  assert.equal(result.status, 200);
+  assert.equal(result.status, 200, await result.clone().text());
   return result;
 }
 async function sql(query, values = []) {

@@ -329,7 +329,7 @@ async function drive() {
       const rejected = page.waitForResponse(
         (response) =>
           response.request().method() === "POST" &&
-          new URL(response.url()).pathname === "/api/owner/portfolio",
+          new URL(response.url()).pathname === "/api/owner/entry",
       );
       await page.goto(`${origin}/editor`);
       assert.equal((await rejected).status(), 401);
@@ -345,8 +345,7 @@ async function drive() {
         report.requests.every(
           (request) =>
             request.method === "GET" ||
-            (request.method === "POST" &&
-              request.path === "/api/owner/portfolio"),
+            (request.method === "POST" && request.path === "/api/owner/entry"),
         ),
         "Unexpected mutation request in signed-out journey",
       );
@@ -361,7 +360,7 @@ async function drive() {
         writes.every(
           (response) =>
             response.method === "POST" &&
-            response.path === "/api/owner/portfolio" &&
+            response.path === "/api/owner/entry" &&
             response.status === 401,
         ),
       );

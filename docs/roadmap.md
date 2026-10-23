@@ -1,6 +1,6 @@
 # MVP implementation roadmap
 
-Build according to the explicit dependencies below; phase numbers identify scope and do not impose a total execution order. Existing IDs remain stable. Owner-approved completion through Phase 17, including 11A–11E, is recorded by the checkboxes and historical approval notes. Use [implementation status](implementation-status.md) for current contracts and constraints and the [agent workflow](agent-workflow.md) for targeted reading, concise records, parallel work and local verification.
+Build according to the explicit dependencies below; phase numbers identify scope and do not impose a total execution order. Existing IDs remain stable. Owner-approved completion is recorded by the checkboxes and historical approval notes. Use [implementation status](implementation-status.md) for current contracts and constraints and the [agent workflow](agent-workflow.md) for targeted reading, concise records, parallel work and local verification.
 
 ## Sources and scope
 
@@ -235,7 +235,9 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 11, 11B, 12–15, 17–22 and the existing auth boundaries.
 - Use `flushValid()`'s confirmed revision and local-only flag for authoritative required-setup validation. Preserve optional local recovery without converting old setup batches or replaying progress. Implement controlled normal post-auth resolution for client callbacks, server allowlists, signed-in `/sign-in` and direct editor navigation while preserving Phase 15's fixed recovery callback/error pair. Integrate its shared controls and explicitly selected post-handoff content recovery without converting setup attempts. Add shared authoritative required-setup validation and the idempotent permanent handoff service. Required Address validation must confirm the portfolio holds the reservation for the mirrored address, not only that the address field is well formed; a valid draft address can sit behind no reservation. Setup saves/uploads/private previews must remain accessible without an editor milestone.
-- [ ] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, a handoff requires a held reserved address, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
+- October 23, 2026: The owner approved Phase 22A completion in [PR #31](https://github.com/umeraamir09/hasawebdotsite/pull/31) after the final local verification and follow-up fixes. The focused authentication/privacy boundary review found no unresolved issues in setup entry or handoff. The Phase 20 provider-suggestion review remains a separate outstanding item. Full guide/editor activation remains Phase 42E.
+- The [Phase 22A implementation record](../specs/2026-10-23-setup-handoff/results.md) tracks controlled account resolution, authoritative required checks, permanent handoff, local verification and approval.
+- [x] Complete when server/fixture checks reject bypass and stale milestone resets, repeated callbacks/handoffs preserve one draft, required-content/save failures remain recoverable, a handoff requires a held reserved address, and completed owners always return to the editor. This is explicit follow-up to Phase 11. Activate the complete new-user journey only in Phase 42E after its screens exist.
 
 ### Phase 23. Build publication validation and checklist
 

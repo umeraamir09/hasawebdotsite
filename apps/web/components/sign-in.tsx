@@ -40,7 +40,7 @@ export function SignIn() {
     const controller = new AbortController();
     readOwner(controller.signal)
       .then((owner) => {
-        if (owner) router.replace("/editor");
+        if (owner) router.replace("/auth/entry");
       })
       .catch(() => {});
     // A browser Back action from provider consent must allow a fresh attempt.

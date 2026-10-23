@@ -23,7 +23,7 @@ Preconditions: fresh migrated local state, no session, three ready Workers. Run 
 - Choose `page.getByRole("link", { name: "Start building", exact: true }).click()`. Require `/sign-in` and enabled buttons named `Continue with GitHub` and `Continue with Google`; capture `02-sign-in`.
 - Choose `page.getByRole("link", { name: "Back to home", exact: true }).click()`. Require `/`; capture `03-home-return`.
 - Open `page.goto(origin + "/editor")`. Require `/sign-in?reason=session_expired` and heading `Welcome back.`; capture `04-signed-out-entry`.
-- Read `journey.json` after cleanup. Require `passed`, zero unexpected external requests/page errors, a 401 rejection for the shell's `POST /api/owner/portfolio`, no other mutation requests and unchanged zero database counts. Confirm trace, screenshots and ARIA snapshots survive and scratch storage is gone.
+- Read `journey.json` after cleanup. Require `passed`, zero unexpected external requests/page errors, a 401 rejection for the shell's `POST /api/owner/entry`, no other mutation requests and unchanged zero database counts. Confirm trace, screenshots and ARIA snapshots survive and scratch storage is gone.
 
 ## Gotchas
 

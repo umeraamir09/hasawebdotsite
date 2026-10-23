@@ -59,3 +59,5 @@ Retrieval has a fifteen-second total abort deadline. The handler accepts JPEG, P
 Reimporting retrieves the current account photo again. It does not restore a retained original, a previous provider image or earlier crop coordinates.
 
 The editor browser suite drives these controls with production authentication, D1/R2, retrieval validation and cropping. Its isolated gateway replaces external provider image HTTP with fixtures and refuses unexpected egress. It does not prove live provider availability or deployed CPU limits.
+
+Phase 22A's web setup handler calls `resolvePrivateAsset` for required avatar/banner objects before permanent handoff. It cancels the returned bodies after checking metadata, purpose, ownership, existence and byte size. D1 rechecks ready metadata and active access at the milestone write. Jobs receives no private-bucket binding. Cleanup must preserve immutable objects referenced by active drafts; account deletion revokes access before cleanup.
