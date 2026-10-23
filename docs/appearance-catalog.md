@@ -97,4 +97,4 @@ Final technical checks now pass after the evidence-formatting repair: 218 unit t
 | 38 | Original choreography with owner images, independent pause/play, reduced motion, accessible reveal and photo withdrawal |
 | 53 | Full browser/viewport acceptance for all palettes, both decorations, playback, reduced motion, focus and flashing limits |
 
-Publication membership validation belongs to Phase 23. Unknown historical IDs must fail that validation with an actionable owner correction, rather than silently become a different published appearance. Draft structural parsing stays backward compatible and does not treat an opaque ID as proof of membership.
+Phase 23 implements publication membership validation and explicit catalog corrections in the reusable editor checklist. Unknown historical IDs must fail that validation with an actionable owner correction, rather than silently become a different published appearance. Draft structural parsing stays backward compatible and does not treat an opaque ID as proof of membership.

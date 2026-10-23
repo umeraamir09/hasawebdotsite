@@ -7,6 +7,7 @@ export * from "./migrations";
 export * from "./owner-saves";
 export * from "./primitives";
 export * from "./profile";
+export * from "./publication";
 export * from "./registry";
 export * from "./rich-text";
 export * from "./samples";

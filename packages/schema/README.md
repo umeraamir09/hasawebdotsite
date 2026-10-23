@@ -45,7 +45,7 @@ URLs are limited to 2,048 UTF-8 bytes and email addresses to 254 UTF-8 bytes, ex
 
 Project case studies store an at-most-80-character lowercase ASCII slug and rich-text body. Duplicate slugs fail. Slug generation and freezing at first publication belong to the case-study/publication phases. Skill category references must resolve. Entry IDs are unique within each collection. Work dates use `YYYY-MM`, permit unfinished dates and reject an end date before the start date.
 
-`appearance` stores opaque theme/font IDs, an optional single `#RRGGBB` seed and `light`, `dark` or `system` initial mode. Decoration IDs are also opaque. The [catalog was approved in Phase 11E](../../docs/appearance-catalog.md) and Phase 12 uses its defaults. Structural parsing remains catalog-independent for compatibility; publication membership checks belong to Phase 23. `seo` stores optional title, description and `ogImage.assetId` overrides.
+`appearance` stores opaque theme/font IDs, an optional single `#RRGGBB` seed and `light`, `dark` or `system` initial mode. Decoration IDs are also opaque. The [catalog was approved in Phase 11E](../../docs/appearance-catalog.md) and Phase 12 uses its defaults. Structural parsing remains catalog-independent for compatibility; Phase 23 checks publication membership against the approved catalog without changing draft compatibility. `seo` stores optional title, description and `ogImage.assetId` overrides.
 
 ## Samples and incomplete drafts
 
@@ -94,3 +94,11 @@ Generic `requestedSubdomain` changes remain non-reserving candidates. Once a reg
 ## Setup entry service messages
 
 `setupCommandSchema` accepts exactly the portfolio ID and confirmed revision. `setupResultSchema` distinguishes missing required fields, a ready check and permanent editor entry. `accountEntryResponseSchema` validates the private owner summary and its setup-progress or editor-milestone variant. No command accepts a client completion flag. These messages do not change stored draft validation or public content. See the [service contract](../../docs/authentication.md#setup-aware-entry-and-handoff-services).
+
+## Publication checks
+
+Phase 23 adds strict revision-bound publication check commands and field-path issues. `publicationContent` is a browser/offline projection that omits untouched optional sample components, their markers, and disabled Face Reveal photos. It does not establish readiness, authorize publication, resolve assets, or produce a public manifest. `PublicContent` still contains private service references and must pass through the display-only projection before transport.
+
+The private check service reuses required setup facts but ignores `firstEditorEnteredAt` as readiness evidence. It checks the held address before first publication and the owned permanent claim against the fixed address afterward, plus included component requirements and approved catalog IDs. Nonempty destinations are safe under stored validation generation 2; unfinished empty destinations and labels in included placements fail readiness. Optional samples become ordinary components after their marker is cleared.
+
+Object checks use eight references per page. Each result identifies the same portfolio/revision and a continuation offset, with at most 50 structural issues plus page-local object issues and a GitHub issue. These are page results, not a server-issued ready token. Consumers must check every page, preserve failures and reject revision changes. Phase 24 still needs measured immutable preparation and Phase 25 must recheck mutable claims and expected state during commit.

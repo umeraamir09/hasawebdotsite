@@ -35,7 +35,12 @@ export function DraftTextField({
     },
   };
   return (
-    <div className="editor-field">
+    <div
+      className="editor-field"
+      data-publication-field={
+        path[0] === "profile" ? String(path[1]) : undefined
+      }
+    >
       <label htmlFor={id}>{label}</label>
       {multiline ? <textarea {...props} rows={4} /> : <input {...props} />}
       {raw && (

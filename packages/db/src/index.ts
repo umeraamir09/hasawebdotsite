@@ -5,6 +5,7 @@ export * from "./github";
 export * from "./legacy-validation";
 export * from "./owner-api";
 export * from "./private-assets";
+export * from "./publication";
 export * from "./repositories";
 export * from "./reserved-subdomains";
 export * from "./schema";

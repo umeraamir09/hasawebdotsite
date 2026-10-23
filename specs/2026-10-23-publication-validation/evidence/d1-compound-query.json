@@ -1,0 +1,11 @@
+{
+  "runtime": {
+    "wrangler": "4.151.0",
+    "workerd": "1.20261012.1"
+  },
+  "failure": "D1_ERROR: too many terms in compound SELECT: SQLITE_ERROR",
+  "originalRuleTerms": 30,
+  "observed": "The query passed native Python SQLite preparation but failed both the real web-Worker API fixture and direct local D1 boundary integration.",
+  "repair": "Split readiness rules into groups of four and nest the asset-selector groups. Retain the global issue bound and real D1 regression tests.",
+  "passingVerification": "Pending rerun."
+}

@@ -10,6 +10,7 @@ import * as schema from "../src/schema";
 import { runAddressChecks } from "./addresses";
 import { runGitHubChecks, verifyGitHubRestart } from "./github";
 import { runProvisionChecks, verifyProvisionRestart } from "./provision";
+import { runPublicationChecks } from "./publication";
 import { runSetupChecks } from "./setup";
 
 function equal(actual: unknown, expected: unknown) {
@@ -154,6 +155,7 @@ export default {
         },
       );
       await runSetupChecks(env.DB, check);
+      await runPublicationChecks(env.DB, check);
       await runAddressChecks(env.DB, check);
       await check("reserved table matches the platform constant", async () => {
         equal(

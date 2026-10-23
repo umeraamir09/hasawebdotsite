@@ -243,6 +243,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 11E, 13, 17–18, 20–22A and the current component contracts.
 - Extend shared authoritative setup checks into publication validation for required profile values, links, ready assets, approved six-theme/three-font/two-decoration catalog membership, compatible sample omission, reserved-address/claim rules, and included components. Resolve a missing or unavailable address reservation in the editor rather than restarting setup.
+- [Implementation and verification record](../specs/2026-10-23-publication-validation/results.md). Owner completion approval is pending.
 - [ ] Complete when each issue opens its control, untouched compatible samples are omitted, and owner-edited/incomplete optional content uses normal validation. Extend checks during later component phases. Setup completion alone must never count as publication readiness.
 
 ### Phase 24. Prepare immutable publication versions

@@ -1496,10 +1496,22 @@ try {
       },
     );
   if (!remote)
-    await check("setup-aware entry and authoritative handoff", async () => {
-      const { checkSetupEntry } = await import("./setup-entry-api.mjs");
-      await checkSetupEntry({ request, sql, fixture, origin, cookie, secrets });
-    });
+    await check(
+      "setup-aware entry, handoff and publication readiness",
+      async () => {
+        const { checkSetupEntry } = await import("./setup-entry-api.mjs");
+        await checkSetupEntry({
+          request,
+          sql,
+          fixture,
+          origin,
+          cookie,
+          secrets,
+        });
+        const { checkPublicationApi } = await import("./publication-api.mjs");
+        await checkPublicationApi({ request, sql, origin, cookie, secrets });
+      },
+    );
   if (benchmark) {
     await clear();
     const preparation = (commands) => ({
