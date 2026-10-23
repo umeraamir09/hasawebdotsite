@@ -41,7 +41,7 @@ The owner requested the three additions before Phase 11E approval. Their semanti
 
 Each mode records `page`, `surface`, `raised`, `text`, `muted`, `accent`, `onAccent`, `link`, `control`, `border`, `hover`, `pressed`, `focus` and `error`. Text, muted text, links and errors are valid on all three surfaces at 4.5:1 or higher. Accent labels use `onAccent` on the normal, hover and pressed fills. Use `control` for control boundaries, including around primary buttons, and `focus` for an offset focus ring against a surface. The soft `border` token is a decorative separator, not a control indicator. Do not use the bright accent as body text on light surfaces.
 
-The future OKLCH generator will consume this decision and derive coordinated custom palettes with its own adjustment explanations and contrast tests. This phase does not implement custom-color generation, disabled-state behavior or the public theme-toggle script. System mode resolves the visitor's preference; later visitor controls preserve the agreed manual override behavior.
+The [OKLCH generator](../packages/theme/README.md#custom-palette-contract) derives coordinated custom palettes with adjustment explanations and final-hex contrast tests. Its preset resolver restores these approved values when the custom seed is absent. Owner controls, immediate preview updates, all page types, and generated CSS delivery remain integration work in Phases 23 through 25 and 35 through 36. System mode resolves the visitor's preference; later visitor controls preserve the agreed manual override behavior.
 
 ## Curated fonts
 
