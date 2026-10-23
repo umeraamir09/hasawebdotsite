@@ -60,9 +60,14 @@ export async function handoffSetup(
         (failure.error === "owner_changed" ||
           failure.error === "revision_conflict" ||
           failure.error === "setup_closed" ||
-          failure.error === "attempt_conflict")
+          failure.error === "attempt_conflict" ||
+          failure.error === "save_rejected")
       )
-        throw new DraftFailure(failure.error);
+        throw new DraftFailure(
+          failure.error === "save_rejected"
+            ? "attempt_conflict"
+            : failure.error,
+        );
       throw new DraftFailure("storage_unavailable", response.status >= 500);
     }
     const result = setupResultSchema.parse(await response.json());

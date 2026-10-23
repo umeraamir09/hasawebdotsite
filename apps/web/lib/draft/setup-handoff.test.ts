@@ -139,6 +139,29 @@ it("persists revision conflicts for the shared review controls", async () => {
   ).toBe(true);
   expect(controller.store.getState().suspended).toBe(false);
 });
+it("exposes a concurrent save rejection as an actionable attempt conflict", async () => {
+  const { controller, storage } = await setup();
+  controller.setInput(["profile", "location"], "unfinished local value");
+  const send = vi.fn<typeof fetch>(async () => {
+    expect(controller.store.getState().pending).toBeNull();
+    return Response.json({ error: "save_rejected" }, { status: 409 });
+  });
+  await expect(handoffSetup(controller, send)).rejects.toMatchObject({
+    code: "attempt_conflict",
+  });
+  expect(controller.store.getState()).toMatchObject({
+    status: "blocked",
+    error: "attempt_conflict",
+    suspended: false,
+  });
+  expect(
+    [...storage.records.values()].some((record) =>
+      Object.values(record.inputs).some(
+        (input) => input.value === "unfinished local value",
+      ),
+    ),
+  ).toBe(true);
+});
 it("keeps the current tab editable when optional recovery cannot be persisted", async () => {
   const { controller, storage } = await setup();
   controller.setInput(["profile", "location"], "unfinished local value");
