@@ -1495,6 +1495,11 @@ try {
         assert.deepEqual(await read(), before);
       },
     );
+  if (!remote)
+    await check("setup-aware entry and authoritative handoff", async () => {
+      const { checkSetupEntry } = await import("./setup-entry-api.mjs");
+      await checkSetupEntry({ request, sql, fixture, origin, cookie, secrets });
+    });
   if (benchmark) {
     await clear();
     const preparation = (commands) => ({

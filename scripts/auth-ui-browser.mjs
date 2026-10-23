@@ -216,7 +216,7 @@ export async function checkAuthUi({
         },
         body: JSON.stringify({
           provider: "github",
-          callbackURL: `http://127.0.0.1:${port}/editor`,
+          callbackURL: `http://127.0.0.1:${port}/auth/entry`,
           errorCallbackURL: `http://127.0.0.1:${port}/sign-in?provider=github`,
         }),
       },
@@ -420,10 +420,7 @@ export async function checkAuthUi({
           writes: Number(response.headers.get("X-Fixture-Rows-Written")),
           queries: Number(response.headers.get("X-Fixture-Queries")),
         });
-      if (
-        url.pathname === "/api/owner/portfolio" &&
-        loseInitializationResponse
-      ) {
+      if (url.pathname === "/api/owner/entry" && loseInitializationResponse) {
         loseInitializationResponse = false;
         assert.equal(response.status, 200);
         await response.text();
@@ -701,12 +698,12 @@ export async function checkAuthUi({
     loseInitializationResponse = true;
     await evaluate("document.querySelector('.provider-button').click()");
     await until(
-      "location.pathname === '/editor' && document.querySelector('[role=alert]')?.textContent.includes('retry')",
+      "location.pathname === '/auth/entry' && document.querySelector('[role=alert]')?.textContent.includes('retry')",
     );
     assert.equal(await evaluate("!!document.querySelector('h1')"), false);
     await evaluate("document.querySelector('.auth-error button').click()");
     await until(
-      "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+      "location.pathname === '/auth/entry' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
     );
     checks.push(
       "account entry retries a lost successful initialization response before displaying the authenticated owner",
@@ -722,7 +719,7 @@ export async function checkAuthUi({
     );
     await evaluate("document.querySelectorAll('.provider-button')[1].click()");
     await until(
-      "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+      "location.pathname === '/auth/entry' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
     );
     const googleOwner = await evaluate(
       "fetch('/api/owner', {cache:'no-store'}).then(r=>r.json())",
@@ -738,7 +735,7 @@ export async function checkAuthUi({
         `void window.recoveryFixture.prepare('${provider}', true).catch(e => { window.recoveryFailure = e.message; })`,
       );
       const accountLink =
-        "Array.from(document.querySelectorAll('a')).find(a => a.textContent === 'Open your account' && a.getAttribute('href') === '/editor')";
+        "Array.from(document.querySelectorAll('a')).find(a => a.textContent === 'Open your account' && a.getAttribute('href') === '/auth/entry')";
       await until(
         `location.pathname === '/auth/recovery' && !!(${accountLink})`,
       );
@@ -750,7 +747,7 @@ export async function checkAuthUi({
       );
       await evaluate(`(${accountLink}).click()`);
       await until(
-        "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+        "location.pathname === '/auth/entry' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
       );
     }
     checks.push(
@@ -943,6 +940,32 @@ export async function checkAuthUi({
       "document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
     );
 
+    assert.equal(await evaluate("location.pathname"), "/auth/entry");
+    checks.push(
+      "direct editor navigation resolves incomplete owners to controlled account entry",
+    );
+    assert.equal(
+      await evaluate(
+        "fetch('/__fixture/editor-entry',{method:'POST'}).then(r=>r.status)",
+      ),
+      200,
+    );
+    for (const destination of ["/sign-in", "/auth/entry", "/editor"]) {
+      await navigate(destination);
+      await until(
+        "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+      );
+    }
+    await evaluate(
+      `fetch('/api/owner/progress',{headers:{'X-Expected-Owner-Id':'${githubOwner.user.id}'}}).then(r=>r.json()).then(p=>fetch('/api/owner/draft/patch',{method:'POST',headers:{'Content-Type':'application/json','X-Expected-Owner-Id':'${githubOwner.user.id}'},body:JSON.stringify({context:'content',revision:p.revision,change:{op:'set',path:['profile','name'],value:''}})}))`,
+    );
+    await navigate("/sign-in");
+    await until(
+      "location.pathname === '/editor' && document.querySelector('h1')?.textContent.includes('Welcome, explicit.')",
+    );
+    checks.push(
+      "entered owners return to the editor through sign-in, account entry and direct navigation after required content removal",
+    );
     await evaluate("document.querySelector('button').click()");
     await until("location.pathname === '/sign-in'");
     await navigate("/editor");

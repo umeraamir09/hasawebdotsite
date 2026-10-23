@@ -32,3 +32,5 @@ Preconditions: `pnpm verify --profile=drafts` builds and runs draft HTTP, autosa
 - Fixtures create the journals, interrupted attempts and changed-base conditions. Never bypass explicit continuation/review by injecting the desired result into application state.
 - Unknown staged content without its original journal requires explicit discard or the original browser. A successful ordinary save is not evidence for this case.
 - Production guide integration remains pending; fixture recovery does not certify that future entry point.
+
+Phase 22A adds the `Open editor` control to the autosave fixture under `?handoff&recovery`. Its browser case uses real uploads and Address confirmation, flushes a visible Name edit, retries a lost successful handoff reply and checks one permanent milestone. The optional raw input in that case comes from a controller setter, so that part proves controller recovery rather than user typing. Existing selected post-handoff content recovery checks remain required. The complete guide is still inactive.

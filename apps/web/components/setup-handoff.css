@@ -1,0 +1,8 @@
+.setup-handoff .ghost-button {
+  width: min(100%, 520px);
+  background: var(--accent);
+  color: var(--text-primary);
+}
+.setup-handoff .ghost-button:hover {
+  background: var(--accent);
+}

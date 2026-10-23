@@ -8,3 +8,4 @@ export * from "./private-assets";
 export * from "./repositories";
 export * from "./reserved-subdomains";
 export * from "./schema";
+export * from "./setup-entry";

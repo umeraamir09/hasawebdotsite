@@ -8,6 +8,7 @@ import {
 } from "./controller";
 import { createRecoveryStorage } from "./recovery";
 import { applySelections, compareRecovery } from "./review";
+import { handoffSetup } from "./setup-handoff";
 import { createDraftTransport } from "./transport";
 import {
   type Context,
@@ -90,7 +91,10 @@ export function createRecoveryCoordinator(options: Options) {
     busy: false,
   }));
   let running = false;
-  async function action<T>(work: () => Promise<T>): Promise<T> {
+  async function action<T>(
+    work: () => Promise<T>,
+    { releasePause = true }: { releasePause?: boolean } = {},
+  ): Promise<T> {
     assertActive();
     if (running) throw new DraftFailure("recovery_required");
     running = true;
@@ -104,7 +108,7 @@ export function createRecoveryCoordinator(options: Options) {
       });
       throw error;
     } finally {
-      if (!store.getState().review)
+      if (releasePause && !store.getState().review)
         store.getState().controller.releaseReviewPause();
       running = false;
       store.setState({ busy: false });
@@ -574,6 +578,18 @@ export function createRecoveryCoordinator(options: Options) {
   }
   return {
     store,
+    handoff(send?: typeof fetch) {
+      return action(
+        async () => {
+          if (store.getState().review)
+            throw new DraftFailure("recovery_required");
+          const result = await handoffSetup(store.getState().controller, send);
+          assertActive();
+          return result;
+        },
+        { releasePause: false },
+      );
+    },
     dispose() {
       if (disposed) return;
       disposed = true;

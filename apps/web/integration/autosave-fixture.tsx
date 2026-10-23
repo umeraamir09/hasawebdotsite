@@ -1,9 +1,13 @@
 // Browser test bundle only. This file has no production route or import.
+
+import { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { useStore } from "zustand";
 import { DraftRecovery } from "../components/draft-recovery";
 import { DraftStatus } from "../components/draft-status";
+import { SetupHandoff } from "../components/setup-handoff";
 import { createDraftController } from "../lib/draft/controller";
+import { createRecoveryStorage } from "../lib/draft/recovery";
 import { createRecoveryCoordinator } from "../lib/draft/recovery-coordinator";
 import { createDraftTransport } from "../lib/draft/transport";
 import "../app/globals.css";
@@ -28,6 +32,7 @@ const send: typeof fetch = async (input, init) => {
   return response;
 };
 const options = {
+  storage: createRecoveryStorage(owner.user.id, owner.portfolio.id),
   ownerId: owner.user.id,
   portfolioId: owner.portfolio.id,
   context:
@@ -39,6 +44,7 @@ const options = {
 const controller = createDraftController(options);
 const recovery = createRecoveryCoordinator({ ...options, controller });
 function Fixture() {
+  const [entered, setEntered] = useState("");
   const recoveryState = useStore(recovery.store);
   const current = recoveryState.controller;
   const state = useStore(current.store);
@@ -61,6 +67,20 @@ function Fixture() {
       ) : (
         <DraftStatus controller={current} />
       )}
+      {new URL(location.href).searchParams.has("handoff") && (
+        <SetupHandoff
+          recovery={recovery}
+          send={send}
+          onEntered={({ hasLocalOnlyInput }) =>
+            setEntered(
+              hasLocalOnlyInput
+                ? "Editor opened. Unsaved input remains in browser recovery."
+                : "Editor opened.",
+            )
+          }
+        />
+      )}
+      {entered && <p role="status">{entered}</p>}
     </main>
   );
 }
@@ -72,6 +92,8 @@ Object.assign(window, {
     },
     recovery,
     fault,
+    storage: options.storage,
+    portfolioId: owner.portfolio.id,
     ready: false,
   },
 });

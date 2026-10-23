@@ -11,4 +11,5 @@ export * from "./registry";
 export * from "./rich-text";
 export * from "./samples";
 export * from "./setup";
+export * from "./setup-entry";
 export * from "./updates";

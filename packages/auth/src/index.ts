@@ -277,7 +277,7 @@ export async function authResponse(
       return privateJson(null, 400);
     const errorURL = `${origin}/sign-in?provider=${body.provider}`;
     const normal =
-      body.callbackURL === `${origin}/editor` &&
+      body.callbackURL === `${origin}/auth/entry` &&
       body.errorCallbackURL === errorURL;
     const recovery =
       body.callbackURL === `${origin}/auth/recovery` &&

@@ -98,7 +98,7 @@ export function AuthRecovery() {
             This recovery record is no longer available. Other browser recovery
             copies remain untouched.
           </p>
-          <a className="ghost-button" href="/editor">
+          <a className="ghost-button" href="/auth/entry">
             Open your account
           </a>
         </>
@@ -136,7 +136,7 @@ export function AuthRecovery() {
             Your account matches. Continue preserved edits explicitly, verify an
             interrupted save, or review against the newer saved draft.
           </p>
-          <a className="ghost-button" href="/editor">
+          <a className="ghost-button" href="/auth/entry">
             Open your account
           </a>
         </>

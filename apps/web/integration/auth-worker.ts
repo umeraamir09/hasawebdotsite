@@ -142,6 +142,18 @@ export default {
           .run();
       return privateJson({ ok: true });
     }
+    if (
+      url.pathname === "/__fixture/editor-entry" &&
+      request.method === "POST"
+    ) {
+      const owner = await currentOwner(settings, request.headers, auth);
+      if (!owner) return privateJson(null, 401);
+      const setup = await owner.repositories.setup.get();
+      if (!setup) return privateJson(null, 404);
+      return privateJson(
+        await owner.repositories.setup.recordFirstEditorEntry(setup.revision),
+      );
+    }
     url.protocol = "https:";
     url.port = "";
     url.host = request.headers.get("X-Fixture-Host") ?? "hasaweb.site";

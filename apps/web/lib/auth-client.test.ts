@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { openOwnerPortfolio, readOwner } from "./auth-client";
+import { readOwner, resolveAccountEntry } from "./auth-client";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -9,7 +9,15 @@ describe("private portfolio entry", () => {
       user: { id: "owner", name: "Provider name" },
       portfolio: null,
     };
-    const initialized = { ...owner, portfolio: { id: "private-portfolio" } };
+    const initialized = {
+      ...owner,
+      portfolio: { id: "private-portfolio" },
+      entry: {
+        kind: "setup",
+        revision: 0,
+        progress: { schemaVersion: 1, step: "address" },
+      },
+    };
     const fetch = vi
       .fn()
       .mockResolvedValueOnce(Response.json(owner))
@@ -21,9 +29,9 @@ describe("private portfolio entry", () => {
       "/api/owner",
       { cache: "no-store", signal: null },
     ]);
-    expect(await openOwnerPortfolio(controller.signal)).toEqual(initialized);
+    expect(await resolveAccountEntry(controller.signal)).toEqual(initialized);
     expect(fetch.mock.calls[1]).toEqual([
-      "/api/owner/portfolio",
+      "/api/owner/entry",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -39,7 +47,7 @@ describe("private portfolio entry", () => {
       "fetch",
       vi.fn().mockResolvedValue(new Response(null, { status: 401 })),
     );
-    expect(await openOwnerPortfolio()).toBe(null);
+    expect(await resolveAccountEntry()).toBe(null);
   });
 
   it("reports storage/network failure and allows the same request to retry", async () => {
@@ -47,15 +55,24 @@ describe("private portfolio entry", () => {
       .fn()
       .mockResolvedValueOnce(new Response(null, { status: 503 }))
       .mockRejectedValueOnce(new TypeError("connection lost"))
-      .mockResolvedValueOnce(Response.json({ portfolio: { id: "saved" } }));
+      .mockResolvedValueOnce(
+        Response.json({
+          user: { id: "owner", name: "Owner" },
+          portfolio: { id: "saved" },
+          entry: { kind: "editor", revision: 5, firstEditorEnteredAt: 1 },
+        }),
+      );
     vi.stubGlobal("fetch", fetch);
-    await expect(openOwnerPortfolio()).rejects.toThrow(
+    await expect(resolveAccountEntry()).rejects.toThrow(
       "Could not open your portfolio",
     );
-    await expect(openOwnerPortfolio()).rejects.toThrow("connection lost");
-    expect(await openOwnerPortfolio()).toEqual({ portfolio: { id: "saved" } });
+    await expect(resolveAccountEntry()).rejects.toThrow("connection lost");
+    expect(await resolveAccountEntry()).toMatchObject({
+      portfolio: { id: "saved" },
+      entry: { kind: "editor" },
+    });
     expect(fetch.mock.calls.map(([url]) => url)).toEqual(
-      Array(3).fill("/api/owner/portfolio"),
+      Array(3).fill("/api/owner/entry"),
     );
   });
 });

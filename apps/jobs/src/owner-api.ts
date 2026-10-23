@@ -8,6 +8,7 @@ import {
 import {
   assertSaveSession,
   OwnerAccessError,
+  ownerDrafts,
   privateJson,
   SaveError,
 } from "@hasaweb/db";
@@ -169,6 +170,27 @@ export function createOwnerRouter() {
     });
   });
   app.all("/api/owner/portfolio", () => privateJson(null, 405));
+  app.post("/api/owner/entry", async (c) => {
+    const invalid = await initializationBody(c.req.raw);
+    if (invalid) return privateJson(null, invalid);
+    const owner = c.get("owner");
+    const portfolio = await owner.repositories.portfolio.provision();
+    if (!portfolio) return privateJson(null, 401);
+    const meta = await ownerDrafts(c.env.DB, owner.identity).metadata();
+    return privateJson({
+      user: { id: owner.identity.user.id, name: owner.identity.user.name },
+      portfolio,
+      entry:
+        meta.firstEditorEnteredAt === null
+          ? { kind: "setup", revision: meta.revision, progress: meta.progress }
+          : {
+              kind: "editor",
+              revision: meta.revision,
+              firstEditorEnteredAt: meta.firstEditorEnteredAt,
+            },
+    });
+  });
+  app.all("/api/owner/entry", () => privateJson(null, 405));
   addDraftRoutes(app);
   return app;
 }
