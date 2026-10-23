@@ -1,6 +1,10 @@
 // External fixture authority is translated only in this separately built experiment.
 import { privateJson } from "@hasaweb/db";
 import worker from "../worker";
+import {
+  providerRequests,
+  releaseProviderPhoto,
+} from "./provider-photo-fixture";
 
 type Env = {
   RUNTIME_ORIGIN: string;
@@ -21,6 +25,10 @@ export default {
     )
       return privateJson(null, 404);
     if (url.pathname === "/health") return privateJson({ ok: true });
+    if (url.pathname === "/__fixture/provider-photo") {
+      if (request.method === "POST") releaseProviderPhoto();
+      return privateJson({ requests: providerRequests });
+    }
     if (url.pathname === "/__fixture/direct-owner")
       return env.JOBS.fetch(
         new Request("https://hasaweb.site/api/owner", request),

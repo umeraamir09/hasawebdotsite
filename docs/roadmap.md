@@ -212,6 +212,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 11, 17–19.
 - Add name, bio, optional editor location, required avatar/banner, and explicit provider-name/photo acceptance. Implement new owner-authorized provider name/photo/email suggestion retrieval and a validated private photo import path using the same crop/upload/readiness checks. Phase 11 did not implement these suggestion/import capabilities. New profiles use no sample identity; compatible older samples still cannot satisfy requirements.
+- The [Phase 20 implementation record](../specs/2026-10-23-required-profile/results.md) tracks reusable profile controls, explicit suggestions, private provider-photo retrieval and local verification. Owner completion approval is pending.
 - [ ] Complete when owner-confirmed values/images can be entered, cropped, saved, replaced, or removed and rendered exactly. Provider URLs alone are not assets; failed imports offer upload/retry without false acceptance. These controls later supply the combined onboarding Profile screen.
 
 ### Phase 21. Manage social and contact identity

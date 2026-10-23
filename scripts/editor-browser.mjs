@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+import { checkProfileControls } from "./profile-controls-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
 export async function checkEditor({
@@ -1208,8 +1209,10 @@ export async function checkEditor({
       run,
       evidence,
       browserOrigin,
+      authority,
     };
     await checkCropControls(controls);
+    await checkProfileControls(controls);
     await checkSocialLinks(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({

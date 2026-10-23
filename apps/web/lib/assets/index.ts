@@ -7,6 +7,7 @@ import {
 } from "@hasaweb/db";
 import type { AssetPurpose } from "@hasaweb/schema";
 import { isAssetPurpose, UploadError, uploadFormat } from "./formats";
+import { providerPhotoRequest } from "./provider-photo";
 import { type AssetBucket, storeUpload } from "./stream";
 
 export type PrivateAssetEnvironment = AuthEnvironment & {
@@ -64,6 +65,8 @@ export async function privateAssetRequest(
   try {
     if (!env.APP_ORIGIN || url.origin !== env.APP_ORIGIN) return response(404);
     if (!read && !upload) return response(405);
+    if (read && url.pathname === "/api/assets/provider-photo")
+      return await providerPhotoRequest(request, env, headers);
     if (upload && request.headers.get("Origin") !== env.APP_ORIGIN)
       throw new UploadError(403);
     const identity = await currentSessionIdentity(env, request.headers, {

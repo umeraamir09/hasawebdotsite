@@ -58,6 +58,8 @@ The default appearance comes from the single template and catalog approved in Ph
 
 Prefill the signup provider's name for review. Offer Use this photo only when a provider photo is available; it requires explicit acceptance, the shared crop experience, and a successful private upload. Do not treat a remote provider URL as an owned draft asset. A missing or failed provider photo can be replaced by an uploaded image.
 
+Phase 20 supplies reusable `ProfileControls` and the private provider-photo import path in the editor handoff fixture. The editor checks account suggestions on request and requires Use this name or Apply crop to accept them. The future onboarding adapter still owns its transient name prefill and required-step navigation. It can hide editor-only location with `showLocation={false}`. These controls do not activate the guide or perform authoritative setup handoff.
+
 Owners enter their own bio and select a banner. Account email is only a suggestion for a public link, never silently copied to public identity. Adding it explains public visibility. An email link and a private contact-form recipient remain separate concepts.
 
 The avatar and banner crop dialogs support repositioning, zoom, Reset, Apply crop, and Cancel. Their crop geometry matches the portfolio rendering. Applying a crop updates the profile preview; required setup waits for ready uploads and accepted crops. Cancelled or failed replacements preserve the previous successful asset. Removing a required image makes setup incomplete before handoff, or blocks publication after handoff.
