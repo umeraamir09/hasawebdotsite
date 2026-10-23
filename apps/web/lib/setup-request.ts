@@ -83,5 +83,30 @@ export async function setupRequest(
     if (error instanceof SaveError)
       return privateJson({ error: error.code }, error.status);
     return privateJson({ error: "storage_unavailable" }, 503);
+  } finally {
+    // Finish small rejected uploads before returning across the Worker boundary.
+    if (!request.bodyUsed && request.body) {
+      const reader = request.body.getReader();
+      const cancel = () => void reader.cancel().catch(() => {});
+      const timeout = setTimeout(cancel, 100);
+      let done = false;
+      try {
+        let bytes = 0;
+        while (bytes < 8192) {
+          const chunk = await reader.read();
+          if (chunk.done) {
+            done = true;
+            break;
+          }
+          bytes += chunk.value.byteLength;
+        }
+      } catch {
+        // An upload failure must preserve the original rejection response.
+      } finally {
+        clearTimeout(timeout);
+        if (!done) cancel();
+        reader.releaseLock();
+      }
+    }
   }
 }

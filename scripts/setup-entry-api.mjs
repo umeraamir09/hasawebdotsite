@@ -53,10 +53,13 @@ export async function checkSetupEntry({
     headers: { Origin: "https://evil.test" },
     status: 403,
   });
-  await handoff(expected, {
-    headers: { "Content-Type": "text/plain" },
-    status: 415,
-  });
+  for (let i = 0; i < 20; i++) {
+    for (const reject of [check, handoff])
+      await reject(expected, {
+        headers: { "Content-Type": "text/plain" },
+        status: 415,
+      });
+  }
   await handoff({ ...expected, firstEditorEnteredAt: 1 }, { status: 422 });
   await handoff(" ".repeat(1025), {
     headers: { "Content-Length": "1025" },

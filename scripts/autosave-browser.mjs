@@ -598,11 +598,14 @@ export async function checkAutosave({
         await boot();
         assert.equal((await snapshot()).error, "recovery_required");
         await page.getByRole("button", { name: "Restore input" }).click();
-        await page.waitForFunction(
-          () =>
-            Object.keys(window.fixture.controller.store.getState().inputs)
-              .length === 1,
-        );
+        await page.waitForFunction(() => {
+          const state = window.fixture.controller.store.getState();
+          return (
+            Object.keys(state.inputs).length === 1 &&
+            state.error === null &&
+            state.status === "unsaved"
+          );
+        });
         assert.equal((await snapshot()).status, "unsaved");
         assert.equal((await getDraft()).requestedSubdomain, undefined);
       },

@@ -1943,6 +1943,7 @@ try {
   );
   console.log(`Passed ${checks.length} production API groups`);
 } catch (error) {
+  await writeFile(join(evidence, "runtime.log"), logs);
   await writeJsonEvidence(
     pathToFileURL(
       join(evidence, remote ? "deployed-partial.json" : "local-partial.json"),
