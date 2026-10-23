@@ -2,7 +2,7 @@
 
 Phase 11 implements GitHub and Google sign-up/sign-in at `/sign-in`. Normal successful OAuth callbacks and signed-in `/sign-in` visits open fixed `/auth/entry`. Phase 22A resolves persisted setup state through the idempotent entry service. Incomplete owners remain in the account shell; entered owners return to `/editor`. `/api/owner` remains a read-only session/deletion check returning the owner's name and existing portfolio ID, without tokens, email or draft content. Phase 13 adds separate private draft/progress APIs. Phase 17 implements a reusable editor and authorized private-preview adapters through handoff fixtures. Production editor entry and onboarding remain gated until the complete guide activates in Phase 42E. See [current status](implementation-status.md).
 
-The following setup/verification instructions describe the authentication baseline and Phase 12 initialization. The [October 16 initial-setup agreement](onboarding.md) changes the target first-user journey. Required setup routing has not yet been activated.
+The following setup/verification instructions describe the authentication baseline, Phase 12 initialization, and Phase 22A's persisted entry resolution and handoff checks. The [October 16 initial-setup agreement](onboarding.md) defines the target first-user journey. The complete guide and editor activation remain Phase 42E.
 
 ## Private portfolio initialization
 
