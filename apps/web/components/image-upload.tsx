@@ -69,10 +69,7 @@ export function ImageUpload({
   useLayoutEffect(() => {
     current.current.onPendingChange?.(pending);
   }, [pending]);
-  useLayoutEffect(
-    () => () => current.current.onPendingChange?.(false),
-    [],
-  );
+  useLayoutEffect(() => () => current.current.onPendingChange?.(false), []);
   const localImage = state.kind === "cropping" ? state.image : null;
   useEffect(() => () => localImage?.release(), [localImage]);
   useEffect(
