@@ -79,3 +79,64 @@ it.each(["owner", "revision"])(
     expect(controller.store.getState().status).toBe("blocked");
   },
 );
+
+it.each(["avatar", "banner"] as const)(
+  "preserves an unfinished %s replacement without suspending the editor",
+  async (purpose) => {
+    const controller = await setup();
+    controller.store.setState({ pendingImages: { [purpose]: true } });
+    const suspended: boolean[] = [];
+    const unsubscribe = controller.store.subscribe((state) => {
+      suspended.push(state.suspended);
+    });
+    const send = vi.fn<typeof fetch>(async (_input, init) => {
+      const command = JSON.parse(String(init?.body));
+      return Response.json({
+        portfolioId: command.portfolioId,
+        revision: command.revision,
+        issues: [],
+        hasMoreIssues: false,
+        nextAssetOffset: null,
+      });
+    });
+    await expect(checkPublication(controller, send)).rejects.toMatchObject({
+      code: "recovery_required",
+    });
+    expect(send).not.toHaveBeenCalled();
+    expect(suspended).not.toContain(true);
+    expect(controller.store.getState().pendingImages[purpose]).toBe(true);
+    unsubscribe();
+
+    controller.store.setState({ pendingImages: {} });
+    await expect(checkPublication(controller, send)).resolves.toMatchObject({
+      issues: [],
+    });
+    expect(send).toHaveBeenCalledOnce();
+  },
+);
+it("blocks an image operation started while valid changes are flushing", async () => {
+  const controller = await setup();
+  const flush = controller.flushValid.bind(controller);
+  vi.spyOn(controller, "flushValid").mockImplementation(async () => {
+    const result = await flush();
+    controller.store.setState({ pendingImages: { avatar: true } });
+    return result;
+  });
+  const quiesce = vi.spyOn(controller, "quiesce");
+  const send = vi.fn<typeof fetch>(async (_input, init) => {
+    const command = JSON.parse(String(init?.body));
+    return Response.json({
+      portfolioId: command.portfolioId,
+      revision: command.revision,
+      issues: [],
+      hasMoreIssues: false,
+      nextAssetOffset: null,
+    });
+  });
+  await expect(checkPublication(controller, send)).rejects.toMatchObject({
+    code: "recovery_required",
+  });
+  expect(quiesce).not.toHaveBeenCalled();
+  expect(send).not.toHaveBeenCalled();
+  expect(controller.store.getState().suspended).toBe(false);
+});

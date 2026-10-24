@@ -9,7 +9,13 @@ export async function checkPublication(
   controller: DraftController,
   send: typeof fetch = fetch,
 ) {
+  const requireFinishedImages = () => {
+    if (Object.values(controller.store.getState().pendingImages).some(Boolean))
+      throw new DraftFailure("recovery_required");
+  };
+  requireFinishedImages();
   const flushed = await controller.flushValid();
+  requireFinishedImages();
   try {
     const record = await controller.quiesce();
     const state = controller.store.getState();

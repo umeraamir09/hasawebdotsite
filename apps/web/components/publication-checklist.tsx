@@ -108,7 +108,8 @@ export function PublicationChecklist({
     result.revision === state.confirmed?.revision &&
     result.draft === state.working &&
     !Object.keys(state.inputs).length &&
-    !state.error
+    !state.error &&
+    !Object.values(state.pendingImages).some(Boolean)
       ? result
       : null;
   async function check() {

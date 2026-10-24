@@ -37,6 +37,11 @@ export function ProfileImages({
               ? { providerPortfolioId: controller.identity.portfolioId }
               : {})}
             disabled={disabled}
+            onPendingChange={(pending) =>
+              controller.store.setState((current) => ({
+                pendingImages: { ...current.pendingImages, [purpose]: pending },
+              }))
+            }
             onReady={(assetId) => {
               const previous =
                 controller.store.getState().working?.profile[purpose];
