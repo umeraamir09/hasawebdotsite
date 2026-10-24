@@ -341,6 +341,23 @@ export function PublicationCorrection({
             onClick={() => {
               const current = controller.store.getState().working;
               if (!current) return;
+              const removedIndex = current.components.findIndex(
+                (item) => item.id === component.id,
+              );
+              for (const input of Object.values(
+                controller.store.getState().inputs,
+              )) {
+                const reference = input.path[1];
+                if (
+                  input.path[0] === "components" &&
+                  ((typeof reference === "object" &&
+                    reference.id === component.id) ||
+                    (typeof reference === "number" &&
+                      reference === removedIndex))
+                ) {
+                  controller.clearInput(input.path);
+                }
+              }
               controller.update(
                 clearSample(
                   {

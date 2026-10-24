@@ -233,4 +233,104 @@ export async function checkPublicationControls({
       );
     },
   );
+  await run(
+    "publication removal clears only the removed section's unfinished input",
+    async () => {
+      const draft = await clean();
+      draft.components = [
+        {
+          id: "incomplete-work",
+          type: "work-experience",
+          version: 1,
+          data: {
+            entries: [
+              {
+                id: "role",
+                role: "Developer",
+                organization: "Example",
+                startDate: "2026-01",
+                endDate: "",
+                current: false,
+                description: "My work",
+              },
+            ],
+          },
+        },
+      ];
+      await boot(draft);
+      const before = (
+        await sql(
+          "SELECT id,first_editor_entered_at FROM portfolio WHERE user_id='draft-alice'",
+        )
+      )[0];
+      await check();
+      await checklist()
+        .getByRole("button", {
+          name: "Complete your work experience end date",
+          exact: true,
+        })
+        .click();
+      await getPage().getByLabel("Required value").fill("2026-");
+      await getPage().getByLabel("Address name").fill("unfinished-");
+      await getPage()
+        .getByRole("button", { name: "Remove this section", exact: true })
+        .click();
+      await getPage()
+        .getByRole("region", { name: "Publication correction" })
+        .waitFor({ state: "detached" });
+      assert.equal(
+        await getPage().getByLabel("Address name").inputValue(),
+        "unfinished-",
+      );
+      assert.equal(
+        await checklist()
+          .getByRole("button", {
+            name: "Finish unsaved section details",
+            exact: true,
+          })
+          .count(),
+        0,
+      );
+      await getPage().getByLabel("Address name").fill("publication-cleanup");
+      await getPage()
+        .getByRole("button", { name: "Save address", exact: true })
+        .click();
+      await getPage()
+        .getByText("Reserved for your portfolio. Your site is still private.", {
+          exact: true,
+        })
+        .waitFor();
+      await check();
+      assert.equal(
+        await checklist()
+          .getByRole("button", {
+            name: "Reserve or restore your address",
+            exact: true,
+          })
+          .count(),
+        0,
+      );
+      const saved = (
+        await sql(
+          "SELECT draft,first_editor_entered_at,subdomain,published_version FROM portfolio WHERE user_id='draft-alice'",
+        )
+      )[0];
+      assert.deepEqual(JSON.parse(saved.draft).components, []);
+      assert.equal(
+        saved.first_editor_entered_at,
+        before.first_editor_entered_at,
+      );
+      assert.equal(saved.subdomain, null);
+      assert.equal(saved.published_version, null);
+      assert.deepEqual(
+        (
+          await sql(
+            "SELECT name,state FROM subdomain_claim WHERE portfolio_id=?",
+            [before.id],
+          )
+        )[0],
+        { name: "publication-cleanup", state: "held" },
+      );
+    },
+  );
 }
