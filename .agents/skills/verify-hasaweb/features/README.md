@@ -25,4 +25,5 @@ The initial deliverable proves only `entry` end to end. The other recipes route 
 | [Editor and private live preview](editor-preview.md) | Profile/component controls, preview selection, desktop/mobile; editor profile | Handoff fixture only |
 | [Private uploads](uploads.md) | `PUT /api/assets`, `GET /api/assets/{id}`; uploads profile for transport, editor profile for controls | Production web handler with real D1/R2, signed-cookie fixtures, and shared crop controls in the handoff fixture |
 | [Reserved address selection](addresses.md) | Address controls in the editor fixture and explicit owner draft actions; drafts profile | Reusable controls and real owner API; required guide activation remains pending |
+| [Publication readiness](editor-preview.md#publication-checklist) | Checklist and correction controls; editor profile, owner API and D1 boundary checks in full profile | Saved-draft readiness only; publication and full owner-flow activation remain pending |
 | [Portfolio rendering and theme](portfolio.md) | Browser preview and static portfolio fixtures, theme toggle; renderer profile | Offline rendering fixtures; no published serving or additional pages |

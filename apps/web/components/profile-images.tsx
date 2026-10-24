@@ -20,51 +20,60 @@ export function ProfileImages({
   return (
     <div className="profile-images">
       {(["avatar", "banner"] as const).map((purpose) => (
-        <ImageUpload
+        <div
           key={`${controller.scopeKey}:${purpose}`}
-          label={purpose === "avatar" ? "Avatar" : "Banner"}
-          purpose={purpose}
-          value={state.working?.profile[purpose]}
-          description={readEditorField(state, ["profile", purpose, "alt"])}
-          descriptionInvalid={Boolean(
-            state.inputs[JSON.stringify(["profile", purpose, "alt"])],
-          )}
-          ownerId={controller.identity.ownerId}
-          {...(purpose === "avatar" && providerPhotoAvailable
-            ? { providerPortfolioId: controller.identity.portfolioId }
-            : {})}
-          disabled={disabled}
-          onReady={(assetId) => {
-            const previous =
-              controller.store.getState().working?.profile[purpose];
-            if (
-              !controller.edit(["profile", purpose], {
-                assetId,
-                alt: previous?.alt ?? "",
-                ...(purpose === "avatar" ? { accepted: true } : {}),
-              })
-            )
-              throw new Error(
-                "The crop is ready but the draft could not accept it. Retry after resolving unfinished input.",
+          data-publication-field={purpose}
+        >
+          <ImageUpload
+            label={purpose === "avatar" ? "Avatar" : "Banner"}
+            purpose={purpose}
+            value={state.working?.profile[purpose]}
+            description={readEditorField(state, ["profile", purpose, "alt"])}
+            descriptionInvalid={Boolean(
+              state.inputs[JSON.stringify(["profile", purpose, "alt"])],
+            )}
+            ownerId={controller.identity.ownerId}
+            {...(purpose === "avatar" && providerPhotoAvailable
+              ? { providerPortfolioId: controller.identity.portfolioId }
+              : {})}
+            disabled={disabled}
+            onPendingChange={(pending) =>
+              controller.store.setState((current) => ({
+                pendingImages: { ...current.pendingImages, [purpose]: pending },
+              }))
+            }
+            onReady={(assetId) => {
+              const previous =
+                controller.store.getState().working?.profile[purpose];
+              if (
+                !controller.edit(["profile", purpose], {
+                  assetId,
+                  alt: previous?.alt ?? "",
+                  ...(purpose === "avatar" ? { accepted: true } : {}),
+                })
+              )
+                throw new Error(
+                  "The crop is ready but the draft could not accept it. Retry after resolving unfinished input.",
+                );
+              const draft = controller.store.getState().working;
+              if (draft?.samples[`profile.${purpose}`])
+                controller.update(clearSample(draft, `profile.${purpose}`));
+            }}
+            onRemove={() => {
+              const draft = controller.store.getState().working;
+              if (!draft) return;
+              const profile = { ...draft.profile };
+              delete profile[purpose];
+              controller.clearInput(["profile", purpose, "alt"]);
+              controller.update(
+                clearSample({ ...draft, profile }, `profile.${purpose}`),
               );
-            const draft = controller.store.getState().working;
-            if (draft?.samples[`profile.${purpose}`])
-              controller.update(clearSample(draft, `profile.${purpose}`));
-          }}
-          onRemove={() => {
-            const draft = controller.store.getState().working;
-            if (!draft) return;
-            const profile = { ...draft.profile };
-            delete profile[purpose];
-            controller.clearInput(["profile", purpose, "alt"]);
-            controller.update(
-              clearSample({ ...draft, profile }, `profile.${purpose}`),
-            );
-          }}
-          onDescription={(value) =>
-            editEditorField(controller, ["profile", purpose, "alt"], value)
-          }
-        />
+            }}
+            onDescription={(value) =>
+              editEditorField(controller, ["profile", purpose, "alt"], value)
+            }
+          />
+        </div>
       ))}
     </div>
   );

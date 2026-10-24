@@ -9,21 +9,21 @@ import { activeSaveSession, ownerDrafts, saveSessionParams } from "./draft-api";
 import type { SessionIdentity } from "./repositories";
 
 // Match String.trim without returning potentially large profile text to JS.
-const whitespace =
+export const setupWhitespace =
   "char(9,10,11,12,13,32,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279)";
 const textPresent = (path: string) =>
-  `length(trim(json_extract(draft,'${path}'),${whitespace}))>0`;
+  `length(trim(json_extract(draft,'${path}'),${setupWhitespace}))>0`;
 const realField = (field: string) =>
   `coalesce(json_extract(draft,'$.samples."profile.${field}"'),0)!=1`;
 const readyImage = (field: "avatar" | "banner") =>
   `EXISTS(SELECT 1 FROM asset a WHERE a.id=json_extract(draft,'$.profile.${field}.assetId') AND a.portfolio_id=portfolio.id AND a.kind='${field}' AND a.status='ready' AND a.content_type IN ('image/jpeg','image/png','image/webp'))`;
-const requirements = {
+export const setupRequirements = {
   address: `EXISTS(SELECT 1 FROM subdomain_claim c WHERE c.portfolio_id=portfolio.id AND c.name=json_extract(draft,'$.requestedSubdomain') AND c.state='held' AND NOT EXISTS(SELECT 1 FROM reserved_subdomain r WHERE r.name=c.name))`,
   name: `(${textPresent("$.profile.name")} AND ${realField("name")})`,
   bio: `(${textPresent("$.profile.bio")} AND ${realField("bio")})`,
   avatar: `(${realField("avatar")} AND json_extract(draft,'$.profile.avatar.accepted')=1 AND ${readyImage("avatar")})`,
   banner: `(${realField("banner")} AND ${readyImage("banner")})`,
-  links: `EXISTS(SELECT 1 FROM json_each(draft,'$.links') l WHERE json_extract(l.value,'$.showInProfile')=1 AND length(trim(json_extract(l.value,'$.label'),${whitespace}))>0 AND length(json_extract(l.value,'$.value'))>0)`,
+  links: `EXISTS(SELECT 1 FROM json_each(draft,'$.links') l WHERE json_extract(l.value,'$.showInProfile')=1 AND length(trim(json_extract(l.value,'$.label'),${setupWhitespace}))>0 AND length(json_extract(l.value,'$.value'))>0)`,
 } satisfies Record<SetupField, string>;
 const fields: SetupField[] = [
   "address",
@@ -33,9 +33,9 @@ const fields: SetupField[] = [
   "banner",
   "links",
 ];
-const validDraft =
+export const setupValidDraft =
   "draft_validation_version=2 AND json_extract(draft,'$.schemaVersion') IN (1,2)";
-const noAttempt =
+export const setupNoAttempt =
   "NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=portfolio.user_id AND a.state IN ('open','string') AND a.expires_at>?)";
 type Facts = Record<SetupField, number | null> & {
   avatarId: string | null;
@@ -62,9 +62,9 @@ export function ownerSetup(
     if (meta.revision !== command.revision)
       throw new SaveError(409, "Draft changed", "revision_conflict");
     const row = await db
-      .prepare(`SELECT ${fields.map((field) => `(${requirements[field]}) AS ${field}`).join(",")},
+      .prepare(`SELECT ${fields.map((field) => `(${setupRequirements[field]}) AS ${field}`).join(",")},
       json_extract(draft,'$.profile.avatar.assetId') AS avatarId,json_extract(draft,'$.profile.banner.assetId') AS bannerId
-      FROM portfolio WHERE id=? AND user_id=? AND draft_rev=? AND status!='deleting' AND first_editor_entered_at IS NULL AND ${validDraft} AND ${noAttempt} AND ${activeSaveSession}`)
+      FROM portfolio WHERE id=? AND user_id=? AND draft_rev=? AND status!='deleting' AND first_editor_entered_at IS NULL AND ${setupValidDraft} AND ${setupNoAttempt} AND ${activeSaveSession}`)
       .bind(
         command.portfolioId,
         identity.user.id,
@@ -109,8 +109,8 @@ export function ownerSetup(
     const now = Date.now();
     const row = await db
       .prepare(`UPDATE portfolio SET first_editor_entered_at=?,draft_rev=draft_rev+1,updated_at=?
-      WHERE id=? AND user_id=? AND draft_rev=? AND status!='deleting' AND first_editor_entered_at IS NULL AND ${validDraft} AND ${noAttempt} AND ${activeSaveSession}
-      AND ${fields.map((field) => `(${requirements[field]})`).join(" AND ")}
+      WHERE id=? AND user_id=? AND draft_rev=? AND status!='deleting' AND first_editor_entered_at IS NULL AND ${setupValidDraft} AND ${setupNoAttempt} AND ${activeSaveSession}
+      AND ${fields.map((field) => `(${setupRequirements[field]})`).join(" AND ")}
       RETURNING id AS portfolioId,draft_rev AS revision,first_editor_entered_at AS firstEditorEnteredAt`)
       .bind(
         now,

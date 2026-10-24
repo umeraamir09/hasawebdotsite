@@ -1,7 +1,7 @@
 "use client";
 
 import type { ImageReference } from "@hasaweb/schema";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import {
   privateImageUrl,
   readPrivateImage,
@@ -37,6 +37,7 @@ export function ImageUpload({
   onReady,
   onRemove,
   onDescription,
+  onPendingChange,
 }: {
   label: string;
   purpose: CropPurpose;
@@ -49,6 +50,7 @@ export function ImageUpload({
   onReady(assetId: string): void;
   onRemove(): void;
   onDescription(value: string): void;
+  onPendingChange?(pending: boolean): void;
 }) {
   const id = useId();
   const file = useRef<HTMLInputElement>(null);
@@ -57,8 +59,17 @@ export function ImageUpload({
   const generation = useRef(0);
   const [state, setState] = useState<UploadState>({ kind: "idle" });
   const [unavailable, setUnavailable] = useState<string | null>(null);
-  const current = useRef({ disabled, onReady });
-  current.current = { disabled, onReady };
+  const current = useRef({ disabled, onReady, onPendingChange });
+  current.current = { disabled, onReady, onPendingChange };
+  const pending =
+    state.kind === "loading" ||
+    state.kind === "cropping" ||
+    state.kind === "uploading" ||
+    state.kind === "failed";
+  useLayoutEffect(() => {
+    current.current.onPendingChange?.(pending);
+  }, [pending]);
+  useLayoutEffect(() => () => current.current.onPendingChange?.(false), []);
   const localImage = state.kind === "cropping" ? state.image : null;
   useEffect(() => () => localImage?.release(), [localImage]);
   useEffect(
@@ -327,13 +338,18 @@ export function ImageUpload({
         <div role="alert">
           <p>{state.message}</p>
           {state.kind === "failed" && (
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => void upload(state.blob)}
-            >
-              Retry upload
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => void upload(state.blob)}
+              >
+                Retry upload
+              </button>
+              <button type="button" disabled={disabled} onClick={cancel}>
+                Cancel upload
+              </button>
+            </>
           )}
         </div>
       )}

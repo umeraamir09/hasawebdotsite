@@ -56,6 +56,7 @@ type Options = {
 };
 const initial = (): DraftState => ({
   suspended: false,
+  pendingImages: {},
   confirmed: null,
   working: null,
   progress: null,

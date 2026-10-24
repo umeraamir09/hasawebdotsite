@@ -107,6 +107,7 @@ export function AddressControl({
   return (
     <form
       className="address-control"
+      data-publication-field="address"
       aria-label="Portfolio address"
       onSubmit={(event) => {
         event.preventDefault();

@@ -1,11 +1,12 @@
 import { type AuthEnvironment, currentSessionIdentity } from "@hasaweb/auth";
 import {
   assertSaveSession,
+  ownerPublication,
   ownerSetup,
   privateJson,
   SaveError,
 } from "@hasaweb/db";
-import { setupCommandSchema } from "@hasaweb/schema";
+import { publicationCommandSchema, setupCommandSchema } from "@hasaweb/schema";
 import { type PrivateAssetEnvironment, resolvePrivateAsset } from "./assets";
 
 async function commandBody(request: Request) {
@@ -24,7 +25,9 @@ async function commandBody(request: Request) {
       text += decoder.decode(chunk.value, { stream: true });
     }
     text += decoder.decode();
-    return setupCommandSchema.parse(JSON.parse(text));
+    return new URL(request.url).pathname === "/api/owner/publication/check"
+      ? publicationCommandSchema.parse(JSON.parse(text))
+      : setupCommandSchema.parse(JSON.parse(text));
   } catch (error) {
     if (error instanceof SaveError) throw error;
     throw new SaveError(422, "Invalid command", "invalid_input");
@@ -40,9 +43,11 @@ export async function setupRequest(
 ): Promise<Response | null> {
   const url = new URL(request.url);
   if (
-    !["/api/owner/setup/check", "/api/owner/setup/handoff"].includes(
-      url.pathname,
-    )
+    ![
+      "/api/owner/setup/check",
+      "/api/owner/setup/handoff",
+      "/api/owner/publication/check",
+    ].includes(url.pathname)
   )
     return null;
   try {
@@ -68,12 +73,22 @@ export async function setupRequest(
     if (expected !== identity.user.id)
       return privateJson({ error: "owner_changed" }, 409);
     const command = await commandBody(request);
-    const setup = ownerSetup(env.DB, identity, async (id, purpose) => {
+    const assetReady: Parameters<typeof ownerSetup>[2] = async (
+      id,
+      purpose,
+    ) => {
       const resolved = await resolvePrivateAsset(env, identity, id, purpose);
       if (!resolved) return false;
       void resolved.object.body.cancel().catch(() => {});
       return true;
-    });
+    };
+    if (url.pathname === "/api/owner/publication/check")
+      return privateJson(
+        await ownerPublication(env.DB, identity, assetReady).check(
+          publicationCommandSchema.parse(command),
+        ),
+      );
+    const setup = ownerSetup(env.DB, identity, assetReady);
     return privateJson(
       await (url.pathname.endsWith("/handoff")
         ? setup.handoff(command)

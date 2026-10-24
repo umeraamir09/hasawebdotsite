@@ -108,6 +108,7 @@ function LinksControl({ controller, disabled }: Props) {
       ref={section}
       className={styles.control}
       aria-label="Social and contact links"
+      data-publication-field="links"
     >
       <h3>Your links</h3>
       <p className={styles.help}>

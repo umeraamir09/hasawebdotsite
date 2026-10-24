@@ -192,6 +192,16 @@ async function request(action, body = {}, options = {}) {
   return result;
 }
 async function check(name, action) {
+  const filter = process.argv
+    .find((argument) => argument.startsWith("--api-filter="))
+    ?.slice("--api-filter=".length);
+  if (
+    filter &&
+    !name.startsWith("real session") &&
+    !new RegExp(filter).test(name)
+  )
+    return;
+
   if (
     (process.argv.includes("--autosave") ||
       process.argv.includes("--editor")) &&
@@ -1496,10 +1506,22 @@ try {
       },
     );
   if (!remote)
-    await check("setup-aware entry and authoritative handoff", async () => {
-      const { checkSetupEntry } = await import("./setup-entry-api.mjs");
-      await checkSetupEntry({ request, sql, fixture, origin, cookie, secrets });
-    });
+    await check(
+      "setup-aware entry, handoff and publication readiness",
+      async () => {
+        const { checkSetupEntry } = await import("./setup-entry-api.mjs");
+        await checkSetupEntry({
+          request,
+          sql,
+          fixture,
+          origin,
+          cookie,
+          secrets,
+        });
+        const { checkPublicationApi } = await import("./publication-api.mjs");
+        await checkPublicationApi({ request, sql, origin, cookie, secrets });
+      },
+    );
   if (benchmark) {
     await clear();
     const preparation = (commands) => ({

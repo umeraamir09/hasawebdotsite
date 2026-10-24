@@ -4,7 +4,7 @@ import type {
   PreviewIdentity,
   PreviewSelection,
 } from "@hasaweb/components/browser";
-import { componentRegistry } from "@hasaweb/schema";
+import { componentRegistry, type PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { createDraftController } from "../lib/draft/controller";
@@ -17,6 +17,10 @@ import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
 import { EditorFields } from "./editor-fields";
 import { EditorPreview } from "./editor-preview";
+import {
+  PublicationChecklist,
+  PublicationCorrection,
+} from "./publication-checklist";
 import "./editor.css";
 
 export function EditorSession(props: {
@@ -98,6 +102,10 @@ function Scope({
   });
   const [panel, setPanel] = useState<"content" | "customization">("content");
   const [view, setView] = useState<"edit" | "preview">("edit");
+  const [correction, setCorrection] = useState<{
+    issue: PublicationIssue;
+    componentId: string | null;
+  } | null>(null);
   const draft = state.working;
   const active: PreviewSelection =
     selection.kind === "component" &&
@@ -164,6 +172,63 @@ function Scope({
               Customization
             </button>
           </fieldset>
+          <PublicationChecklist
+            controller={controller}
+            disabled={disabled}
+            onOpen={(issue) => {
+              setPanel("content");
+              setView("edit");
+              const index =
+                issue.path[0] === "components" &&
+                typeof issue.path[1] === "number"
+                  ? issue.path[1]
+                  : null;
+              const component =
+                index === null ? undefined : draft?.components[index];
+              setSelection(
+                component
+                  ? { kind: "component", id: component.id }
+                  : { kind: "profile" },
+              );
+              if (
+                issue.code === "catalog" ||
+                component ||
+                issue.path[1] === "faceReveal" ||
+                issue.path[0] === "seo"
+              )
+                setCorrection({ issue, componentId: component?.id ?? null });
+              else {
+                setCorrection(null);
+                requestAnimationFrame(() => {
+                  const key =
+                    issue.path[0] === "requestedSubdomain"
+                      ? "address"
+                      : issue.path[0] === "links"
+                        ? "links"
+                        : String(issue.path[1]);
+                  const control = document.querySelector<HTMLElement>(
+                    `[data-publication-field="${key}"]`,
+                  );
+                  control?.scrollIntoView({ block: "center" });
+                  (
+                    control?.querySelector<HTMLElement>(
+                      "input,textarea,button",
+                    ) ?? control
+                  )?.focus();
+                });
+              }
+            }}
+          />
+          {correction && (
+            <PublicationCorrection
+              controller={controller}
+              key={JSON.stringify(correction)}
+              issue={correction.issue}
+              componentId={correction.componentId}
+              disabled={disabled}
+              onClose={() => setCorrection(null)}
+            />
+          )}
           {panel === "content" ? (
             <>
               <nav
