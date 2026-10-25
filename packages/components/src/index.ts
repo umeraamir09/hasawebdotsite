@@ -20,6 +20,7 @@ export {
 export {
   Portfolio,
   PortfolioProfile,
+  PortfolioProject,
   PortfolioSection,
   RichText,
 } from "./portfolio";

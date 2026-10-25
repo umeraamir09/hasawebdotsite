@@ -1,10 +1,16 @@
 import { type AuthEnvironment, currentSessionIdentity } from "@hasaweb/auth";
-import { publicationTasks, type Wake, wakeSchema } from "@hasaweb/db";
+import {
+  publicationRetainsAsset,
+  publicationTasks,
+  type Wake,
+  wakeSchema,
+} from "@hasaweb/db";
 import {
   type DispatchEnv,
   runPublicationBatch,
   sweepPublicationTasks,
 } from "../src/publication-dispatch";
+import { withPublicationFault } from "./publication-faults";
 import { measureDispatch } from "./publication-measure";
 
 type Env = DispatchEnv &
@@ -63,8 +69,11 @@ export default {
         }),
       };
     }
-    const env = measured(original),
-      url = new URL(request.url);
+    const base = measured(original);
+    const env = withPublicationFault(base, fault);
+    const counter = counters.get(base);
+    if (counter) counters.set(env, counter);
+    const url = new URL(request.url);
     const reply = (value: unknown, status = 200) =>
       Response.json(
         { value, counts: counters.get(env)?.() ?? null },
@@ -115,6 +124,14 @@ export default {
         );
         return reply(true);
       }
+      if (url.pathname === "/retains")
+        return reply(
+          await publicationRetainsAsset(
+            env.DB,
+            "s8-portfolio",
+            url.searchParams.get("asset") ?? "",
+          ),
+        );
       const id = url.searchParams.get("id");
       if (!id) return reply("missing id", 400);
       if (url.pathname === "/status")
@@ -146,8 +163,12 @@ export default {
         return reply(await publicationTasks(env.DB).claim(id));
       if (url.pathname === "/sweep")
         return reply(await sweepPublicationTasks(env));
-      if (url.pathname === "/cleanup")
-        return reply(await publicationTasks(env.DB).startCleanup(id));
+      if (url.pathname === "/cleanup") {
+        const accepted = await publicationTasks(env.DB).startCleanup(id);
+        if (accepted && env.MANUAL_DISPATCH !== "true")
+          await env.PUBLICATION_QUEUE.send({ candidateId: id });
+        return reply(accepted);
+      }
       if (url.pathname === "/objects")
         return reply({
           sites: await env.SITES_BUCKET.list({

@@ -34,7 +34,7 @@ type ProjectDisplay = Omit<
   ComponentOf<"projects">["data"]["entries"][number],
   "id" | "image" | "caseStudy"
 > & { image: DisplayAsset; hasCaseStudy: boolean };
-const projectSchema = z.strictObject({
+export const projectModelSchema = z.strictObject({
   title: z.string(),
   summary: z.string(),
   technologies: z.array(z.string()),
@@ -52,7 +52,7 @@ const schemas = {
   projects: z.strictObject({
     ...identity,
     type: z.literal("projects"),
-    data: z.strictObject({ entries: z.array(projectSchema) }),
+    data: z.strictObject({ entries: z.array(projectModelSchema) }),
   }),
   skills: z.strictObject({
     ...identity,
@@ -380,9 +380,10 @@ export async function projectPortfolioCancellable(
 export function normalizeDisplayStrings(model: PortfolioModel): PortfolioModel;
 export function normalizeDisplayStrings(model: ProfileModel): ProfileModel;
 export function normalizeDisplayStrings(model: ComponentModel): ComponentModel;
+export function normalizeDisplayStrings(model: ProjectDisplay): ProjectDisplay;
 export function normalizeDisplayStrings(
-  model: PortfolioModel | ProfileModel | ComponentModel,
-): PortfolioModel | ProfileModel | ComponentModel {
+  model: PortfolioModel | ProfileModel | ComponentModel | ProjectDisplay,
+): PortfolioModel | ProfileModel | ComponentModel | ProjectDisplay {
   const copy = structuredClone(model);
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: false });

@@ -9,7 +9,7 @@ export type Wake = z.infer<typeof wakeSchema>;
 export const LEASE_MS = 60_000;
 export const DEADLINE_MS = 3_600_000;
 export const MAX_ATTEMPTS = 4;
-export const PUBLICATION_RENDERER_VERSION = "s8-v2";
+export const PUBLICATION_RENDERER_VERSION = "s8-v3";
 export const candidateSchema = z.object({
   id: candidateIdSchema,
   portfolio_id: z.string(),
@@ -39,6 +39,10 @@ export const candidateSchema = z.object({
   last_error: z.string().nullable(),
 });
 export type Candidate = z.infer<typeof candidateSchema>;
+export const PUBLICATION_SOURCE_LIMIT = 4;
+export const PUBLICATION_ROW_LIMIT = 128;
+export const PUBLICATION_READY_MS = 3_600_000;
+export const PUBLICATION_TOMBSTONE_MS = 86_400_000;
 const columns =
   "id,portfolio_id,owner_id,source_revision,renderer_version,task_batch,asset_origin,status,cursor,sequence,output_count,page_index,lease_token,lease_until,attempts,next_attempt_at,deadline_at,last_error";
 export const candidateActive = `EXISTS(SELECT 1 FROM portfolio p JOIN user u ON u.id=p.user_id WHERE p.id=publication_candidate.portfolio_id AND p.user_id=publication_candidate.owner_id AND p.status!='deleting' AND u.deleting_at IS NULL)`;
@@ -86,6 +90,9 @@ export function publicationTasks(db: D1Database) {
         .prepare(`INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,renderer_version,task_batch,asset_origin,status,cursor,next_attempt_at,deadline_at,created_at,updated_at)
         SELECT ?,p.id,p.user_id,p.draft_rev,(${sourceSql}),?,?,?,'preparing',?, ?,?,?,? FROM portfolio p
         WHERE p.id=? AND p.user_id=? AND p.draft_rev=? AND p.draft_validation_version=2 AND p.status!='deleting'
+        AND NOT EXISTS(SELECT 1 FROM publication_candidate existing WHERE existing.portfolio_id=p.id AND existing.source IS NOT NULL)
+        AND (SELECT count(*) FROM publication_candidate WHERE source IS NOT NULL)<${PUBLICATION_SOURCE_LIMIT}
+        AND (SELECT count(*) FROM publication_candidate)<${PUBLICATION_ROW_LIMIT}
         AND ${activeSaveSession} AND NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=p.user_id AND a.state NOT IN ('aborted','committed') AND a.expires_at>?) RETURNING id`)
         .bind(
           id,
@@ -109,7 +116,10 @@ export function publicationTasks(db: D1Database) {
           now,
         )
         .first<{ id: string }>();
-      if (!row) throw new Error("Source revision unavailable");
+      if (!row)
+        throw new Error(
+          "Source revision unavailable or publication capacity reached; finish candidate cleanup before retrying",
+        );
       return row.id;
     },
     async claim(id: string, now = Date.now()) {
@@ -136,13 +146,15 @@ export function publicationTasks(db: D1Database) {
       const now = Date.now();
       const result = await db
         .prepare(
-          `UPDATE publication_candidate SET cursor=?,output_count=?,page_index=?,status=?,sequence=sequence+1,lease_token=NULL,lease_until=0,attempts=0,next_attempt_at=?,updated_at=? WHERE id=? AND sequence=? AND lease_token=? AND lease_until>? AND status=? AND (status='cleaning' OR ${candidateActive}) RETURNING id`,
+          `UPDATE publication_candidate SET cursor=?,output_count=?,page_index=?,status=?,cleaned_at=CASE WHEN ?='cleaned' THEN coalesce(cleaned_at,?) ELSE cleaned_at END,sequence=sequence+1,lease_token=NULL,lease_until=0,attempts=0,next_attempt_at=?,updated_at=? WHERE id=? AND sequence=? AND lease_token=? AND lease_until>? AND status=? AND (status='cleaning' OR ${candidateActive}) RETURNING id`,
         )
         .bind(
           patch.cursor,
           patch.outputCount,
           patch.pageIndex,
           patch.status,
+          patch.status,
+          now,
           now,
           now,
           row.id,
@@ -188,9 +200,9 @@ export function publicationTasks(db: D1Database) {
       const now = Date.now();
       await db
         .prepare(
-          `UPDATE publication_candidate SET status='failed',last_error=CASE WHEN status='cleaning' THEN 'cleanup:expired' ELSE 'expired_or_deleted' END,updated_at=? WHERE id IN (SELECT id FROM publication_candidate WHERE status IN ('preparing','assembling','transferring','cleaning','ready') AND ((status!='ready' AND (deadline_at<=? OR (attempts>=${MAX_ATTEMPTS} AND lease_until<=?))) OR (status!='cleaning' AND NOT ${candidateActive})) ORDER BY next_attempt_at LIMIT ?)`,
+          `UPDATE publication_candidate SET status='failed',last_error=CASE WHEN status='cleaning' THEN 'cleanup:expired' ELSE 'expired_or_deleted' END,updated_at=? WHERE id IN (SELECT id FROM publication_candidate WHERE status IN ('preparing','assembling','transferring','cleaning','ready') AND ((status!='ready' AND (deadline_at<=? OR (attempts>=${MAX_ATTEMPTS} AND lease_until<=?))) OR (status='ready' AND updated_at<=? ) OR (status!='cleaning' AND NOT ${candidateActive})) ORDER BY next_attempt_at LIMIT ?)`,
         )
-        .bind(now, now, now, limit)
+        .bind(now, now, now, now - PUBLICATION_READY_MS, limit)
         .run();
       const rows = await db
         .prepare(

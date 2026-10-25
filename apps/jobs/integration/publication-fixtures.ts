@@ -190,6 +190,8 @@ export function makeDraft(kind: string): DraftDoc {
   }
   if (kind === "hands" || kind === "cat") draft.profile.decorationId = kind;
   if (kind === "face") draft.profile.faceReveal.enabled = true;
+  if (kind === "surrogate-boundary")
+    draft.profile.bio = `${"a".repeat(32763)}😀\ud800\r\n${"عمر<&>\u0000".repeat(5000)}`;
   if (kind === "surrogate") draft.profile.bio = "A\ud800B\udc00Z";
   return serializeDraft(draft).draft;
 }

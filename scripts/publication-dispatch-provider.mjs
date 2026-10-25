@@ -4,9 +4,9 @@ import { spawnSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { cloudflareToken } from "./lib/cloudflare-token.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url)),
   directory = join(root, ".wrangler/s8-provider"),
@@ -28,12 +28,7 @@ const require = createRequire(import.meta.url),
     dirname(require.resolve("wrangler/package.json")),
     "bin/wrangler.js",
   );
-const saved = await readFile(
-  join(homedir(), ".config/.wrangler/config/default.toml"),
-  "utf8",
-);
-const token = saved.match(/oauth_token\s*=\s*"([^"]+)"/)?.[1];
-assert.ok(token, "Cloudflare login required");
+const token = await cloudflareToken(wrangler);
 const account = "b6f9a87e6702c76c45a8d61744826e0f";
 async function raw(path, init = {}) {
   return fetch(`https://api.cloudflare.com/client/v4${path}`, {
@@ -216,6 +211,21 @@ if (action === "deploy") {
       },
     },
   };
+  if (process.argv.includes("--full-source")) {
+    state.fullSource ??= `${state.prefix}-full-source`;
+    configs.fullSource = {
+      ...configs.source,
+      name: state.fullSource,
+      main: join(root, "apps/web/worker.ts"),
+      workers_dev: false,
+      assets: {
+        directory: join(root, "apps/web/.open-next/assets"),
+        binding: "ASSETS",
+      },
+    };
+    configs.jobs.services[0].service = state.fullSource;
+    configs.fullSource.services = [];
+  }
   configs.control = {
     ...configs.jobs,
     name: state.control,
@@ -235,7 +245,14 @@ if (action === "deploy") {
     }),
     { mode: 0o600 },
   );
-  for (const [name, config] of Object.entries(configs)) {
+  await save(state);
+  for (const name of [
+    "source",
+    ...(configs.fullSource ? ["fullSource"] : []),
+    "jobs",
+    "control",
+  ]) {
+    const config = configs[name];
     const path = join(directory, `${name}.json`);
     await writeFile(path, JSON.stringify(config, null, 2));
     if (name === "source")
@@ -271,9 +288,12 @@ if (action === "cpu") {
     end = process.argv[4] ?? new Date().toISOString();
   const query = `query($account:String!,$start:Time!,$end:Time!,$script:String!){viewer{accounts(filter:{accountTag:$account}){workersInvocationsAdaptive(limit:100,filter:{datetime_geq:$start,datetime_leq:$end,scriptName:$script}){dimensions{scriptName status coloCode scriptVersion}sum{requests errors}quantiles{cpuTimeP50 cpuTimeP95 cpuTimeP99}}}}}`;
   const results = [];
-  for (const script of [state.jobs, state.source, state.control].filter(
-    Boolean,
-  )) {
+  for (const script of [
+    state.jobs,
+    state.source,
+    state.fullSource,
+    state.control,
+  ].filter(Boolean)) {
     const response = await raw("/graphql", {
       method: "POST",
       body: JSON.stringify({
@@ -311,9 +331,12 @@ if (action === "cleanup") {
       });
     }
   }
-  for (const name of [state.control, state.jobs, state.source].filter(
-    Boolean,
-  )) {
+  for (const name of [
+    state.control,
+    state.jobs,
+    state.fullSource,
+    state.source,
+  ].filter(Boolean)) {
     const response = await raw(
       `/accounts/${account}/workers/scripts/${name}?force=true`,
       { method: "DELETE" },
@@ -412,9 +435,9 @@ if (action === "verify-cleanup") {
   const state = JSON.parse(await readFile(statePath, "utf8"));
   assert.ok(state.cleanedAt, "Finish owned-resource cleanup first");
   const paths = [
-    ...[state.control, state.jobs, state.source].map(
-      (name) => `/workers/scripts/${name}`,
-    ),
+    ...[state.control, state.jobs, state.fullSource, state.source]
+      .filter(Boolean)
+      .map((name) => `/workers/scripts/${name}`),
     `/queues/${state.queueId}`,
     ...Object.values(state.buckets).map((name) => `/r2/buckets/${name}`),
     `/d1/database/${state.database.uuid}`,

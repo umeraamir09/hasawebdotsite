@@ -156,6 +156,35 @@ export function PortfolioProfile({ profile }: { profile: ProfileModel }) {
     </PortfolioFrame>
   );
 }
+export function PortfolioProject({
+  entry,
+}: {
+  entry: Extract<
+    ComponentModel,
+    { type: "projects" }
+  >["data"]["entries"][number];
+}) {
+  return (
+    <article className="pf-entry">
+      {entry.image.state !== "missing" && <AssetImage asset={entry.image} />}
+      <h3>{entry.title || "Untitled project"}</h3>
+      <p>{entry.summary || "Summary not added."}</p>
+      {entry.contribution && <p>{entry.contribution}</p>}
+      {entry.technologies.length > 0 && (
+        <ul className="pf-tags">
+          {entry.technologies.map((item, itemIndex) => (
+            <li key={itemIndex}>{item}</li>
+          ))}
+        </ul>
+      )}
+      <div className="pf-links">
+        {entry.codeUrl && <SafeLink href={entry.codeUrl}>Code</SafeLink>}
+        {entry.demoUrl && <SafeLink href={entry.demoUrl}>Demo</SafeLink>}
+      </div>
+      {entry.hasCaseStudy && <Empty>Case study unavailable.</Empty>}
+    </article>
+  );
+}
 function SectionContent({
   component,
 }: {
@@ -168,30 +197,7 @@ function SectionContent({
           <h2>Projects</h2>
           {component.data.entries.length ? (
             component.data.entries.map((entry, index) => (
-              <article className="pf-entry" key={index}>
-                {entry.image.state !== "missing" && (
-                  <AssetImage asset={entry.image} />
-                )}
-                <h3>{entry.title || "Untitled project"}</h3>
-                <p>{entry.summary || "Summary not added."}</p>
-                {entry.contribution && <p>{entry.contribution}</p>}
-                {entry.technologies.length > 0 && (
-                  <ul className="pf-tags">
-                    {entry.technologies.map((item, itemIndex) => (
-                      <li key={itemIndex}>{item}</li>
-                    ))}
-                  </ul>
-                )}
-                <div className="pf-links">
-                  {entry.codeUrl && (
-                    <SafeLink href={entry.codeUrl}>Code</SafeLink>
-                  )}
-                  {entry.demoUrl && (
-                    <SafeLink href={entry.demoUrl}>Demo</SafeLink>
-                  )}
-                </div>
-                {entry.hasCaseStudy && <Empty>Case study unavailable.</Empty>}
-              </article>
+              <PortfolioProject entry={entry} key={index} />
             ))
           ) : (
             <Empty>No projects added.</Empty>

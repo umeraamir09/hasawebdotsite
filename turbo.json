@@ -16,7 +16,8 @@
     "S8_EVIDENCE",
     "S8_BATCH",
     "S8_CASES",
-    "S8_MAX_ASSETS"
+    "S8_MAX_ASSETS",
+    "S8_PROFILE"
   ],
   "tasks": {
     "build": {

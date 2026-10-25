@@ -35,3 +35,5 @@ See the [renderer contract](../render/README.md) and [Phase 16 evidence](../../s
 ## Inactive bounded publication preparation
 
 `@hasaweb/components/frames` exports a closed set of existing portfolio wrappers for the [S-8 preparation protocol](../../specs/2026-10-24-s8-dispatch-feasibility/protocol.md). It cannot select arbitrary tags or inject HTML. The rich-text view accepts an optional trusted image resolver for case-study images; private/public authorization remains at the caller boundary. Asset units reuse `AssetImage` and the existing cat/hands avatar views. These helpers do not activate publication or change saved appearance selections in the editor. See the [unresolved S-8 evidence gate](../../specs/2026-10-24-s8-dispatch-feasibility/results.md) before depending on them.
+
+`PortfolioProject` is the shared project-card view used both by complete sections and bounded S-8 entry rendering. Its output and image policy remain unchanged.

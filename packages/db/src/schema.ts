@@ -492,6 +492,7 @@ export const publicationCandidate = sqliteTable(
     portfolioId: text("portfolio_id").notNull(),
     ownerId: text("owner_id").notNull(),
     sourceRevision: integer("source_revision").notNull(),
+    cleanedAt: integer("cleaned_at"),
     source: text("source"),
     rendererVersion: text("renderer_version").notNull().default("s8-v1"),
     taskBatch: integer("task_batch").notNull().default(16),
@@ -513,6 +514,7 @@ export const publicationCandidate = sqliteTable(
   },
   (t) => [
     index("publication_candidate_due_idx").on(t.status, t.nextAttemptAt),
+    index("publication_candidate_owner_idx").on(t.portfolioId),
     check(
       "publication_candidate_status",
       sql`${t.status} in ('preparing','assembling','transferring','ready','failed','cleaning','cleaned')`,
@@ -525,6 +527,18 @@ export const publicationCandidate = sqliteTable(
       "publication_candidate_cursor",
       sql`json_valid(${t.cursor}) and length(${t.cursor})<=32768`,
     ),
+  ],
+);
+export const publicationCandidateIndex = sqliteTable(
+  "publication_candidate_index",
+  {
+    candidateId: text("candidate_id")
+      .primaryKey()
+      .references(() => publicationCandidate.id, { onDelete: "cascade" }),
+    value: text("value").notNull(),
+  },
+  (t) => [
+    check("publication_candidate_index_json", sql`json_valid(${t.value})`),
   ],
 );
 export const publicationTransfer = sqliteTable(

@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import {
   type FrameInput,
   type FrameName,
@@ -19,6 +20,12 @@ const view = z.enum([
 ]);
 export const commandSchema = z.discriminatedUnion("kind", [
   z.strictObject({ kind: z.literal("root") }),
+  z.strictObject({ kind: z.literal("profile-end") }),
+  z.strictObject({
+    kind: z.literal("reuse-profile"),
+    index: z.number().int().nonnegative(),
+    count: z.number().int().positive(),
+  }),
   z.strictObject({
     kind: z.literal("page-start"),
     ordinal: z.number().int().nonnegative(),
@@ -86,6 +93,7 @@ export interface PreparationSource {
   discover(index: number): Promise<boolean>;
   caseAt(index: number): Promise<{ path: string; slug: string } | null>;
   resumeAt(): Promise<{ path: string; ordinal: number } | null>;
+  project(path: string): Promise<string | null>;
   components(
     path: string,
     index: number,
@@ -152,6 +160,10 @@ export function decodeTextSlice(
   wire: string,
   final: boolean,
 ): { text: string; consumed: number; consumedBytes: number } {
+  // Most large bios contain plain ASCII. Avoid walking and parsing it twice.
+  const ascii = wire.slice(0, 4096);
+  if (ascii && /^[\x20-\x21\x23-\x5b\x5d-\x7f]*$/.test(ascii))
+    return { text: ascii, consumed: ascii.length, consumedBytes: ascii.length };
   let safe = 0,
     units = 0,
     bytes = 0;
@@ -220,9 +232,7 @@ export function decodeTextSlice(
 export function decodeSqlString(hex: string): string {
   if (hex.length > 16384 || hex.length % 2 || !/^[a-f0-9]*$/i.test(hex))
     throw new Error("SQL string envelope");
-  const bytes = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < bytes.length; i++)
-    bytes[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  const bytes = Buffer.from(hex, "hex");
   let end = bytes.length;
   if (end) {
     let start = end - 1;
@@ -316,7 +326,12 @@ export async function advancePreparation(
       push([text(`${command.path}.alt`), { ...command, side: "close" }]);
     return source.image(command.path, command.purpose, command.side);
   }
-  if (command.kind === "page-start" || command.kind === "page-end")
+  if (
+    command.kind === "page-start" ||
+    command.kind === "page-end" ||
+    command.kind === "profile-end" ||
+    command.kind === "reuse-profile"
+  )
     throw new Error("Page boundary requires durable dispatch");
   if (command.kind === "case-pages") {
     const page = await source.caseAt(command.index);
@@ -407,8 +422,8 @@ export async function advancePreparation(
     case "profile": {
       const location = await value(".location");
       const links = await source.read("$.profileLinks");
-      push(
-        wrap("profile", [
+      push([
+        ...wrap("profile", [
           {
             kind: "image",
             path: `${p}.banner`,
@@ -430,7 +445,8 @@ export async function advancePreparation(
               : empty("No links added.")),
           ]),
         ]),
-      );
+        { kind: "profile-end" },
+      ]);
       break;
     }
     case "component": {
@@ -522,6 +538,8 @@ export async function advancePreparation(
       break;
     }
     case "project": {
+      const html = await source.project(p);
+      if (html !== null) return html;
       const image = await value(".image.assetId"),
         contribution = await value(".contribution");
       const code = await value(".codeUrl"),

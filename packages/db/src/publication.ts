@@ -32,8 +32,7 @@ const issue = (
   target: string,
   from: string,
   condition: string,
-) =>
-  `SELECT '${code}' AS code,${target} AS path FROM ${from} WHERE NOT coalesce((${condition}),0)`;
+) => ({ code, target, from, condition });
 const cp = (suffix: string) =>
   `json_insert(json_array('components',c.idx,'data'),'$[#]',${suffix})`;
 const ep = (key: string) =>
@@ -173,6 +172,18 @@ const rules = [
     `c.type!='contact' OR EXISTS(SELECT 1 FROM contact_recipient r WHERE r.portfolio_id=p.id AND r.verified_at IS NOT NULL AND ${field("c.value", "data.recipientId")}=r.portfolio_id)`,
   ),
 ];
+// Scan each related collection once, emitting only failing rules. Building a
+// small SQL JSON array avoids revisiting all component rows for every field.
+const bySource = new Map<string, typeof rules>();
+for (const rule of rules) {
+  const group = bySource.get(rule.from) ?? [];
+  group.push(rule);
+  bySource.set(rule.from, group);
+}
+const ruleQueries = [...bySource].map(
+  ([from, group]) =>
+    `SELECT json_extract(f.value,'$.code') AS code,json_extract(f.value,'$.path') AS path FROM ${from},json_each(json_array(${group.map(({ code, target, condition }) => `CASE WHEN NOT coalesce((${condition}),0) THEN json_object('code','${code}','path',json(${target})) END`).join(",")})) f WHERE f.type='object'`,
+);
 const componentCoverage = {
   projects: true,
   skills: true,
@@ -266,8 +277,8 @@ export function ownerPublication(
       const rows: { code: string; path: string }[] = [];
       // The real D1 runtime rejects the original large compound SELECT.
       // Keep each query small and stop only after proving issue truncation.
-      for (let offset = 0; offset < rules.length; offset += 4) {
-        const group = rules.slice(offset, offset + 4);
+      for (let offset = 0; offset < ruleQueries.length; offset += 4) {
+        const group = ruleQueries.slice(offset, offset + 4);
         const result = await db
           .prepare(
             `${cte} SELECT * FROM (${group.join(" UNION ALL ")}) LIMIT ${PUBLICATION_ISSUE_LIMIT + 1 - rows.length}`,

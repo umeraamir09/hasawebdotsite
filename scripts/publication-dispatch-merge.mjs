@@ -14,8 +14,10 @@ const [report, tail, local] = await Promise.all([
 ]);
 for (const run of report.runs) {
   if (!Number.isFinite(run.inputBytes)) continue;
-  const events = tail.events.filter((event) =>
-    event.quota?.some((row) => row.candidateId === run.id),
+  const events = tail.events.filter(
+    (event) =>
+      event.quota?.some((row) => row.candidateId === run.id) &&
+      (!event.at || event.at <= Date.parse(run.finishedAt)),
   );
   run.invocations = events.flatMap((event) =>
     event.quota
@@ -33,6 +35,17 @@ for (const run of report.runs) {
     ),
     "R2 counters missing",
   );
+  run.cleanup = tail.events
+    .filter(
+      (event) =>
+        event.quota?.some((row) => row.candidateId === run.id) &&
+        event.at >= Date.parse(run.cleanupStartedAt),
+    )
+    .flatMap((event) =>
+      event.quota
+        .filter((row) => row.candidateId === run.id)
+        .map((row) => row.counts),
+    );
   run.quotaMethod =
     "Provider D1 meta and instrumented Queue/R2 calls, including named private source";
 }

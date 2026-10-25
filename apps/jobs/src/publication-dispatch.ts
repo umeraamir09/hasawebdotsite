@@ -1,8 +1,14 @@
-import { projectPortfolio, withinBounds } from "@hasaweb/components/model";
+import {
+  type ComponentModel,
+  projectPortfolio,
+  withinBounds,
+} from "@hasaweb/components/model";
 import {
   type Candidate,
   candidateActive,
   PUBLICATION_RENDERER_VERSION,
+  PUBLICATION_TOMBSTONE_MS,
+  preparePublicationIndex,
   publicationTasks,
   type Wake,
 } from "@hasaweb/db";
@@ -44,9 +50,35 @@ export function preparationSource(
   env: DispatchEnv,
   row: Candidate,
 ): PreparationSource {
+  let textWindow:
+    | { path: string; offset: number; length: number; hex: string }
+    | undefined;
   const read = async (path: string, offset?: number): Promise<SourceNode> => {
     if (path.length > 4096 || (offset ?? 0) < 0)
       throw new Error("Source path envelope");
+    if (
+      offset !== undefined &&
+      textWindow?.path === path &&
+      offset >= textWindow.offset
+    ) {
+      const relative = offset - textWindow.offset;
+      const available = textWindow.hex.length / 2 - relative;
+      if (
+        available >= 4096 ||
+        (available > 0 && offset + available >= textWindow.length)
+      ) {
+        const wire = decodeSqlString(
+          textWindow.hex.slice(relative * 2, relative * 2 + 8192),
+        );
+        return {
+          type: "text",
+          length: textWindow.length,
+          value: null,
+          wire,
+          count: 0,
+        };
+      }
+    }
     const link =
       /^\$\.(profileLinks|socialLinks)(?:\[(\d+)\]\.(label|href))?$/.exec(path);
     if (link) {
@@ -76,22 +108,29 @@ export function preparationSource(
           row.id,
           Number(link[2]),
           offset ?? 0,
-          offset === undefined ? 8192 : 4096,
+          offset === undefined ? 8192 : 32768,
           offset ?? 0,
         )
         .first<{ length: number; wire: string }>();
       if (!result) throw new Error("Source link unavailable");
-      const wire = decodeSqlString(result.wire);
+      if (offset !== undefined)
+        textWindow = { path, offset, length: result.length, hex: result.wire };
+      const wire = decodeSqlString(
+        offset === undefined ? result.wire : result.wire.slice(0, 8192),
+      );
       return {
         type: "text",
         length: result.length,
         wire,
         count: 0,
-        value: decode(
-          wire,
-          (offset ?? 0) + new TextEncoder().encode(wire).byteLength >=
-            result.length,
-        ),
+        value:
+          offset === undefined
+            ? decode(
+                wire,
+                (offset ?? 0) + new TextEncoder().encode(wire).byteLength >=
+                  result.length,
+              )
+            : null,
       };
     }
     const node =
@@ -104,7 +143,7 @@ export function preparationSource(
           path,
           row.id,
           offset ?? 0,
-          offset === undefined ? 8192 : 4096,
+          offset === undefined ? 8192 : 32768,
           offset ?? 0,
         )
         .first<{
@@ -114,32 +153,89 @@ export function preparationSource(
           count: number;
         }>();
     if (!node) throw new Error("Source unavailable");
+    const hex = String(node.value ?? "");
+    if (node.type === "text" && offset !== undefined)
+      textWindow = { path, offset, length: node.length, hex };
     const wire =
-      node.type === "text" ? decodeSqlString(String(node.value ?? "")) : "";
+      node.type === "text"
+        ? decodeSqlString(offset === undefined ? hex : hex.slice(0, 8192))
+        : "";
     return {
       ...node,
       wire,
       value:
-        node.type === "text"
+        node.type === "text" && offset === undefined
           ? decode(
               wire,
               (offset ?? 0) + new TextEncoder().encode(wire).byteLength >=
                 node.length,
             )
-          : node.value,
+          : node.type === "text"
+            ? null
+            : node.value,
     };
   };
   return {
     read,
+    async project(path) {
+      const item = await env.DB.prepare(
+        "SELECT CASE WHEN length(cast(json_extract(source,?) AS blob))<=4096 THEN json_extract(source,?) ELSE NULL END AS value FROM publication_candidate WHERE id=?",
+      )
+        .bind(path, path, row.id)
+        .first<{ value: string | null }>();
+      if (!item?.value) return null;
+      const raw: unknown = JSON.parse(item.value);
+      if (
+        !withinBounds(raw, {
+          maxNodes: 150,
+          maxDepth: 24,
+          maxString: 2048,
+          maxBytes: 8192,
+        })
+      )
+        return null;
+      const parsed = componentContentSchema.safeParse({
+        id: "entry",
+        type: "projects",
+        version: 1,
+        data: { entries: [raw] },
+      });
+      if (!parsed.success) return null;
+      const draft = createEmptyDraft({
+        themeId: "leaf",
+        fontId: "dm-sans",
+        colorMode: "system",
+      });
+      draft.components = [parsed.data];
+      const component = projectPortfolio(draft, {
+        assetOrigins: [row.asset_origin],
+        resolveAsset: ({ assetId }) => ({
+          state: "ready",
+          url: `${row.asset_origin}/${root(row.id)}assets/${assetId}`,
+        }),
+      }).components[0];
+      if (component?.type !== "projects" || !component.data.entries[0])
+        return null;
+      const result = renderFragment(
+        { kind: "project", entry: component.data.entries[0] },
+        { assetOrigins: [row.asset_origin] },
+      );
+      return result.status === "ready"
+        ? result.html.replace(/<link rel="preload"[^>]*\/>/g, "")
+        : null;
+    },
     async components(path, index) {
       const rows = await env.DB.prepare(
-        `WITH RECURSIVE n(i) AS (SELECT cast(? AS INTEGER) UNION ALL SELECT i+1 FROM n WHERE i<?+15), items AS MATERIALIZED (SELECT i,json_extract(c.source,?||'['||i||']') AS v FROM publication_candidate c,n WHERE c.id=? AND i<json_array_length(c.source,?)) SELECT CASE WHEN length(cast(v AS blob))<=4096 AND sum(length(cast(v AS blob))) OVER (ORDER BY i)<=16384 THEN v ELSE NULL END AS value FROM items ORDER BY i`,
+        `WITH RECURSIVE n(i) AS (SELECT cast(? AS INTEGER) UNION ALL SELECT i+1 FROM n WHERE i<?+31), items AS MATERIALIZED (SELECT i,json_extract(c.source,?||'['||i||']') AS v FROM publication_candidate c,n WHERE c.id=? AND i<json_array_length(c.source,?)) SELECT CASE WHEN length(cast(v AS blob))<=4096 AND sum(length(cast(v AS blob))) OVER (ORDER BY i)<=16384 THEN v ELSE NULL END AS value FROM items ORDER BY i`,
       )
         .bind(index, index, path, row.id, path)
         .all<{ value: string | null }>();
-      let html = "",
-        count = 0,
-        bytes = 0;
+      const draft = createEmptyDraft({
+        themeId: "leaf",
+        fontId: "dm-sans",
+        colorMode: "system",
+      });
+      let bytes = 0;
       for (const item of rows.results) {
         if (item.value === null) break;
         bytes += new TextEncoder().encode(item.value).byteLength;
@@ -156,88 +252,87 @@ export function preparationSource(
           break;
         const parsed = componentContentSchema.safeParse(raw);
         if (!parsed.success || parsed.data.type === "social-links") break;
-        const draft = createEmptyDraft({
-          themeId: "leaf",
-          fontId: "dm-sans",
-          colorMode: "system",
-        });
-        draft.components = [parsed.data];
-        const model = projectPortfolio(draft, {
-          assetOrigins: [row.asset_origin],
-          resolveAsset: ({ assetId }) => ({
-            state: "ready",
-            url: `${row.asset_origin}/${root(row.id)}assets/${assetId}`,
-          }),
-        });
+        draft.components.push(parsed.data);
+      }
+      const model = projectPortfolio(draft, {
+        assetOrigins: [row.asset_origin],
+        resolveAsset: ({ assetId }) => ({
+          state: "ready",
+          url: `${row.asset_origin}/${root(row.id)}assets/${assetId}`,
+        }),
+      });
+      const render = (
+        components: ComponentModel[],
+      ): { html: string; count: number } => {
+        if (!components.length) return { html: "", count: 0 };
         const result = renderFragment(
-          { kind: "component", component: model.components[0] },
+          { kind: "components", components },
           { assetOrigins: [row.asset_origin] },
         );
-        if (result.status !== "ready") break;
-        html += result.html.replace(/<link rel="preload"[^>]*\/>/g, "");
-        count++;
-      }
+        if (result.status === "ready")
+          return {
+            html: result.html.replace(/<link rel="preload"[^>]*\/>/g, ""),
+            count: components.length,
+          };
+        if (components.length === 1) return { html: "", count: 0 };
+        const middle = Math.ceil(components.length / 2);
+        const left = render(components.slice(0, middle));
+        if (left.count < middle) return left;
+        const right = render(components.slice(middle));
+        return {
+          html: left.html + right.html,
+          count: left.count + right.count,
+        };
+      };
+      const { html, count } = render(model.components);
       return { html, count };
     },
     async caseAt(index) {
-      const result = await env.DB.prepare(
-        `SELECT fullkey AS path,json_extract(value,'$.slug') AS slug FROM publication_candidate c,json_tree(c.source) WHERE c.id=? AND key='caseStudy' ORDER BY json_tree.id LIMIT 1 OFFSET ?`,
+      return env.DB.prepare(
+        "SELECT json_extract(value,?||'.path') AS path,json_extract(value,?||'.slug') AS slug FROM publication_candidate_index WHERE candidate_id=? AND json_type(value,?)='object'",
       )
-        .bind(row.id, index)
+        .bind(
+          `$.cases[${index}]`,
+          `$.cases[${index}]`,
+          row.id,
+          `$.cases[${index}]`,
+        )
         .first<{ path: string; slug: string }>();
-      return result
-        ? { path: result.path.slice(0, -10), slug: result.slug }
-        : null;
     },
     async resumeAt() {
-      const result = await env.DB.prepare(
-        `SELECT j.key AS idx FROM publication_candidate c,json_each(c.source,'$.components') j WHERE c.id=? AND json_extract(j.value,'$.type')='resume' LIMIT 1`,
+      return env.DB.prepare(
+        "SELECT json_extract(value,'$.resume.path') AS path,json_extract(value,'$.resume.ordinal') AS ordinal FROM publication_candidate_index WHERE candidate_id=? AND json_type(value,'$.resume')='object'",
       )
         .bind(row.id)
-        .first<{ idx: number }>();
-      if (!result) return null;
-      const count = await env.DB.prepare(
-        `SELECT count(*) AS n FROM publication_candidate c,json_tree(c.source) WHERE c.id=? AND key='caseStudy'`,
-      )
-        .bind(row.id)
-        .first<{ n: number }>();
-      return {
-        path: `$.components[${result.idx}]`,
-        ordinal: (count?.n ?? 0) + 1,
-      };
+        .first<{ path: string; ordinal: number }>();
     },
     async discover(index) {
+      if (index === 0) await preparePublicationIndex(env.DB, row);
       const refs = await env.DB.prepare(
-        `SELECT fullkey AS path,atom AS id FROM publication_candidate c,json_tree(c.source) WHERE c.id=? AND key='assetId' ORDER BY fullkey LIMIT 5 OFFSET ?`,
+        `WITH RECURSIVE n(i) AS (SELECT cast(? AS INTEGER) UNION ALL SELECT i+1 FROM n WHERE i<?+4)
+        SELECT i,json_extract(value,'$.assets['||i||'].id') AS id,json_extract(value,'$.assets['||i||'].purpose') AS purpose
+        FROM publication_candidate_index,n WHERE candidate_id=? AND i<json_array_length(value,'$.assets') ORDER BY i`,
       )
-        .bind(row.id, index)
-        .all<{ path: string; id: string }>();
+        .bind(index, index, row.id)
+        .all<{ i: number; id: string; purpose: string }>();
       for (const ref of refs.results.slice(0, 4)) {
-        const purpose =
-          ref.path === "$.profile.avatar.assetId"
-            ? "avatar"
-            : ref.path === "$.profile.banner.assetId"
-              ? "banner"
-              : ref.path === "$.profile.faceReveal.image.assetId"
-                ? "face"
-                : ref.path === "$.seo.ogImage.assetId"
-                  ? "og"
-                  : ref.path.endsWith(".data.file.assetId")
-                    ? "resume"
-                    : ref.path.endsWith(".image.assetId")
-                      ? "project"
-                      : "case_study";
         const asset = await env.DB.prepare(
-          `INSERT INTO publication_transfer(candidate_id,asset_id,purpose,bytes,content_type) SELECT c.id,a.id,a.kind,a.bytes,a.content_type FROM publication_candidate c JOIN asset a ON a.portfolio_id=c.portfolio_id WHERE c.id=? AND c.lease_token=? AND c.lease_until>? AND a.id=json_extract(c.source,?) AND a.kind=? AND a.status='ready' AND ${candidateActive.replaceAll("publication_candidate.", "c.")} ON CONFLICT DO NOTHING RETURNING asset_id`,
+          `INSERT INTO publication_transfer(candidate_id,asset_id,purpose,bytes,content_type) SELECT c.id,a.id,a.kind,a.bytes,a.content_type FROM publication_candidate c JOIN asset a ON a.portfolio_id=c.portfolio_id JOIN publication_candidate_index x ON x.candidate_id=c.id WHERE c.id=? AND c.lease_token=? AND c.lease_until>? AND a.id=json_extract(x.value,?) AND a.kind=? AND a.status='ready' AND ${candidateActive.replaceAll("publication_candidate.", "c.")} ON CONFLICT DO NOTHING RETURNING asset_id`,
         )
-          .bind(row.id, row.lease_token, Date.now(), ref.path, purpose)
+          .bind(
+            row.id,
+            row.lease_token,
+            Date.now(),
+            `$.assets[${ref.i}].id`,
+            ref.purpose,
+          )
           .first();
         if (
           !asset &&
           !(await env.DB.prepare(
             "SELECT 1 AS ok FROM publication_transfer WHERE candidate_id=? AND asset_id=? AND purpose=?",
           )
-            .bind(row.id, ref.id, purpose)
+            .bind(row.id, ref.id, ref.purpose)
             .first())
         )
           throw new Error("Referenced asset unavailable");
@@ -306,34 +401,21 @@ export function preparationSource(
     },
   };
 }
-async function assemble(
+async function copyParts(
   env: DispatchEnv,
-  row: Candidate,
-): Promise<{
-  cursor: string;
-  outputCount: number;
-  status: Candidate["status"];
-}> {
-  const state = assemblySchema.parse(JSON.parse(row.cursor));
-  const end = Math.min(state.count, state.index + 8);
+  keys: string[],
+  destination: string,
+) {
   let bytes = 0;
-  for (let i = state.index; i < end; i++) {
-    const object = await env.SITES_BUCKET.head(
-      chunk(row.id, state.page, state.level, i),
-    );
+  for (const key of keys) {
+    const object = await env.SITES_BUCKET.head(key);
     if (!object) throw new Error("Assembly input missing");
     bytes += object.size;
   }
-  const final = end === state.count && state.written === 0;
-  const destination = final
-    ? `${root(row.id)}pages/${state.page}.html`
-    : chunk(row.id, state.page, state.level + 1, state.written);
   let activeReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   async function* inputs() {
-    for (let i = state.index; i < end; i++) {
-      const object = await env.SITES_BUCKET.get(
-        chunk(row.id, state.page, state.level, i),
-      );
+    for (const key of keys) {
+      const object = await env.SITES_BUCKET.get(key);
       if (!object) throw new Error("Assembly input disappeared");
       const reader = object.body.getReader();
       activeReader = reader;
@@ -363,6 +445,28 @@ async function assemble(
     },
   });
   await putBoundedStream(env.SITES_BUCKET, destination, input, bytes);
+}
+async function assemble(
+  env: DispatchEnv,
+  row: Candidate,
+): Promise<{
+  cursor: string;
+  outputCount: number;
+  status: Candidate["status"];
+}> {
+  const state = assemblySchema.parse(JSON.parse(row.cursor));
+  const end = Math.min(state.count, state.index + 16);
+  const final = end === state.count && state.written === 0;
+  const destination = final
+    ? `${root(row.id)}pages/${state.page}.html`
+    : chunk(row.id, state.page, state.level + 1, state.written);
+  await copyParts(
+    env,
+    Array.from({ length: end - state.index }, (_, i) =>
+      chunk(row.id, state.page, state.level, state.index + i),
+    ),
+    destination,
+  );
   const written = state.written + 1;
   if (end === state.count && written === 1) {
     const receipt = await env.DB.prepare(
@@ -515,6 +619,7 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
         cost = 0,
         commands = 0,
         pageEnded = false,
+        profileEnded = false,
         outputBytes = 0;
       while (stack.length && commands < 128) {
         const command = stack[stack.length - 1];
@@ -541,6 +646,42 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
           pageEnded = true;
           break;
         }
+        if (command?.kind === "profile-end") {
+          stack.pop();
+          profileEnded = true;
+          break;
+        }
+        if (
+          command?.kind === "view" &&
+          command.view === "profile" &&
+          pageIndex > 0
+        ) {
+          if (html) break;
+          const cached = await env.DB.prepare(
+            "SELECT json_extract(value,'$.profileParts') AS parts FROM publication_candidate_index WHERE candidate_id=?",
+          )
+            .bind(row.id)
+            .first<{ parts: number }>();
+          if (!cached?.parts) throw new Error("Prepared profile missing");
+          stack.pop();
+          stack.push({ kind: "reuse-profile", index: 0, count: cached.parts });
+          continue;
+        }
+        if (command?.kind === "reuse-profile") {
+          if (html) break;
+          const end = Math.min(command.count, command.index + 16);
+          await copyParts(
+            env,
+            Array.from({ length: end - command.index }, (_, i) =>
+              chunk(row.id, 0, 0, command.index + i),
+            ),
+            chunk(row.id, pageIndex, 0, count),
+          );
+          count++;
+          stack.pop();
+          if (end < command.count) stack.push({ ...command, index: end });
+          break;
+        }
         const weight =
           command?.kind === "each" && command.view === "component"
             ? 16
@@ -564,6 +705,21 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
       if (html) {
         await env.SITES_BUCKET.put(chunk(row.id, pageIndex, 0, count), html);
         count++;
+      }
+      if (profileEnded) {
+        const receipt = await env.DB.prepare(
+          `UPDATE publication_candidate_index SET value=json_set(value,'$.profileParts',?) WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE id=? AND sequence=? AND lease_token=? AND lease_until>? AND status='preparing' AND ${candidateActive}) RETURNING candidate_id`,
+        )
+          .bind(
+            count,
+            row.id,
+            row.id,
+            row.sequence,
+            row.lease_token,
+            Date.now(),
+          )
+          .first();
+        if (!receipt) throw new Error("Profile preparation fenced");
       }
       if (pageEnded)
         await env.DB.prepare(
@@ -606,21 +762,25 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
           remaining = true;
         }
       }
-      if (!remaining)
+      if (!remaining) {
+        const guard =
+          "id=? AND sequence=? AND lease_token=? AND lease_until>? AND status='cleaning'";
+        const values = [row.id, row.sequence, row.lease_token, Date.now()];
         await env.DB.batch([
           env.DB.prepare(
-            "UPDATE publication_candidate SET source=NULL WHERE id=? AND lease_token=?",
-          ).bind(row.id, row.lease_token),
-          env.DB.prepare(
-            "DELETE FROM publication_transfer WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE id=? AND lease_token=?)",
-          ).bind(row.id, row.id, row.lease_token),
-          env.DB.prepare(
-            "DELETE FROM publication_page WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE id=? AND lease_token=?)",
-          ).bind(row.id, row.id, row.lease_token),
-          env.DB.prepare(
-            "UPDATE publication_candidate SET owner_id='',portfolio_id='' WHERE id=? AND lease_token=? AND NOT EXISTS(SELECT 1 FROM user WHERE id=publication_candidate.owner_id)",
-          ).bind(row.id, row.lease_token),
+            `UPDATE publication_candidate SET source=NULL,owner_id='',portfolio_id='' WHERE ${guard}`,
+          ).bind(...values),
+          ...[
+            "publication_transfer",
+            "publication_candidate_index",
+            "publication_page",
+          ].map((table) =>
+            env.DB.prepare(
+              `DELETE FROM ${table} WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE ${guard})`,
+            ).bind(row.id, ...values),
+          ),
         ]);
+      }
       next = {
         cursor: "[]",
         outputCount: 0,
@@ -643,6 +803,29 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
 export async function sweepPublicationTasks(env: DispatchEnv) {
   const tasks = publicationTasks(env.DB),
     now = Date.now();
+  const exhausted = await env.DB.prepare(
+    "SELECT id FROM publication_candidate WHERE status='failed' AND last_error LIKE 'cleanup:%' AND source IS NOT NULL AND lease_until<=? LIMIT 4",
+  )
+    .bind(now)
+    .all<{ id: string }>();
+  for (const row of exhausted.results) {
+    const guard =
+      "id=? AND status='failed' AND last_error LIKE 'cleanup:%' AND lease_until<=?";
+    await env.DB.batch([
+      env.DB.prepare(
+        `UPDATE publication_candidate SET source=NULL,owner_id='',portfolio_id='',last_error='cleanup:exhausted' WHERE ${guard}`,
+      ).bind(row.id, now),
+      ...[
+        "publication_transfer",
+        "publication_candidate_index",
+        "publication_page",
+      ].map((table) =>
+        env.DB.prepare(
+          `DELETE FROM ${table} WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE ${guard})`,
+        ).bind(row.id, row.id, now),
+      ),
+    ]);
+  }
   const failed = await env.DB.prepare(
     `SELECT id FROM publication_candidate WHERE status='failed' AND coalesce(last_error,'') NOT LIKE 'cleanup:%' AND lease_until<? AND updated_at<? ORDER BY updated_at LIMIT 4`,
   )
@@ -650,10 +833,10 @@ export async function sweepPublicationTasks(env: DispatchEnv) {
     .all<{ id: string }>();
   for (const row of failed.results) await tasks.startCleanup(row.id);
   const tombstones = await env.DB.prepare(
-    `SELECT id FROM publication_candidate WHERE status='cleaned' AND next_attempt_at<=? ORDER BY next_attempt_at LIMIT 4`,
+    `SELECT id,coalesce(cleaned_at,updated_at) AS cleaned_at FROM publication_candidate WHERE status='cleaned' AND next_attempt_at<=? ORDER BY next_attempt_at LIMIT 4`,
   )
     .bind(now)
-    .all<{ id: string }>();
+    .all<{ id: string; cleaned_at: number }>();
   for (const row of tombstones.results) {
     let found = false;
     for (const bucket of [env.SITES_BUCKET, env.PUBLIC_ASSETS_BUCKET])
@@ -661,11 +844,20 @@ export async function sweepPublicationTasks(env: DispatchEnv) {
         (await bucket.list({ prefix: root(row.id), limit: 1 })).objects.length
       )
         found = true;
+    if (!found && row.cleaned_at <= now - PUBLICATION_TOMBSTONE_MS) {
+      await env.DB.prepare(
+        "DELETE FROM publication_candidate WHERE id=? AND status='cleaned' AND lease_until<=?",
+      )
+        .bind(row.id, now)
+        .run();
+      continue;
+    }
     await env.DB.prepare(
-      `UPDATE publication_candidate SET status=?,deadline_at=?,next_attempt_at=?,updated_at=? WHERE id=? AND status='cleaned'`,
+      `UPDATE publication_candidate SET status=?,cleaned_at=coalesce(cleaned_at,?),attempts=0,deadline_at=?,next_attempt_at=?,updated_at=? WHERE id=? AND status='cleaned'`,
     )
       .bind(
         found ? "cleaning" : "cleaned",
+        row.cleaned_at,
         now + 3600000,
         found ? now : now + 3600000,
         now,

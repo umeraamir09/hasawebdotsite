@@ -2,6 +2,7 @@ import {
   AssetImage,
   PortfolioAvatar,
   PortfolioProfile,
+  PortfolioProject,
   PortfolioSection,
 } from "@hasaweb/components";
 import {
@@ -9,6 +10,7 @@ import {
   componentModelSchema,
   normalizeDisplayStrings,
   profileModelSchema,
+  projectModelSchema,
   withinBounds,
 } from "@hasaweb/components/model";
 import { isWebUrl } from "@hasaweb/schema";
@@ -37,6 +39,11 @@ export const FRAGMENT_BOUNDS = {
 };
 export const FRAGMENT_MAX_OUTPUT_BYTES = 262_144;
 const fragmentSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("project"), entry: projectModelSchema }),
+  z.strictObject({
+    kind: z.literal("components"),
+    components: z.array(componentModelSchema),
+  }),
   z.strictObject({ kind: z.literal("profile"), profile: profileModelSchema }),
   z.strictObject({
     kind: z.literal("component"),
@@ -81,12 +88,22 @@ export function renderFragment(
   const parsed = fragmentSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid" };
   const fragment = parsed.data;
+  const components =
+    fragment.kind === "components"
+      ? fragment.components
+      : fragment.kind === "component"
+        ? [fragment.component]
+        : [];
   const images =
     fragment.kind === "profile"
       ? [fragment.profile.avatar, fragment.profile.banner]
-      : fragment.component.type === "projects"
-        ? fragment.component.data.entries.map((entry) => entry.image)
-        : [];
+      : fragment.kind === "project"
+        ? [fragment.entry.image]
+        : components.flatMap((component) =>
+            component.type === "projects"
+              ? component.data.entries.map((entry) => entry.image)
+              : [],
+          );
   if (
     images.some(
       (image) =>
@@ -98,10 +115,15 @@ export function renderFragment(
   const html = renderToStaticMarkup(
     fragment.kind === "profile" ? (
       <PortfolioProfile profile={normalizeDisplayStrings(fragment.profile)} />
+    ) : fragment.kind === "project" ? (
+      <PortfolioProject entry={normalizeDisplayStrings(fragment.entry)} />
     ) : (
-      <PortfolioSection
-        component={normalizeDisplayStrings(fragment.component)}
-      />
+      components.map((component) => (
+        <PortfolioSection
+          key={component.id}
+          component={normalizeDisplayStrings(component)}
+        />
+      ))
     ),
   );
   if (new TextEncoder().encode(html).byteLength > FRAGMENT_MAX_OUTPUT_BYTES)
