@@ -6,6 +6,7 @@ export {
   type DraftComponent,
   profileDefinition,
 } from "@hasaweb/schema";
+export { AssetImage } from "./asset";
 export { PortfolioAvatar } from "./avatar";
 export {
   type ComponentModel,

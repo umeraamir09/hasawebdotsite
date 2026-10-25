@@ -385,7 +385,7 @@ export function normalizeDisplayStrings(
 ): PortfolioModel | ProfileModel | ComponentModel {
   const copy = structuredClone(model);
   const encoder = new TextEncoder();
-  const decoder = new TextDecoder("utf-8", { ignoreBOM: true });
+  const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: false });
   function visit(node: object): void {
     for (const [key, value] of Object.entries(node)) {
       if (typeof value === "string") {

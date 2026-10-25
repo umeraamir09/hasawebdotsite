@@ -1,5 +1,11 @@
-import { PortfolioProfile, PortfolioSection } from "@hasaweb/components";
 import {
+  AssetImage,
+  PortfolioAvatar,
+  PortfolioProfile,
+  PortfolioSection,
+} from "@hasaweb/components";
+import {
+  assetSchema,
   componentModelSchema,
   normalizeDisplayStrings,
   profileModelSchema,
@@ -8,7 +14,14 @@ import {
 import { isWebUrl } from "@hasaweb/schema";
 import { renderToStaticMarkup } from "react-dom/server";
 import { z } from "zod";
+import { partSchema, type RenderPart, renderPart } from "./parts";
 
+const imagePartSchema = z.strictObject({
+  kind: z.literal("asset"),
+  asset: assetSchema,
+  usage: z.enum(["avatar", "banner", "image"]),
+  decoration: z.enum(["none", "cat", "hands"]).default("none"),
+});
 export type RenderContext = "preview" | "public";
 export type PlatformAssets = {
   cssUrl: string;
@@ -30,7 +43,10 @@ const fragmentSchema = z.discriminatedUnion("kind", [
     component: componentModelSchema,
   }),
 ]);
-export type RenderFragment = z.infer<typeof fragmentSchema>;
+export type RenderFragment =
+  | z.infer<typeof fragmentSchema>
+  | RenderPart
+  | z.infer<typeof imagePartSchema>;
 export type FragmentResult =
   | { status: "ready"; html: string }
   | { status: "needs_partitioning" }
@@ -41,6 +57,27 @@ export function renderFragment(
 ): FragmentResult {
   if (!withinBounds(input, FRAGMENT_BOUNDS))
     return { status: "needs_partitioning" };
+  const part = partSchema.safeParse(input);
+  if (part.success) return { status: "ready", html: renderPart(part.data) };
+  const image = imagePartSchema.safeParse(input);
+  if (image.success) {
+    const { asset, usage, decoration } = image.data;
+    if (
+      asset.state === "ready" &&
+      !assetOrigins.includes(new URL(asset.url).origin)
+    )
+      return { status: "invalid" };
+    const html = renderToStaticMarkup(
+      usage === "avatar" ? (
+        <PortfolioAvatar asset={asset} decoration={decoration} />
+      ) : (
+        <AssetImage asset={asset} kind={usage} />
+      ),
+    );
+    return new TextEncoder().encode(html).byteLength > FRAGMENT_MAX_OUTPUT_BYTES
+      ? { status: "needs_partitioning" }
+      : { status: "ready", html };
+  }
   const parsed = fragmentSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid" };
   const fragment = parsed.data;

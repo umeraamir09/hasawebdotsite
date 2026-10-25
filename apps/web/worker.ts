@@ -14,3 +14,5 @@ export default {
     );
   },
 } satisfies ExportedHandler<CloudflareEnv>;
+
+export { PublicationAssets } from "./lib/assets/publication-source";

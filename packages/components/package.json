@@ -11,7 +11,8 @@
     "./avatar.css": "./static/avatar.css",
     "./static/*": "./static/*",
     "./model": "./src/model.ts",
-    "./site-entry": "./src/site-entry.ts"
+    "./site-entry": "./src/site-entry.ts",
+    "./frames": "./src/frames.tsx"
   },
   "scripts": {
     "build": "tsc --noEmit",

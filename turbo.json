@@ -12,7 +12,11 @@
     "RENDERER_EVIDENCE",
     "AUTH_EVIDENCE",
     "RUNTIME_EVIDENCE",
-    "XDG_CACHE_HOME"
+    "XDG_CACHE_HOME",
+    "S8_EVIDENCE",
+    "S8_BATCH",
+    "S8_CASES",
+    "S8_MAX_ASSETS"
   ],
   "tasks": {
     "build": {

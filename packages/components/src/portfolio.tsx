@@ -1,5 +1,6 @@
 /* biome-ignore-all lint/suspicious/noArrayIndexKey: Display-only collections and rich-text nodes have no local component state or canonical node IDs. */
 import {
+  type CaseStudyDocument,
   isSafeLink,
   type RichList,
   type RichTextDocument,
@@ -7,6 +8,7 @@ import {
 import type { ReactNode } from "react";
 import { AssetImage } from "./asset";
 import { PortfolioAvatar } from "./avatar";
+import { PortfolioFrame } from "./frames";
 import type { ComponentModel, PortfolioModel, ProfileModel } from "./model";
 
 function SafeLink({
@@ -41,10 +43,28 @@ function Links({ links }: { links: ProfileModel["links"] }) {
   );
 }
 type RichNode =
-  | RichTextDocument["content"][number]
+  | CaseStudyDocument["content"][number]
   | RichList["content"][number];
-function RichNodeView({ node }: { node: RichNode }): ReactNode {
+function RichNodeView({
+  node,
+  images,
+}: {
+  node: RichNode;
+  images?:
+    | ((id: string, alt: string) => import("./model").DisplayAsset)
+    | undefined;
+}): ReactNode {
   switch (node.type) {
+    case "image":
+      return (
+        <AssetImage
+          asset={
+            images?.(node.attrs.assetId, node.attrs.alt ?? "") ?? {
+              state: "unavailable",
+            }
+          }
+        />
+      );
     case "paragraph":
       return (
         <p>
@@ -79,7 +99,7 @@ function RichNodeView({ node }: { node: RichNode }): ReactNode {
       return (
         <ul>
           {node.content.map((child, index) => (
-            <RichNodeView key={index} node={child} />
+            <RichNodeView key={index} node={child} images={images} />
           ))}
         </ul>
       );
@@ -87,7 +107,7 @@ function RichNodeView({ node }: { node: RichNode }): ReactNode {
       return (
         <ol start={node.attrs?.start}>
           {node.content.map((child, index) => (
-            <RichNodeView key={index} node={child} />
+            <RichNodeView key={index} node={child} images={images} />
           ))}
         </ol>
       );
@@ -95,7 +115,7 @@ function RichNodeView({ node }: { node: RichNode }): ReactNode {
       return (
         <li>
           {node.content.map((child, index) => (
-            <RichNodeView key={index} node={child} />
+            <RichNodeView key={index} node={child} images={images} />
           ))}
         </li>
       );
@@ -105,18 +125,26 @@ function RichNodeView({ node }: { node: RichNode }): ReactNode {
     }
   }
 }
-export function RichText({ document }: { document: RichTextDocument }) {
+export function RichText({
+  document,
+  images,
+}: {
+  document: RichTextDocument | CaseStudyDocument;
+  images?:
+    | ((id: string, alt: string) => import("./model").DisplayAsset)
+    | undefined;
+}) {
   return (
     <div className="pf-rich-text">
       {document.content.map((node, index) => (
-        <RichNodeView key={index} node={node} />
+        <RichNodeView key={index} node={node} images={images} />
       ))}
     </div>
   );
 }
 export function PortfolioProfile({ profile }: { profile: ProfileModel }) {
   return (
-    <header className="pf-profile" data-component="profile">
+    <PortfolioFrame frame={{ name: "profile" }}>
       <AssetImage asset={profile.banner} kind="banner" />
       <PortfolioAvatar asset={profile.avatar} />
       <div className="pf-profile-copy">
@@ -125,7 +153,7 @@ export function PortfolioProfile({ profile }: { profile: ProfileModel }) {
         {profile.location && <p className="pf-muted">{profile.location}</p>}
         <Links links={profile.links} />
       </div>
-    </header>
+    </PortfolioFrame>
   );
 }
 function SectionContent({
@@ -276,13 +304,11 @@ function SectionContent({
 }
 export function PortfolioSection({ component }: { component: ComponentModel }) {
   return (
-    <section
-      className="pf-section"
-      data-component={component.type}
-      data-component-id={component.id}
+    <PortfolioFrame
+      frame={{ name: "section", component: component.type, id: component.id }}
     >
       <SectionContent component={component} />
-    </section>
+    </PortfolioFrame>
   );
 }
 export function Portfolio({ model }: { model: PortfolioModel }) {

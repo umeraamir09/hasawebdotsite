@@ -30,7 +30,9 @@ The lifecycle is `pending` to `ready` after successful R2 storage and conditiona
 
 `resolvePrivateAsset(env, identity, id, purpose)` is the reusable owned-ready-purpose check for future setup and publication validation. The identity must come from the authentication library. The resolver repeats persisted authorization, requires the exact purpose and checks R2 existence and byte size. It returns a private R2 body, which callers must consume or cancel. It does not grant jobs access to the draft bucket and does not produce a public URL.
 
-Jobs promotion and lifecycle deletion still require a specified and measured authorized source-transfer contract. Passing local upload tests does not establish provider CPU or source-transfer feasibility.
+The inactive S-8 `PublicationAssets` named Worker entry supplies the [candidate transfer contract](../../../../specs/2026-10-24-s8-dispatch-feasibility/protocol.md). It accepts a candidate/lease/asset/purpose ticket through a service binding only, derives the private key from D1, and checks persisted ownership, deletion, reachability, readiness, purpose and bytes before streaming. The default HTTP handler does not expose this entry. No production jobs binding is configured. Jobs never receives `DRAFT_BUCKET`.
+
+The [S-8 verification gate](../../../../specs/2026-10-24-s8-dispatch-feasibility/results.md) remains unresolved. Later garbage collection must retain assets referenced by sealed active candidates even after removal from a draft. Account deletion must revoke transfer before cleaning both candidate records/objects and draft objects. Passing local upload tests does not establish deployed transfer CPU or shared capacity.
 
 ## Verification
 

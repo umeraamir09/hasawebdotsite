@@ -1,4 +1,4 @@
-// Request-scoped instrumentation for local quota tests only. Never caches data.
+// Request-scoped quota instrumentation, disabled for native CPU measurements.
 export function measureDb(
   binding: D1Database,
   beforeExecute?: (query: string) => Promise<void>,

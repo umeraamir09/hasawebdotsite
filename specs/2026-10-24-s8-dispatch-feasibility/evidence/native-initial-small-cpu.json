@@ -1,0 +1,98 @@
+{
+  "start": "2026-10-25T08:07:55.389Z",
+  "end": "2026-10-25T08:19:16.751Z",
+  "mode": "native",
+  "batch": "16",
+  "results": [
+    {
+      "script": "hasaweb-s8-f5419d-jobs",
+      "status": 200,
+      "data": {
+        "viewer": {
+          "accounts": [
+            {
+              "workersInvocationsAdaptive": [
+                {
+                  "dimensions": {
+                    "scriptName": "hasaweb-s8-f5419d-jobs",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 5629,
+                    "cpuTimeP95": 25697,
+                    "cpuTimeP99": 25697
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 10
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "errors": null
+    },
+    {
+      "script": "hasaweb-s8-f5419d-source",
+      "status": 200,
+      "data": {
+        "viewer": {
+          "accounts": [
+            {
+              "workersInvocationsAdaptive": [
+                {
+                  "dimensions": {
+                    "scriptName": "hasaweb-s8-f5419d-source",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 1647,
+                    "cpuTimeP95": 6287,
+                    "cpuTimeP99": 6287
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 5
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "errors": null
+    },
+    {
+      "script": "hasaweb-s8-f5419d-control",
+      "status": 200,
+      "data": {
+        "viewer": {
+          "accounts": [
+            {
+              "workersInvocationsAdaptive": [
+                {
+                  "dimensions": {
+                    "scriptName": "hasaweb-s8-f5419d-control",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 961,
+                    "cpuTimeP95": 2416,
+                    "cpuTimeP99": 45750
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 24
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "errors": null
+    }
+  ]
+}
