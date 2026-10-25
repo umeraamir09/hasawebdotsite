@@ -47,3 +47,15 @@ The review does not approve feasibility. Remaining blockers are the measured CPU
 ## Documentation impact
 
 The changed assumption is that reusable preparation/source-transfer code now exists, while feasibility and activation remain unapproved. Updated the roadmap dependency, implementation baseline, architecture, renderer/components/database/private-asset guidance and verification profiles. Downstream account deletion and GC must retain sealed candidate references and remove surviving cleanup state. Historical S-8/S-9 evidence and prior owner approvals remain intact. No roadmap completion checkbox was changed.
+
+## October 25 continuation
+
+The owner requested continued S-8 technical work in the existing clean worktree at `e9e3158`. Phase 24 remains blocked pending technical verification, explicit completion approval, integration and integration checks. The separate Phase 24 worktree is outside this task's write boundary.
+
+Baseline claim to test: complete native invocations of `e9e3158`, at logical batch 32 with the actual renderer and synthetic maximum/dense/gallery inputs, either meet warm p95 below 10 ms or identify a reproducible failing boundary. Diagnostic profiling and quota counters are separate from native acceptance. Previous provider state and cleanup receipts are preserved.
+
+The owner confirmed Workers Free for account `b6f9a87e6702c76c45a8d61744826e0f` on October 25. [Plan evidence](evidence/provider-plan-confirmation.json) separates that confirmation from inaccessible billing metadata. Fresh resources use `hasaweb-s8-d3c356`, with public bucket access disabled.
+
+The exact `e9e3158` baseline completed [five maximum-content repetitions](evidence/native-e9e3158-five-results.json). [Per-candidate native CPU windows](evidence/native-e9e3158-five-cpu.json) report p95 49.047 ms in DEN, 31.655 ms in SJC, 54.001 and 54.490 ms in SEA, and 43.755 ms in DEN. Every repetition fails 10 ms; two windows contain 50 of 51 expected observations. All retained outcomes are successful with exact output. These repeats use 128-byte synthetic binaries. The earlier fresh baseline separately completed small/maximum/dense with full-size binaries before a gallery seed request timed out. Client transport failure is not a provider CPU-limit failure.
+
+Production-mode diagnostic profiles identified hex decoding and duplicate text decoding as concrete application work. They include local workerd/D1 adapter overhead and are not native acceptance CPU. An explicit CTE-materialization experiment increased dense reads and was discarded. Current working changes use native hex conversion, adjacent bounded text windows, a single typed asset/page index, shared component/project entry rendering, reused sealed profile parts, grouped readiness scans, admission/retention and specific fault injection. Final local/native verification and the shared ledger remain pending. Runs interrupted by watched source edits or the old shared fixture-config path are diagnostic only. Each run now owns its configuration directory, and the client closes idle oracle-download connections.

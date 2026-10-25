@@ -1,0 +1,332 @@
+{
+  "recordedAt": "2026-10-25T11:22:24.589Z",
+  "checks": [
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "Preparation, replay and cleanup preserve the seeded pointer and claim before account deletion"
+  ],
+  "runs": [
+    {
+      "kind": "max",
+      "id": "5865e19f-4e4e-4dbc-9fc8-0992b49f2c69",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T11:01:12.807Z",
+      "polls": 153,
+      "dispatchCheckpoints": 51,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "ffb66c4ae01e8fe29e5d995b2bb2b35e007edc78eedfc55cb1f73dcf1d590ba5"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "56465e816a1de96a1862c67e23139798526c132868a36c097837beae5aa9044e"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "fffefc225ebd2419a74f0d72a340b3b409906dc59b86db19a614de2ec6043f79"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T11:05:18.597Z",
+      "outputBytes": 1049714,
+      "sha256": "ffb66c4ae01e8fe29e5d995b2bb2b35e007edc78eedfc55cb1f73dcf1d590ba5",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 128
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 128
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 128
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 128
+        }
+      ],
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 512
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      }
+    },
+    {
+      "kind": "max",
+      "id": "c361c799-51d3-4965-a648-129fd2d05e8b",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T11:05:20.563Z",
+      "polls": 153,
+      "dispatchCheckpoints": 51,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "8d580547273e01061ba7471bb91e1e47705913fe9e65d56cc7c96c8f7b54bfc3"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "63f755d2cb6bebd38758ce0e3c79fc548f98880ff8c788c2809bdc522c5c70fb"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "37e0eb0807e561adccfc3e2f1e022cc3aa1a92040a260b6706e6344edbf2d068"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T11:09:35.477Z",
+      "outputBytes": 1049714,
+      "sha256": "8d580547273e01061ba7471bb91e1e47705913fe9e65d56cc7c96c8f7b54bfc3",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 128
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 128
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 128
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 128
+        }
+      ],
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 512
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      }
+    },
+    {
+      "kind": "max",
+      "id": "86c77df8-a0ff-48e5-8741-185a9f982bdd",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T11:09:37.614Z",
+      "polls": 164,
+      "dispatchCheckpoints": 51,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "4635d0103963b9329f01ee4359ea49aeb1ac3a24d7821157144c53c8c55ce5d6"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "9be3ee322519e0a8402e12ca96495fec50c4278311c2dd08aeb1be33f487a25c"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "f7b3defbdc0eb2a08dd25fd049f5a49694e9f5fe520384a56cb4d6a8963bf7f1"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T11:13:57.459Z",
+      "outputBytes": 1049714,
+      "sha256": "4635d0103963b9329f01ee4359ea49aeb1ac3a24d7821157144c53c8c55ce5d6",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 128
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 128
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 128
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 128
+        }
+      ],
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 512
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      }
+    },
+    {
+      "kind": "max",
+      "id": "fd245184-07e1-4352-b4fa-f30b6f6b56d9",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T11:13:59.633Z",
+      "polls": 163,
+      "dispatchCheckpoints": 51,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "8cffb426c6ca398f505800104dab31fe02bd110f8510df5152e7822d0001275e"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "a3dba67d9134fd9b3a2225df40821bb21039da6351870c1d010ec337839bd590"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "a297599c8e1dcafe91fee64a592dcfa4ac7c0a9bac47b8d6cb6b8f5e1e91f478"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T11:18:27.929Z",
+      "outputBytes": 1049714,
+      "sha256": "8cffb426c6ca398f505800104dab31fe02bd110f8510df5152e7822d0001275e",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 128
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 128
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 128
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 128
+        }
+      ],
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 512
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      }
+    },
+    {
+      "kind": "max",
+      "id": "6870cd86-16bb-4fc2-9503-67c08fc14310",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T11:18:30.786Z",
+      "polls": 142,
+      "dispatchCheckpoints": 51,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "05f2f8f00a2bc1b39ecd1d3137140d9fbe4a000c440df8008d4914de0f6b2c23"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "89500ba28d922324d38e8304969b8d3765ce3b636f3eba39eab23b027a104479"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "7429fe58146c036db70b893f2ca63523052ad6efa8723fc9f3d19caf3f36a88d"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T11:22:23.533Z",
+      "outputBytes": 1049714,
+      "sha256": "05f2f8f00a2bc1b39ecd1d3137140d9fbe4a000c440df8008d4914de0f6b2c23",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 128
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 128
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 128
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 128
+        }
+      ],
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 512
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      }
+    }
+  ],
+  "limitations": [
+    "Local workerd counters are not provider CPU proof.",
+    "Separate boundary review and owner completion approval pending."
+  ]
+}
