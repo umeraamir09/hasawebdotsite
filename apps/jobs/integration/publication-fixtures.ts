@@ -107,7 +107,7 @@ export function makeDraft(kind: string): DraftDoc {
       draft.profile.bio = "x".repeat(size - base);
     }
   }
-  if (kind === "assets") {
+  if (kind === "assets" || kind === "assets-face") {
     const projects = draft.components.find(
       (component) => component.type === "projects",
     );
@@ -189,7 +189,8 @@ export function makeDraft(kind: string): DraftDoc {
       draft.profile.banner.alt = '😀<&>"\r\n'.repeat(2000);
   }
   if (kind === "hands" || kind === "cat") draft.profile.decorationId = kind;
-  if (kind === "face") draft.profile.faceReveal.enabled = true;
+  if (kind === "face" || kind === "assets-face")
+    draft.profile.faceReveal.enabled = true;
   if (kind === "surrogate-boundary")
     draft.profile.bio = `${"a".repeat(32763)}😀\ud800\r\n${"عمر<&>\u0000".repeat(5000)}`;
   if (kind === "surrogate") draft.profile.bio = "A\ud800B\udc00Z";

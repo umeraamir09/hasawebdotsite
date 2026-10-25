@@ -1,0 +1,248 @@
+{
+  "recordedAt": "2026-10-25T18:03:17.136Z",
+  "input": "/home/umer/.codex/worktrees/s8-dispatch-feasibility/hasawebdotsite/.wrangler/evidence/s8-dispatch-M6NrOd/results.json",
+  "budget": {
+    "requests": 100000,
+    "reads": 5000000,
+    "writes": 100000,
+    "queueOperations": 10000,
+    "r2ClassA": 1000000,
+    "r2ClassB": 10000000,
+    "d1Bytes": 500000000,
+    "r2Bytes": 10000000000
+  },
+  "owner": {
+    "requests": 52400,
+    "reads": 1450000,
+    "writes": 66000
+  },
+  "shared": {
+    "requests": 3600,
+    "reads": 112384,
+    "writes": 10032,
+    "queueOperations": 2919,
+    "r2ClassA": 74190,
+    "r2ClassB": 1088100
+  },
+  "measuredSweepReserve": {
+    "invocationsPerDay": 288,
+    "reads": 12384,
+    "writes": 4032,
+    "samples": 19,
+    "requestsAlreadyInShared": true,
+    "r2ListsAlreadyInShared": true
+  },
+  "publicationsPerDay": 30,
+  "method": "Observed counters plus explicit workload forecasts. Daily and monthly units remain separate. Each ordinary wake uses three Queue operations. Replay allowances cover one extra complete wake for the most expensive distinct 10% of logical batches per resource; the failed-candidate allowance includes full work, cleanup and four maximum-cost extra invocations.",
+  "assumptions": [
+    "100 portfolios, 30 editing sessions, 30 publishes per day, 50 views per portfolio, 50 GitHub-enabled portfolios.",
+    "GitHub: 200 visit refreshes and 50 private daily sweeps, with three extra Queue reads per message in the retry scenario.",
+    "Contact: 90 accepted messages with all five delivery attempts; ten verification/notice jobs with three extra reads each.",
+    "Shared request forecast adds 2500 graph requests, 250 GitHub jobs, 450 contact attempts, ten notice jobs, 90 submissions and 288 shared sweeps.",
+    "Shared R2 forecast assumes 60 uploads and 100 orphan-list calls daily, plus 36000 reads daily with no public edge-cache savings. Add the bounded maximum four two-bucket tombstone checks per five-minute sweep.",
+    "The future contact/GitHub handlers retain a separate forecast of 100000 reads and 6000 writes daily. Measured worst-case S-8 sweeper D1 work is reserved additionally for all 288 daily shared sweeps; their Worker requests and maximum eight R2 lists per sweep are already counted in shared forecasts.",
+    "Ten percent replay selects distinct logical batches once. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
+    "The publication start request conservatively counts both web and jobs. Provider fixture seeding and control polling are excluded from measured counters.",
+    "Publication forecast keeps owner polling every five seconds for at least five minutes, two Workers and ten D1 reads per poll. It separately reserves bounded snapshot chunks/assembly, document-shell copies, a size-based manifest, 404/robots/sitemap and generated style retention. Each future task reserves six reads, four writes and one complete Queue wake. These are forecasts, not implemented CPU proof.",
+    "Existing art/style/font hashes have a measured inventory. The model conservatively reserves one complete static-library refresh daily plus per-publication existence reads; those bytes are retained once globally in the storage forecast."
+  ],
+  "storage": {
+    "platformInventory": {
+      "objects": 9,
+      "bytes": 832852,
+      "method": "Static artifact inventory; forecast retention is shared globally"
+    },
+    "d1ExistingMeasuredLocalAllocation": 426217472,
+    "d1RemainingBeforeCandidates": 73782528,
+    "sourceAdmissionLimit": 4,
+    "retainedRecordLimit": 128,
+    "sourcePayloadOnlyAtFourCandidates": 28132,
+    "model": "Baseline is the historical local page-allocation measurement, not current production usage. Candidate payload is a lower bound; row/index pages, transfer/page receipts and retained tombstones add storage. Admission bounds sources to four and records to 128. Ready sources expire after one hour. Cleaned rows physically retire after at least 24 hours and confirmed absence; failed output cleanup keeps a scrubbed ticket until explicit retry. Measured allocation/churn remains a separate provider check.",
+    "r2MaximumAssetForecast": {
+      "portfolios": 100,
+      "privateBytesPerPortfolio": 31457280,
+      "publicBytesPerVersion": 26214400,
+      "withOneVersion": 5767168000,
+      "withTwoVersions": 8388608000,
+      "withThreeVersions": 11010048000,
+      "sixtyMaximumImageReplacementsPerDayForThirtyDays": 9437184000,
+      "caveat": "Asset-only forecast excludes HTML/assembly copies, additional project/case images, platform assets and fragmentation. Measured object inventories accompany cases when present. Replaced private assets must be collected while protecting active sealed sources."
+    },
+    "tombstoneSweepUpperForecastPerMonth": {
+      "r2Lists": 69120
+    }
+  },
+  "scenarios": [
+    {
+      "kind": "assets-face",
+      "inputBytes": 7098,
+      "pages": 3,
+      "completedBatches": 38,
+      "measuredPerPublication": {
+        "requests": 49,
+        "reads": 1858,
+        "writes": 161,
+        "queueOperations": 114,
+        "r2ClassA": 33,
+        "r2ClassB": 59
+      },
+      "publicationForecast": {
+        "requests": 127,
+        "reads": 647,
+        "writes": 31,
+        "queueOperations": 21,
+        "r2ClassA": 9,
+        "r2ClassB": 4
+      },
+      "deliveryForecast": {
+        "snapshotBytes": 7033,
+        "snapshotChunkBytes": 131072,
+        "snapshotParts": 1,
+        "snapshotAssembly": 0,
+        "shellCopies": 3,
+        "manifestBytes": 11776,
+        "manifestParts": 1,
+        "fixedFileParts": 1,
+        "generatedStyleTasks": 1,
+        "totalTasks": 7,
+        "note": "Unimplemented bounded delivery forecast. Includes snapshot.json, complete document shells, manifest, 404/robots/sitemap and generated style retention. Exact CPU, packing and counters require future implementation. Does not assert one whole-document parse fits a Worker."
+      },
+      "pollingCalls": 60,
+      "perPublication": {
+        "requests": 176,
+        "reads": 2505,
+        "writes": 192,
+        "queueOperations": 135,
+        "r2ClassA": 42,
+        "r2ClassB": 63
+      },
+      "replayBatches": 4,
+      "replayReserve": {
+        "requests": 8,
+        "reads": 499,
+        "writes": 39,
+        "queueOperations": 12,
+        "r2ClassA": 4,
+        "r2ClassB": 46
+      },
+      "replayWithReplacementUpper": {
+        "requests": 8,
+        "reads": 1020,
+        "writes": 100,
+        "queueOperations": 12,
+        "r2ClassA": 4,
+        "r2ClassB": 128
+      },
+      "cleanup": {
+        "requests": 3,
+        "reads": 44,
+        "writes": 24,
+        "queueOperations": 9,
+        "r2ClassA": 6,
+        "r2ClassB": 0
+      },
+      "failedCandidate": {
+        "requests": 187,
+        "reads": 3569,
+        "writes": 316,
+        "queueOperations": 156,
+        "r2ClassA": 52,
+        "r2ClassB": 191
+      },
+      "projected": {
+        "requests": 61797,
+        "reads": 1657393,
+        "writes": 83998,
+        "queueOperations": 7755,
+        "r2ClassA": 122550,
+        "r2ClassB": 1191930
+      },
+      "remaining": {
+        "requests": 38203,
+        "reads": 3342607,
+        "writes": 16002,
+        "queueOperations": 2245,
+        "r2ClassA": 877450,
+        "r2ClassB": 8808070
+      },
+      "maxParentCalls": 38,
+      "maxParentQueries": 16,
+      "sourceQueries": 2,
+      "externalSubrequests": 0,
+      "simultaneousStorageStreams": 2,
+      "retained": {
+        "sites": {
+          "objects": 24,
+          "bytes": 37126
+        },
+        "assets": {
+          "objects": 9,
+          "bytes": 52428800
+        }
+      },
+      "storageForecast": {
+        "privateBytesPerPortfolio": 52428800,
+        "finalHtmlBytesPerPortfolio": 18563,
+        "publicAssetBytesPerPortfolio": 52428800,
+        "platformBytesSharedOnce": 832852,
+        "additionalSnapshotAndStyleBytesPerPortfolio": 27513,
+        "steadyAt100Portfolios": 10487616300,
+        "candidateTemporaryPeakAtFourSources": 209863704,
+        "totalWithDeliveryAndFourCandidatePeaksAndOneDayOrphans": 11015636956,
+        "oneDayOfSixtyMaximumImageOrphans": 314572800,
+        "note": "Storage forecast uses measured object inventories. Retained public output, orphan collection and a 24-hour orphan window are future assumptions, not a measured collector. Separate private and public copies can fail the shared storage allowance."
+      },
+      "privateWorkingState": {
+        "sourceBytes": 7033,
+        "cursorBytes": 2,
+        "indexBytes": 516
+      },
+      "retryStorm": {
+        "1": {
+          "requests": 176,
+          "reads": 2505,
+          "writes": 192,
+          "queueOperations": 135,
+          "r2ClassA": 42,
+          "r2ClassB": 63
+        },
+        "3": {
+          "requests": 528,
+          "reads": 7515,
+          "writes": 576,
+          "queueOperations": 405,
+          "r2ClassA": 126,
+          "r2ClassB": 189
+        },
+        "10": {
+          "requests": 1760,
+          "reads": 25050,
+          "writes": 1920,
+          "queueOperations": 1350,
+          "r2ClassA": 420,
+          "r2ClassB": 630
+        }
+      },
+      "exceeded": [
+        "r2StorageSteadyProjection",
+        "r2StorageWithRetentionForecast"
+      ],
+      "publicationCapacity": {
+        "requests": 234,
+        "reads": 1126,
+        "writes": 92,
+        "queueOperations": 44
+      },
+      "storageRemaining": {
+        "steady": -487616300,
+        "withDeliveryAndRetentionForecast": -1015636956
+      }
+    }
+  ],
+  "limitations": [
+    "No CPU verdict follows from operation counters. Native warm/cold provider evidence is a separate gate.",
+    "Future shared-job estimates are forecasts, not measurements of unimplemented consumers.",
+    "Storage requires separate measured allocation, inventory, retention and cleanup assumptions; operation headroom alone cannot establish storage feasibility."
+  ],
+  "verified": false
+}

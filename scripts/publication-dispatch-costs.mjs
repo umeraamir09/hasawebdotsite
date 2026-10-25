@@ -336,6 +336,20 @@ for (const run of report.runs.filter((run) =>
       ]),
     ),
   });
+  const scenario = scenarios[scenarios.length - 1];
+  if (scenario.storageForecast) {
+    scenario.storageRemaining = {
+      steady: budget.r2Bytes - scenario.storageForecast.steadyAt100Portfolios,
+      withDeliveryAndRetentionForecast:
+        budget.r2Bytes -
+        scenario.storageForecast
+          .totalWithDeliveryAndFourCandidatePeaksAndOneDayOrphans,
+    };
+    if (scenario.storageRemaining.steady < 0)
+      scenario.exceeded.push("r2StorageSteadyProjection");
+    if (scenario.storageRemaining.withDeliveryAndRetentionForecast < 0)
+      scenario.exceeded.push("r2StorageWithRetentionForecast");
+  }
 }
 assert.ok(scenarios.length);
 const result = {
