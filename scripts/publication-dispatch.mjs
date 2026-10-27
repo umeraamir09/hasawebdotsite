@@ -1073,6 +1073,63 @@ try {
     checks.push(
       "Exhausted cleanup retains only its output cleanup capability, scrubs source/identity, stops redelivery and supports an explicit retry",
     );
+    // Retained current versions must not consume preparation/cleanup slots.
+    const retainedIds = Array.from({ length: 128 }, () => crypto.randomUUID());
+    const retainedJson = JSON.stringify(retainedIds);
+    await sql(
+      "INSERT INTO user(id,name,email,created_at,updated_at) SELECT value,'Retained capacity fixture',value || '@example.test',1,1 FROM json_each(?)",
+      [retainedJson],
+    );
+    await sql(
+      "INSERT INTO portfolio(id,user_id,status,published_version,draft,created_at,updated_at) SELECT value,value,'published',1,'{}',1,1 FROM json_each(?)",
+      [retainedJson],
+    );
+    await sql(
+      "INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,status,cursor,next_attempt_at,deadline_at,created_at,updated_at) SELECT value,value,value,0,'{}','ready','[]',0,0,0,0 FROM json_each(?)",
+      [retainedJson],
+    );
+    await sql(
+      "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) SELECT value,value,1,'live','publication-v1',value,1,1 FROM json_each(?)",
+      [retainedJson],
+    );
+    const pendingCount = async () =>
+      (await sql("SELECT count(*) AS n FROM publication_candidate_pending"))
+        .results[0].n;
+    const pendingBefore = await pendingCount();
+    assert.ok(pendingBefore < 128);
+    const afterRetention = (await api("/create", { revision })).value.id;
+    await finish(afterRetention);
+    assert.equal(await pendingCount(), pendingBefore + 1);
+    // Referencing a complete candidate releases its slot in the same transaction.
+    await sql(
+      "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES(?,'s8-portfolio',9,'superseded','publication-v1',?,1,1)",
+      [afterRetention, afterRetention],
+    );
+    assert.equal(await pendingCount(), pendingBefore);
+    assert.equal((await api(`/cleanup?id=${afterRetention}`)).value, false);
+    await api(`/sweep?id=${afterRetention}`);
+    assert.equal(
+      (await api(`/status?id=${afterRetention}`)).value.status,
+      "ready",
+    );
+    const afterRelease = (await api("/create", { revision })).value.id;
+    await sql("UPDATE publication_candidate SET status='failed' WHERE id=?", [
+      afterRelease,
+    ]);
+    await api(`/cleanup?id=${afterRelease}`);
+    await finish(afterRelease, "cleaned");
+    await sql("DELETE FROM publish_version WHERE id=?", [afterRetention]);
+    assert.equal(await pendingCount(), pendingBefore + 2);
+    await api(`/cleanup?id=${afterRetention}`);
+    await finish(afterRetention, "cleaned");
+    for (const id of [retainedIds[0], retainedIds[127]]) {
+      assert.equal((await api(`/cleanup?id=${id}`)).value, false);
+      await api(`/sweep?id=${id}`);
+      assert.equal((await api(`/status?id=${id}`)).value.status, "ready");
+    }
+    checks.push(
+      "128 retained current portfolios permit complete preparation and subsequent admission; references release slots atomically, prevent cleanup/expiry and return deleted versions to cleanup accounting",
+    );
     const capIds = Array.from({ length: 4 }, () => crypto.randomUUID());
     const insertCap = async (ids, source) =>
       sql(
@@ -1088,21 +1145,35 @@ try {
     assert.equal(capacity.status, 500);
     assert.match((await capacity.json()).value.error, /capacity reached/);
     await sql("DELETE FROM publication_candidate WHERE owner_id='cap-fixture'");
+    const sourceRace = await Promise.all(
+      [0, 1].map(() =>
+        request("/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ revision }),
+        }),
+      ),
+    );
+    assert.deepEqual(
+      sourceRace.map((response) => response.status).sort(),
+      [200, 500],
+    );
+    assert.ok((await pendingCount()) < 127);
+    const sourceWinner = await sourceRace
+      .find((response) => response.status === 200)
+      .json();
+    await sql("UPDATE publication_candidate SET status='failed' WHERE id=?", [
+      sourceWinner.value.id,
+    ]);
+    await api(`/cleanup?id=${sourceWinner.value.id}`);
+    await finish(sourceWinner.value.id, "cleaned");
     const existing = (
-      await sql("SELECT count(*) AS n FROM publication_candidate")
+      await sql("SELECT count(*) AS n FROM publication_candidate_pending")
     ).results[0].n;
     await insertCap(
-      Array.from({ length: 128 - existing }, () => crypto.randomUUID()),
+      Array.from({ length: 127 - existing }, () => crypto.randomUUID()),
       null,
     );
-    capacity = await request("/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ revision }),
-    });
-    assert.equal(capacity.status, 500);
-    assert.match((await capacity.json()).value.error, /capacity reached/);
-    await sql("DELETE FROM publication_candidate WHERE owner_id='cap-fixture'");
     const raced = await Promise.all(
       [0, 1].map(() =>
         request("/create", {
@@ -1119,13 +1190,53 @@ try {
     const winner = await raced
       .find((response) => response.status === 200)
       .json();
+    assert.equal(await pendingCount(), 128);
     await sql("UPDATE publication_candidate SET status='failed' WHERE id=?", [
       winner.value.id,
     ]);
     await api(`/cleanup?id=${winner.value.id}`);
     await finish(winner.value.id, "cleaned");
+    // No source remains here: only the pending row limit can deny admission.
+    assert.equal(
+      (
+        await sql(
+          "SELECT count(*) AS n FROM publication_candidate WHERE source IS NOT NULL",
+        )
+      ).results[0].n,
+      0,
+    );
+    assert.equal(await pendingCount(), 128);
+    capacity = await request("/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ revision }),
+    });
+    assert.equal(capacity.status, 500);
+    assert.match((await capacity.json()).value.error, /capacity reached/);
     checks.push(
-      "Atomic admission enforces one source per portfolio, four global sources and 128 retained records under concurrent creation",
+      "With 128 retained versions, atomic admission still enforces one source per portfolio, four global sources and 128 pending candidates including cleanup tombstones; one concurrent request wins the final slot",
+    );
+    await sql("DELETE FROM publication_candidate WHERE owner_id='cap-fixture'");
+    // Cascaded version deletion must restore orphan cleanup accounting even if
+    // that temporarily exceeds admission capacity. No cleanup ticket is lost.
+    await sql("DELETE FROM user WHERE id IN (SELECT value FROM json_each(?))", [
+      retainedJson,
+    ]);
+    assert.ok((await pendingCount()) > 128);
+    capacity = await request("/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ revision }),
+    });
+    assert.equal(capacity.status, 500);
+    assert.match((await capacity.json()).value.error, /capacity reached/);
+    await sql(
+      "DELETE FROM publication_candidate WHERE id IN (SELECT value FROM json_each(?))",
+      [retainedJson],
+    );
+    assert.equal(await pendingCount(), existing + 1);
+    checks.push(
+      "Owner deletion returns retained candidates to pending cleanup above the admission limit, blocks new work until slots retire and cascades pending rows on physical candidate deletion",
     );
     const retained = (await api("/create", { revision })).value.id;
     await finish(retained);

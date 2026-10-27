@@ -41,7 +41,7 @@ export const candidateSchema = z.object({
 });
 export type Candidate = z.infer<typeof candidateSchema>;
 export const PUBLICATION_SOURCE_LIMIT = 4;
-export const PUBLICATION_ROW_LIMIT = 128;
+export const PUBLICATION_PENDING_LIMIT = 128;
 export const PUBLICATION_READY_MS = 3_600_000;
 export const PUBLICATION_TOMBSTONE_MS = 86_400_000;
 const columns =
@@ -98,9 +98,9 @@ export function publicationTasks(db: D1Database) {
         .prepare(`INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,facts,renderer_version,task_batch,asset_origin,status,cursor,next_attempt_at,deadline_at,created_at,updated_at)
         SELECT ?,p.id,p.user_id,p.draft_rev,(${sourceSql}),${publicationFacts},?,?,?,'preparing',?, ?,?,?,? FROM portfolio p
         WHERE p.id=? AND p.user_id=? AND p.draft_rev=? AND p.draft_validation_version=2 AND p.status!='deleting'
-        AND NOT EXISTS(SELECT 1 FROM publication_candidate existing WHERE existing.portfolio_id=p.id AND existing.source IS NOT NULL)
-        AND (SELECT count(*) FROM publication_candidate WHERE source IS NOT NULL)<${PUBLICATION_SOURCE_LIMIT}
-        AND (SELECT count(*) FROM publication_candidate)<${PUBLICATION_ROW_LIMIT}
+        AND NOT EXISTS(SELECT 1 FROM publication_candidate_pending pending CROSS JOIN publication_candidate existing ON existing.id=pending.candidate_id WHERE existing.portfolio_id=p.id AND existing.source IS NOT NULL)
+        AND (SELECT count(*) FROM publication_candidate WHERE id IN (SELECT candidate_id FROM publication_candidate_pending) AND source IS NOT NULL)<${PUBLICATION_SOURCE_LIMIT}
+        AND (SELECT count(*) FROM publication_candidate_pending)<${PUBLICATION_PENDING_LIMIT}
         AND ${publicationFacts}=? AND ${activeSaveSession} AND NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=p.user_id AND a.state NOT IN ('aborted','committed') AND a.expires_at>?) RETURNING id`)
         .bind(
           id,

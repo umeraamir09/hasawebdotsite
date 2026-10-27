@@ -141,12 +141,50 @@ try {
     "--command",
     `INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,draft,progress,expires_at) SELECT 'migration-attempt',user_id,'migration-session',draft_rev,draft,setup_progress,9999999999999 FROM portfolio WHERE id='local-portfolio'; INSERT INTO owner_save_piece(attempt_id,n,data) VALUES('migration-attempt',0,'"retained piece"');`,
   ]);
+  // Upgrade an existing Phase 24 database containing both retained and pending
+  // candidates. The admission migration must preserve their different lifetimes.
+  for (const name of await readdir(join(root, "packages/db/migrations")))
+    if (/\.sql$/.test(name) && name < "0012_")
+      await copyFile(
+        join(root, "packages/db/migrations", name),
+        join(legacyMigrations, name),
+      );
+  command(["d1", "migrations", "apply", "persistence-integration"]);
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    `INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,status,cursor,next_attempt_at,deadline_at,created_at,updated_at) VALUES
+      ('migration-retained','local-portfolio','local-user',0,'{}','ready','[]',0,0,1,1),
+      ('migration-pending','local-portfolio','local-user',0,NULL,'cleaned','[]',0,0,1,1);
+     INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES('migration-version','local-portfolio',1,'superseded','publication-v1','migration-retained',1,1);`,
+  ]);
   configuration.d1_databases[0].migrations_dir = join(
     root,
     "packages/db/migrations",
   );
   await writeFile(config, JSON.stringify(configuration));
   command(["d1", "migrations", "apply", "persistence-integration"]);
+  const admission = command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    "SELECT candidate_id FROM publication_candidate_pending ORDER BY candidate_id",
+    "--json",
+  ]);
+  assert.deepEqual(
+    JSON.parse(admission.slice(admission.indexOf("[")))[0].results,
+    [{ candidate_id: "migration-pending" }],
+  );
+  command([
+    "d1",
+    "execute",
+    "DB",
+    "--command",
+    "DELETE FROM publish_version WHERE id='migration-version'; DELETE FROM publication_candidate WHERE id IN ('migration-retained','migration-pending');",
+  ]);
   const staged = command([
     "d1",
     "execute",
@@ -215,6 +253,7 @@ try {
     runtime: "local workerd / D1",
     migrationsReapplied: true,
     migrationAttemptPreserved: true,
+    candidateAdmissionBackfillPreserved: true,
     fixturesReapplied: true,
     ...result,
     restartPersistence: persisted,

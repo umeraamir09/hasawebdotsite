@@ -1,0 +1,340 @@
+{
+  "recordedAt": "2026-10-27",
+  "baseRevision": "90e727994b6e6ebec002c0790191d1ae681697de",
+  "syntheticFixturesOnly": true,
+  "reproduction": {
+    "receipt": "2026-10-27T11-50-50.812Z-tIJ232",
+    "status": "failed",
+    "setup": "New combined local workerd/D1/R2 fixture with 128 retained current portfolios, using the old total-candidate count predicate. New membership migration remains present to isolate the defective admission rule. S8_CASES=small; all local fault checks still run.",
+    "expected": "A valid candidate can be admitted and prepared while retained versions remain protected.",
+    "actual": "POST /create returns HTTP 500: Source revision unavailable or publication capacity reached; finish candidate cleanup before retrying.",
+    "failure": "AssertionError [ERR_ASSERTION]: {\"value\":{\"error\":\"Source revision unavailable or publication capacity reached; finish candidate cleanup before retrying\"},\"counts\":{\"reads\":285,\"writes\":0,\"queries\":12,\"r2Reads\":0,\"r2Writes\":0,\"r2Lists\":0,\"r2Deletes\":0,\"queueWrites\":0,\"sourceCalls\":0,\"platformCalls\":0,\"sourceReads\":0,\"sourceWrites\":0,\"sourceQueries\":0,\"sourceR2Reads\":0}}\n\n500 !== 200\n\n    at api (file:///home/umer/hasawebdotsite/scripts/publication-dispatch.mjs:86:10)\n    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at async file:///home/umer/hasawebdotsite/scripts/publication-dispatch.mjs:1100:29",
+    "correction": "Admission counts transactional pending membership only. Retained references release slots, reference deletion restores cleanup accounting, and candidate deletion cascades the membership row."
+  },
+  "verification": {
+    "status": "passed",
+    "initialFullRun": {
+      "receipt": "2026-10-27T11-53-16.305Z-4GC2Si",
+      "passed": [
+        "check",
+        "all application builds",
+        "renderer",
+        "auth/browser",
+        "persistence including admission backfill"
+      ],
+      "failure": {
+        "suite": "uploads",
+        "message": "Local Miniflare core entry returned Network connection lost during a fixture SQL read after an injected upload storage failure.",
+        "action": "Preserved failure and resumed uploads plus every remaining full-profile suite without changing application or test code."
+      }
+    },
+    "completePublicationMatrix": {
+      "receipt": "2026-10-27T12-02-24.188Z-t6EOxB",
+      "groupsPassed": 43,
+      "cases": [
+        {
+          "kind": "small",
+          "inputBytes": 604,
+          "dispatchCheckpoints": 25
+        },
+        {
+          "kind": "mixed",
+          "inputBytes": 1793,
+          "dispatchCheckpoints": 44
+        },
+        {
+          "kind": "privacy",
+          "inputBytes": 1860,
+          "dispatchCheckpoints": 36
+        },
+        {
+          "kind": "unicode",
+          "inputBytes": 109756,
+          "dispatchCheckpoints": 48
+        },
+        {
+          "kind": "surrogate",
+          "inputBytes": 1771,
+          "dispatchCheckpoints": 44
+        },
+        {
+          "kind": "surrogate-boundary",
+          "inputBytes": 109533,
+          "dispatchCheckpoints": 48
+        },
+        {
+          "kind": "description",
+          "inputBytes": 27787,
+          "dispatchCheckpoints": 44
+        },
+        {
+          "kind": "deep",
+          "inputBytes": 1896,
+          "dispatchCheckpoints": 68
+        },
+        {
+          "kind": "dense",
+          "inputBytes": 520383,
+          "dispatchCheckpoints": 141
+        },
+        {
+          "kind": "hands",
+          "inputBytes": 1816,
+          "dispatchCheckpoints": 44
+        },
+        {
+          "kind": "cat",
+          "inputBytes": 1814,
+          "dispatchCheckpoints": 46
+        },
+        {
+          "kind": "face",
+          "inputBytes": 1792,
+          "dispatchCheckpoints": 47
+        },
+        {
+          "kind": "assets",
+          "inputBytes": 7099,
+          "dispatchCheckpoints": 84
+        },
+        {
+          "kind": "assets-face",
+          "inputBytes": 7098,
+          "dispatchCheckpoints": 87
+        },
+        {
+          "kind": "max",
+          "inputBytes": 1048576,
+          "dispatchCheckpoints": 97
+        }
+      ],
+      "checks": [
+        "small: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "mixed: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "privacy: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "unicode: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "surrogate: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "surrogate-boundary: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "description: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "deep: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "dense: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "hands: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "cat: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "face: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "assets: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "assets-face: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "max: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation",
+        "Duplicate delivery, expired lease replacement, terminal-state fencing and private source denial",
+        "Authorized private source checks reachability, purpose, lease, readiness, size and persisted deletion",
+        "A post-write crash replays output without duplication or truncation",
+        "Candidate cleanup removes written outputs and retains private sources and the previous complete version",
+        "Finalization platform replays a post-write failure, cleans candidate output and preserves retained versions",
+        "Finalization snapshot replays a post-write failure, cleans candidate output and preserves retained versions",
+        "Finalization pages replays a post-write failure, cleans candidate output and preserves retained versions",
+        "Finalization manifest replays a post-write failure, cleans candidate output and preserves retained versions",
+        "Finalization manifest-assembly replays a post-write failure, cleans candidate output and preserves retained versions",
+        "Sealing atomically rechecks asset readiness after copying and hashing",
+        "A changed mutable verification fact prevents the ready checkpoint",
+        "source-truncated: bounded failure, exact replay, source retention and cleanup",
+        "source-interrupted: bounded failure, exact replay, source retention and cleanup",
+        "source-idle: bounded failure, exact replay, source retention and cleanup",
+        "r2-before: bounded failure, exact replay, source retention and cleanup",
+        "r2-after: bounded failure, exact replay, source retention and cleanup",
+        "checkpoint-before: bounded failure, exact replay, source retention and cleanup",
+        "checkpoint-after: bounded failure, exact replay, source retention and cleanup",
+        "delete-during-copy: bounded failure, exact replay, source retention and cleanup",
+        "Exhausted cleanup retains only its output cleanup capability, scrubs source/identity, stops redelivery and supports an explicit retry",
+        "128 retained current portfolios permit complete preparation and subsequent admission; references release slots atomically, prevent cleanup/expiry and return deleted versions to cleanup accounting",
+        "With 128 retained versions, atomic admission still enforces one source per portfolio, four global sources and 128 pending candidates including cleanup tombstones; one concurrent request wins the final slot",
+        "Owner deletion returns retained candidates to pending cleanup above the admission limit, blocks new work until slots retire and cascades pending rows on physical candidate deletion",
+        "Ready sources expire, cleaned metadata and owner identifiers are removed, and tombstones physically retire",
+        "Older renderer/cursor cleanup remains supported and legacy tombstone sweeps preserve their original retention age",
+        "Lost enqueue acknowledgements recover through sweep and crashed attempts terminate at the persisted limit",
+        "Owner deletion fences retained ready candidates and permits bounded cleanup after owner removal",
+        "Preparation, replay and cleanup preserve the seeded pointer and claim before account deletion"
+      ]
+    },
+    "strengthenedIndependentLimits": {
+      "receipt": "2026-10-27T12-12-28.015Z-EpqRJm",
+      "status": "passed",
+      "groupsPassed": 29,
+      "contentCases": ["small"],
+      "scope": "Rechecks every fault, retention and lifecycle group with the final capacity assertions. The row-limit denial occurs with zero remaining sources, and a separate race checks one source per portfolio below row capacity. The earlier full matrix supplies unchanged content/output coverage.",
+      "checks": [
+        "128 retained current portfolios permit complete preparation and subsequent admission; references release slots atomically, prevent cleanup/expiry and return deleted versions to cleanup accounting",
+        "With 128 retained versions, atomic admission still enforces one source per portfolio, four global sources and 128 pending candidates including cleanup tombstones; one concurrent request wins the final slot",
+        "Owner deletion returns retained candidates to pending cleanup above the admission limit, blocks new work until slots retire and cascades pending rows on physical candidate deletion"
+      ]
+    },
+    "editorFailure": {
+      "receipt": "2026-10-27T12-02-24.188Z-t6EOxB",
+      "failure": "ProxyWorker Network connection lost on POST /api/owner/draft/address, followed by browser wait timeout.",
+      "action": "Retained screenshot, HTTP request status list and runtime log in ignored evidence; rerun editor plus remaining runtime/routing checks without source changes."
+    },
+    "fullGateCoverage": "All thirteen commands passed across retained locked runs; each local connection failure passed on an unchanged rerun. The subsequent capacity-assertion refinement is covered by repeated checks and the final focused fixture.",
+    "fullGateRuns": [
+      {
+        "receipt": "2026-10-27T11-53-16.305Z-4GC2Si",
+        "status": "failed",
+        "workingChangesSha256": "c2e3b1b7db06a4c5806eb5fb85aa15bb9009958485644b288a7eff92a010017a",
+        "commands": [
+          {
+            "command": ["pnpm", "check"],
+            "startedAt": "2026-10-27T11:53:16.329Z",
+            "durationMs": 57739,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "build"],
+            "startedAt": "2026-10-27T11:54:14.080Z",
+            "durationMs": 50777,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:renderer"],
+            "startedAt": "2026-10-27T11:55:04.858Z",
+            "durationMs": 33381,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:auth:browser"],
+            "startedAt": "2026-10-27T11:55:38.239Z",
+            "durationMs": 105772,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:persistence"],
+            "startedAt": "2026-10-27T11:57:24.012Z",
+            "durationMs": 86534,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:uploads"],
+            "startedAt": "2026-10-27T11:58:50.546Z",
+            "durationMs": 141601,
+            "exitCode": 1,
+            "signal": null
+          }
+        ]
+      },
+      {
+        "receipt": "2026-10-27T12-02-24.188Z-t6EOxB",
+        "status": "failed",
+        "workingChangesSha256": "dc060e3bdccbbce59d18afb0651aaa3e695baf24264bc89b406e64e379379dac",
+        "commands": [
+          {
+            "command": ["pnpm", "test:uploads"],
+            "startedAt": "2026-10-27T12:02:24.479Z",
+            "durationMs": 155787,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:publication-dispatch"],
+            "startedAt": "2026-10-27T12:05:00.276Z",
+            "durationMs": 298462,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:draft-api"],
+            "startedAt": "2026-10-27T12:09:58.739Z",
+            "durationMs": 153925,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:autosave"],
+            "startedAt": "2026-10-27T12:12:32.664Z",
+            "durationMs": 253535,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:editor"],
+            "startedAt": "2026-10-27T12:16:46.199Z",
+            "durationMs": 75348,
+            "exitCode": 1,
+            "signal": null
+          }
+        ]
+      },
+      {
+        "receipt": "2026-10-27T12-19-17.758Z-8lT4xj",
+        "status": "passed",
+        "workingChangesSha256": "b4ce679395533a80496dafdf4c241e05bd165071e2f90631c845ba63e477ffa9",
+        "commands": [
+          {
+            "command": ["pnpm", "test:editor"],
+            "startedAt": "2026-10-27T12:20:33.621Z",
+            "durationMs": 197407,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:runtime"],
+            "startedAt": "2026-10-27T12:23:51.041Z",
+            "durationMs": 56316,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "test:runtime:smoke"],
+            "startedAt": "2026-10-27T12:24:47.357Z",
+            "durationMs": 32358,
+            "exitCode": 0,
+            "signal": null
+          },
+          {
+            "command": ["pnpm", "spike:routing"],
+            "startedAt": "2026-10-27T12:25:19.715Z",
+            "durationMs": 7245,
+            "exitCode": 0,
+            "signal": null
+          }
+        ]
+      }
+    ],
+    "fullProfileCommandsPassed": [
+      ["pnpm", "check"],
+      ["pnpm", "build"],
+      ["pnpm", "test:renderer"],
+      ["pnpm", "test:auth:browser"],
+      ["pnpm", "test:persistence"],
+      ["pnpm", "test:uploads"],
+      ["pnpm", "test:publication-dispatch"],
+      ["pnpm", "test:draft-api"],
+      ["pnpm", "test:autosave"],
+      ["pnpm", "test:editor"],
+      ["pnpm", "test:runtime"],
+      ["pnpm", "test:runtime:smoke"],
+      ["pnpm", "spike:routing"]
+    ],
+    "migration": {
+      "checkedAt": "2026-10-27T11:58:50.373Z",
+      "runtime": "local workerd / D1",
+      "migrationsReapplied": true,
+      "migrationAttemptPreserved": true,
+      "candidateAdmissionBackfillPreserved": true,
+      "passed": 85
+    },
+    "schemaDrift": "drizzle-kit generate reported no schema changes after generating 0012",
+    "costHelper": "Executed successfully against complete 15-case publication results; pendingCandidateAdmissionLimit is 128. This remains a historical Free-budget comparison, not native paid capacity acceptance."
+  },
+  "sourceArtifacts": {
+    "packages/db/src/publication-tasks.ts": "09a51a66fb7a71ab958d51ae698b38c9753361211106b5e1175ec393325ccc7e",
+    "packages/db/src/schema.ts": "63101d368aeb8ace6cc5ae8d371eebcf012912eb36a82a3ffac4d56aac6a84dd",
+    "packages/db/migrations/0012_publication_admission.sql": "a30002baa8558da6252d7c9c13817d3eb30e63ff39837db7d7f32be0354fc6eb",
+    "packages/db/migrations/meta/0012_snapshot.json": "d4a0a3b15c15cf3da03bc6dc7eb5a09b345174574eb39735fcd2ad18a660bb9d",
+    "packages/db/migrations/meta/_journal.json": "8151f09966aa3f01b8e13e38d80795bcca6e96409052572099b4f1a79392aba5",
+    "scripts/publication-dispatch.mjs": "317c5074032d4ad8690db050efc50ab12083be64cda34b7b96c749add3bef24e",
+    "scripts/persistence-integration.mjs": "2f391c1c42f705f3a25693777ceeaa3f88079005ed82e375123edd501e1c4f71",
+    "scripts/publication-dispatch-costs.mjs": "77db2764fea9fb05b55a726c33aecfcaa77a84a6430e5f2428ebca0894e154a0"
+  },
+  "review": "Normal diff review completed. The corrective migration/admission boundary is ready for follow-up independent review; roadmap remains unchecked."
+}

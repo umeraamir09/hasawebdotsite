@@ -2,7 +2,7 @@
 
 October 27, 2026: the [paid-at-launch policy](../../docs/deployment-policy.md) authorizes this tested `s8-v3` scaffold as the S-8 local development milestone. Integrate and check it before local Phase 24. Final native paid verification and production activation are release gates; upgrading the account is deferred until launch preparation.
 
-October 27 implementation update: [Phase 24](../2026-10-24-immutable-publication/protocol.md) supersedes the scaffold-only artifact and `s8-v3` policy descriptions below. Historical measurements still describe the tested S-8 scaffold.
+October 27 implementation update: [Phase 24](../2026-10-24-immutable-publication/protocol.md) supersedes the scaffold-only artifact and `s8-v3` policy descriptions below. Migration `0012` also supersedes the global 128-record admission rule with 128 pending-candidate slots; retained-version references release their slots and deleted references reacquire cleanup slots. Historical measurements still describe the tested S-8 scaffold.
 
 This is the S-8 prerequisite implementation, not a publication endpoint or a live version commit. The owner has authorized local reuse under the paid-at-launch policy; Phase 24 consumes the milestone after integration and applicable local checks. The public site Worker and existing live pointer remain unchanged.
 

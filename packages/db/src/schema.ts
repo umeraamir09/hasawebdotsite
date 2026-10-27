@@ -535,6 +535,14 @@ export const publicationCandidate = sqliteTable(
     ),
   ],
 );
+export const publicationCandidatePending = sqliteTable(
+  "publication_candidate_pending",
+  {
+    candidateId: text("candidate_id")
+      .primaryKey()
+      .references(() => publicationCandidate.id, { onDelete: "cascade" }),
+  },
+);
 export const publicationCandidateIndex = sqliteTable(
   "publication_candidate_index",
   {
