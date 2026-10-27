@@ -1,0 +1,574 @@
+{
+  "recordedAt": "2026-10-27T06:09:43.490Z",
+  "method": "Schema-validated variant of the locally verified gallery-plus-Face fixture. Only the 24 gallery image references change to distinct IDs. Byte calculations assume distinct maximum-size payloads allowed by the upload contract. No binary seeding, compression, global deduplication, collector or native measurement is claimed.",
+  "fixtureBytes": 7136,
+  "distinctAssets": 29,
+  "references": [
+    {
+      "id": "avatar",
+      "purpose": "avatar"
+    },
+    {
+      "id": "banner",
+      "purpose": "banner"
+    },
+    {
+      "id": "private-face",
+      "purpose": "face"
+    },
+    {
+      "id": "unique-gallery-0",
+      "purpose": "project"
+    },
+    {
+      "id": "case-image",
+      "purpose": "case_study"
+    },
+    {
+      "id": "unique-gallery-1",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-2",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-3",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-4",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-5",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-6",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-7",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-8",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-9",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-10",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-11",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-12",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-13",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-14",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-15",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-16",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-17",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-18",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-19",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-20",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-21",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-22",
+      "purpose": "project"
+    },
+    {
+      "id": "unique-gallery-23",
+      "purpose": "project"
+    },
+    {
+      "id": "resume",
+      "purpose": "resume"
+    }
+  ],
+  "onePhysicalCopyBytesPerPortfolio": 157286400,
+  "onePhysicalCopyAt100Portfolios": 15728640000,
+  "galleryImagesAloneAt100Portfolios": 12582912000,
+  "agreedR2PlanningBytes": 10000000000,
+  "draft": {
+    "schemaVersion": 2,
+    "requestedSubdomain": "s8-fixture",
+    "profile": {
+      "name": "عمر Example",
+      "bio": "I build <tools> & interfaces.\r\n😀",
+      "location": "Karachi",
+      "avatar": {
+        "assetId": "avatar",
+        "alt": "Portrait",
+        "accepted": true
+      },
+      "banner": {
+        "assetId": "banner",
+        "alt": "Banner"
+      },
+      "faceReveal": {
+        "enabled": true,
+        "image": {
+          "assetId": "private-face",
+          "alt": "Keep private"
+        }
+      }
+    },
+    "links": [
+      {
+        "id": "website",
+        "label": "Website",
+        "kind": "website",
+        "value": "https://example.test",
+        "showInProfile": true,
+        "showInSocialComponent": true
+      }
+    ],
+    "components": [
+      {
+        "id": "text",
+        "type": "text",
+        "version": 1,
+        "data": {
+          "title": "Notes",
+          "body": {
+            "type": "doc",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Useful work <safe> & \"escaped\"."
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      },
+      {
+        "id": "projects",
+        "type": "projects",
+        "version": 1,
+        "data": {
+          "entries": [
+            {
+              "id": "gallery-0",
+              "title": "Gallery 0",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-0",
+                "alt": "Image 0 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code",
+              "caseStudy": {
+                "slug": "project",
+                "body": {
+                  "type": "doc",
+                  "content": [
+                    {
+                      "type": "paragraph",
+                      "content": [
+                        {
+                          "type": "text",
+                          "text": "Case study"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "image",
+                      "attrs": {
+                        "assetId": "case-image",
+                        "alt": "Case image 😀 <&>"
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": "gallery-1",
+              "title": "Gallery 1",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-1",
+                "alt": "Image 1 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-2",
+              "title": "Gallery 2",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-2",
+                "alt": "Image 2 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-3",
+              "title": "Gallery 3",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-3",
+                "alt": "Image 3 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-4",
+              "title": "Gallery 4",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-4",
+                "alt": "Image 4 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-5",
+              "title": "Gallery 5",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-5",
+                "alt": "Image 5 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-6",
+              "title": "Gallery 6",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-6",
+                "alt": "Image 6 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-7",
+              "title": "Gallery 7",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-7",
+                "alt": "Image 7 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-8",
+              "title": "Gallery 8",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-8",
+                "alt": "Image 8 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-9",
+              "title": "Gallery 9",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-9",
+                "alt": "Image 9 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-10",
+              "title": "Gallery 10",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-10",
+                "alt": "Image 10 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-11",
+              "title": "Gallery 11",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-11",
+                "alt": "Image 11 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-12",
+              "title": "Gallery 12",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-12",
+                "alt": "Image 12 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-13",
+              "title": "Gallery 13",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-13",
+                "alt": "Image 13 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-14",
+              "title": "Gallery 14",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-14",
+                "alt": "Image 14 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-15",
+              "title": "Gallery 15",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-15",
+                "alt": "Image 15 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-16",
+              "title": "Gallery 16",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-16",
+                "alt": "Image 16 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-17",
+              "title": "Gallery 17",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-17",
+                "alt": "Image 17 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-18",
+              "title": "Gallery 18",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-18",
+                "alt": "Image 18 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-19",
+              "title": "Gallery 19",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-19",
+                "alt": "Image 19 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-20",
+              "title": "Gallery 20",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-20",
+                "alt": "Image 20 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-21",
+              "title": "Gallery 21",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-21",
+                "alt": "Image 21 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-22",
+              "title": "Gallery 22",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-22",
+                "alt": "Image 22 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            },
+            {
+              "id": "gallery-23",
+              "title": "Gallery 23",
+              "summary": "Summary",
+              "image": {
+                "assetId": "unique-gallery-23",
+                "alt": "Image 23 😀 <&>"
+              },
+              "technologies": ["TypeScript", "SQLite"],
+              "contribution": "Built it",
+              "codeUrl": "https://example.test/code"
+            }
+          ]
+        }
+      },
+      {
+        "id": "skills",
+        "type": "skills",
+        "version": 1,
+        "data": {
+          "categories": [
+            {
+              "id": "language",
+              "name": "Languages"
+            }
+          ],
+          "entries": [
+            {
+              "id": "ts",
+              "name": "TypeScript",
+              "categoryId": "language"
+            },
+            {
+              "id": "sql",
+              "name": "SQL"
+            }
+          ]
+        }
+      },
+      {
+        "id": "work",
+        "type": "work-experience",
+        "version": 1,
+        "data": {
+          "entries": [
+            {
+              "id": "role",
+              "role": "Engineer",
+              "organization": "Studio",
+              "startDate": "2020-01",
+              "current": true,
+              "description": "Built useful things",
+              "organizationUrl": "https://example.test"
+            }
+          ]
+        }
+      },
+      {
+        "id": "social",
+        "type": "social-links",
+        "version": 1,
+        "data": {}
+      },
+      {
+        "id": "resume",
+        "type": "resume",
+        "version": 1,
+        "data": {
+          "file": {
+            "assetId": "resume"
+          }
+        }
+      }
+    ],
+    "appearance": {
+      "themeId": "leaf",
+      "fontId": "dm-sans",
+      "colorMode": "system"
+    },
+    "seo": {},
+    "samples": {}
+  },
+  "limitation": "This is an arithmetic lower bound for a permitted maximum-size content variant, excluding public duplication, HTML, snapshots, styles, replacements and retained versions. Avoiding duplicate copies alone cannot guarantee the full 100-portfolio maximum-content workload fits. An aggregate storage/content constraint or a larger allowance would require an explicit owner decision; neither is changed here."
+}

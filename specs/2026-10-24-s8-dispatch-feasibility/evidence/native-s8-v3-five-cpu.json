@@ -1,0 +1,195 @@
+{
+  "revision": "5b796accfac88bf40b2875e606b79c52192a3e16",
+  "recordedAt": "2026-10-27T05:57:26.899Z",
+  "units": "GraphQL CPU quantiles are microseconds; divide by 1000 for milliseconds",
+  "method": "Native Queue Worker only. Per-candidate completion windows. Provider adaptive analytics can omit observations; compare expected and observed counts. Repeated execution does not label individual cold isolates. Do not average regional percentiles.",
+  "excludedIncompleteCandidates": [],
+  "runs": [
+    {
+      "kind": "max",
+      "candidateId": "74f478ad-1cd2-4adf-8551-09dfb4631f96",
+      "start": "2026-10-27T05:45:26.178Z",
+      "end": "2026-10-27T05:48:04.334Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 30,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "clientDisconnected"
+          },
+          "quantiles": {
+            "cpuTimeP50": 20413,
+            "cpuTimeP95": 20413,
+            "cpuTimeP99": 20413
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 7956,
+            "cpuTimeP95": 33335,
+            "cpuTimeP99": 34095
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 29
+          }
+        }
+      ]
+    },
+    {
+      "kind": "max",
+      "candidateId": "f41d808c-7202-4660-a356-ccee6ed0e21b",
+      "start": "2026-10-27T05:48:25.615Z",
+      "end": "2026-10-27T05:51:26.640Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 30,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "clientDisconnected"
+          },
+          "quantiles": {
+            "cpuTimeP50": 281,
+            "cpuTimeP95": 281,
+            "cpuTimeP99": 281
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 1
+          }
+        },
+        {
+          "dimensions": {
+            "coloCode": "DFW",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 5173,
+            "cpuTimeP95": 30210,
+            "cpuTimeP99": 30210
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 15
+          }
+        },
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 7906,
+            "cpuTimeP95": 14160,
+            "cpuTimeP99": 14160
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 14
+          }
+        }
+      ]
+    },
+    {
+      "kind": "max",
+      "candidateId": "e22abef8-31aa-48b9-bdf4-0fe59eab82fd",
+      "start": "2026-10-27T05:51:40.417Z",
+      "end": "2026-10-27T05:53:13.583Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 28,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "DFW",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 6982,
+            "cpuTimeP95": 29165,
+            "cpuTimeP99": 32175
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 28
+          }
+        }
+      ]
+    },
+    {
+      "kind": "max",
+      "candidateId": "00161986-ba78-4c4d-a913-238f75fcc73e",
+      "start": "2026-10-27T05:53:29.334Z",
+      "end": "2026-10-27T05:54:57.128Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 28,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "SJC",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 7689,
+            "cpuTimeP95": 29615,
+            "cpuTimeP99": 29897
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 28
+          }
+        }
+      ]
+    },
+    {
+      "kind": "max",
+      "candidateId": "ee70bdc0-79d3-442b-90f6-b5f829181bdf",
+      "start": "2026-10-27T05:55:14.202Z",
+      "end": "2026-10-27T05:56:47.932Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 28,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 7263,
+            "cpuTimeP95": 31971,
+            "cpuTimeP99": 35166
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 28
+          }
+        }
+      ]
+    }
+  ]
+}

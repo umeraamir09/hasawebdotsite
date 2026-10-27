@@ -1,0 +1,97 @@
+{
+  "recordedAt": "2026-10-27T05:49:03.073Z",
+  "revision": "5b796accfac88bf40b2875e606b79c52192a3e16",
+  "mode": "native",
+  "batch": "32",
+  "scripts": [
+    {
+      "key": "jobs",
+      "name": "hasaweb-s8-d3c356-jobs",
+      "deployment": {
+        "id": "32473b4a-c218-4034-ba6d-ca52afb8b533",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "versions": [
+          {
+            "version_id": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-10-25T17:32:19.872849Z"
+      },
+      "bundleUpload": "3586.41 KiB / gzip: 614.71 KiB",
+      "deploymentStartupMs": 78,
+      "preSecretVersion": "6147d42c-a85f-4d78-969e-1618a60ef1c0"
+    },
+    {
+      "key": "control",
+      "name": "hasaweb-s8-d3c356-control",
+      "deployment": {
+        "id": "cde69019-f70a-4733-8ea3-e23868e8634d",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "versions": [
+          {
+            "version_id": "e85f3f16-d68f-4f12-86d9-0e7178841389",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-10-25T17:32:41.56139Z"
+      },
+      "bundleUpload": "3586.13 KiB / gzip: 614.67 KiB",
+      "deploymentStartupMs": 70,
+      "preSecretVersion": "b26aba72-1eb9-4785-906a-e4299d8b7047"
+    },
+    {
+      "key": "source",
+      "name": "hasaweb-s8-d3c356-source",
+      "deployment": {
+        "id": "c9e68ff4-1229-4649-9ee5-0d982bb42e89",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "versions": [
+          {
+            "version_id": "91cbe941-ef54-465b-88e5-cecef93a34a7",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-10-25T17:30:46.961617Z"
+      },
+      "bundleUpload": "908.14 KiB / gzip: 148.48 KiB",
+      "deploymentStartupMs": 25,
+      "preSecretVersion": "0c9006f8-2ae8-4b6c-8744-38783dc1b8a3"
+    },
+    {
+      "key": "fullSource",
+      "name": "hasaweb-s8-d3c356-full-source",
+      "deployment": {
+        "id": "24b93fff-d186-4326-bfc3-ab75f4d3ba77",
+        "source": "wrangler",
+        "strategy": "percentage",
+        "annotations": {
+          "workers/triggered_by": "secret"
+        },
+        "versions": [
+          {
+            "version_id": "c0403b07-093d-4b22-b7d2-4ae590ce4875",
+            "percentage": 100
+          }
+        ],
+        "created_on": "2026-10-25T17:31:45.392367Z"
+      },
+      "bundleUpload": "11753.09 KiB / gzip: 2273.89 KiB",
+      "deploymentStartupMs": 92,
+      "preSecretVersion": "25aa283f-fd0b-4cf7-b4c5-c9721bbd65cd"
+    }
+  ],
+  "limitation": "Startup is deployment validation time, not complete invocation CPU. Secret upload creates a new active version after the bundle version in Wrangler deploy output. Native GraphQL scriptVersion identifies measured execution."
+}

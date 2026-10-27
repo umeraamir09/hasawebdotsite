@@ -1,0 +1,69 @@
+{
+  "revision": "5b796accfac88bf40b2875e606b79c52192a3e16",
+  "recordedAt": "2026-10-27T05:47:25.803Z",
+  "units": "GraphQL CPU quantiles are microseconds; divide by 1000 for milliseconds",
+  "method": "Native Queue Worker only. Per-candidate completion windows. Provider adaptive analytics can omit observations; compare expected and observed counts. Repeated execution does not label individual cold isolates. Do not average regional percentiles.",
+  "runs": [
+    {
+      "kind": "max",
+      "candidateId": "12941e06-dff2-459c-b0bc-926d4370b8ad",
+      "start": "2026-10-25T18:01:35.559Z",
+      "end": "2026-10-25T18:03:23.861Z",
+      "expectedCheckpoints": 28,
+      "observedRequests": 26,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "SEA",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 8315,
+            "cpuTimeP95": 127299,
+            "cpuTimeP99": 191941
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 26
+          }
+        }
+      ]
+    },
+    {
+      "kind": "dense",
+      "candidateId": "1e727dca-2b0b-4644-8aed-bec2887010e0",
+      "start": "2026-10-25T18:03:39.818Z",
+      "end": "2026-10-25T18:06:10.556Z",
+      "expectedCheckpoints": 60,
+      "observedRequests": 55,
+      "groups": [
+        {
+          "dimensions": {
+            "coloCode": "DEN",
+            "scriptName": "hasaweb-s8-d3c356-jobs",
+            "scriptVersion": "2dba82ff-ec15-4417-a9ab-46145d50a850",
+            "status": "success"
+          },
+          "quantiles": {
+            "cpuTimeP50": 13627,
+            "cpuTimeP95": 24582,
+            "cpuTimeP99": 86265
+          },
+          "sum": {
+            "errors": 0,
+            "requests": 55
+          }
+        }
+      ]
+    }
+  ],
+  "excludedIncompleteCandidates": [
+    {
+      "kind": "assets-face",
+      "reason": "Truncated HTTP transfer response. Candidate CPU window has no completion boundary and is excluded."
+    }
+  ],
+  "selection": "Retained completed windows from the provider response. Excluded the unfinished candidate whose missing end boundary made its query invalid for acceptance. The corrected reporter filters incomplete candidates before querying."
+}

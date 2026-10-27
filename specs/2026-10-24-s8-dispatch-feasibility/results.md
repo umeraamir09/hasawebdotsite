@@ -1,6 +1,76 @@
 # S-8 bounded dispatcher prerequisite
 
-## Outcome and gate
+## Current outcome, October 27, 2026
+
+The inactive `s8-v3` implementation passes the full local gate and the deployed content matrix, but **S-8 feasibility remains unverified and Phase 24 remains blocked**. Native Queue CPU exceeds the required 10 ms p95. The complete shared forecast exceeds the Free Queue allowance for dense content. A valid gallery plus Face Reveal draft also disproves storage fit for the current separate private/public asset copies. No completion approval, integration, production activation or Phase 24 implementation is recorded.
+
+The tested application revision is `5b796accfac88bf40b2875e606b79c52192a3e16`. Commit `94f317b` adds the gallery-plus-Face fixture and storage failure reporting without changing application code. Commits `531d8d5`, `676aeec` and `db739f6` correct incomplete CPU windows, reserve delivery replays and match storage inventories across candidate-specific URLs. The [current source manifest](evidence/source-manifest-s8-v3.json) separates runtime, fixture and measurement-tool revisions. Shared `main` remains `5564c31`; the separate Phase 24 worktree and prerequisite audit are untouched. One implementation owner, with no delegation.
+
+The owner confirmed Workers Free for account `b6f9a87e6702c76c45a8d61744826e0f`. [Plan evidence](evidence/provider-plan-confirmation.json) distinguishes that confirmation from inaccessible subscription metadata. [Publication acceptance](../../docs/acceptance-criteria.md#15-subdomain-selection-and-publication), [Phase 24 dependencies](../../docs/roadmap.md#phase-24-prepare-immutable-publication-versions) and the unresolved S-9 withdrawal prerequisite still control dependent work.
+
+## What changed
+
+The [current protocol](protocol.md) pins `s8-v3`. Preparation reuses one bounded encoded-text window per invocation, a single typed asset/page index per candidate, grouped shared component/project rendering, and prepared profile parts across pages. It removes repeated dense collection scans without adding one persisted row per component. Complete shared rendering, normalization, escaping, Unicode and wrapper order remain unchanged. Maximum, dense and gallery candidates now require 28, 60 and 37 checkpoints respectively, compared with the original 51, 116 and 70. These are work counts, not a CPU speedup claim.
+
+Admission permits one sealed source per portfolio, four globally and 128 retained records. Private ready probes expire after one hour. Cleanup scrubs source/index and owner identifiers. Tombstones retire after at least 24 hours and two-bucket absence checks; bounded sweeps can delay physical removal. Failed storage cleanup retains a scrubbed prefix ticket for explicit retry rather than endless redelivery. The reusable asset-retention guard protects all portfolio assets before indexing and indexed sealed references before transfer discovery. A future collector must combine this with draft/live-version reachability.
+
+Lease/sequence fencing covers cleanup checkpoints as well as preparation. Assembly remains limited to sixteen inputs and two simultaneous storage bodies, with idle and total transfer deadlines. Local fault injection now exercises truncated, interrupted and idle streams, transient writes and checkpoints, deletion during transfer, cleanup exhaustion, late objects and old cursor policies. A repaired legacy tombstone bug preserves the original retention age instead of resetting it on every sweep.
+
+## Verification and native evidence
+
+The [clean full local gate](evidence/verification-5b796ac.json) passed all 13 commands at exact revision `5b796ac`, with 456 unit tests, every application build and [32 S-8 integration groups](evidence/local-s8-v3-full-results.json). The later [gallery-plus-Face proof](evidence/gallery-face-storage-results.json) passed 20 focused groups with full-size files. Tooling changes received formatting, syntax and exact ledger reproduction checks. Final repository lint passed with three existing specificity warnings in unchanged `editor.css`. Changed Markdown file links and runtime source hashes passed their checks. Heavy local verification used the shared `pnpm verify` resource lock.
+
+The [native full-size matrix](evidence/native-s8-v3-full-results.json) passed all 13 cases, including exact total-1-MiB multi-page content, 3,000 components, deep rich text, long Unicode/descriptions, isolated and boundary surrogates, both decorations, Face Reveal, repeated gallery references, and complete maximum-size image/PDF hashes. The actual full web module supplied the private named source entry. [Active versions and deployment startup](evidence/native-s8-v3-provider-versions.json) identify Queue version `2dba82ff-ec15-4417-a9ab-46145d50a850` and full-source version `c0403b07-093d-4b22-b7d2-4ae590ce4875`. Full-source deployment startup was 92 ms. Deployment startup is separate from invocation CPU.
+
+[Per-candidate native CPU](evidence/native-s8-v3-matrix-cpu.json) reports p95 values above 10 ms across the matrix. Examples are maximum 187.130 ms in SEA and dense 29.273 ms in DFW. A subsequent full-size repetition completed maximum at 127.299 ms in SEA and dense at 24.582 ms in DEN before a truncated HTTP response interrupted the gallery-plus-Face transfer. [Completed windows](evidence/native-s8-v3-interrupted-cpu.json) exclude that incomplete candidate; [the partial result](evidence/native-s8-v3-interrupted-results.json) preserves it. This is a client transport failure, not evidence of a CPU-limit rejection.
+
+Analytics values are microseconds, divided by 1,000 for milliseconds. Windows include complete candidate work and identify region/version; adaptive analytics sometimes omit observations or include additional deliveries. Counts are retained beside checkpoints. All outcomes in the completed retained matrix/partial windows are successful, with zero reported errors. Repeated candidates do not label individual warm/cold isolates. Neither these windows nor deployment startup certify cold execution. Quota instrumentation and local profile samples are excluded from native CPU claims.
+
+[Five repeated maximum candidates](evidence/native-s8-v3-five-results.json) all completed at 28 checkpoints with exact output and 128-byte synthetic binaries. Their [native CPU groups](evidence/native-s8-v3-five-cpu.json) retain all locations and outcomes:
+
+| Repetition | Successful group p95, ms | Observed / checkpoints | Other outcomes |
+| --- | --- | --- | --- |
+| 1 | SEA 33.335 | 30 / 28 | One `clientDisconnected` |
+| 2 | DFW 30.210; SEA 14.160 | 30 / 28 | One `clientDisconnected` |
+| 3 | DFW 29.165 | 28 / 28 | None |
+| 4 | SJC 29.615 | 28 / 28 | None |
+| 5 | SEA 31.971 | 28 / 28 | None |
+
+These are per-region quantiles, never averaged. The two non-success provider outcomes and additional invocations in the first two repetitions remain unexplained. All five outputs completed, [retained candidate error fields were empty](evidence/native-s8-v3-post-repetitions.json), and no retained group reports `exceededCpu`. The last three contain exactly 28 observations each, still above the target. No individual cold-isolate label is available and no warm p95 pass is established.
+
+[Native lifecycle probes](evidence/native-s8-v3-lifecycle.json) exercised ten empty sweeps and five four-tombstone sweeps through HTTP, deleting all twenty synthetic old tombstones. This is the actual core sweeper function, not scheduled-trigger proof. Three D1 allocation cycles each inserted and deleted four 1-MiB source payloads. File metadata repeatedly rose from 1,372,160 to 5,578,752 bytes and returned to 1,372,160 bytes; D1 delete-statement `size_after` reported 1,376,256 bytes. Neither API snapshot nor this narrow allocation-only fixture proves capacity for 100 owners or page/index/asset growth.
+
+A subsequent [isolated native HTTP sweeper run](evidence/native-s8-v3-sweeper-results.json), on [control version `cce2c323`](evidence/native-s8-v3-sweeper-deployment.json) with instrumentation disabled, replaced an earlier window contaminated by a state-read request. [Provider CPU](evidence/native-s8-v3-sweeper-cpu.json) contains 9/10 empty-sweep observations and all 5/5 four-tombstone observations. Empty-sweep p95 is 5.626 ms in KHI and 4.914 ms in LHE. Tombstone-sweep p95 is 10.419 ms in KHI and 7.673 ms in LHE. All retained outcomes are successful. These small regional groups do not establish a warm/cold guarantee, and one exceeds the target. Cron was never activated.
+
+The [deployed start checks](evidence/native-s8-v3-start-denials.json) reject absent, forged and expired sessions and another owner's session without creating a candidate. The other-owner response is a generic fixture 500, not a product HTTP contract. Isolated positive-start CPU remains unverified.
+
+The exact `e9e3158` baseline completed [five maximum repetitions](evidence/native-e9e3158-five-results.json), with [p95 values](evidence/native-e9e3158-five-cpu.json) from 31.655 to 54.490 ms. Local production-mode diagnostics identified hex and duplicate text decoding, which the implementation removes. Current [maximum](evidence/diagnostic-s8-v3-max.json), [dense](evidence/diagnostic-s8-v3-dense.json) and [gallery](evidence/diagnostic-s8-v3-assets.json) profiles show D1 response conversion, SDK instrumentation and preparation work. These sampled profiles include local adapter overhead. They do not attribute native outliers precisely. There is no controlled interleaved A/B result and no percentage speedup claim.
+
+The [provider-backed shared ledger](costs.md) includes all 148 instrumented wakes, measured cleanup and local sweep reserves, the unchanged 100/30/30 workload, future delivery work, ten-percent replays including delivery, and one fully failed candidate. Dense usage projects 4,665,125 D1 reads, 85,093 writes and 10,443 Queue operations/day. Reads/writes fit; Queue exceeds the 10,000 allowance. Maximum usage projects 1,626,627 reads, 83,189 writes and 7,659 Queue operations/day. These operation forecasts do not override native CPU or storage failures.
+
+The [current cleanup receipt](evidence/provider-s8-v3-cleanup.json) confirms deletion and subsequent HTTP 404 checks for all nine `hasaweb-s8-d3c356` resources: four Workers, one Queue, three buckets with their fixture objects, and one D1 database. Bucket public access remained disabled. No billing, DNS or production routing changed. Historical `hasaweb-s8-f5419d` receipts remain separate.
+
+## Storage and remaining work
+
+The [gallery-plus-Face storage proof](evidence/gallery-face-storage-ledger.json) uses a valid 7,098-byte draft, 24 gallery entries with repeated images, a case image, avatar/banner/Face and a 10 MiB PDF. Its private inventory is 50 MiB, and its nine distinct copied assets total another 50 MiB. One retained public version across 100 portfolios projects 10,487,616,300 bytes before snapshots/styles/temp files/replacements. The complete delivery/retention forecast reaches 11,015,636,956 bytes. This exceeds the agreed 10,000,000,000-byte planning allowance even without retaining extra public versions. A 24-hour orphan window is an assumption, not an implemented collector.
+
+A [schema-validated distinct-gallery variant](evidence/unique-gallery-storage-lower-bound.json) is only 7,136 draft bytes. Replacing the 24 repeated gallery references with distinct image IDs permits 29 assets. At the current maximum upload sizes, one physical copy requires 157,286,400 bytes per portfolio or 15,728,640,000 bytes for 100 portfolios. The gallery images alone require 12,582,912,000 bytes. This is an arithmetic lower bound, not a seeded binary/native test. It assumes different owner payloads, so compression or cross-owner deduplication cannot be taken for granted. Even a single-copy layout cannot guarantee that the entire allowed maximum-content workload fits the agreed storage budget.
+
+A separate boundary pass reviewed persisted authorization/purpose/size/deletion, revision CAS, source sealing, leases, retries, source/identifier scrubbing, old policy cleanup and runtime/storage budgets. Repaired local behaviors pass the focused and full gates. Remaining acceptance gaps are native p95 and cold labeling, isolated positive-start CPU, actual scheduled-trigger behavior, final delivery implementation/counters, general storage/GC capacity and the incompatible distinct-gallery maximum. The bounded private candidate lifecycle does not prove those future paths.
+
+Avoiding duplicate private/public payloads would improve the current layout. A possible prototype is one immutable owned-object store with private/public manifest references, or a verified relocation/read-fallback design, preserving private reads, ownership, withdrawal and sealed/version reachability. This is a material contract change and is not implemented here. It still cannot satisfy the distinct-gallery lower bound. A guaranteed maximum-content fit therefore also needs an explicit owner decision about an aggregate content/storage contract or a larger allowance. Neither is changed in this work. Shorter orphan retention, task batching and deduplication assumptions cannot remove that lower bound.
+
+Queue work also needs further task packing for the complete dense forecast. Native CPU needs a separately profiled minimal Queue entry and measured SDK/initialization boundaries before another batch choice. Do not reduce the content allowance, omit future delivery work or assume a paid plan to obtain a pass. After a replacement passes all technical gates, obtain explicit owner approval of its exact revision, integrate it, rerun affected checks and record both commits in Phase 24's audit. S-9 remains separate.
+
+## Documentation impact
+
+The changed assumption is that bounded indexed preparation, source admission/retention and specific dispatcher recovery tests now exist, while CPU, shared quota and storage feasibility still fail. Updated the protocol, shared ledger, implementation baseline, architecture, renderer/components/database/private-asset guidance and the downstream GC requirement. Current guidance must use the sealed-source retention guard. Historical failures and owner approvals remain below. No roadmap completion checkbox changed.
+
+## Historical initial follow-up
+
+The following record describes the initial follow-up before the October 25–27 changes. Its `s8-v2` metrics, missing proofs and original cleanup apply to that revision. Current evidence above supersedes its pending-work statements.
+
+### Outcome and gate
 
 The follow-up implements reusable inactive preparation, Queue/D1 dispatch, page assembly and private asset transfer, but **fails the required feasibility gate**. The repeated maximum candidate's native Queue CPU is p95 71.704 ms, above 10 ms. Valid dense/gallery workloads also exceed shared Free quotas. Phase 24 remains blocked. No owner completion approval or integration is recorded, and the existing Phase 24 worktree/audit is untouched.
 
@@ -8,7 +78,7 @@ Shared base: `main` at `5564c31`. Branch: `feat/s8-dispatch-feasibility`. One im
 
 Final source files are identified by the [base and SHA-256 manifest](evidence/source-manifest.json); native and quota provider versions are recorded separately.
 
-## Delivered contract
+### Delivered contract
 
 The [protocol](protocol.md) describes atomic revision-guarded SQL source capture without a whole-draft Worker parse, bounded command/text/component preparation, actual shared `renderFragment` calls, Unicode-safe byte cursors, wrapper-preserving output and streaming multi-page assembly. `s8-v2` pins the corrected byte-cursor/stream policy. Unsupported work versions fail; cleanup can remove older candidate formats.
 
@@ -16,7 +86,7 @@ D1 owns candidate identity, source revision, immutable execution policy, cursors
 
 The named web `PublicationAssets` entry checks persisted candidate reachability, exact asset purpose, ownership, readiness, bytes/media and deletion before resolving a source key. Jobs streams through a service binding and repeats fencing/metadata checks before its receipt. `DRAFT_BUCKET` stays web-only. The default web HTTP route does not expose that entry. Production publication, consumer/binding/cron activation, editor activation, public serving and live-pointer/claim changes are absent.
 
-## Evidence
+### Evidence
 
 - Local matrix covers small/mixed drafts, exact 1 MiB total content across three pages, long Unicode/descriptions, isolated surrogates, deep rich text, 3,000 components, both existing decorations, enabled/disabled Face Reveal, repeated gallery references and case-study images. Maximum image/PDF copies have exact byte/hash checks. The independent full renderer is an offline correctness oracle only.
 - Failure checks cover duplicate delivery, stale/terminal leases, cross-candidate source tickets, wrong purpose, unreachable ready assets, readiness/size mismatch, persisted deletion, post-write replay, lost enqueue acknowledgement, sweep recovery, active/exhausted fourth attempts, source retention and cleanup isolation. A later draft revision cannot alter a sealed candidate. Actual owner removal permits candidate cleanup.
@@ -31,24 +101,24 @@ Isolated resources used the `hasaweb-s8-f5419d` prefix and synthetic data only. 
 
 The [Unicode regression](evidence/unicode-regression.json) preserves the failing normalization and repair. Historical oversized three-page stress remains in the original S-8 record, separate from the valid total-1-MiB case. Restricted-sandbox verification-runner failures were rerun elevated and passed; none were waived. An automatic permission-review timeout on quota execution was retried once successfully. The first quota collector omitted R2 counter names; its incomplete run was discarded and the corrected complete run supplies the ledger.
 
-## Separate boundary review
+### Separate boundary review
 
 A separate final pass reviewed transfer authorization, revision races, lease fencing, retry recovery, deletion/cleanup and budgets. It found and repaired: later pages being skipped during assembly, SQLite lone-surrogate corruption, an active fourth claim being expired too early, owner-deletion cleanup guards, missing source-hop instrumentation, unbounded assembly stream waits and a valid attribute colliding with the controlled wrapper marker. Focused tests and the final full gate cover the repaired local behavior.
 
 The review does not approve feasibility. Remaining blockers are the measured CPU failure, dense/gallery quota failures, final-version/native cold and authorization/sweeper evidence, source/tombstone storage retention and admission, full production source-module startup, and S-8-specific interrupted-stream/transient D1/R2 failure injections. Existing upload fault tests are not substitutes for those dispatcher tests. Production snapshot/manifest/style retention and future generated palettes also require measurement when integrated. S-9 browser/query-cache withdrawal remains a separate prerequisite.
 
-## Concrete remediation and approval
+### Concrete remediation and approval
 
 1. Profile the repeated maximum invocation, including byte decoding, normalization, React serialization and bookkeeping. Redesign the batch/output strategy until complete native warm p95 is below 10 ms with demonstrated cold behavior. Increasing the batch from 16 to 32 saved messages but failed CPU.
 2. Remove repeated dense JSON scans and reduce traversal/transfer wake overhead. Measure the resulting reads, writes, storage and CPU together; gallery and dense cases must have an explicit supported planning contract without shrinking the agreed content allowance.
 3. Bound candidate admission and physical source/tombstone retention, retain sealed-source assets during GC, and verify deletion/late-write cleanup plus transient storage/stream faults. Reproduce the shared ledger, including actual sweeps and production start/poll/snapshot/manifest work.
 4. Only after those gates pass, obtain explicit owner approval of the tested revision, integrate it into the shared base, rerun invalidated checks, and record approval/integration commits in Phase 24's audit. Material changes need renewed verification and approval. No Phase 24 implementation starts now.
 
-## Documentation impact
+### Documentation impact
 
 The changed assumption is that reusable preparation/source-transfer code now exists, while feasibility and activation remain unapproved. Updated the roadmap dependency, implementation baseline, architecture, renderer/components/database/private-asset guidance and verification profiles. Downstream account deletion and GC must retain sealed candidate references and remove surviving cleanup state. Historical S-8/S-9 evidence and prior owner approvals remain intact. No roadmap completion checkbox was changed.
 
-## October 25 continuation
+### October 25 continuation
 
 The owner requested continued S-8 technical work in the existing clean worktree at `e9e3158`. Phase 24 remains blocked pending technical verification, explicit completion approval, integration and integration checks. The separate Phase 24 worktree is outside this task's write boundary.
 

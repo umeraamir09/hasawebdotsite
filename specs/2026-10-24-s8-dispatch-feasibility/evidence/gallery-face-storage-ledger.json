@@ -1,6 +1,6 @@
 {
-  "recordedAt": "2026-10-25T18:03:17.136Z",
-  "input": "/home/umer/.codex/worktrees/s8-dispatch-feasibility/hasawebdotsite/.wrangler/evidence/s8-dispatch-M6NrOd/results.json",
+  "recordedAt": "2026-10-27T06:01:37.296Z",
+  "input": "/home/umer/.codex/worktrees/s8-dispatch-feasibility/hasawebdotsite/specs/2026-10-24-s8-dispatch-feasibility/evidence/gallery-face-storage-results.json",
   "budget": {
     "requests": 100000,
     "reads": 5000000,
@@ -41,7 +41,7 @@
     "Shared request forecast adds 2500 graph requests, 250 GitHub jobs, 450 contact attempts, ten notice jobs, 90 submissions and 288 shared sweeps.",
     "Shared R2 forecast assumes 60 uploads and 100 orphan-list calls daily, plus 36000 reads daily with no public edge-cache savings. Add the bounded maximum four two-bucket tombstone checks per five-minute sweep.",
     "The future contact/GitHub handlers retain a separate forecast of 100000 reads and 6000 writes daily. Measured worst-case S-8 sweeper D1 work is reserved additionally for all 288 daily shared sweeps; their Worker requests and maximum eight R2 lists per sweep are already counted in shared forecasts.",
-    "Ten percent replay selects distinct logical batches once. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
+    "Ten percent replay selects distinct logical batches once, including forecast delivery tasks. Each future task has a conservative replay envelope of one wake, ten reads, four writes, three R2 Class A calls and 32 R2 Class B calls for bounded sixteen-input head/read assembly. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
     "The publication start request conservatively counts both web and jobs. Provider fixture seeding and control polling are excluded from measured counters.",
     "Publication forecast keeps owner polling every five seconds for at least five minutes, two Workers and ten D1 reads per poll. It separately reserves bounded snapshot chunks/assembly, document-shell copies, a size-based manifest, 404/robots/sitemap and generated style retention. Each future task reserves six reads, four writes and one complete Queue wake. These are forecasts, not implemented CPU proof.",
     "Existing art/style/font hashes have a measured inventory. The model conservatively reserves one complete static-library refresh daily plus per-publication existence reads; those bytes are retained once globally in the storage forecast."
@@ -116,22 +116,30 @@
         "r2ClassA": 42,
         "r2ClassB": 63
       },
-      "replayBatches": 4,
+      "replayBatches": 5,
+      "futureWakeReplayForecast": {
+        "requests": 1,
+        "reads": 10,
+        "writes": 4,
+        "queueOperations": 3,
+        "r2ClassA": 3,
+        "r2ClassB": 32
+      },
       "replayReserve": {
-        "requests": 8,
-        "reads": 499,
-        "writes": 39,
-        "queueOperations": 12,
-        "r2ClassA": 4,
-        "r2ClassB": 46
+        "requests": 10,
+        "reads": 555,
+        "writes": 43,
+        "queueOperations": 15,
+        "r2ClassA": 15,
+        "r2ClassB": 160
       },
       "replayWithReplacementUpper": {
-        "requests": 8,
-        "reads": 1020,
-        "writes": 100,
-        "queueOperations": 12,
-        "r2ClassA": 4,
-        "r2ClassB": 128
+        "requests": 10,
+        "reads": 1275,
+        "writes": 125,
+        "queueOperations": 15,
+        "r2ClassA": 15,
+        "r2ClassB": 160
       },
       "cleanup": {
         "requests": 3,
@@ -146,24 +154,24 @@
         "reads": 3569,
         "writes": 316,
         "queueOperations": 156,
-        "r2ClassA": 52,
+        "r2ClassA": 60,
         "r2ClassB": 191
       },
       "projected": {
-        "requests": 61797,
-        "reads": 1657393,
-        "writes": 83998,
-        "queueOperations": 7755,
-        "r2ClassA": 122550,
-        "r2ClassB": 1191930
+        "requests": 61857,
+        "reads": 1659073,
+        "writes": 84118,
+        "queueOperations": 7845,
+        "r2ClassA": 132690,
+        "r2ClassB": 1294530
       },
       "remaining": {
-        "requests": 38203,
-        "reads": 3342607,
-        "writes": 16002,
-        "queueOperations": 2245,
-        "r2ClassA": 877450,
-        "r2ClassB": 8808070
+        "requests": 38143,
+        "reads": 3340927,
+        "writes": 15882,
+        "queueOperations": 2155,
+        "r2ClassA": 867310,
+        "r2ClassB": 8705470
       },
       "maxParentCalls": 38,
       "maxParentQueries": 16,
@@ -228,10 +236,10 @@
         "r2StorageWithRetentionForecast"
       ],
       "publicationCapacity": {
-        "requests": 234,
-        "reads": 1126,
-        "writes": 92,
-        "queueOperations": 44
+        "requests": 231,
+        "reads": 1106,
+        "writes": 91,
+        "queueOperations": 43
       },
       "storageRemaining": {
         "steady": -487616300,

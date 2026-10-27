@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-27T05:59:16.081Z",
+  "after": "Five native maximum repetitions",
+  "status": 200,
+  "value": {
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "WEUR",
+      "served_by_colo": "CDG",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 0.169
+      },
+      "duration": 0.169,
+      "changes": 0,
+      "last_row_id": 9,
+      "changed_db": false,
+      "size_after": 1372160,
+      "rows_read": 5,
+      "rows_written": 0,
+      "total_attempts": 1
+    },
+    "results": [
+      {
+        "candidates": 5,
+        "retainedErrors": 0,
+        "retainedSources": 0
+      }
+    ]
+  }
+}
