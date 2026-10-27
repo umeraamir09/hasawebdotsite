@@ -42,6 +42,10 @@ The policy removes Free-tier feasibility blockers from Phase 24 and budget-relat
 3. Continue downstream phases when their actual implementation dependencies are integrated. Keep S-9 validation with dependent serving/withdrawal work; complete account deletion, asset GC and recovery against sealed/current/retained references.
 4. In Phase 52 prepare separate production configurations and a release checklist. At launch preparation, upgrade, perform isolated paid-provider verification and reconcile the measured monthly budget. Only then activate real routes/consumers/cron and run release smoke/acceptance checks through Phases 53–54.
 
+## PR and integration status
+
+The owner requires a separate session branch and PR. Changes are proposed on `docs/paid-launch-policy`; do not push directly to main or merge without the normal owner review. Local `main` was restored to its starting `5564c31` after candidate testing; the remote main was never changed. The [full candidate gate](../specs/2026-10-24-s8-dispatch-feasibility/evidence/integration-869aa40.json) passed all 13 commands at `869aa40`. The [preserved Phase 24 audit](../specs/2026-10-24-immutable-publication/results.md) now distinguishes this pending PR integration from the superseded Free-budget blocker. After merge, rerun only checks invalidated by integration, then proceed locally without an early subscription purchase.
+
 ## Sources
 
 - [Workers pricing](https://developers.cloudflare.com/workers/platform/pricing/)

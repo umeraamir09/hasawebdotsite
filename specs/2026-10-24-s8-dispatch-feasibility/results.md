@@ -13,6 +13,14 @@ Final paid native CPU/cold/error behavior, positive publication start, scheduled
 Changed the hosting target and the timing of provider-budget verification, not owner-facing functionality. Updated architecture, roadmap, implementation/workflow baseline, onboarding/acceptance/product guidance, subsystem READMEs, S-8 protocol/cost interpretation and linked historical spike entry notes. Preserve numerical evidence, original approvals and the prior blocked Phase 24 audit; append its current local/release split after integration. No phase completion box is checked by this decision.
 
 
+### PR candidate verification and shared-base status
+
+The owner requested a separate session branch and PR instead of direct main changes. Local `main` was briefly fast-forwarded during integration testing, then restored to its exact starting revision `5564c31` after preserving every commit on `docs/paid-launch-policy`. Nothing was pushed to main. Merge this PR before dependent Phase 24 application changes begin; local authorization is recorded, but integration into shared main is not yet complete.
+
+The [candidate full gate](evidence/integration-869aa40.json) passed all 13 commands on clean revision `869aa408c6108f96f10efbc40a1d775058ae44ed`, with 456 unit tests, every build, 32 S-8 groups and all auth/persistence/uploads/draft/autosave/editor/runtime/routing suites. This run exercises the default logical batch 16 as additional correctness coverage; earlier native/quota batch-32 receipts remain separate measurements. No paid-provider pass is claimed.
+
+The [first root integration run](evidence/integration-discovery-failure-5e81f2b.json) failed because default Vitest discovery collected tests inside other `.wrangler/worktrees` checkouts. Commit `869aa40` excludes generated `.wrangler` state and preserves all 41 active-checkout test files. The complete rerun passed; no test failure was waived. Later edits only record the owner decision, linked historical supersessions, this PR boundary and the preserved Phase 24 audit, so they do not invalidate the passing application gate.
+
 ## Historical Free-target outcome, before the owner decision
 
 The inactive `s8-v3` implementation passes the full local gate and the deployed content matrix, but **S-8 feasibility remains unverified and Phase 24 remains blocked**. Native Queue CPU exceeds the required 10 ms p95. The complete shared forecast exceeds the Free Queue allowance for dense content. A valid gallery plus Face Reveal draft also disproves storage fit for the current separate private/public asset copies. No completion approval, integration, production activation or Phase 24 implementation is recorded.

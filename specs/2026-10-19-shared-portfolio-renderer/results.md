@@ -1,5 +1,7 @@
 # Phase 16 results
 
+October 27, 2026 supersession: the owner approved [Workers Paid at launch and local development now](../../docs/deployment-policy.md). Free-only CPU/quota fit and prohibitions on planning a paid launch no longer block local implementation. Preserve original measurements, phase approvals, renderer/security/content contracts and S-9 withdrawal requirements. Use the integrated S-8 local milestone; final native paid verification is a release gate. No subscription change occurs during local development.
+
 ## Owner-approved completion, October 19, 2026
 
 The owner authorized Phase 16 checkoff and a pull request if a final light review found no blocker. The lead reviewed the acceptance criteria, current rendering/preview/control boundaries, repaired avatar CSS, safety policies and completed evidence without subagents. No remaining Phase 16 blocker was found. All 14 renderer tests passed again. The existing 27 passing browser groups, 33 repaired regression cases, six direct source comparisons, 340 workspace tests and twelve successful builds remain the verification basis. This was a light review, not another full browser/build run.

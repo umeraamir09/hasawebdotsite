@@ -1,5 +1,7 @@
 # Phase 08 acceptance criteria
 
+October 27, 2026 supersession: the owner approved [Workers Paid at launch and local development now](../../docs/deployment-policy.md). Free-only CPU/quota fit and prohibitions on planning a paid launch no longer block local implementation. Preserve original measurements, phase approvals, renderer/security/content contracts and S-9 withdrawal requirements. Use the integrated S-8 local milestone; final native paid verification is a release gate. No subscription change occurs during local development.
+
 - A repeatable command executes actual Cloudflare Workflows against local D1 and R2, with near-limit portfolio, case-study and resume fixtures.
 - Ordered streamed output matches independently rendered expected bytes; intermediate R2 objects stay below the 32-source fan-in bound. Step results contain references rather than HTML.
 - A fault after an R2 write retries idempotently. A permanently failed candidate leaves the prior pointer intact. Competing candidates have one compare-and-swap winner with complete pages.

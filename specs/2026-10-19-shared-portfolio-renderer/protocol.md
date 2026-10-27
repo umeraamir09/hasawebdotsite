@@ -1,5 +1,7 @@
 # Phase 16 renderer protocol
 
+October 27, 2026 supersession: the owner approved [Workers Paid at launch and local development now](../../docs/deployment-policy.md). Free-only CPU/quota fit and prohibitions on planning a paid launch no longer block local implementation. Preserve original measurements, phase approvals, renderer/security/content contracts and S-9 withdrawal requirements. Use the integrated S-8 local milestone; final native paid verification is a release gate. No subscription change occurs during local development.
+
 October 20 supersession note. Phase 17 replaces the whole-model preview wire format and browser envelope with the acknowledged chunk protocol in the [current component contract](../../packages/components/README.md#browser-adapter). The original Phase 16 measurements and fixture evidence below remain historical. Static fragment and publication constraints are unchanged.
 
 Recorded October 19, 2026. The [selected design](design.md) supersedes both retained exploration candidates. This increment adds reusable renderer code and isolated evidence. It does not activate editor, public serving, publication or mandatory signup routes.

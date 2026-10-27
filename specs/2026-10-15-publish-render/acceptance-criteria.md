@@ -1,5 +1,7 @@
 # Acceptance criteria
 
+October 27, 2026 supersession: the owner approved [Workers Paid at launch and local development now](../../docs/deployment-policy.md). Free-only CPU/quota fit and prohibitions on planning a paid launch no longer block local implementation. Preserve original measurements, phase approvals, renderer/security/content contracts and S-9 withdrawal requirements. Use the integrated S-8 local milestone; final native paid verification is a release gate. No subscription change occurs during local development.
+
 - One command bundles and runs the production React renderer in local workerd without credentials or deployment.
 - Deterministic portfolio, case-study, and resume fixtures remain within the 1 MiB draft ceiling. Byte sizes and node counts are recorded.
 - Evidence includes first-render and warm timing distributions, output sizes, runtime versions, raw samples, and sampled CPU profiles with an explicit measurement method.
