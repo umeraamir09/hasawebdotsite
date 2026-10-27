@@ -1,6 +1,15 @@
 # Shared cost calculation
 
-## Current `s8-v3` verdict, October 27, 2026
+## Paid launch interpretation, October 27, 2026
+
+The [owner decision](../../docs/deployment-policy.md) targets Workers Paid at launch and removes Free-only capacity as a local implementation blocker. Upgrade only in launch preparation. The Free comparisons and counter files below remain unchanged evidence, not paid-provider acceptance.
+
+Using the established workload and 30 days, the most expensive measured dense scenario projects 1,872,480 Worker requests, 139,953,750 D1 reads, 2,552,790 D1 writes and 313,290 Queue operations/month. These are below the current Paid included operation allowances. R2 operation forecasts are also below their included allowances, but storage above 10 GB-month is separately metered. The $5 minimum is not a total bill ceiling. Native aggregate CPU billing is unknown: p95 cannot be multiplied into an average-cost claim. Reconcile the final paid deployment, retained versions, storage peaks and provider prices before public launch.
+
+CPU p95 above 10 ms now identifies work to monitor rather than a Free-only local stop. Retain finite batches, deadlines, recovery and measured internal-call limits. Do not shrink owner content, assume unlimited paid capacity, relabel failed/partial observations, or switch to the rejected Workflow design without a new implementation and verification.
+
+
+## Historical `s8-v3` Free-target verdict
 
 The complete required fit still fails. The dense scenario exceeds Queue operations, maximum content has no passing native CPU result, and permitted asset inventories exceed storage. [Current provider counters and forecasts](evidence/shared-ledger-s8-v3.json) supersede the historical tables below. Reproduce them with `node scripts/publication-dispatch-costs.mjs specs/2026-10-24-s8-dispatch-feasibility/evidence/provider-s8-v3-quota-results.json output.json`. This calculator does not certify CPU, future handlers or general storage feasibility.
 

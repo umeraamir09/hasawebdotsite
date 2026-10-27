@@ -1,5 +1,7 @@
 # Agent workflow
 
+Budget decision, October 27, 2026: apply the [paid-at-launch policy](deployment-policy.md). The owner authorized local S-8 reuse and removal of Free-only development blockers. Integrate the named milestone and check affected code before consumers start. Paid account activation and native paid verification belong to launch preparation; do not require a subscription during local work. All other dependency, completion-approval and privacy rules below remain in force.
+
 Updated October 20, 2026 after the owner's workflow review. This is current process guidance. The roadmap owns dependencies and approvals, product/acceptance documents own behavior, and architecture/package contracts own technical decisions. Historical specs retain evidence, not authority over how every future task must be run.
 
 ## Start and record the work

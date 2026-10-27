@@ -1,6 +1,8 @@
 # Inactive publication preparation and dispatch
 
-This is the S-8 prerequisite implementation, not a publication endpoint or a live version commit. Phase 24 consumes the measured code only after owner approval and integration. The public site Worker and existing live pointer remain unchanged.
+October 27, 2026: the [paid-at-launch policy](../../docs/deployment-policy.md) authorizes this tested `s8-v3` scaffold as the S-8 local development milestone. Integrate and check it before local Phase 24. Final native paid verification and production activation are release gates; upgrading the account is deferred until launch preparation.
+
+This is the S-8 prerequisite implementation, not a publication endpoint or a live version commit. The owner has authorized local reuse under the paid-at-launch policy; Phase 24 consumes the milestone after integration and applicable local checks. The public site Worker and existing live pointer remain unchanged.
 
 ## Accepted source and renderer units
 

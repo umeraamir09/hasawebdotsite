@@ -1,5 +1,7 @@
 # hasaweb.site
 
+Launch targets Workers Paid, currently $5/month minimum. Develop locally without upgrading; upgrade only during launch preparation before public activation. See the [owner-approved deployment policy](docs/deployment-policy.md) for current budget and release gates. The product remains free to owners.
+
 Use the [roadmap](docs/roadmap.md) for owner-approved phase status, [implementation status](docs/implementation-status.md) for current code and constraints, and the [agent workflow](docs/agent-workflow.md) for parallel work, concise phase records and local checks. Shared saving/recovery, renderer and editor adapters are implemented. Editor activation, publication and guided setup remain pending.
 
 ## Setup

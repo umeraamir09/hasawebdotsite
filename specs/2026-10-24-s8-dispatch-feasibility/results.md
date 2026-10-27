@@ -1,6 +1,19 @@
 # S-8 bounded dispatcher prerequisite
 
-## Current outcome, October 27, 2026
+## Current decision, October 27, 2026
+
+The owner approved [Workers Paid at launch, with local development continuing now](../../docs/deployment-policy.md). The earlier Free-only CPU, Queue and storage failures below remain true measurements, but no longer block local Phase 24. Upgrade only during launch preparation, before public activation; no billing or remote resource change is authorized now.
+
+The named S-8 local development milestone reuses tested application `5b796accfac88bf40b2875e606b79c52192a3e16` and evidence/tooling through `acc77f2`. The owner instruction authorizes local continuation on this scaffold after shared-base integration and applicable local checks. This is not a claim that S-8 passed Free feasibility, completed Phase 24, or passed paid-provider production acceptance. The current [implementation sequence and release gates](../../docs/deployment-policy.md#implementation-sequence) control dependent work.
+
+Final paid native CPU/cold/error behavior, positive publication start, scheduled cleanup, monthly costs, D1 allocation, R2 retention/peaks and actual public withdrawal must pass at launch. Keep all bounded-work, authorization, recovery and content contracts. The account remains Free until launch preparation. The 25-portfolio discussion did not change the established workload.
+
+### Documentation impact of this decision
+
+Changed the hosting target and the timing of provider-budget verification, not owner-facing functionality. Updated architecture, roadmap, implementation/workflow baseline, onboarding/acceptance/product guidance, subsystem READMEs, S-8 protocol/cost interpretation and linked historical spike entry notes. Preserve numerical evidence, original approvals and the prior blocked Phase 24 audit; append its current local/release split after integration. No phase completion box is checked by this decision.
+
+
+## Historical Free-target outcome, before the owner decision
 
 The inactive `s8-v3` implementation passes the full local gate and the deployed content matrix, but **S-8 feasibility remains unverified and Phase 24 remains blocked**. Native Queue CPU exceeds the required 10 ms p95. The complete shared forecast exceeds the Free Queue allowance for dense content. A valid gallery plus Face Reveal draft also disproves storage fit for the current separate private/public asset copies. No completion approval, integration, production activation or Phase 24 implementation is recorded.
 

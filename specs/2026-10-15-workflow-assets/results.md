@@ -1,5 +1,7 @@
 # Phase 08 workflow and withdrawal results
 
+October 27, 2026 supersession: the [owner-approved paid-at-launch policy](../../docs/deployment-policy.md) removes this record's Free-only feasibility requirements as local development blockers. Preserve all original failures, API-limit findings and approvals below. Reuse the integrated S-8 local milestone; verify final paid behavior before launch. S-9 withdrawal/privacy requirements still apply to dependent activation.
+
 Recorded October 15, 2026. This is an architecture feasibility experiment, not the production publish pipeline. The owner approved Phase 08 completion on October 15, 2026, with the recorded fallback requirements. The roadmap checkbox is checked.
 
 ## Decision
