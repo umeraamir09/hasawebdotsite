@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hasaweb/config": "workspace:*"
+    "@hasaweb/config": "workspace:*",
+    "@hasaweb/render": "workspace:*"
   },
   "devDependencies": {
     "typescript": "7.0.2",

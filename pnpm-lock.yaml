@@ -245,6 +245,9 @@ importers:
       '@hasaweb/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@hasaweb/render':
+        specifier: workspace:*
+        version: link:../../packages/render
     devDependencies:
       typescript:
         specifier: 7.0.2

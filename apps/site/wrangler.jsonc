@@ -3,7 +3,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": false,
   "vars": {
-    "APP_ENV": "local"
+    "APP_ENV": "local",
+    "ASSET_ORIGIN": "https://assets.hasaweb.site"
   },
   "d1_databases": [
     {

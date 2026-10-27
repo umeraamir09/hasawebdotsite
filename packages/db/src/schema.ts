@@ -583,3 +583,23 @@ export const publicationPage = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.candidateId, t.ordinal] })],
 );
+
+// Receipts outlive candidate cleanup so delayed retries cannot move the pointer.
+export const publicationCommit = sqliteTable(
+  "publication_commit",
+  {
+    candidateId: text("candidate_id").primaryKey(),
+    portfolioId: text("portfolio_id")
+      .notNull()
+      .references(() => portfolio.id, { onDelete: "cascade" }),
+    payloadHash: text("payload_hash").notNull(),
+    version: integer("version").notNull(),
+    address: text("address").notNull(),
+    committedAt: integer("committed_at").notNull(),
+    applied: integer("applied").notNull(),
+  },
+  (t) => [
+    check("publication_commit_applied", sql`${t.applied} = 1`),
+    check("publication_commit_version", sql`${t.version} > 0`),
+  ],
+);
