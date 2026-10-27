@@ -180,10 +180,22 @@ for (const run of report.runs.filter((run) =>
     r2ClassB: 2 * (snapshotParts + snapshotAssembly - 1) + pageCount + 1,
   };
   for (const key of Object.keys(per)) per[key] += publicationForecast[key];
-  const replayBatches = Math.ceil(steps.length * 0.1);
+  const futureWake = {
+    requests: 1,
+    reads: 10,
+    writes: 4,
+    queueOperations: 3,
+    r2ClassA: 3,
+    r2ClassB: 32,
+  };
+  const replayCosts = [
+    ...combined,
+    ...Array.from({ length: deliveryTasks }, () => futureWake),
+  ];
+  const replayBatches = Math.ceil(replayCosts.length * 0.1);
   const replay = {};
   for (const key of Object.keys(per))
-    replay[key] = combined
+    replay[key] = replayCosts
       .map((row) => row[key])
       .sort((a, b) => b - a)
       .slice(0, replayBatches)
@@ -191,7 +203,7 @@ for (const run of report.runs.filter((run) =>
   const replayWithReplacementUpper = Object.fromEntries(
     Object.keys(per).map((key) => [
       key,
-      replayBatches * Math.max(...combined.map((row) => row[key])),
+      replayBatches * Math.max(...replayCosts.map((row) => row[key])),
     ]),
   );
   const cleanupBatches = run.cleanup?.length
@@ -218,7 +230,7 @@ for (const run of report.runs.filter((run) =>
     failed[key] =
       per[key] +
       cleanupCost[key] +
-      4 * Math.max(...combined.map((row) => row[key]));
+      4 * Math.max(...replayCosts.map((row) => row[key]));
   const projected = {};
   for (const key of ["requests", "reads", "writes", "queueOperations"])
     projected[key] =
@@ -262,6 +274,7 @@ for (const run of report.runs.filter((run) =>
     pollingCalls,
     perPublication: per,
     replayBatches,
+    futureWakeReplayForecast: futureWake,
     replayReserve: replay,
     replayWithReplacementUpper,
     cleanup: cleanupCost,
@@ -376,7 +389,7 @@ const result = {
     "Shared request forecast adds 2500 graph requests, 250 GitHub jobs, 450 contact attempts, ten notice jobs, 90 submissions and 288 shared sweeps.",
     "Shared R2 forecast assumes 60 uploads and 100 orphan-list calls daily, plus 36000 reads daily with no public edge-cache savings. Add the bounded maximum four two-bucket tombstone checks per five-minute sweep.",
     "The future contact/GitHub handlers retain a separate forecast of 100000 reads and 6000 writes daily. Measured worst-case S-8 sweeper D1 work is reserved additionally for all 288 daily shared sweeps; their Worker requests and maximum eight R2 lists per sweep are already counted in shared forecasts.",
-    "Ten percent replay selects distinct logical batches once. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
+    "Ten percent replay selects distinct logical batches once, including forecast delivery tasks. Each future task has a conservative replay envelope of one wake, ten reads, four writes, three R2 Class A calls and 32 R2 Class B calls for bounded sixteen-input head/read assembly. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
     "The publication start request conservatively counts both web and jobs. Provider fixture seeding and control polling are excluded from measured counters.",
     "Publication forecast keeps owner polling every five seconds for at least five minutes, two Workers and ten D1 reads per poll. It separately reserves bounded snapshot chunks/assembly, document-shell copies, a size-based manifest, 404/robots/sitemap and generated style retention. Each future task reserves six reads, four writes and one complete Queue wake. These are forecasts, not implemented CPU proof.",
     "Existing art/style/font hashes have a measured inventory. The model conservatively reserves one complete static-library refresh daily plus per-publication existence reads; those bytes are retained once globally in the storage forecast.",
