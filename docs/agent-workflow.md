@@ -85,6 +85,8 @@ pnpm verify --profile=checks
 
 `--build=web,site,jobs` selects affected application builds for ordinary profiles. Include every consuming application; a schema, public contract, dependency or toolchain change requires `full`. Full/runtime profiles always build all applications. Test/tooling-only changes can use `checks`; documentation-only changes use `docs`. Existing individual commands remain available for focused work.
 
+Unit-test discovery excludes `.wrangler` generated state and nested worktrees. Run each worktree's own suites through its local verification profile; never collect another checkout's tests from the shared root.
+
 A local gate is mandatory before completion review. Passing CI is additional evidence. Repeat a gate only when relevant source, contracts, build inputs, environment or integration changed. A later documentation-only edit does not invalidate a passing application gate. Review ordinary changes through the diff. High-risk changes need a separate review of concrete access, race, failure, recovery, migration, withdrawal or budget behavior. Request that review through an authorized chat; do not automatically create chats or subagents.
 
 The confirmed browser/viewport and provider matrix in architecture section 13 remains the release requirement. Incremental checks cover affected behavior, including keyboard/focus, responsive layouts and failures where relevant. Existing Phase 53/54 acceptance and usability checks remain required. New hot handlers and changed performance boundaries still need their documented measurements.
