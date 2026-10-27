@@ -416,14 +416,14 @@ const result = {
     d1ExistingMeasuredLocalAllocation: 426217472,
     d1RemainingBeforeCandidates: budget.d1Bytes - 426217472,
     sourceAdmissionLimit: 4,
-    retainedRecordLimit: 128,
+    pendingCandidateAdmissionLimit: 128,
     sourcePayloadOnlyAtFourCandidates:
       Math.max(
         0,
         ...report.runs.map((run) => run.privateWorkingState?.sourceBytes ?? 0),
       ) * 4,
     model:
-      "Baseline is the historical local page-allocation measurement, not current production usage. Candidate payload is a lower bound; row/index pages, transfer/page receipts and retained tombstones add storage. Admission bounds sources to four and records to 128. Ready sources expire after one hour. Cleaned rows physically retire after at least 24 hours and confirmed absence; failed output cleanup keeps a scrubbed ticket until explicit retry. Measured allocation/churn remains a separate provider check.",
+      "Baseline is the historical local page-allocation measurement, not current production usage. Candidate payload is a lower bound; row/index pages, transfer/page receipts and retained tombstones add storage. Admission bounds sources to four and pending candidates to 128. Referenced retained versions release their slots and require separate storage capacity accounting. Deleting references restores cleanup tickets, which can temporarily exceed 128 and block new admission. Unreferenced ready sources expire after one hour. Cleaned rows physically retire after at least 24 hours and confirmed absence; failed output cleanup keeps a scrubbed ticket until explicit retry. Measured allocation/churn remains a separate provider check.",
     r2MaximumAssetForecast: {
       portfolios: 100,
       privateBytesPerPortfolio: 30 * 1024 * 1024,
