@@ -10,6 +10,7 @@ export function measureDispatch<T extends DispatchEnv>(env: T) {
       r2Deletes: 0,
       queueWrites: 0,
       sourceCalls: 0,
+      platformCalls: 0,
       sourceReads: 0,
       sourceWrites: 0,
       sourceQueries: 0,
@@ -69,6 +70,17 @@ export function measureDispatch<T extends DispatchEnv>(env: T) {
       SITES_BUCKET: bucket(env.SITES_BUCKET),
       PUBLIC_ASSETS_BUCKET: bucket(env.PUBLIC_ASSETS_BUCKET),
       PRIVATE_SOURCE: source,
+      PLATFORM_ASSETS: new Proxy(env.PLATFORM_ASSETS, {
+        get(target, key) {
+          if (key === "fetch")
+            return (...args: Parameters<Fetcher["fetch"]>) => {
+              counts.platformCalls++;
+              return target.fetch(...args);
+            };
+          const value = Reflect.get(target, key);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      }),
       PUBLICATION_QUEUE: queue,
     },
     counts: () => ({ ...counts, ...db.counts }),

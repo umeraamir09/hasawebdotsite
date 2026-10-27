@@ -1,0 +1,299 @@
+{
+  "recordedAt": "2026-10-27T09:10:43.155Z",
+  "baseRevision": "e3f313b9f6bd66672e7f5448c46399907d967c5f",
+  "branch": "feat/24-immutable-publication",
+  "implementationFilesSha256": "8e26c4f918cd3da66b73967f4aa7a6a2ced836a23f1e4ebfd05ad5cae8b9e525",
+  "implementationFiles": [
+    "apps/jobs/integration/publication-dispatch-worker.ts",
+    "apps/jobs/integration/publication-fixtures.ts",
+    "apps/jobs/integration/publication-measure.ts",
+    "apps/jobs/package.json",
+    "apps/jobs/src/publication-dispatch.ts",
+    "apps/jobs/src/publication-finalization.ts",
+    "apps/web/lib/draft/publication.test.ts",
+    "apps/web/lib/draft/publication.ts",
+    "packages/components/src/index.ts",
+    "packages/components/src/portfolio.tsx",
+    "packages/db/migrations/0011_publication_sealing.sql",
+    "packages/db/migrations/meta/0011_snapshot.json",
+    "packages/db/migrations/meta/_journal.json",
+    "packages/db/src/publication-facts.ts",
+    "packages/db/src/publication-index.ts",
+    "packages/db/src/publication-tasks.ts",
+    "packages/db/src/schema.ts",
+    "packages/render/src/render.tsx",
+    "scripts/build-publication-platform.mjs",
+    "scripts/publication-dispatch-costs.mjs",
+    "scripts/publication-dispatch.mjs",
+    "turbo.json"
+  ],
+  "fullProfileCoverage": "passed across original retained successful commands and the resumed locked run; no failure waived",
+  "coverage": [
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "check"],
+      "exitCode": 0,
+      "durationMs": 34496
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "command": ["pnpm", "build"],
+      "exitCode": 0,
+      "durationMs": 33916
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "command": ["pnpm", "test:renderer"],
+      "exitCode": 0,
+      "durationMs": 35665
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "command": ["pnpm", "test:auth:browser"],
+      "exitCode": 0,
+      "durationMs": 124488
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "command": ["pnpm", "test:persistence"],
+      "exitCode": 0,
+      "durationMs": 81103
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "command": ["pnpm", "test:uploads"],
+      "exitCode": 0,
+      "durationMs": 136204
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:publication-dispatch"],
+      "exitCode": 0,
+      "durationMs": 216928
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:draft-api"],
+      "exitCode": 0,
+      "durationMs": 129794
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:autosave"],
+      "exitCode": 0,
+      "durationMs": 222572
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:editor"],
+      "exitCode": 0,
+      "durationMs": 168751
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:runtime"],
+      "exitCode": 0,
+      "durationMs": 63184
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "test:runtime:smoke"],
+      "exitCode": 0,
+      "durationMs": 21380
+    },
+    {
+      "receipt": "2026-10-27T08-56-21.617Z-GkOJjq",
+      "command": ["pnpm", "spike:routing"],
+      "exitCode": 0,
+      "durationMs": 4402
+    }
+  ],
+  "resumptionReason": "Only the new privacy fixture changed after the original run stopped. Builds and renderer/auth/persistence/uploads were unaffected. Checks and every remaining full-profile command passed in the resumed run.",
+  "counts": {
+    "unitTests": 458,
+    "unitFiles": 41,
+    "rendererBrowserGroups": 27,
+    "authChecks": 30,
+    "authBrowserJourneys": 19,
+    "persistenceChecks": 85,
+    "uploadGroups": 11,
+    "publicationGroups": 41,
+    "publicationCases": 15,
+    "draftApiGroups": 17,
+    "autosaveBrowserChecks": 49,
+    "editorBrowserGroups": 38,
+    "routingBoundaries": 31
+  },
+  "publication": [
+    {
+      "kind": "small",
+      "inputBytes": 604,
+      "dispatchCheckpoints": 25,
+      "manifest": {
+        "files": 10,
+        "bytes": 2826,
+        "sha256": "e77df383f1b6d81f925e6fe4d36453b16d2c607077acb7398a831dac7c78d62f"
+      }
+    },
+    {
+      "kind": "mixed",
+      "inputBytes": 1793,
+      "dispatchCheckpoints": 44,
+      "manifest": {
+        "files": 14,
+        "bytes": 3796,
+        "sha256": "f60547c28f1d37864629e4a3c0d282a1d809928f72fb6d8b8dbfdac53c9b4c5c"
+      }
+    },
+    {
+      "kind": "privacy",
+      "inputBytes": 1860,
+      "dispatchCheckpoints": 36,
+      "manifest": {
+        "files": 12,
+        "bytes": 3303,
+        "sha256": "d425910b3bbd55ef8da6965149a3167d13aaa58297fd9b87d2bdfb96dfc81af5"
+      }
+    },
+    {
+      "kind": "unicode",
+      "inputBytes": 109756,
+      "dispatchCheckpoints": 48,
+      "manifest": {
+        "files": 14,
+        "bytes": 3804,
+        "sha256": "f02a3b12e2da275f5359f0b1d0e7cb3d6f073078bc684cd602daca86e5c50d3d"
+      }
+    },
+    {
+      "kind": "surrogate",
+      "inputBytes": 1771,
+      "dispatchCheckpoints": 44,
+      "manifest": {
+        "files": 14,
+        "bytes": 3796,
+        "sha256": "36bfdb3f63e31ea3b046041b0568b030236cd44fa8a5559d643cd8adcbd71994"
+      }
+    },
+    {
+      "kind": "surrogate-boundary",
+      "inputBytes": 109533,
+      "dispatchCheckpoints": 48,
+      "manifest": {
+        "files": 14,
+        "bytes": 3804,
+        "sha256": "c7e442172b7706dba46022aa683c6ede0c9ab699f9ed9e5af815812dbf3fb681"
+      }
+    },
+    {
+      "kind": "description",
+      "inputBytes": 27787,
+      "dispatchCheckpoints": 44,
+      "manifest": {
+        "files": 14,
+        "bytes": 3800,
+        "sha256": "d2b2e6bf56e21ada08be17af2b65416ce6e594ebac2647d7ec3ac932359fdb7f"
+      }
+    },
+    {
+      "kind": "deep",
+      "inputBytes": 1896,
+      "dispatchCheckpoints": 68,
+      "manifest": {
+        "files": 10,
+        "bytes": 2827,
+        "sha256": "9b7e3716c604c2082604c7fc74d8fd8c2f218af2d1b11e95286d731014969269"
+      }
+    },
+    {
+      "kind": "dense",
+      "inputBytes": 520383,
+      "dispatchCheckpoints": 141,
+      "manifest": {
+        "files": 10,
+        "bytes": 2832,
+        "sha256": "1ef55012d66549f54f937b2bb14dc115d3ad2a3fb68a0a3759a6051ad3b00ea7"
+      }
+    },
+    {
+      "kind": "hands",
+      "inputBytes": 1816,
+      "dispatchCheckpoints": 44,
+      "manifest": {
+        "files": 14,
+        "bytes": 3798,
+        "sha256": "4748ae7d9ca1ede6d73f948b72feb153eeb7e11270ed19ed58deddc215319c22"
+      }
+    },
+    {
+      "kind": "cat",
+      "inputBytes": 1814,
+      "dispatchCheckpoints": 46,
+      "manifest": {
+        "files": 16,
+        "bytes": 4484,
+        "sha256": "9b5df987c5ba0543356f9dbb6748bcdbbdd68a6ef3cf1432aa52ca0e8d7f0ab5"
+      }
+    },
+    {
+      "kind": "face",
+      "inputBytes": 1792,
+      "dispatchCheckpoints": 47,
+      "manifest": {
+        "files": 15,
+        "bytes": 4040,
+        "sha256": "80daf4ebc9d529691bbb3bed6a1de202d25a40c70d111cb5ad41de441e942703"
+      }
+    },
+    {
+      "kind": "assets",
+      "inputBytes": 7099,
+      "dispatchCheckpoints": 84,
+      "manifest": {
+        "files": 18,
+        "bytes": 4788,
+        "sha256": "a76fd84f94965aee815b59ac9bd7686644bc53ee2787dc14c04e8005eef075bf"
+      }
+    },
+    {
+      "kind": "assets-face",
+      "inputBytes": 7098,
+      "dispatchCheckpoints": 87,
+      "manifest": {
+        "files": 19,
+        "bytes": 5031,
+        "sha256": "3151e8a6abda9fa8285d6fb3387580d7b77d5046c35261297aa60f22c6be335d"
+      }
+    },
+    {
+      "kind": "max",
+      "inputBytes": 1048576,
+      "dispatchCheckpoints": 97,
+      "manifest": {
+        "files": 14,
+        "bytes": 3809,
+        "sha256": "97a9689819423b51695f466461d3f7690d08dfa569eddf178591bde380f7e91b"
+      }
+    }
+  ],
+  "maxSuccessfulParentInvocationApiCalls": 40,
+  "platform": {
+    "files": 5,
+    "bytes": 766135,
+    "hashesAndCssDependencies": "passed",
+    "perCandidateFetchCounts": "4 normally, 6 with selected cat art, verified against counters"
+  },
+  "cleanup": "No suite listening ports remained in 8800-8899, 9400-9599 after completion. Ignored evidence retained.",
+  "limitations": [
+    "All candidate and provider fixtures are synthetic and local.",
+    "No native paid-provider CPU/capacity, cost/storage or cache-withdrawal acceptance is claimed.",
+    "The budget helper retains historical comparison/forecast assumptions; it is not the final paid launch model.",
+    "Separate publication/privacy/recovery review and owner approval are pending.",
+    "No public commit/serving/Publish UI or production binding is activated."
+  ],
+  "documentationGate": {
+    "receipt": "2026-10-27T11-11-24.200Z-L10hSS",
+    "status": "passed",
+    "changedLinksAndUntrackedWhitespace": "passed"
+  }
+}

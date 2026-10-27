@@ -1,0 +1,7 @@
+# Immutable candidate preparation
+
+[Phase 24 results](../../../../specs/2026-10-24-immutable-publication/results.md) and [protocol](../../../../specs/2026-10-24-immutable-publication/protocol.md) define the complete private artifact contract. Run `pnpm verify --profile=publication` for the mapped fixture. Shared persistence/contracts require `full` for completion.
+
+The keyed fixture uses real local workerd, D1/R2, shared renderer code, a named web-only private-source entry and the compiled platform package. It creates a synthetic owner/session/portfolio and advances the dormant candidate dispatcher. It verifies exact-revision capture, whole documents and manifests, every retained file size/hash, sample/private-field omission, enabled/disabled Face assets, selected art, maximum/dense/Unicode content and maximum-size upload copies. It injects source, R2, checkpoint and deletion failures; retries and cleanup must preserve the prior version and claim. Retained version references must block expiry/cleanup.
+
+The shared `preparePublication` helper is covered by controller tests. Its admission callback is a dormant Phase 26 adapter, not an implemented public HTTP operation or Publish button. This fixture does not prove the signup-to-publication journey, live serving, paid-provider CPU/cost or S-9 cache withdrawal. Complete additional-page/PDF/appearance behavior remains in its respective phases. Evidence follows the publication suite directory in the verification summary; preserve failed runs as well.

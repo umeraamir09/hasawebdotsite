@@ -317,7 +317,7 @@ export function PortfolioSection({ component }: { component: ComponentModel }) {
     </PortfolioFrame>
   );
 }
-export function Portfolio({ model }: { model: PortfolioModel }) {
+export function PortfolioLayout({ children }: { children: ReactNode }) {
   return (
     <div className="pf-portfolio">
       <div className="pf-toolbar">
@@ -329,12 +329,20 @@ export function Portfolio({ model }: { model: PortfolioModel }) {
         </button>
       </div>
       <main id="portfolio-content" tabIndex={-1}>
-        <PortfolioProfile profile={model.profile} />
-        {model.components.map((component) => (
-          <PortfolioSection key={component.id} component={component} />
-        ))}
+        {children}
       </main>
       <footer className="pf-footer">Made with hasaweb.site</footer>
     </div>
+  );
+}
+
+export function Portfolio({ model }: { model: PortfolioModel }) {
+  return (
+    <PortfolioLayout>
+      <PortfolioProfile profile={model.profile} />
+      {model.components.map((component) => (
+        <PortfolioSection key={component.id} component={component} />
+      ))}
+    </PortfolioLayout>
   );
 }

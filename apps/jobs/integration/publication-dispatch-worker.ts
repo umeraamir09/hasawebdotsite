@@ -186,6 +186,23 @@ export default {
           status: object ? 200 : 404,
         });
       }
+      if (url.pathname === "/file") {
+        const key = url.searchParams.get("key") ?? "";
+        if (!key.startsWith(`candidate/${id}/`))
+          return reply("invalid key", 400);
+        const bucket =
+          url.searchParams.get("bucket") === "assets"
+            ? env.PUBLIC_ASSETS_BUCKET
+            : env.SITES_BUCKET;
+        const object = await bucket.get(key);
+        return new Response(object?.body ?? null, {
+          status: object ? 200 : 404,
+          headers: {
+            "Content-Type":
+              object?.httpMetadata?.contentType ?? "application/octet-stream",
+          },
+        });
+      }
       if (url.pathname === "/output") {
         const object = await env.SITES_BUCKET.get(
           `candidate/${id}/pages/${Number(url.searchParams.get("page") ?? 0)}.html`,

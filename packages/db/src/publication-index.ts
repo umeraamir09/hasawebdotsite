@@ -35,7 +35,7 @@ export async function publicationRetainsAsset(
 ) {
   return !!(await db
     .prepare(`SELECT 1 AS retained FROM publication_candidate c
-    WHERE c.portfolio_id=? AND c.source IS NOT NULL AND (
+    WHERE c.portfolio_id=? AND (c.source IS NOT NULL OR EXISTS(SELECT 1 FROM publish_version v WHERE v.candidate_id=c.id)) AND (
       NOT EXISTS(SELECT 1 FROM publication_candidate_index x WHERE x.candidate_id=c.id)
       OR EXISTS(SELECT 1 FROM publication_candidate_index x,json_each(x.value,'$.assets') r
         WHERE x.candidate_id=c.id AND json_extract(r.value,'$.id')=?)) LIMIT 1`)

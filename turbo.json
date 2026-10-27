@@ -39,7 +39,11 @@
     },
     "@hasaweb/jobs#build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/scripts/build-publication-platform.mjs"
+      ]
     }
   }
 }

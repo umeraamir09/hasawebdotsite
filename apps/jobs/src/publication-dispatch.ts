@@ -15,6 +15,7 @@ import {
 import { renderFragment } from "@hasaweb/render";
 import { componentContentSchema, createEmptyDraft } from "@hasaweb/schema";
 import { z } from "zod";
+import { finalizePublication } from "./publication-finalization";
 import {
   advancePreparation,
   cursorSchema,
@@ -30,6 +31,7 @@ export type DispatchEnv = {
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   PRIVATE_SOURCE: Fetcher;
+  PLATFORM_ASSETS: Fetcher;
   PUBLICATION_QUEUE: Queue<Wake>;
   ASSET_ORIGIN: string;
   PUBLICATION_TASK_BATCH?: string;
@@ -405,8 +407,10 @@ async function copyParts(
   env: DispatchEnv,
   keys: string[],
   destination: string,
+  shell?: { open: string; close: string },
 ) {
-  let bytes = 0;
+  const encoder = new TextEncoder();
+  let bytes = shell ? encoder.encode(shell.open + shell.close).byteLength : 0;
   for (const key of keys) {
     const object = await env.SITES_BUCKET.head(key);
     if (!object) throw new Error("Assembly input missing");
@@ -414,6 +418,7 @@ async function copyParts(
   }
   let activeReader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   async function* inputs() {
+    if (shell) yield encoder.encode(shell.open);
     for (const key of keys) {
       const object = await env.SITES_BUCKET.get(key);
       if (!object) throw new Error("Assembly input disappeared");
@@ -431,6 +436,7 @@ async function copyParts(
         activeReader = undefined;
       }
     }
+    if (shell) yield encoder.encode(shell.close);
   }
   const iterator = inputs();
   const input = new ReadableStream<Uint8Array>({
@@ -444,7 +450,17 @@ async function copyParts(
       await iterator.return();
     },
   });
-  await putBoundedStream(env.SITES_BUCKET, destination, input, bytes);
+  await putBoundedStream(
+    env.SITES_BUCKET,
+    destination,
+    input,
+    bytes,
+    destination.endsWith(".json")
+      ? "application/json"
+      : destination.endsWith(".xml")
+        ? "application/xml"
+        : "text/html; charset=utf-8",
+  );
 }
 async function assemble(
   env: DispatchEnv,
@@ -535,11 +551,9 @@ async function transfer(
       .bind(row.id)
       .first<{ n: number }>();
     if (incomplete?.n) throw new Error("Candidate page incomplete");
-    return {
-      cursor: "[]",
-      outputCount: row.output_count,
-      status: "ready" satisfies Candidate["status"],
-    };
+    return finalizePublication(env, row, (keys, destination, shell) =>
+      copyParts(env, keys, destination, shell),
+    );
   }
   const response = await env.PRIVATE_SOURCE.fetch(
     new Request("https://publication-source.internal/source", {
@@ -768,7 +782,7 @@ export async function runPublicationBatch(env: DispatchEnv, id: string) {
         const values = [row.id, row.sequence, row.lease_token, Date.now()];
         await env.DB.batch([
           env.DB.prepare(
-            `UPDATE publication_candidate SET source=NULL,owner_id='',portfolio_id='' WHERE ${guard}`,
+            `UPDATE publication_candidate SET source=NULL,facts=NULL,owner_id='',portfolio_id='' WHERE ${guard}`,
           ).bind(...values),
           ...[
             "publication_transfer",
@@ -813,7 +827,7 @@ export async function sweepPublicationTasks(env: DispatchEnv) {
       "id=? AND status='failed' AND last_error LIKE 'cleanup:%' AND lease_until<=?";
     await env.DB.batch([
       env.DB.prepare(
-        `UPDATE publication_candidate SET source=NULL,owner_id='',portfolio_id='',last_error='cleanup:exhausted' WHERE ${guard}`,
+        `UPDATE publication_candidate SET source=NULL,facts=NULL,owner_id='',portfolio_id='',last_error='cleanup:exhausted' WHERE ${guard}`,
       ).bind(row.id, now),
       ...[
         "publication_transfer",

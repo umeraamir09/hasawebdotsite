@@ -1,6 +1,7 @@
 import {
   AssetImage,
   PortfolioAvatar,
+  PortfolioLayout,
   PortfolioProfile,
   PortfolioProject,
   PortfolioSection,
@@ -198,4 +199,14 @@ export function unavailableResponse(): Response {
     '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portfolio unavailable</title><main><h1>Portfolio unavailable</h1><p>This portfolio is not available.</p></main></html>',
     { status: 404, headers },
   );
+}
+
+export function portfolioDocumentFrame() {
+  const marker = "HASA_CONTROLLED_PAGE_FRAME";
+  const html = renderToStaticMarkup(
+    <PortfolioLayout>{marker}</PortfolioLayout>,
+  );
+  const [open, close] = html.split(marker);
+  if (!open || !close) throw new Error("Portfolio frame missing");
+  return { open, close };
 }

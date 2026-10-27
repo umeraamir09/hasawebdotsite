@@ -33,6 +33,7 @@ const fields = [
   "r2Deletes",
   "queueWrites",
   "sourceCalls",
+  "platformCalls",
   "sourceReads",
   "sourceWrites",
   "sourceQueries",
@@ -179,6 +180,16 @@ for (const run of report.runs.filter((run) =>
       1,
     r2ClassB: 2 * (snapshotParts + snapshotAssembly - 1) + pageCount + 1,
   };
+  if (run.manifest) {
+    for (const key of Object.keys(publicationForecast))
+      publicationForecast[key] = 0;
+    publicationForecast.requests = 2 * pollingCalls;
+    publicationForecast.reads = 10 * pollingCalls;
+    publicationForecast.writes = 3;
+    deliveryForecast.totalTasks = 0;
+    deliveryForecast.note =
+      "Phase 24 complete delivery is included in observed counters. Only later owner polling and commit accounting are forecast separately; no duplicate delivery reserve is added.";
+  }
   for (const key of Object.keys(per)) per[key] += publicationForecast[key];
   const futureWake = {
     requests: 1,
@@ -190,7 +201,7 @@ for (const run of report.runs.filter((run) =>
   };
   const replayCosts = [
     ...combined,
-    ...Array.from({ length: deliveryTasks }, () => futureWake),
+    ...Array.from({ length: deliveryForecast.totalTasks }, () => futureWake),
   ];
   const replayBatches = Math.ceil(replayCosts.length * 0.1);
   const replay = {};
@@ -253,7 +264,8 @@ for (const run of report.runs.filter((run) =>
         row.r2Lists +
         row.r2Deletes +
         row.queueWrites +
-        row.sourceCalls,
+        row.sourceCalls +
+        (row.platformCalls ?? 0),
     ),
   );
   const maxParentQueries = Math.max(
@@ -391,7 +403,7 @@ const result = {
     "The future contact/GitHub handlers retain a separate forecast of 100000 reads and 6000 writes daily. Measured worst-case S-8 sweeper D1 work is reserved additionally for all 288 daily shared sweeps; their Worker requests and maximum eight R2 lists per sweep are already counted in shared forecasts.",
     "Ten percent replay selects distinct logical batches once, including forecast delivery tasks. Each future task has a conservative replay envelope of one wake, ten reads, four writes, three R2 Class A calls and 32 R2 Class B calls for bounded sixteen-input head/read assembly. The previous repeated-maximum-with-replacement upper bound is retained separately; repeated storms also have explicit one/three/ten full-publication replay forecasts.",
     "The publication start request conservatively counts both web and jobs. Provider fixture seeding and control polling are excluded from measured counters.",
-    "Publication forecast keeps owner polling every five seconds for at least five minutes, two Workers and ten D1 reads per poll. It separately reserves bounded snapshot chunks/assembly, document-shell copies, a size-based manifest, 404/robots/sitemap and generated style retention. Each future task reserves six reads, four writes and one complete Queue wake. These are forecasts, not implemented CPU proof.",
+    "Publication forecast keeps owner polling every five seconds for at least five minutes, two Workers and ten D1 reads per poll. Historical scaffold inputs separately reserve bounded snapshot/manifest/document delivery. Inputs containing a Phase 24 manifest already measure that work and do not add a duplicate delivery reserve. Each future task reserves six reads, four writes and one complete Queue wake. These are forecasts, not implemented CPU proof.",
     "Existing art/style/font hashes have a measured inventory. The model conservatively reserves one complete static-library refresh daily plus per-publication existence reads; those bytes are retained once globally in the storage forecast.",
   ],
   storage: {

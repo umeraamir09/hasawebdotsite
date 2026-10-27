@@ -6,7 +6,7 @@ Read the [skill](../SKILL.md) for launch, doctor, locking, evidence and cleanup.
 
 - `entry` uses fresh migrated storage, no session, no provider credentials and a new browser context. The executable helper owns launch and teardown.
 - Other recipes use existing suites and their own seeded users, sessions and draft records. Run one locked profile at a time. Do not replace their seeds with `pnpm local:seed`, which creates no usable sessions.
-- `/auth/entry` resolves incomplete owners into the account shell and entered owners to `/editor`, which also remains a shell. Editor controls, shared image crop/upload controls, social/contact links, and private iframe routes exist in the handoff fixture. Phase 20 provider suggestions and photo import run through these controls. Public portfolio serving, publication and the required setup guide remain pending.
+- `/auth/entry` resolves incomplete owners into the account shell and entered owners to `/editor`, which also remains a shell. Editor controls, shared image crop/upload controls, social/contact links, and private iframe routes exist in the handoff fixture. Phase 20 provider suggestions and photo import run through these controls. Public portfolio serving, publication commit and the required setup guide remain pending. Phase 24 adds dormant complete candidate preparation through the publication API/worker fixture.
 - An unmet precondition is a failed or blocked journey with its reason, never permission to omit an entry point or weaken the assertion.
 
 ## Driving and proof conventions
@@ -27,3 +27,4 @@ The initial deliverable proves only `entry` end to end. The other recipes route 
 | [Reserved address selection](addresses.md) | Address controls in the editor fixture and explicit owner draft actions; drafts profile | Reusable controls and real owner API; required guide activation remains pending |
 | [Publication readiness](editor-preview.md#publication-checklist) | Checklist and correction controls; editor profile, owner API and D1 boundary checks in full profile | Saved-draft readiness only; publication and full owner-flow activation remain pending |
 | [Portfolio rendering and theme](portfolio.md) | Browser preview and static portfolio fixtures, theme toggle; renderer profile | Offline rendering fixtures; no published serving or additional pages |
+| [Immutable candidate preparation](publication-candidates.md) | Shared controller admission helper and keyed real D1/R2 dispatch fixture; publication profile, or full for changed shared contracts | Complete private artifacts, hashes, failures and retention; no public publication route |

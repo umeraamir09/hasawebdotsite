@@ -31,3 +31,10 @@ Run `pnpm test:renderer`. The script builds an isolated local fixture, starts Ch
 `node scripts/portfolio-renderer-browser.mjs --serve` keeps the fixture at [port 8794](http://127.0.0.1:8794/published). This is synthetic owner content, not a product preview or publication. The Phase 17 editor and dormant authorized preview adapters have their own handoff fixture. Product editor activation, upload authorization, publication and onboarding Review remain later integrations.
 
 See the [Phase 16 protocol](../../specs/2026-10-19-shared-portfolio-renderer/protocol.md) and [results](../../specs/2026-10-19-shared-portfolio-renderer/results.md).
+
+
+## Prepared candidate artifacts
+
+[Phase 24](../../specs/2026-10-24-immutable-publication/results.md) wraps bounded assembled markup with `documentShell` in streamed copies and retains the corresponding platform package under each private candidate prefix. It streams snapshot/manifest/sitemap bytes from bounded SQLite slices and hashes R2 objects with `crypto.DigestStream`. The final manifest records logical paths, bucket keys, byte sizes, content types and SHA-256 hashes. CSS/script URLs and their font/art dependencies are logical root paths for Phase 25's manifest-authorized serving. Owner upload URLs retain their candidate-specific authorized asset origin.
+
+`scripts/build-publication-platform.mjs` packages only existing shared generated styles, `site-entry.ts`, the shipped font and approved clean cat art. It excludes regeneration inputs and portraits. Each candidate records its selected package before copying, so a deployment cannot silently change a retried candidate's dependencies. A missing previous build asset fails preparation rather than substituting a new file. Native paid CPU/capacity and observed cache withdrawal remain release gates.

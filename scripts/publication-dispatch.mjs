@@ -7,6 +7,7 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { buildPublicationPlatform } from "./build-publication-platform.mjs";
 import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
 import { s8Profiler } from "./lib/s8-profiler.mjs";
 
@@ -141,7 +142,13 @@ const config = {
     PUBLICATION_TASK_BATCH: process.env.S8_BATCH ?? "16",
   },
 };
+await buildPublicationPlatform(join(directory, "platform"));
 const jobs = {
+  assets: {
+    directory: join(directory, "platform"),
+    binding: "PLATFORM_ASSETS",
+    run_worker_first: true,
+  },
   ...config,
   name: "hasaweb-s8-dispatch-jobs-local",
   main: join(root, "apps/jobs/integration/publication-dispatch-worker.ts"),
@@ -286,10 +293,14 @@ try {
     "INSERT OR REPLACE INTO subdomain_claim(name,portfolio_id,state,held_at) VALUES('s8-fixture','s8-portfolio','held',?)",
     [now],
   );
+  await sql(
+    "INSERT INTO contact_recipient(portfolio_id,email,verified_at) VALUES('s8-portfolio','PRIVATE_RECIPIENT@example.test',?)",
+    [now],
+  );
   const assets = new Map();
   for (const kind of (
     process.env.S8_CASES ??
-    "small,mixed,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,assets,max"
+    "small,mixed,privacy,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,assets,assets-face,max"
   ).split(",")) {
     const draft = makeDraft(kind);
     for (const ref of assetReferences(draft)) {
@@ -408,6 +419,101 @@ try {
         sha256: hash(html),
       });
     }
+    const getFile = (key, bucket = "sites") =>
+      request(`/file?id=${id}&key=${encodeURIComponent(key)}&bucket=${bucket}`);
+    const manifestResponse = await getFile(`candidate/${id}/manifest.json`);
+    assert.equal(manifestResponse.status, 200);
+    const manifestBytes = Buffer.from(await manifestResponse.arrayBuffer());
+    const manifest = JSON.parse(manifestBytes);
+    assert.equal(manifest.format, "hasaweb-candidate-v1");
+    assert.equal(manifest.candidateId, id);
+    assert.equal(manifest.sourceRevision, revision);
+    assert.equal(manifest.rendererVersion, "publication-v1");
+    const seal = (
+      await sql(
+        "SELECT json_extract(value,'$.manifest') AS seal FROM publication_candidate_index WHERE candidate_id=?",
+        [id],
+      )
+    ).results[0];
+    assert.deepEqual(JSON.parse(seal.seal), {
+      key: `candidate/${id}/manifest.json`,
+      bytes: manifestBytes.length,
+      sha256: hash(manifestBytes),
+    });
+    assert.equal(
+      new Set(manifest.files.map((file) => file.key)).size,
+      manifest.files.length,
+    );
+    for (const file of manifest.files) {
+      const response = await getFile(file.key, file.bucket);
+      assert.equal(response.status, 200, file.key);
+      const bytes = Buffer.from(await response.arrayBuffer());
+      assert.equal(bytes.length, file.bytes, file.key);
+      assert.equal(hash(bytes), file.sha256, file.key);
+      if (file.path === "snapshot.json") {
+        const snapshot = JSON.parse(bytes);
+        assert.deepEqual(
+          Object.keys(snapshot).sort(),
+          [
+            "schemaVersion",
+            "profile",
+            "links",
+            "components",
+            "appearance",
+            "seo",
+          ].sort(),
+        );
+        assert.equal(snapshot.profile.name, draft.profile.name);
+        assert.ok(!bytes.toString().includes("PRIVATE_RECIPIENT"));
+        assert.ok(!bytes.toString().includes("PRIVATE_SAMPLE"));
+        assert.ok(!bytes.toString().includes("PRIVATE_EMAIL"));
+        assert.equal(
+          snapshot.profile.faceReveal.image !== undefined,
+          draft.profile.faceReveal.enabled,
+        );
+        assert.ok(
+          snapshot.components.every((component) => !component.data.recipientId),
+        );
+        assert.ok(
+          snapshot.components.every(
+            (component) => !draft.samples[`components.${component.id}`],
+          ),
+        );
+      }
+      const page = pages.find((page) => page.path === file.path);
+      if (page) {
+        const document = bytes.toString();
+        assert.ok(document.startsWith("<!doctype html><html"));
+        assert.ok(document.endsWith("</body></html>"));
+        assert.ok(
+          document.includes(
+            `<main id="portfolio-content" tabindex="-1">${page.html}</main>`,
+          ),
+        );
+        assert.equal((document.match(/<script/g) ?? []).length, 1);
+        assert.match(
+          document,
+          /<script src="\/platform\/[a-f0-9]+\.js" defer><\/script>/,
+        );
+      }
+      assert.ok(!/portrait|reference|raw|generator|source-map/.test(file.path));
+    }
+    const art = manifest.files.filter((file) => file.path.endsWith(".webp"));
+    assert.equal(art.length, kind === "cat" ? 2 : 0);
+    assert.equal(
+      manifest.files.filter((file) => file.path.endsWith(".ttf")).length,
+      1,
+    );
+    for (const path of ["/404", "/robots.txt", "/sitemap.xml", "snapshot.json"])
+      assert.ok(
+        manifest.files.some((file) => file.path === path),
+        path,
+      );
+    run.manifest = {
+      files: manifest.files.length,
+      bytes: manifestBytes.length,
+      sha256: hash(manifestBytes),
+    };
     const copied = (
       await sql(
         "SELECT asset_id,bytes FROM publication_transfer WHERE candidate_id=? AND complete=1",
@@ -469,7 +575,7 @@ try {
       run.cleanupFinishedAt = new Date().toISOString();
     }
     checks.push(
-      `${kind}: output parity, ordered wrappers, complete asset copies and disabled-face isolation`,
+      `${kind}: complete document/manifest/hash parity, sanitized snapshot, selected art, ordered wrappers, complete asset copies and disabled-face isolation`,
     );
     console.log(
       `PASS ${kind}: ${run.inputBytes} input bytes, ${remote ? run.dispatchCheckpoints : run.invocations.length} dispatch checkpoints`,
@@ -709,6 +815,135 @@ try {
       }
       throw new Error(`Candidate did not reach ${target}`);
     }
+    // Each new output stage must replay safely after an R2 write succeeds but
+    // its invocation fails. The previous live pointer and object stay intact.
+    for (const stage of [
+      "platform",
+      "snapshot",
+      "pages",
+      "manifest",
+      "manifest-assembly",
+    ]) {
+      const candidate = (await api("/create", { revision })).value.id;
+      for (let n = 0; n < 1000; n++) {
+        const row = (await api(`/status?id=${candidate}`)).value;
+        const cursor = JSON.parse(row.cursor);
+        if (row.status === "transferring" && cursor.stage === stage) break;
+        await api(`/advance?id=${candidate}`);
+        assert.ok(n < 999, stage);
+      }
+      const failed = await request(`/advance?id=${candidate}`, {
+        headers: { "X-S8-Fault": "r2-after" },
+      });
+      assert.equal(failed.status, 500, stage);
+      assert.notEqual(
+        (await api(`/status?id=${candidate}`)).value.status,
+        "ready",
+      );
+      await sql(
+        "UPDATE publication_candidate SET next_attempt_at=0 WHERE id=?",
+        [candidate],
+      );
+      await finish(candidate);
+      if (stage === "platform") {
+        await sql(
+          "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES(?, 's8-portfolio',8,'superseded','publication-v1',?,?,?)",
+          [candidate, candidate, Date.now(), Date.now()],
+        );
+        assert.equal((await api(`/cleanup?id=${candidate}`)).value, false);
+        await sql("UPDATE publication_candidate SET updated_at=0 WHERE id=?", [
+          candidate,
+        ]);
+        await api(`/sweep?id=${candidate}`);
+        assert.equal(
+          (await api(`/status?id=${candidate}`)).value.status,
+          "ready",
+        );
+        assert.equal(
+          (
+            await sql(
+              "SELECT source,facts FROM publication_candidate WHERE id=?",
+              [candidate],
+            )
+          ).results[0].source,
+          null,
+        );
+        assert.equal((await api("/retains?asset=avatar")).value, true);
+        const next = (await api("/create", { revision })).value.id;
+        await sql(
+          "UPDATE publication_candidate SET status='failed' WHERE id=?",
+          [next],
+        );
+        assert.equal((await api(`/cleanup?id=${next}`)).value, true);
+        await finish(next, "cleaned");
+        await sql("DELETE FROM publish_version WHERE id=?", [candidate]);
+      }
+      assert.equal((await api(`/cleanup?id=${candidate}`)).value, true);
+      await finish(candidate, "cleaned");
+      const removed = (await api(`/objects?id=${candidate}`)).value;
+      assert.equal(
+        removed.sites.objects.length + removed.assets.objects.length,
+        0,
+      );
+      assert.equal(
+        await (await request(`/live?id=${candidate}`)).text(),
+        "<p>Previous complete version</p>",
+      );
+      checks.push(
+        `Finalization ${stage} replays a post-write failure, cleans candidate output and preserves retained versions`,
+      );
+    }
+    const changed = (await api("/create", { revision })).value.id;
+    for (let n = 0; n < 1000; n++) {
+      const row = (await api(`/status?id=${changed}`)).value;
+      if (JSON.parse(row.cursor).stage === "seal") break;
+      await api(`/advance?id=${changed}`);
+      assert.ok(n < 999);
+    }
+    await sql("UPDATE asset SET status='failed' WHERE id='avatar'");
+    assert.equal((await request(`/advance?id=${changed}`)).status, 500);
+    assert.notEqual((await api(`/status?id=${changed}`)).value.status, "ready");
+    await sql("UPDATE asset SET status='ready' WHERE id='avatar'");
+    await sql("UPDATE publication_candidate SET next_attempt_at=0 WHERE id=?", [
+      changed,
+    ]);
+    await finish(changed);
+    assert.equal((await api(`/cleanup?id=${changed}`)).value, true);
+    await finish(changed, "cleaned");
+    checks.push(
+      "Sealing atomically rechecks asset readiness after copying and hashing",
+    );
+    const revoked = (await api("/create", { revision })).value.id;
+    for (let n = 0; n < 1000; n++) {
+      const row = (await api(`/status?id=${revoked}`)).value;
+      if (JSON.parse(row.cursor).stage === "seal") break;
+      await api(`/advance?id=${revoked}`);
+      assert.ok(n < 999);
+    }
+    const recipient = (
+      await sql(
+        "SELECT verified_at FROM contact_recipient WHERE portfolio_id='s8-portfolio'",
+      )
+    ).results[0];
+    await sql(
+      "UPDATE contact_recipient SET verified_at=NULL WHERE portfolio_id='s8-portfolio'",
+    );
+    assert.equal((await request(`/advance?id=${revoked}`)).status, 500);
+    assert.notEqual((await api(`/status?id=${revoked}`)).value.status, "ready");
+    await sql(
+      "UPDATE contact_recipient SET verified_at=? WHERE portfolio_id='s8-portfolio'",
+      [recipient.verified_at],
+    );
+    await sql("UPDATE publication_candidate SET next_attempt_at=0 WHERE id=?", [
+      revoked,
+    ]);
+    await finish(revoked);
+    assert.equal((await api(`/cleanup?id=${revoked}`)).value, true);
+    await finish(revoked, "cleaned");
+    checks.push(
+      "A changed mutable verification fact prevents the ready checkpoint",
+    );
+
     for (const fault of [
       "source-truncated",
       "source-interrupted",

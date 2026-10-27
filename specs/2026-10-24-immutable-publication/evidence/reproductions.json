@@ -1,0 +1,28 @@
+{
+  "recordedAt": "2026-10-27",
+  "baseRevision": "e3f313b9f6bd66672e7f5448c46399907d967c5f",
+  "syntheticFixturesOnly": true,
+  "failures": [
+    {
+      "receipt": "2026-10-27T08-30-50.827Z-PNEh3a",
+      "status": "failed",
+      "workingChangesSha256": "b5bc735459cf8e603cac24d92a15aa2017d91919beea0978a35d47783364ca37",
+      "failure": "Candidate manifest incomplete. Sitemap assembly advanced to sealing before asset receipts and the manifest were prepared.",
+      "correction": "Sitemap assembly now advances to asset receipt collection, then streamed manifest assembly, then sealing."
+    },
+    {
+      "receipt": "2026-10-27T08-42-37.805Z-88Ej20",
+      "status": "failed",
+      "workingChangesSha256": "c9764a032fa266864b369cbfadedef3b85c8507109b4231b67be9211921399f1",
+      "failure": "The jobs assets.directory resolved inside a relocated auth browser scratch configuration and did not exist.",
+      "correction": "Production Worker config stays unchanged. Only the candidate fixture binds the platform package; builds retain it under cached dist/platform output."
+    },
+    {
+      "receipt": "2026-10-27T08-46-32.354Z-o8GK3K",
+      "status": "failed",
+      "workingChangesSha256": "e075f1646a9c423b2cccd008b2dafba473fbc46ebd05959784670b6b55768bd3",
+      "failure": "The new privacy fixture attempted a second Projects component, which the existing schema correctly forbids.",
+      "correction": "The privacy fixture now marks its existing Projects component as an untouched sample. Passing earlier full-gate commands remain valid; checks and remaining suites were rerun."
+    }
+  ]
+}
