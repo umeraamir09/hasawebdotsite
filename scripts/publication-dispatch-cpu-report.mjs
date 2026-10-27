@@ -26,8 +26,9 @@ const token = await cloudflareToken(
 const report = JSON.parse(await readFile(input, "utf8"));
 const query = `query($account:String!,$start:Time!,$end:Time!,$script:String!){viewer{accounts(filter:{accountTag:$account}){workersInvocationsAdaptive(limit:100,filter:{datetime_geq:$start,datetime_leq:$end,scriptName:$script}){dimensions{scriptName status coloCode scriptVersion}sum{requests errors}quantiles{cpuTimeP50 cpuTimeP95 cpuTimeP99}}}}}`;
 const runs = [];
-for (const run of report.runs.filter((run) =>
-  Number.isFinite(run.inputBytes),
+for (const run of report.runs.filter(
+  (run) =>
+    Number.isFinite(run.inputBytes) && run.status === "ready" && run.finishedAt,
 )) {
   const response = await fetch("https://api.cloudflare.com/client/v4/graphql", {
     method: "POST",
@@ -71,6 +72,13 @@ await writeFile(
         "GraphQL CPU quantiles are microseconds; divide by 1000 for milliseconds",
       method:
         "Native Queue Worker only. Per-candidate completion windows. Provider adaptive analytics can omit observations; compare expected and observed counts. Repeated execution does not label individual cold isolates. Do not average regional percentiles.",
+      excludedIncompleteCandidates: report.runs
+        .filter((run) => Number.isFinite(run.inputBytes) && !run.finishedAt)
+        .map((run) => ({
+          kind: run.kind,
+          candidateId: run.id,
+          start: run.startedAt,
+        })),
       runs,
     },
     null,
