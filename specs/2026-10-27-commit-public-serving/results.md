@@ -26,7 +26,11 @@ The fixture was then tightened to move the held name to a competing portfolio be
 
 The focused fixture first exposed a platform-file bucket mismatch and then a stale-state error classification mistake. Both are fixed and covered by the passing fixture. The manifest file loop now checks all public files from a prepared candidate, including CSS, font, art, pages, robots and sitemap.
 
-Completion approval and roadmap checkoff have not been given. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates. A separate review of the publication, privacy and withdrawal boundary is still required before completion review.
+October 27, 2026 separate publication, privacy and withdrawal boundary review of commit `eb6d2fe`: no additional Phase 25 blocking findings. Reviewed the authenticated commit and replay guards, atomic claim/pointer batch, manifest-authorized host and asset reads, response headers, candidate retention and the focused workerd fixture. The fixture exercises competing ownership, concurrent commit/replay, old-or-new page reads, private path denial and unavailable state after unpublish. This review inspected the existing evidence; it did not rerun the suites or verify a deployed cache.
+
+The serving code deliberately permits direct access to superseded candidate uploads while the portfolio remains published, including after a later version omits them. Unpublishing denies those requests at the origin, but republishing can make retained older uploads accessible again until cleanup removes their version references or objects. Phase 26 must complete withdrawal cleanup and verify origin and cache absence before reporting withdrawal complete. The local `no-store` headers do not establish deployed browser or CDN behavior.
+
+Completion approval and roadmap checkoff have not been given. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates.
 
 ## Documentation impact
 
