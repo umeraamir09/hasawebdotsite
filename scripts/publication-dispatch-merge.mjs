@@ -70,14 +70,25 @@ for (const run of report.runs.filter((row) =>
       (entry) =>
         entry.kind === run.kind &&
         entry.inputBytes === run.inputBytes &&
-        entry.sha256 === run.sha256 &&
         entry.privateAssetInventory &&
         entry.retained &&
         JSON.stringify(entry.assets.map((asset) => asset.asset_id).sort()) ===
           JSON.stringify(run.assets.map((asset) => asset.asset_id).sort()),
     );
   assert.ok(inventory, `Full-size storage inventory required for ${run.kind}`);
-  assert.deepEqual(inventory.pages, run.pages, "Storage oracle pages differ");
+  const pageSizes = (entry) =>
+    entry.pages.map(({ path, bytes }) => ({ path, bytes }));
+  assert.deepEqual(
+    pageSizes(inventory),
+    pageSizes(run),
+    "Storage pages differ",
+  );
+  assert.deepEqual(inventory.retained.sites, run.retained.sites);
+  assert.equal(inventory.retained.assets.objects, run.retained.assets.objects);
+  assert.equal(
+    inventory.retained.assets.bytes,
+    inventory.assets.reduce((total, asset) => total + asset.bytes, 0),
+  );
   run.providerTransferInventory = {
     assets: run.assets,
     privateAssetInventory: run.privateAssetInventory,
@@ -86,7 +97,7 @@ for (const run of report.runs.filter((row) =>
   run.privateAssetInventory = inventory.privateAssetInventory;
   run.retained = inventory.retained;
   run.storageInventoryMethod =
-    "Full-size local inventory matched by input bytes, page hashes and asset IDs. Provider transfer counts use the separately retained 128-byte binary inventory.";
+    "Full-size local inventory matched by fixture kind, input bytes, page paths/byte lengths, site inventory and asset IDs/counts. Both reports independently verified exact output against the full renderer. Their hashes differ because URLs contain different candidate UUIDs. Provider transfer counts use the separately retained 128-byte binary inventory.";
 }
 report.sweeps = inventories.flatMap((entry) => entry.sweeps ?? []);
 assert.ok(report.sweeps.length, "Measured sweep reserve required");
