@@ -30,8 +30,10 @@ October 27, 2026 separate publication, privacy and withdrawal boundary review of
 
 The serving code deliberately permits direct access to superseded candidate uploads while the portfolio remains published, including after a later version omits them. Unpublishing denies those requests at the origin, but republishing can make retained older uploads accessible again until cleanup removes their version references or objects. Phase 26 must complete withdrawal cleanup and verify origin and cache absence before reporting withdrawal complete. The local `no-store` headers do not establish deployed browser or CDN behavior.
 
-Completion approval and roadmap checkoff have not been given. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates.
+The owner approved Phase 25 completion and directed roadmap checkoff on October 27, 2026 after PR #36 merged to main. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates.
 
 ## Documentation impact
 
 The changed assumption is that no committed version or public site route exists. Updated the current baseline, roadmap, architecture, database and renderer guidance, and added a dated supersession note to the Phase 24 candidate protocol. Phase 26 still needs the owner operation and cleanup; paid-provider and observed S-9 checks remain release gates. Historical failures, measurements and approvals are unchanged.
+
+October 27, 2026: Owner approval updates the roadmap and implementation status. Phase 26 withdrawal cleanup and the paid-provider and S-9 release gates remain unresolved.
