@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { createDraftController, type DraftController } from "./controller";
-import { checkPublication } from "./publication";
+import { checkPublication, preparePublication } from "./publication";
 import { fixtureTransport, memoryStorage } from "./test-fixtures";
 
 const controllers: DraftController[] = [];
@@ -138,5 +138,66 @@ it("blocks an image operation started while valid changes are flushing", async (
   });
   expect(quiesce).not.toHaveBeenCalled();
   expect(send).not.toHaveBeenCalled();
+  expect(controller.store.getState().suspended).toBe(false);
+});
+
+it("submits only the controller-confirmed revision and keeps edits paused until candidate admission", async () => {
+  const controller = await setup();
+  controller.edit(["profile", "name"], "Saved before preparation");
+  const send = vi.fn<typeof fetch>(async (_input, init) => {
+    const command = JSON.parse(String(init?.body));
+    return Response.json({
+      ...command,
+      issues: [],
+      hasMoreIssues: false,
+      nextAssetOffset: null,
+      assetOffset: undefined,
+    });
+  });
+  const submit = vi.fn(
+    async (command: {
+      ownerId: string;
+      portfolioId: string;
+      revision: number;
+    }) => {
+      expect(controller.store.getState().suspended).toBe(true);
+      expect(command.revision).toBe(
+        controller.store.getState().confirmed?.revision,
+      );
+      return {
+        candidateId: "00000000-0000-4000-8000-000000000001",
+        portfolioId: command.portfolioId,
+        revision: command.revision,
+      };
+    },
+  );
+  expect((await preparePublication(controller, submit, send)).kind).toBe(
+    "preparing",
+  );
+  expect(submit).toHaveBeenCalledTimes(1);
+  expect(controller.store.getState().suspended).toBe(false);
+});
+it("never admits a candidate with unfinished uploads, raw input or checklist issues", async () => {
+  const controller = await setup();
+  const submit = vi.fn();
+  controller.store.setState({ pendingImages: { avatar: true } });
+  await expect(preparePublication(controller, submit)).rejects.toMatchObject({
+    code: "recovery_required",
+  });
+  controller.store.setState({ pendingImages: {} });
+  const send = vi.fn<typeof fetch>(async (_input, init) => {
+    const command = JSON.parse(String(init?.body));
+    return Response.json({
+      portfolioId: command.portfolioId,
+      revision: command.revision,
+      issues: [{ code: "required", path: ["profile", "bio"] }],
+      hasMoreIssues: false,
+      nextAssetOffset: null,
+    });
+  });
+  expect((await preparePublication(controller, submit, send)).kind).toBe(
+    "blocked",
+  );
+  expect(submit).not.toHaveBeenCalled();
   expect(controller.store.getState().suspended).toBe(false);
 });

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { activeSaveSession, saveSessionParams } from "./draft-api";
 import { ownerPublication } from "./publication";
+import { candidateUnretained, publicationFacts } from "./publication-facts";
 import type { SessionIdentity } from "./repositories";
 
 export const candidateIdSchema = z.string().uuid();
@@ -9,7 +10,7 @@ export type Wake = z.infer<typeof wakeSchema>;
 export const LEASE_MS = 60_000;
 export const DEADLINE_MS = 3_600_000;
 export const MAX_ATTEMPTS = 4;
-export const PUBLICATION_RENDERER_VERSION = "s8-v3";
+export const PUBLICATION_RENDERER_VERSION = "publication-v1";
 export const candidateSchema = z.object({
   id: candidateIdSchema,
   portfolio_id: z.string(),
@@ -53,9 +54,9 @@ const sourceSql = `WITH p AS (SELECT draft FROM portfolio WHERE id=?),
  c AS (SELECT j.value AS value FROM p,json_each(p.draft,'$.components') j
  WHERE coalesce(json_extract(p.draft,'$.samples.' || json_quote('components.' || json_extract(j.value,'$.id'))),0)!=1),
  links AS (SELECT j.value FROM p,json_each(p.draft,'$.links') j)
- SELECT json_object('profile',json(json_remove(json_extract(draft,'$.profile'),
+ SELECT json_object('schemaVersion',json_extract(draft,'$.schemaVersion'),'profile',json(json_remove(json_extract(draft,'$.profile'),
  CASE WHEN json_extract(draft,'$.profile.faceReveal.enabled')=1 THEN '$.unused' ELSE '$.faceReveal.image' END)),
- 'links',json((SELECT json_group_array(json(value)) FROM links WHERE json_extract(value,'$.showInProfile')=1 OR json_extract(value,'$.showInSocialComponent')=1)),
+ 'links',json((SELECT json_group_array(json(value)) FROM links WHERE json_extract(value,'$.showInProfile')=1 OR (json_extract(value,'$.showInSocialComponent')=1 AND EXISTS(SELECT 1 FROM c WHERE json_extract(value,'$.type')='social-links')))),
  'components',json((SELECT json_group_array(json(CASE WHEN json_extract(value,'$.type')='contact' THEN json_remove(value,'$.data.recipientId') ELSE value END)) FROM c)),
  'appearance',json(json_extract(draft,'$.appearance')),'seo',json(json_extract(draft,'$.seo'))) FROM p`;
 export function publicationTasks(db: D1Database) {
@@ -74,6 +75,13 @@ export function publicationTasks(db: D1Database) {
       revision: number,
       policy: { batchSize: number; assetOrigin: string },
     ) {
+      const facts = await db
+        .prepare(
+          `SELECT ${publicationFacts} AS value FROM portfolio p WHERE p.id=? AND p.user_id=? AND p.draft_rev=?`,
+        )
+        .bind(portfolioId, identity.user.id, revision)
+        .first<{ value: string }>();
+      if (!facts) throw new Error("Source revision unavailable");
       const validation = await ownerPublication(
         db,
         identity,
@@ -87,13 +95,13 @@ export function publicationTasks(db: D1Database) {
       const id = crypto.randomUUID(),
         now = Date.now();
       const row = await db
-        .prepare(`INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,renderer_version,task_batch,asset_origin,status,cursor,next_attempt_at,deadline_at,created_at,updated_at)
-        SELECT ?,p.id,p.user_id,p.draft_rev,(${sourceSql}),?,?,?,'preparing',?, ?,?,?,? FROM portfolio p
+        .prepare(`INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,facts,renderer_version,task_batch,asset_origin,status,cursor,next_attempt_at,deadline_at,created_at,updated_at)
+        SELECT ?,p.id,p.user_id,p.draft_rev,(${sourceSql}),${publicationFacts},?,?,?,'preparing',?, ?,?,?,? FROM portfolio p
         WHERE p.id=? AND p.user_id=? AND p.draft_rev=? AND p.draft_validation_version=2 AND p.status!='deleting'
         AND NOT EXISTS(SELECT 1 FROM publication_candidate existing WHERE existing.portfolio_id=p.id AND existing.source IS NOT NULL)
         AND (SELECT count(*) FROM publication_candidate WHERE source IS NOT NULL)<${PUBLICATION_SOURCE_LIMIT}
         AND (SELECT count(*) FROM publication_candidate)<${PUBLICATION_ROW_LIMIT}
-        AND ${activeSaveSession} AND NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=p.user_id AND a.state NOT IN ('aborted','committed') AND a.expires_at>?) RETURNING id`)
+        AND ${publicationFacts}=? AND ${activeSaveSession} AND NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=p.user_id AND a.state NOT IN ('aborted','committed') AND a.expires_at>?) RETURNING id`)
         .bind(
           id,
           portfolioId,
@@ -112,6 +120,7 @@ export function publicationTasks(db: D1Database) {
           portfolioId,
           identity.user.id,
           revision,
+          facts.value,
           ...saveSessionParams(identity),
           now,
         )
@@ -146,7 +155,7 @@ export function publicationTasks(db: D1Database) {
       const now = Date.now();
       const result = await db
         .prepare(
-          `UPDATE publication_candidate SET cursor=?,output_count=?,page_index=?,status=?,cleaned_at=CASE WHEN ?='cleaned' THEN coalesce(cleaned_at,?) ELSE cleaned_at END,sequence=sequence+1,lease_token=NULL,lease_until=0,attempts=0,next_attempt_at=?,updated_at=? WHERE id=? AND sequence=? AND lease_token=? AND lease_until>? AND status=? AND (status='cleaning' OR ${candidateActive}) RETURNING id`,
+          `UPDATE publication_candidate SET cursor=?,output_count=?,page_index=?,status=?,cleaned_at=CASE WHEN ?='cleaned' THEN coalesce(cleaned_at,?) ELSE cleaned_at END,sequence=sequence+1,lease_token=NULL,lease_until=0,attempts=0,next_attempt_at=?,updated_at=? WHERE id=? AND sequence=? AND lease_token=? AND lease_until>? AND status=? AND (status='cleaning' OR ${candidateActive}) AND (?!='ready' OR (facts=(SELECT ${publicationFacts} FROM portfolio p WHERE p.id=publication_candidate.portfolio_id) AND NOT EXISTS(SELECT 1 FROM publication_transfer t LEFT JOIN asset a ON a.id=t.asset_id WHERE t.candidate_id=publication_candidate.id AND (t.complete!=1 OR a.id IS NULL OR a.portfolio_id!=publication_candidate.portfolio_id OR a.status!='ready' OR a.kind!=t.purpose OR a.bytes!=t.bytes OR a.content_type!=t.content_type)))) RETURNING id`,
         )
         .bind(
           patch.cursor,
@@ -162,8 +171,11 @@ export function publicationTasks(db: D1Database) {
           row.lease_token,
           now,
           row.status,
+          patch.status,
         )
         .first();
+      if (!result && patch.status === "ready")
+        throw new Error("Mutable publication facts changed before sealing");
       return !!result;
     },
     async retry(row: Candidate, error: string) {
@@ -200,7 +212,7 @@ export function publicationTasks(db: D1Database) {
       const now = Date.now();
       await db
         .prepare(
-          `UPDATE publication_candidate SET status='failed',last_error=CASE WHEN status='cleaning' THEN 'cleanup:expired' ELSE 'expired_or_deleted' END,updated_at=? WHERE id IN (SELECT id FROM publication_candidate WHERE status IN ('preparing','assembling','transferring','cleaning','ready') AND ((status!='ready' AND (deadline_at<=? OR (attempts>=${MAX_ATTEMPTS} AND lease_until<=?))) OR (status='ready' AND updated_at<=? ) OR (status!='cleaning' AND NOT ${candidateActive})) ORDER BY next_attempt_at LIMIT ?)`,
+          `UPDATE publication_candidate SET status='failed',last_error=CASE WHEN status='cleaning' THEN 'cleanup:expired' ELSE 'expired_or_deleted' END,updated_at=? WHERE id IN (SELECT id FROM publication_candidate WHERE status IN ('preparing','assembling','transferring','cleaning','ready') AND ${candidateUnretained} AND ((status!='ready' AND (deadline_at<=? OR (attempts>=${MAX_ATTEMPTS} AND lease_until<=?))) OR (status='ready' AND updated_at<=? ) OR (status!='cleaning' AND NOT ${candidateActive})) ORDER BY next_attempt_at LIMIT ?)`,
         )
         .bind(now, now, now, now - PUBLICATION_READY_MS, limit)
         .run();
@@ -217,7 +229,7 @@ export function publicationTasks(db: D1Database) {
       const now = Date.now();
       return !!(await db
         .prepare(
-          "UPDATE publication_candidate SET status='cleaning',cursor='[]',attempts=0,deadline_at=?,next_attempt_at=?,lease_token=NULL,lease_until=0,updated_at=? WHERE id=? AND status IN ('failed','ready') AND lease_until<? RETURNING id",
+          `UPDATE publication_candidate SET status='cleaning',cursor='[]',attempts=0,deadline_at=?,next_attempt_at=?,lease_token=NULL,lease_until=0,updated_at=? WHERE id=? AND status IN ('failed','ready') AND lease_until<? AND ${candidateUnretained} RETURNING id`,
         )
         .bind(now + DEADLINE_MS, now, now, id, now - 30_000)
         .first());

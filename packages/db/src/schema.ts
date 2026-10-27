@@ -240,6 +240,10 @@ export const publishVersion = sqliteTable(
     id: text("id").primaryKey(),
     portfolioId: portfolioId(),
     n: integer("n").notNull(),
+    candidateId: text("candidate_id").references(
+      () => publicationCandidate.id,
+      { onDelete: "restrict" },
+    ),
     status: text("status", {
       enum: ["rendering", "live", "failed", "superseded"],
     })
@@ -254,6 +258,7 @@ export const publishVersion = sqliteTable(
   },
   (t) => [
     uniqueIndex("publish_portfolio_number").on(t.portfolioId, t.n),
+    uniqueIndex("publish_candidate_idx").on(t.candidateId),
     check("publish_number", sql`${t.n} > 0`),
     check(
       "publish_status",
@@ -494,6 +499,7 @@ export const publicationCandidate = sqliteTable(
     sourceRevision: integer("source_revision").notNull(),
     cleanedAt: integer("cleaned_at"),
     source: text("source"),
+    facts: text("facts"),
     rendererVersion: text("renderer_version").notNull().default("s8-v1"),
     taskBatch: integer("task_batch").notNull().default(16),
     assetOrigin: text("asset_origin")

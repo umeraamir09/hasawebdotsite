@@ -1,6 +1,65 @@
-# Phase 24 immutable publication prerequisite audit
+# Phase 24 immutable publication
 
-## Current local-development decision, October 27, 2026
+## October 27 implementation
+
+### Scope and acceptance
+
+Implement [Phase 24](../../docs/roadmap.md#phase-24-prepare-immutable-publication-versions) and [publication acceptance](../../docs/acceptance-criteria.md#15-subdomain-selection-and-publication). Prepare complete immutable candidates, public-only snapshots, retained renderer dependencies and manifests with resumable receipts. Preserve the live pointer and address namespace on every preparation outcome.
+
+Prerequisites 02, 08, 11A, 16, 18 and 23 are owner-approved. PR #33 integrated the approved S-8 local milestone and paid-at-launch policy into shared `main` at `e3f313b`. The existing `feat/24-immutable-publication` worktree at `/home/umer/hasawebdotsite/.wrangler/worktrees/phase24` was fast-forwarded to that base before implementation. Its previous identical untracked audit was preserved at `/tmp/phase24-prerequisite-audit-20261027.md`. The clean prerequisite integration gate at `869aa40` is retained in the S-8 record. The final full gate checks the merged base and all changed contracts.
+
+Write boundaries are candidate preparation and retention, the shared controller preparation adapter, static platform packaging, their fixture tests and affected guidance. No parallel workers were requested or delegated. Public pointer/claim commit, public serving, complete owner-flow activation and production configuration retain their later phases.
+
+### Decisions
+
+Use the existing fenced dispatcher and private-source transfer. Finalization runs bounded tasks within the transferring stage and writes candidate-scoped retained platform files, complete document shells, snapshot parts and a final manifest. Candidate scope makes failed-output cleanup independent of other candidates and retained live versions. No public route is enabled.
+
+### Results
+
+The local implementation and required full verification coverage are complete. The [retained verification record](evidence/local-verification.json) records all thirteen required commands, tested file digest, case manifests and operation counts. [Selected reproduction evidence](evidence/reproductions.json) preserves the finalization-order and relocated-config failures and the corrected privacy fixture. No failure was waived. Owner completion approval and the separate publication/privacy/recovery boundary review are pending; Phase 24 remains unchecked.
+
+- `publication-v1` captures the exact validated revision and excludes samples, hidden links, disabled Face assets, setup/progress, recipients and credentials. The shared controller flushes and remains paused through candidate admission; it reports `preparing`, never a live publication.
+- Candidates now retain complete main/case-study/resume documents with the shared layout, `snapshot.json`, 404/robots/sitemap, selected platform dependencies and `manifest.json`. Bounded SQLite slices and streamed R2 assembly avoid whole-draft hot parsing. Every manifest file has a verified size/hash, with a separate manifest receipt. Platform packaging participates in the jobs build/cache output; its binding remains confined to the candidate fixture.
+- Migration `0011` adds mutable-fact sealing and retained-version references. Ownership/readiness/type/size and address/recipient/GitHub facts are rechecked before readiness. References prevent cleanup/expiry/deletion, release private working source/facts for another candidate and keep source-asset retention. The pointer transaction must create its reference in Phase 25.
+- Injected finalization writes, source truncation/interruption/timeout, R2 and checkpoint faults, stale leases, deletion and exhausted cleanup recover or retain retryable cleanup. The seeded previous version and claim survive preparation. Old-format cleanup remains supported.
+
+#### Verification
+
+The original locked full run at `.wrangler/verification/2026-10-27T08-46-32.354Z-o8GK3K/summary.json` passed checks, all application builds, renderer, auth, persistence and uploads before the new privacy fixture failed its schema. The only subsequent application-related change fixed that fixture to use the permitted single Projects component; the instrumented fixture/cost-helper corrections are covered by the repeated checks and publication suite. No shipped runtime source or build input changed after the passing build. The resumed locked run at `.wrangler/verification/2026-10-27T08-56-21.617Z-GkOJjq/summary.json` passed checks and every remaining full-profile suite. Together these prove all thirteen commands in the repository's full profile without repeating unaffected checks.
+
+| Verification | Result |
+| --- | --- |
+| Lint, all package typechecks, unit tests | Passed, 458 tests in 41 files. Three existing editor CSS specificity warnings remain. |
+| All application builds | Passed, including the retained platform package. Build scripts used dry-run packaging. |
+| Renderer | 27 browser groups passed. |
+| Authentication | 30 API/security checks and 19 browser journeys passed with provider fixtures. |
+| Persistence/migrations | 85 checks passed, including restart persistence. Drizzle reports no schema drift. |
+| Private uploads | 11 groups passed with actual D1/R2 and browser transport. |
+| Candidate preparation | 41 groups across 15 content cases passed. Includes a 1,048,576-byte draft, 3,000 components, Unicode/surrogate boundaries, deep lists, descriptions, both decorations, samples/private recipients, Face Reveal and full 5 MiB image/10 MiB PDF copies. |
+| Draft API | 17 production API groups passed. |
+| Autosave/recovery | 49 browser checks passed, with no reported browser errors. |
+| Editor | 38 browser groups passed, with no reported browser errors. |
+| Runtime and routing | Worker/binding/restart tests, correctness smoke and 31 host/path/method boundaries passed. |
+
+The maximum draft completed in 97 dispatch checkpoints; the dense case needed 141. The measured successful parent-invocation maximum was 40 D1/R2/Queue/source/platform calls. These are local operation counts, not provider CPU measurements. Platform hashes and CSS dependency reachability were checked independently for all five packaged files, totaling 766,135 bytes. The budget helper now avoids adding the previously forecast delivery work a second time to complete-candidate measurements. Its historical Free comparisons are not local blockers or a paid launch budget result.
+
+Normal diff review, changed file/anchor links and migration SQL/snapshot alignment were checked. The final documentation profile passed at `.wrangler/verification/2026-10-27T11-11-24.200Z-L10hSS/summary.json`; untracked files also passed explicit whitespace checks. The final port inspection found no listening verification processes on the suite port ranges. Routine success/failure logs, screenshots, scratch state and full manifests remain ignored; selected proof is retained above. The normal diff review does not substitute for the required separate high-risk review.
+
+#### Remaining blockers and integration boundaries
+
+1. Obtain the separate publication/privacy/recovery review, including the new retention migration and reused Phase 23 validation boundary. Phase 23's existing owner approval remains intact. No review chat or subagent was started without authorization.
+2. Obtain explicit owner completion approval and integrate the Phase 24 branch before dependent phases consume it. This record and the roadmap keep Phase 24 unchecked.
+3. Phase 25 supplies atomic pointer/claim commit and manifest-authorized serving. Phase 26 supplies the admission operation, progress/retry and Open/Copy integration. Complete guide/editor activation remains later work. The current PDF/additional-page/appearance representations do not claim those later capabilities are complete.
+4. Before release, run native Workers Paid CPU/operation/storage/cost acceptance and S-9 browser/query/edge withdrawal verification under the approved paid-at-launch policy. No subscription purchase, deployment, native provider CPU run or public activation occurred here.
+
+### Documentation impact
+
+The changed assumption is that the dormant dispatcher prepares complete candidates rather than scaffold fragments alone. Updated the baseline, architecture, roadmap record link, verification profile/map, renderer/database/controller contracts and the lasting [candidate protocol](protocol.md). Added a dated S-8 protocol supersession note and preserved all earlier failures and approvals. The cost helper distinguishes measured complete delivery from historical forecasts. Separate review/owner approval, Phase 25–26 activation and paid/S-9 gates remain unresolved.
+
+
+## Local-development decision before PR #33, October 27, 2026
+
+October 27 supersession note: PR #33 is now integrated at `e3f313b`. The pending-integration statements in this historical decision record no longer block implementation. See the implementation record above. The paid-at-launch policy remains current.
 
 The owner chose Workers Paid, currently a $5/month minimum, only at launch and explicitly authorized removing Free-budget blockers so implementation can continue. The [deployment policy](../../docs/deployment-policy.md) is the current budget/start/release contract. The original blocked audit below is preserved history, not a current instruction to wait for a Free-plan CPU pass or an early subscription purchase.
 

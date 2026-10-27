@@ -2,12 +2,52 @@ import {
   type PublicationIssue,
   publicationResultSchema,
 } from "@hasaweb/schema";
+import { z } from "zod";
 import type { DraftController } from "./controller";
 import { DraftFailure } from "./types";
 
-export async function checkPublication(
+type Readiness = {
+  revision: number;
+  issues: PublicationIssue[];
+  hasMoreIssues: boolean;
+  draft: ReturnType<DraftController["store"]["getState"]>["working"];
+};
+const preparationSchema = z.strictObject({
+  candidateId: z.string().uuid(),
+  portfolioId: z.string(),
+  revision: z.number().int().nonnegative(),
+});
+export function checkPublication(
   controller: DraftController,
   send: typeof fetch = fetch,
+) {
+  return withPublication(controller, send, async (result) => result);
+}
+export function preparePublication(
+  controller: DraftController,
+  submit: (command: {
+    ownerId: string;
+    portfolioId: string;
+    revision: number;
+  }) => Promise<unknown>,
+  send: typeof fetch = fetch,
+) {
+  return withPublication(controller, send, async (result) => {
+    if (result.issues.length || result.hasMoreIssues)
+      return { kind: "blocked" as const, ...result };
+    const command = { ...controller.identity, revision: result.revision };
+    const prepared = preparationSchema.parse(await submit(command));
+    if (prepared.portfolioId !== command.portfolioId)
+      throw new DraftFailure("owner_changed");
+    if (prepared.revision !== command.revision)
+      throw new DraftFailure("revision_conflict");
+    return { kind: "preparing" as const, ...prepared };
+  });
+}
+async function withPublication<T>(
+  controller: DraftController,
+  send: typeof fetch,
+  complete: (result: Readiness) => Promise<T>,
 ) {
   const requireFinishedImages = () => {
     if (Object.values(controller.store.getState().pendingImages).some(Boolean))
@@ -19,6 +59,7 @@ export async function checkPublication(
   try {
     const record = await controller.quiesce();
     const state = controller.store.getState();
+    requireFinishedImages();
     if (
       flushed.hasLocalOnlyInput ||
       Object.keys(record.inputs).length ||
@@ -81,12 +122,13 @@ export async function checkPublication(
         throw new DraftFailure("storage_unavailable");
       assetOffset = result.nextAssetOffset;
     }
-    return {
+    requireFinishedImages();
+    return await complete({
       revision: flushed.revision,
       issues: [...issues.values()],
       hasMoreIssues: more,
       draft: controller.store.getState().working,
-    };
+    });
   } catch (error) {
     if (
       error instanceof DraftFailure &&

@@ -97,6 +97,35 @@ export function makeDraft(kind: string): DraftDoc {
     resume.data.file = { assetId: "resume" };
     draft.components = [text, projects, skills, work, social, resume];
   }
+  if (kind === "privacy") {
+    const sample = draft.components.find(
+      (component) => component.type === "projects",
+    );
+    if (sample?.type !== "projects")
+      throw new Error("Missing sample project fixture");
+    sample.data.entries = [
+      {
+        id: "sample",
+        title: "PRIVATE_SAMPLE",
+        summary: "PRIVATE_SAMPLE",
+        technologies: [],
+        contribution: "",
+        image: { assetId: "sample-only", alt: "PRIVATE_SAMPLE" },
+      },
+    ];
+    draft.samples[`components.${sample.id}`] = true;
+    const contact = createComponent("contact", "contact");
+    contact.data.recipientId = "s8-portfolio";
+    draft.components.push(contact);
+    draft.links.push({
+      id: "hidden-email",
+      label: "PRIVATE_EMAIL",
+      kind: "email",
+      value: "private@example.test",
+      showInProfile: false,
+      showInSocialComponent: false,
+    });
+  }
   if (kind === "unicode" || kind === "max") {
     const size = kind === "max" ? 1_048_576 : 80_000;
     const pattern = kind === "max" ? "x" : 'عمر😀\r\n\u0000<&>"\\';
