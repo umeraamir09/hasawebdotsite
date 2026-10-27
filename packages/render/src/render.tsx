@@ -18,6 +18,10 @@ import { isWebUrl } from "@hasaweb/schema";
 import { renderToStaticMarkup } from "react-dom/server";
 import { z } from "zod";
 import { partSchema, type RenderPart, renderPart } from "./parts";
+import type { RenderContext } from "./response-policy";
+
+export type { RenderContext } from "./response-policy";
+export { portfolioHeaders, unavailableResponse } from "./response-policy";
 
 const imagePartSchema = z.strictObject({
   kind: z.literal("asset"),
@@ -25,7 +29,6 @@ const imagePartSchema = z.strictObject({
   usage: z.enum(["avatar", "banner", "image"]),
   decoration: z.enum(["none", "cat", "hands"]).default("none"),
 });
-export type RenderContext = "preview" | "public";
 export type PlatformAssets = {
   cssUrl: string;
   scriptUrl: string;
@@ -159,48 +162,6 @@ export function documentShell({
 }): string {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title><link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}" defer></script></head><body>${markup}</body></html>`;
 }
-export function portfolioHeaders(
-  context: RenderContext,
-  {
-    assetOrigins = [],
-    parentOrigin,
-  }: { assetOrigins?: readonly string[]; parentOrigin?: string } = {},
-): Headers {
-  const origins = assetOrigins.map((origin) => {
-    if (!isWebUrl(origin) || new URL(origin).origin !== origin)
-      throw new Error("Expected an asset origin");
-    return origin;
-  });
-  if (
-    parentOrigin &&
-    (!isWebUrl(parentOrigin) || new URL(parentOrigin).origin !== parentOrigin)
-  )
-    throw new Error("Expected a preview parent origin");
-  return new Headers({
-    "Content-Type": "text/html; charset=utf-8",
-    "Cache-Control":
-      context === "preview"
-        ? "private, no-store"
-        : "public, max-age=0, must-revalidate",
-    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "no-referrer",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-    ...(context === "preview"
-      ? { "X-Robots-Tag": "noindex, nofollow, noarchive" }
-      : {}),
-  });
-}
-export function unavailableResponse(): Response {
-  const headers = portfolioHeaders("public");
-  headers.set("Cache-Control", "no-store");
-  headers.set("X-Robots-Tag", "noindex, nofollow");
-  return new Response(
-    '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portfolio unavailable</title><main><h1>Portfolio unavailable</h1><p>This portfolio is not available.</p></main></html>',
-    { status: 404, headers },
-  );
-}
-
 export function portfolioDocumentFrame() {
   const marker = "HASA_CONTROLLED_PAGE_FRAME";
   const html = renderToStaticMarkup(

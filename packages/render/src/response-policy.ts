@@ -1,0 +1,46 @@
+import { isWebUrl } from "@hasaweb/schema";
+
+export type RenderContext = "preview" | "public";
+
+export function portfolioHeaders(
+  context: RenderContext,
+  {
+    assetOrigins = [],
+    parentOrigin,
+  }: { assetOrigins?: readonly string[]; parentOrigin?: string } = {},
+): Headers {
+  const origins = assetOrigins.map((origin) => {
+    if (!isWebUrl(origin) || new URL(origin).origin !== origin)
+      throw new Error("Expected an asset origin");
+    return origin;
+  });
+  if (
+    parentOrigin &&
+    (!isWebUrl(parentOrigin) || new URL(parentOrigin).origin !== parentOrigin)
+  )
+    throw new Error("Expected a preview parent origin");
+  return new Headers({
+    "Content-Type": "text/html; charset=utf-8",
+    "Cache-Control":
+      context === "preview"
+        ? "private, no-store"
+        : "public, max-age=0, must-revalidate",
+    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    ...(context === "preview"
+      ? { "X-Robots-Tag": "noindex, nofollow, noarchive" }
+      : {}),
+  });
+}
+
+export function unavailableResponse(): Response {
+  const headers = portfolioHeaders("public");
+  headers.set("Cache-Control", "no-store");
+  headers.set("X-Robots-Tag", "noindex, nofollow");
+  return new Response(
+    '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portfolio unavailable</title><main><h1>Portfolio unavailable</h1><p>This portfolio is not available.</p></main></html>',
+    { status: 404, headers },
+  );
+}

@@ -1,4 +1,5 @@
 import { health, isLocalProbe } from "@hasaweb/config";
+import { servePublic } from "./public-serving";
 
 interface Env {
   APP_ENV: string;
@@ -7,6 +8,7 @@ interface Env {
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   CONTACT_QUEUE: Queue;
   GITHUB_QUEUE: Queue;
+  ASSET_ORIGIN?: string;
 }
 export default {
   async fetch(request, env) {
@@ -28,6 +30,6 @@ export default {
         asset: await asset?.text(),
       });
     }
-    return new Response("This portfolio is unavailable.", { status: 404 });
+    return servePublic(request, env);
   },
 } satisfies ExportedHandler<Env>;

@@ -1,10 +1,13 @@
 import { type AuthEnvironment, currentSessionIdentity } from "@hasaweb/auth";
 import {
+  ownerPublicationCommit,
+  PublicationCommitError,
   publicationRetainsAsset,
   publicationTasks,
   type Wake,
   wakeSchema,
 } from "@hasaweb/db";
+import { servePublic } from "../../site/src/public-serving";
 import {
   type DispatchEnv,
   runPublicationBatch,
@@ -105,6 +108,31 @@ export default {
         if (env.MANUAL_DISPATCH !== "true")
           await env.PUBLICATION_QUEUE.send({ candidateId: id });
         return reply({ id });
+      }
+      if (url.pathname === "/commit" && request.method === "POST") {
+        const identity = await currentSessionIdentity(env, request.headers);
+        if (!identity) return reply({ code: "unauthorized" }, 401);
+        return reply(
+          await ownerPublicationCommit(env.DB, identity, {
+            assetOrigin: env.ASSET_ORIGIN,
+          }).commit(await request.json()),
+        );
+      }
+      if (url.pathname === "/serve" && request.method === "POST") {
+        const body = await request.json<{
+          url: string;
+          method?: "GET" | "HEAD";
+          ifNoneMatch?: string;
+        }>();
+        return servePublic(
+          new Request(body.url, {
+            method: body.method ?? "GET",
+            headers: body.ifNoneMatch
+              ? { "If-None-Match": body.ifNoneMatch }
+              : {},
+          }),
+          env,
+        );
       }
       if (url.pathname === "/seed-asset")
         return env.SOURCE_FIXTURE.fetch(
@@ -221,6 +249,8 @@ export default {
       }
       return reply("missing route", 404);
     } catch (error) {
+      if (error instanceof PublicationCommitError)
+        return reply({ code: error.code, error: error.message }, 409);
       return reply(
         { error: error instanceof Error ? error.message : "failed" },
         500,

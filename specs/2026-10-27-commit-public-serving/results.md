@@ -1,0 +1,33 @@
+# Phase 25 commit and public serving
+
+## Scope and acceptance
+
+[Phase 25](../../docs/roadmap.md#phase-25-commit-and-serve-a-complete-version) uses the [AC 15 publication rules](../../docs/acceptance-criteria.md#15-subdomain-selection-and-publication), [visitor access rules](../../docs/acceptance-criteria.md#16-public-visitor-experience), [architecture 8.3](../../docs/architecture.md#83-publish-product-15-the-core-flow), the [Phase 24 candidate protocol](../2026-10-24-immutable-publication/protocol.md), and the [renderer response policy](../../packages/render/README.md#document-and-response-policy). It must turn only an owned hold into a permanent claim on first commit, preserve that claim on later commits, reject stale state, and serve only complete active-version artifacts.
+
+Prerequisites checked on October 27, 2026: Phases 04 and 22 through 24 are checked in the roadmap and integrated into shared `main` at `d2bbf05`. Phase 24 and its admission repair merged through PRs #34 and #35. The reserved-name table and migration `0006` permanent-claim triggers are present. The S-8 local milestone is integrated under the paid-at-launch decision. The S-9 browser, query and edge cache policy remains a release and withdrawal dependency; local serving must use a revalidation policy and ignore query variants.
+
+The implementation branch is `feat/25-public-commit-serving` in `/home/umer/hasawebdotsite/.wrangler/worktrees/phase25-public-commit-serving`, created from that shared base. The older `feat/25-commit-serving` worktree contains a pre-integration, untracked audit and is untouched. No parallel agent work was requested. Write boundaries are publication commit persistence, the site Worker, focused fixtures, this record and affected current guidance. Phase 26 owns the owner-facing Publish progress and withdrawal cleanup.
+
+## Decisions
+
+`ownerPublicationCommit` is an internal authenticated service. Phase 26 will choose the owner HTTP operation and progress protocol. The command includes candidate ID, portfolio ID and expected status/version. Migration `0013` retains an immutable command-hash receipt after candidate cleanup. A matching retry returns its original success without touching the current pointer. A different command for the same candidate fails.
+
+The D1 batch inserts a ready version reference, converts only the portfolio's held row on first publication, supersedes the old version, switches the pointer and records the receipt. The receipt's `applied=1` check consumes the pointer update count; a failed guard rolls back the entire batch. The insert rechecks active owner/session, candidate readiness and manifest inventory, saved address/claim and platform blocklist, captured mutable facts, asset origin and expected publication state. Republish keeps the claimed row and fixed address.
+
+The site Worker uses the React-free renderer response-policy entry and looks up a file receipt in the same D1 statement as the active pointer. Only exact public page, platform and copied-asset paths can reach R2. Platform files from retained superseded versions remain available to already loaded old pages. Uncommitted candidates, snapshots, draft paths and private graph routes have no visitor route. Published responses use `no-store` for both browser and CDN headers and ignore query variants. The deployed S-9 policy still requires observed verification.
+
+## Results
+
+Implemented the guarded commit service, `0013_publication_commit.sql`, the site Worker, and a real-workerd fixture that prepares three complete Phase 24 candidates. The focused `pnpm test:publication-serving` passed on the working tree, with evidence in ignored `.wrangler/evidence/s8-dispatch-LJawUh/results.json`. It checked a reserved-name failure with no pointer or claim change, first held-to-claimed conversion, complete manifest page/platform/upload reads, no-store and query handling, `HEAD`/ETag, snapshot/draft/graph denial, concurrent old-or-new page reads, later-version retry fencing, unavailable states and republish after unpublish. The existing Phase 22 reservation suite owns the two-owner reservation race.
+
+`pnpm verify --profile=full` passed at `d2bbf05` with the implementation working tree in `.wrangler/verification/2026-10-27T13-35-56.160Z-Yzq4bl/summary.json`. It ran checks, all application builds, 458 unit tests, renderer and auth browser suites, 85 persistence checks, 11 upload groups, 43 preparation groups, the new serving fixture, draft/autosave/editor suites, runtime smoke and routing. The first full attempt stopped at Biome formatting of Drizzle's new snapshot; formatting that file resolved it. A final boundary review added runtime checks for all D1 file-row fields. `pnpm verify --profile=publication` then passed on the changed source in `.wrangler/verification/2026-10-27T13-53-24.845Z-oH88oj/summary.json`, including checks, all builds, 43 preparation groups and the serving fixture. Routine logs remain ignored.
+
+The fixture was then tightened to move the held name to a competing portfolio before first commit and to race two identical commit calls. The first cannot claim another portfolio's hold; the latter yield one initial receipt and one replay. The focused suite passed in `.wrangler/evidence/s8-dispatch-kTGbOI/results.json`. The test-only change passed `pnpm verify --profile=checks` in `.wrangler/verification/2026-10-27T16-38-17.007Z-G4ubSS/summary.json`. The application source and migration did not change after the publication profile.
+
+The focused fixture first exposed a platform-file bucket mismatch and then a stale-state error classification mistake. Both are fixed and covered by the passing fixture. The manifest file loop now checks all public files from a prepared candidate, including CSS, font, art, pages, robots and sitemap.
+
+Completion approval and roadmap checkoff have not been given. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates. A separate review of the publication, privacy and withdrawal boundary is still required before completion review.
+
+## Documentation impact
+
+The changed assumption is that no committed version or public site route exists. Updated the current baseline, roadmap, architecture, database and renderer guidance, and added a dated supersession note to the Phase 24 candidate protocol. Phase 26 still needs the owner operation and cleanup; paid-provider and observed S-9 checks remain release gates. Historical failures, measurements and approvals are unchanged.

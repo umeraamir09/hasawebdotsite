@@ -29,6 +29,7 @@ const evidence = await createEvidenceDirectory(
   process.env.S8_EVIDENCE,
 );
 const remote = process.argv.includes("--remote");
+const commitMode = process.argv.includes("--commit-serving");
 const remoteState = remote
   ? JSON.parse(
       await readFile(join(root, ".wrangler/s8-provider/state.json"), "utf8"),
@@ -44,7 +45,8 @@ let child,
   profiler;
 const checks = [],
   runs = [],
-  sweeps = [];
+  sweeps = [],
+  preparedForCommit = [];
 function cli(args) {
   const result = spawnSync(process.execPath, [wrangler, ...args], {
     cwd: root,
@@ -86,6 +88,21 @@ async function api(path, body) {
   assert.equal(response.status, 200, JSON.stringify(data));
   if (path.startsWith("/sweep") && data.counts) sweeps.push(data.counts);
   return data;
+}
+async function commitPublication(command) {
+  const response = await request("/commit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(command),
+  });
+  return { status: response.status, ...(await response.json()) };
+}
+function visitor(url, options = {}) {
+  return request("/serve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, ...options }),
+  });
 }
 async function sql(query, values = []) {
   if (remote) {
@@ -558,7 +575,268 @@ try {
         [id],
       )
     ).results[0];
-    {
+    if (commitMode) {
+      preparedForCommit.push({ id, html: pages[0].html, manifest, copied });
+      const publicUrl = "https://s8-fixture.hasaweb.site/";
+      const command = (candidate, expectedVersion, expectedStatus) => ({
+        portfolioId: "s8-portfolio",
+        candidateId: candidate.id,
+        expectedVersion,
+        expectedStatus,
+      });
+      if (preparedForCommit.length === 1) {
+        assert.equal((await visitor(publicUrl)).status, 404);
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${id}/assets/avatar`,
+            )
+          ).status,
+          404,
+        );
+        await sql("INSERT INTO reserved_subdomain(name) VALUES('s8-fixture')");
+        const unavailable = await commitPublication(
+          command(preparedForCommit[0], null, "draft"),
+        );
+        assert.equal(unavailable.status, 409);
+        assert.equal(unavailable.value.code, "unavailable_address");
+        assert.deepEqual(
+          (
+            await sql(
+              "SELECT status,published_version FROM portfolio WHERE id='s8-portfolio'",
+            )
+          ).results[0],
+          { status: "draft", published_version: null },
+        );
+        assert.equal(
+          (
+            await sql(
+              "SELECT state FROM subdomain_claim WHERE name='s8-fixture'",
+            )
+          ).results[0].state,
+          "held",
+        );
+        assert.equal(
+          (
+            await sql(
+              "SELECT count(*) AS n FROM publish_version WHERE portfolio_id='s8-portfolio'",
+            )
+          ).results[0].n,
+          0,
+        );
+        await sql("DELETE FROM reserved_subdomain WHERE name='s8-fixture'");
+        await sql(
+          "INSERT INTO user(id,name,email,email_verified,created_at,updated_at) VALUES('s8-other','Other owner','other@example.test',1,?,?)",
+          [Date.now(), Date.now()],
+        );
+        await sql(
+          "INSERT INTO portfolio(id,user_id,status,draft,created_at,updated_at) VALUES('s8-other-portfolio','s8-other','draft','{}',?,?)",
+          [Date.now(), Date.now()],
+        );
+        await sql(
+          "DELETE FROM subdomain_claim WHERE name='s8-fixture' AND state='held'",
+        );
+        await sql(
+          "INSERT INTO subdomain_claim(name,portfolio_id,state,held_at) VALUES('s8-fixture','s8-other-portfolio','held',?)",
+          [Date.now()],
+        );
+        const wrongHolder = await commitPublication(
+          command(preparedForCommit[0], null, "draft"),
+        );
+        assert.equal(wrongHolder.status, 409);
+        assert.equal(wrongHolder.value.code, "unavailable_address");
+        assert.equal(
+          (
+            await sql(
+              "SELECT portfolio_id,state FROM subdomain_claim WHERE name='s8-fixture'",
+            )
+          ).results[0].portfolio_id,
+          "s8-other-portfolio",
+        );
+        assert.equal(
+          (
+            await sql(
+              "SELECT published_version FROM portfolio WHERE id='s8-portfolio'",
+            )
+          ).results[0].published_version,
+          null,
+        );
+        await sql(
+          "DELETE FROM subdomain_claim WHERE name='s8-fixture' AND state='held'",
+        );
+        await sql(
+          "INSERT INTO subdomain_claim(name,portfolio_id,state,held_at) VALUES('s8-fixture','s8-portfolio','held',?)",
+          [Date.now()],
+        );
+        const concurrent = await Promise.all([
+          commitPublication(command(preparedForCommit[0], null, "draft")),
+          commitPublication(command(preparedForCommit[0], null, "draft")),
+        ]);
+        for (const committed of concurrent) {
+          assert.equal(committed.status, 200, JSON.stringify(committed));
+          assert.equal(committed.value.version, 1);
+        }
+        assert.deepEqual(
+          concurrent.map((result) => result.value.replayed).sort(),
+          [false, true],
+        );
+        assert.equal(
+          (
+            await sql(
+              "SELECT state FROM subdomain_claim WHERE name='s8-fixture'",
+            )
+          ).results[0].state,
+          "claimed",
+        );
+        const oldPage = await visitor(publicUrl);
+        assert.equal(oldPage.status, 200);
+        assert.ok((await oldPage.text()).includes(preparedForCommit[0].html));
+        assert.equal(oldPage.headers.get("Cache-Control"), "no-store");
+        const platform = manifest.files.find((file) =>
+          file.path.endsWith(".css"),
+        );
+        assert.ok(platform);
+        assert.equal(
+          (await visitor(`https://s8-fixture.hasaweb.site${platform.path}`))
+            .status,
+          200,
+          platform.path,
+        );
+        const asset = manifest.files.find((file) =>
+          file.path.startsWith("/assets/"),
+        );
+        assert.ok(asset);
+        const assetUrl = `https://s8-assets.invalid/candidate/${id}${asset.path}`;
+        const file = await visitor(assetUrl);
+        assert.equal(file.status, 200);
+        assert.equal(file.headers.get("Cache-Control"), "no-store");
+        assert.equal((await visitor(assetUrl, { method: "HEAD" })).status, 200);
+        assert.equal(
+          (await visitor(assetUrl, { ifNoneMatch: file.headers.get("ETag") }))
+            .status,
+          304,
+        );
+        assert.equal((await visitor(`${assetUrl}?variant=warm`)).status, 200);
+        for (const url of [
+          `https://s8-assets.invalid/candidate/${id}/snapshot.json`,
+          `https://s8-fixture.hasaweb.site/_/github.json`,
+          `https://s8-fixture.hasaweb.site/api/assets/avatar`,
+          `https://unknown.hasaweb.site/`,
+          `https://www.hasaweb.site/`,
+        ])
+          assert.equal((await visitor(url)).status, 404, url);
+        const changedCommand = await commitPublication(
+          command(preparedForCommit[0], 1, "published"),
+        );
+        assert.equal(changedCommand.status, 409);
+        assert.equal(changedCommand.value.code, "command_conflict");
+      } else if (preparedForCommit.length === 2) {
+        const first = preparedForCommit[0];
+        const stale = await commitPublication(
+          command(preparedForCommit[1], null, "draft"),
+        );
+        assert.equal(stale.status, 409);
+        assert.equal(stale.value.code, "stale_publication");
+        const raced = await Promise.all([
+          ...Array.from({ length: 8 }, () => visitor(publicUrl)),
+          commitPublication(command(preparedForCommit[1], 1, "published")),
+        ]);
+        const committed = raced.at(-1);
+        assert.equal(committed.status, 200, JSON.stringify(committed));
+        assert.equal(committed.value.version, 2);
+        for (const response of raced.slice(0, -1)) {
+          assert.equal(response.status, 200);
+          const body = await response.text();
+          assert.ok(
+            body.includes(first.html) ||
+              body.includes(preparedForCommit[1].html),
+          );
+        }
+        const newPage = await visitor(publicUrl);
+        assert.equal(newPage.status, 200);
+        assert.ok((await newPage.text()).includes(preparedForCommit[1].html));
+        for (const file of manifest.files) {
+          if (file.path === "snapshot.json") continue;
+          const url = file.path.startsWith("/assets/")
+            ? `https://s8-assets.invalid/candidate/${id}${file.path}`
+            : `https://s8-fixture.hasaweb.site${file.path}`;
+          const response = await visitor(url);
+          assert.equal(
+            response.status,
+            file.path === "/404" ? 404 : 200,
+            file.path,
+          );
+          assert.equal(
+            response.headers.get("Content-Type"),
+            file.contentType,
+            file.path,
+          );
+        }
+        const oldPlatform = first.manifest.files.find((file) =>
+          file.path.endsWith(".css"),
+        );
+        const oldAsset = first.manifest.files.find((file) =>
+          file.path.startsWith("/assets/"),
+        );
+        assert.equal(
+          (await visitor(`https://s8-fixture.hasaweb.site${oldPlatform.path}`))
+            .status,
+          200,
+        );
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${first.id}${oldAsset.path}`,
+            )
+          ).status,
+          200,
+        );
+        const replay = await commitPublication(command(first, null, "draft"));
+        assert.equal(replay.status, 200);
+        assert.equal(replay.value.replayed, true);
+        assert.equal(replay.value.version, 1);
+        assert.equal(
+          (
+            await sql(
+              "SELECT published_version FROM portfolio WHERE id='s8-portfolio'",
+            )
+          ).results[0].published_version,
+          2,
+        );
+      } else if (preparedForCommit.length === 3) {
+        await sql(
+          "UPDATE portfolio SET status='unpublished' WHERE id='s8-portfolio'",
+        );
+        assert.equal((await visitor(publicUrl)).status, 404);
+        const first = preparedForCommit[0];
+        const oldAsset = first.manifest.files.find((file) =>
+          file.path.startsWith("/assets/"),
+        );
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${first.id}${oldAsset.path}`,
+            )
+          ).status,
+          404,
+        );
+        const committed = await commitPublication(
+          command(preparedForCommit[2], 2, "unpublished"),
+        );
+        assert.equal(committed.status, 200, JSON.stringify(committed));
+        assert.equal(committed.value.version, 3);
+        assert.equal(committed.value.address, "s8-fixture");
+        assert.equal(
+          (
+            await sql(
+              "SELECT state FROM subdomain_claim WHERE name='s8-fixture'",
+            )
+          ).results[0].state,
+          "claimed",
+        );
+        assert.equal((await visitor(publicUrl)).status, 200);
+      }
+    } else {
       run.cleanupStartedAt = new Date().toISOString();
       const cleanupSteps = [];
       assert.equal((await api(`/cleanup?id=${id}`)).value, true);
@@ -581,6 +859,11 @@ try {
       `PASS ${kind}: ${run.inputBytes} input bytes, ${remote ? run.dispatchCheckpoints : run.invocations.length} dispatch checkpoints`,
     );
   }
+  // biome-ignore format: Keep the existing S-8 suite's layout stable.
+  if (commitMode) {
+    assert.equal(preparedForCommit.length, 3);
+    checks.push("First claim, failure rollback, complete version serving, stale and delayed retries, retained dependencies, privacy, no-store query policy and republish after unpublish");
+  } else {
   assert.equal(
     (
       await sql(
@@ -1377,6 +1660,7 @@ try {
   checks.push(
     "Preparation, replay and cleanup preserve the seeded pointer and claim before account deletion",
   );
+  }
   console.log(`PASS ${checks.length} S-8 integration groups`);
 } catch (error) {
   await writeFile(join(evidence, "failure.txt"), String(error.stack));
