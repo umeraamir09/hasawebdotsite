@@ -50,6 +50,34 @@
       "when": 1792595661312,
       "tag": "0006_address_reservations",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792863384892,
+      "tag": "0007_publication_dispatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792865900972,
+      "tag": "0008_publication_candidate_policy",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792866500856,
+      "tag": "0009_publication_pages",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792926320920,
+      "tag": "0010_publication_retention",
+      "breakpoints": true
     }
   ]
 }

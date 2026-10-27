@@ -1,0 +1,75 @@
+{
+  "start": "2026-10-25T17:32:41.578Z",
+  "end": "2026-10-25T17:45:20.177Z",
+  "mode": "native",
+  "batch": "32",
+  "results": [
+    {
+      "script": "hasaweb-s8-d3c356-full-source",
+      "status": 200,
+      "data": {
+        "viewer": {
+          "accounts": [
+            {
+              "workersInvocationsAdaptive": [
+                {
+                  "dimensions": {
+                    "coloCode": "SJC",
+                    "scriptName": "hasaweb-s8-d3c356-full-source",
+                    "scriptVersion": "c0403b07-093d-4b22-b7d2-4ae590ce4875",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 3118,
+                    "cpuTimeP95": 6805,
+                    "cpuTimeP99": 6805
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 2
+                  }
+                },
+                {
+                  "dimensions": {
+                    "coloCode": "LAX",
+                    "scriptName": "hasaweb-s8-d3c356-full-source",
+                    "scriptVersion": "c0403b07-093d-4b22-b7d2-4ae590ce4875",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 2085,
+                    "cpuTimeP95": 4483,
+                    "cpuTimeP99": 4483
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 4
+                  }
+                },
+                {
+                  "dimensions": {
+                    "coloCode": "SEA",
+                    "scriptName": "hasaweb-s8-d3c356-full-source",
+                    "scriptVersion": "c0403b07-093d-4b22-b7d2-4ae590ce4875",
+                    "status": "success"
+                  },
+                  "quantiles": {
+                    "cpuTimeP50": 2217,
+                    "cpuTimeP95": 6984,
+                    "cpuTimeP99": 6984
+                  },
+                  "sum": {
+                    "errors": 0,
+                    "requests": 16
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "errors": null
+    }
+  ],
+  "limitation": "Initial matrix interval from the actual full web-module source entry. Per-region provider quantiles do not label warm/cold isolates and are not combined with Queue CPU."
+}

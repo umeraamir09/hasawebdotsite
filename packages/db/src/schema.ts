@@ -482,3 +482,90 @@ export const schema = {
   counter,
   operatorEmailAudit,
 };
+
+// Candidate tombstones survive owner deletion until private object cleanup.
+// No live publication pointer or address mutation belongs to this subsystem.
+export const publicationCandidate = sqliteTable(
+  "publication_candidate",
+  {
+    id: text("id").primaryKey(),
+    portfolioId: text("portfolio_id").notNull(),
+    ownerId: text("owner_id").notNull(),
+    sourceRevision: integer("source_revision").notNull(),
+    cleanedAt: integer("cleaned_at"),
+    source: text("source"),
+    rendererVersion: text("renderer_version").notNull().default("s8-v1"),
+    taskBatch: integer("task_batch").notNull().default(16),
+    assetOrigin: text("asset_origin")
+      .notNull()
+      .default("https://s8-assets.invalid"),
+    status: text("status").notNull(),
+    cursor: text("cursor").notNull(),
+    sequence: integer("sequence").notNull().default(0),
+    outputCount: integer("output_count").notNull().default(0),
+    pageIndex: integer("page_index").notNull().default(0),
+    leaseToken: text("lease_token"),
+    leaseUntil: integer("lease_until").notNull().default(0),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at").notNull(),
+    deadlineAt: integer("deadline_at").notNull(),
+    lastError: text("last_error"),
+    ...timestamps(),
+  },
+  (t) => [
+    index("publication_candidate_due_idx").on(t.status, t.nextAttemptAt),
+    index("publication_candidate_owner_idx").on(t.portfolioId),
+    check(
+      "publication_candidate_status",
+      sql`${t.status} in ('preparing','assembling','transferring','ready','failed','cleaning','cleaned')`,
+    ),
+    check(
+      "publication_candidate_source",
+      sql`${t.source} is null or json_valid(${t.source})`,
+    ),
+    check(
+      "publication_candidate_cursor",
+      sql`json_valid(${t.cursor}) and length(${t.cursor})<=32768`,
+    ),
+  ],
+);
+export const publicationCandidateIndex = sqliteTable(
+  "publication_candidate_index",
+  {
+    candidateId: text("candidate_id")
+      .primaryKey()
+      .references(() => publicationCandidate.id, { onDelete: "cascade" }),
+    value: text("value").notNull(),
+  },
+  (t) => [
+    check("publication_candidate_index_json", sql`json_valid(${t.value})`),
+  ],
+);
+export const publicationTransfer = sqliteTable(
+  "publication_transfer",
+  {
+    candidateId: text("candidate_id")
+      .notNull()
+      .references(() => publicationCandidate.id, { onDelete: "cascade" }),
+    assetId: text("asset_id").notNull(),
+    purpose: text("purpose").notNull(),
+    bytes: integer("bytes").notNull(),
+    contentType: text("content_type").notNull(),
+    complete: integer("complete").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.candidateId, t.assetId, t.purpose] })],
+);
+
+export const publicationPage = sqliteTable(
+  "publication_page",
+  {
+    candidateId: text("candidate_id")
+      .notNull()
+      .references(() => publicationCandidate.id, { onDelete: "cascade" }),
+    ordinal: integer("ordinal").notNull(),
+    path: text("path").notNull(),
+    parts: integer("parts").notNull().default(0),
+    ready: integer("ready").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.candidateId, t.ordinal] })],
+);

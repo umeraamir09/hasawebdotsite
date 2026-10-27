@@ -1,0 +1,562 @@
+{
+  "recordedAt": "2026-10-25T09:59:53.435Z",
+  "input": "/home/umer/.codex/worktrees/s8-dispatch-feasibility/hasawebdotsite/specs/2026-10-24-s8-dispatch-feasibility/evidence/local-batch32-results.json",
+  "budget": {
+    "requests": 100000,
+    "reads": 5000000,
+    "writes": 100000,
+    "queueOperations": 10000,
+    "r2ClassA": 1000000,
+    "r2ClassB": 10000000,
+    "d1Bytes": 500000000,
+    "r2Bytes": 10000000000
+  },
+  "owner": {
+    "requests": 52400,
+    "reads": 1450000,
+    "writes": 66000
+  },
+  "shared": {
+    "requests": 3588,
+    "reads": 100000,
+    "writes": 6000,
+    "queueOperations": 2910,
+    "r2ClassA": 73920,
+    "r2ClassB": 1080000
+  },
+  "publicationsPerDay": 30,
+  "method": "Observed counters plus explicit workload forecasts. Daily and monthly units remain separate. Each ordinary wake uses three Queue operations. Replay allowances conservatively include an extra complete wake; the failed-candidate allowance includes full work, cleanup and four maximum-cost extra invocations.",
+  "assumptions": [
+    "100 portfolios, 30 editing sessions, 30 publishes per day, 50 views per portfolio, 50 GitHub-enabled portfolios.",
+    "GitHub: 200 visit refreshes and 50 private daily sweeps, with three extra Queue reads per message in the retry scenario.",
+    "Contact: 90 accepted messages with all five delivery attempts; ten verification/notice jobs with three extra reads each.",
+    "Shared request forecast adds 2500 graph requests, 250 GitHub jobs, 450 contact attempts, ten notice jobs, 90 submissions and 288 shared sweeps.",
+    "Shared R2 forecast assumes 60 uploads and 100 orphan-list calls daily, plus 36000 reads daily with no public edge-cache savings. Add the bounded maximum four two-bucket tombstone checks per five-minute sweep.",
+    "The future contact/GitHub handlers must validate the reserved shared D1 allowance of 100000 reads and 6000 writes daily.",
+    "The publication start request conservatively counts both web and jobs. Provider fixture seeding and control polling are excluded from measured counters.",
+    "Publication forecast adds owner polling every five seconds for at least five minutes, conservatively two Worker requests and ten D1 reads per poll, plus two snapshot/manifest invocations, six Queue operations, four reads, three writes and two R2 reads/writes. These later-phase operations are unimplemented and require measurement."
+  ],
+  "storage": {
+    "d1ExistingMeasuredLocalAllocation": 426217472,
+    "d1RemainingBeforeCandidates": 73782528,
+    "sourcePayloadOnlyAt100Candidates": 104845500,
+    "model": "Baseline is the historical local page-allocation measurement, not current production usage. Candidate payload is a lower bound; row/index pages, transfer/page receipts and retained tombstones add storage. Admission and physical retention are not yet bounded.",
+    "r2MaximumAssetForecast": {
+      "portfolios": 100,
+      "privateBytesPerPortfolio": 31457280,
+      "publicBytesPerVersion": 26214400,
+      "withOneVersion": 5767168000,
+      "withTwoVersions": 8388608000,
+      "withThreeVersions": 11010048000,
+      "sixtyMaximumImageReplacementsPerDayForThirtyDays": 9437184000,
+      "caveat": "Asset-only forecast excludes HTML/assembly copies, additional project/case images, platform assets and fragmentation. Measured object inventories accompany cases when present. Replaced private assets must be collected while protecting active sealed sources."
+    },
+    "tombstoneSweepUpperForecastPerMonth": {
+      "r2Lists": 69120
+    }
+  },
+  "scenarios": [
+    {
+      "kind": "small",
+      "inputBytes": 604,
+      "pages": 1,
+      "completedBatches": 8,
+      "measuredPerPublication": {
+        "requests": 12,
+        "reads": 410,
+        "writes": 38,
+        "queueOperations": 24,
+        "r2ClassA": 5,
+        "r2ClassB": 6
+      },
+      "publicationForecast": {
+        "requests": 122,
+        "reads": 604,
+        "writes": 3,
+        "queueOperations": 6,
+        "r2ClassA": 2,
+        "r2ClassB": 2
+      },
+      "pollingCalls": 60,
+      "perPublication": {
+        "requests": 134,
+        "reads": 1014,
+        "writes": 41,
+        "queueOperations": 30,
+        "r2ClassA": 7,
+        "r2ClassB": 8
+      },
+      "replayBatches": 1,
+      "replayReserve": {
+        "requests": 2,
+        "reads": 53,
+        "writes": 9,
+        "queueOperations": 3,
+        "r2ClassA": 1,
+        "r2ClassB": 4
+      },
+      "cleanup": {
+        "requests": 8,
+        "reads": 53,
+        "writes": 28,
+        "queueOperations": 24,
+        "r2ClassA": 16,
+        "r2ClassB": 0
+      },
+      "failedCandidate": {
+        "requests": 150,
+        "reads": 1279,
+        "writes": 105,
+        "queueOperations": 66,
+        "r2ClassA": 27,
+        "r2ClassB": 24
+      },
+      "projected": {
+        "requests": 60458,
+        "reads": 1584879,
+        "writes": 74445,
+        "queueOperations": 4686,
+        "r2ClassA": 96330,
+        "r2ClassB": 1091520
+      },
+      "remaining": {
+        "requests": 39542,
+        "reads": 3415121,
+        "writes": 25555,
+        "queueOperations": 5314,
+        "r2ClassA": 903670,
+        "r2ClassB": 8908480
+      },
+      "maxParentCalls": 18,
+      "maxParentQueries": 18,
+      "sourceQueries": 2,
+      "externalSubrequests": 0,
+      "simultaneousStorageStreams": 2,
+      "retained": {
+        "sites": {
+          "objects": 3,
+          "bytes": 2148
+        },
+        "assets": {
+          "objects": 2,
+          "bytes": 10485760
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 483,
+        "cursorBytes": 2
+      },
+      "retryStorm": {
+        "1": {
+          "requests": 134,
+          "reads": 1014,
+          "writes": 41,
+          "queueOperations": 30,
+          "r2ClassA": 7,
+          "r2ClassB": 8
+        },
+        "3": {
+          "requests": 402,
+          "reads": 3042,
+          "writes": 123,
+          "queueOperations": 90,
+          "r2ClassA": 21,
+          "r2ClassB": 24
+        },
+        "10": {
+          "requests": 1340,
+          "reads": 10140,
+          "writes": 410,
+          "queueOperations": 300,
+          "r2ClassA": 70,
+          "r2ClassB": 80
+        }
+      },
+      "exceeded": [],
+      "publicationCapacity": {
+        "requests": 304,
+        "reads": 3079,
+        "writes": 357,
+        "queueOperations": 123
+      }
+    },
+    {
+      "kind": "assets",
+      "inputBytes": 7099,
+      "pages": 3,
+      "completedBatches": 70,
+      "measuredPerPublication": {
+        "requests": 80,
+        "reads": 6624,
+        "writes": 249,
+        "queueOperations": 210,
+        "r2ClassA": 64,
+        "r2ClassB": 114
+      },
+      "publicationForecast": {
+        "requests": 122,
+        "reads": 604,
+        "writes": 3,
+        "queueOperations": 6,
+        "r2ClassA": 2,
+        "r2ClassB": 2
+      },
+      "pollingCalls": 60,
+      "perPublication": {
+        "requests": 202,
+        "reads": 7228,
+        "writes": 252,
+        "queueOperations": 216,
+        "r2ClassA": 66,
+        "r2ClassB": 116
+      },
+      "replayBatches": 7,
+      "replayReserve": {
+        "requests": 14,
+        "reads": 9576,
+        "writes": 91,
+        "queueOperations": 21,
+        "r2ClassA": 7,
+        "r2ClassB": 112
+      },
+      "cleanup": {
+        "requests": 8,
+        "reads": 53,
+        "writes": 28,
+        "queueOperations": 24,
+        "r2ClassA": 16,
+        "r2ClassB": 0
+      },
+      "failedCandidate": {
+        "requests": 218,
+        "reads": 12753,
+        "writes": 332,
+        "queueOperations": 252,
+        "r2ClassA": 86,
+        "r2ClassB": 180
+      },
+      "projected": {
+        "requests": 62926,
+        "reads": 2068463,
+        "writes": 83462,
+        "queueOperations": 10992,
+        "r2ClassA": 156600,
+        "r2ClassB": 1290600
+      },
+      "remaining": {
+        "requests": 37074,
+        "reads": 2931537,
+        "writes": 16538,
+        "queueOperations": -992,
+        "r2ClassA": 843400,
+        "r2ClassB": 8709400
+      },
+      "maxParentCalls": 30,
+      "maxParentQueries": 29,
+      "sourceQueries": 2,
+      "externalSubrequests": 0,
+      "simultaneousStorageStreams": 2,
+      "retained": {
+        "sites": {
+          "objects": 56,
+          "bytes": 52912
+        },
+        "assets": {
+          "objects": 8,
+          "bytes": 47185920
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 6978,
+        "cursorBytes": 2
+      },
+      "retryStorm": {
+        "1": {
+          "requests": 202,
+          "reads": 7228,
+          "writes": 252,
+          "queueOperations": 216,
+          "r2ClassA": 66,
+          "r2ClassB": 116
+        },
+        "3": {
+          "requests": 606,
+          "reads": 21684,
+          "writes": 756,
+          "queueOperations": 648,
+          "r2ClassA": 198,
+          "r2ClassB": 348
+        },
+        "10": {
+          "requests": 2020,
+          "reads": 72280,
+          "writes": 2520,
+          "queueOperations": 2160,
+          "r2ClassA": 660,
+          "r2ClassB": 1160
+        }
+      },
+      "exceeded": ["queueOperations"],
+      "publicationCapacity": {
+        "requests": 195,
+        "reads": 203,
+        "writes": 74,
+        "queueOperations": 26
+      }
+    },
+    {
+      "kind": "max",
+      "inputBytes": 1048576,
+      "pages": 3,
+      "completedBatches": 51,
+      "measuredPerPublication": {
+        "requests": 57,
+        "reads": 2424,
+        "writes": 180,
+        "queueOperations": 153,
+        "r2ClassA": 46,
+        "r2ClassB": 82
+      },
+      "publicationForecast": {
+        "requests": 122,
+        "reads": 604,
+        "writes": 3,
+        "queueOperations": 6,
+        "r2ClassA": 2,
+        "r2ClassB": 2
+      },
+      "pollingCalls": 60,
+      "perPublication": {
+        "requests": 179,
+        "reads": 3028,
+        "writes": 183,
+        "queueOperations": 159,
+        "r2ClassA": 48,
+        "r2ClassB": 84
+      },
+      "replayBatches": 6,
+      "replayReserve": {
+        "requests": 12,
+        "reads": 1494,
+        "writes": 78,
+        "queueOperations": 18,
+        "r2ClassA": 6,
+        "r2ClassB": 96
+      },
+      "cleanup": {
+        "requests": 8,
+        "reads": 53,
+        "writes": 28,
+        "queueOperations": 24,
+        "r2ClassA": 16,
+        "r2ClassB": 0
+      },
+      "failedCandidate": {
+        "requests": 195,
+        "reads": 4077,
+        "writes": 263,
+        "queueOperations": 195,
+        "r2ClassA": 68,
+        "r2ClassB": 148
+      },
+      "projected": {
+        "requests": 62153,
+        "reads": 1691327,
+        "writes": 80933,
+        "queueOperations": 9135,
+        "r2ClassA": 138960,
+        "r2ClassB": 1246440
+      },
+      "remaining": {
+        "requests": 37847,
+        "reads": 3308673,
+        "writes": 19067,
+        "queueOperations": 865,
+        "r2ClassA": 861040,
+        "r2ClassB": 8753560
+      },
+      "maxParentCalls": 36,
+      "maxParentQueries": 34,
+      "sourceQueries": 2,
+      "externalSubrequests": 0,
+      "simultaneousStorageStreams": 2,
+      "retained": {
+        "sites": {
+          "objects": 42,
+          "bytes": 9437178
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2
+      },
+      "retryStorm": {
+        "1": {
+          "requests": 179,
+          "reads": 3028,
+          "writes": 183,
+          "queueOperations": 159,
+          "r2ClassA": 48,
+          "r2ClassB": 84
+        },
+        "3": {
+          "requests": 537,
+          "reads": 9084,
+          "writes": 549,
+          "queueOperations": 477,
+          "r2ClassA": 144,
+          "r2ClassB": 252
+        },
+        "10": {
+          "requests": 1790,
+          "reads": 30280,
+          "writes": 1830,
+          "queueOperations": 1590,
+          "r2ClassA": 480,
+          "r2ClassB": 840
+        }
+      },
+      "exceeded": [],
+      "publicationCapacity": {
+        "requests": 220,
+        "reads": 753,
+        "writes": 95,
+        "queueOperations": 34
+      }
+    },
+    {
+      "kind": "dense",
+      "inputBytes": 520383,
+      "pages": 1,
+      "completedBatches": 116,
+      "measuredPerPublication": {
+        "requests": 120,
+        "reads": 202954,
+        "writes": 361,
+        "queueOperations": 348,
+        "r2ClassA": 113,
+        "r2ClassB": 222
+      },
+      "publicationForecast": {
+        "requests": 122,
+        "reads": 604,
+        "writes": 3,
+        "queueOperations": 6,
+        "r2ClassA": 2,
+        "r2ClassB": 2
+      },
+      "pollingCalls": 60,
+      "perPublication": {
+        "requests": 242,
+        "reads": 203558,
+        "writes": 364,
+        "queueOperations": 354,
+        "r2ClassA": 115,
+        "r2ClassB": 224
+      },
+      "replayBatches": 12,
+      "replayReserve": {
+        "requests": 24,
+        "reads": 576492,
+        "writes": 108,
+        "queueOperations": 36,
+        "r2ClassA": 12,
+        "r2ClassB": 192
+      },
+      "cleanup": {
+        "requests": 9,
+        "reads": 71,
+        "writes": 35,
+        "queueOperations": 27,
+        "r2ClassA": 18,
+        "r2ClassB": 0
+      },
+      "failedCandidate": {
+        "requests": 259,
+        "reads": 395793,
+        "writes": 435,
+        "queueOperations": 393,
+        "r2ClassA": 137,
+        "r2ClassB": 288
+      },
+      "projected": {
+        "requests": 64497,
+        "reads": 25349423,
+        "writes": 87645,
+        "queueOperations": 15813,
+        "r2ClassA": 208530,
+        "r2ClassB": 1463040
+      },
+      "remaining": {
+        "requests": 35503,
+        "reads": -20349423,
+        "writes": 12355,
+        "queueOperations": -5813,
+        "r2ClassA": 791470,
+        "r2ClassB": 8536960
+      },
+      "maxParentCalls": 20,
+      "maxParentQueries": 17,
+      "sourceQueries": 2,
+      "externalSubrequests": 0,
+      "simultaneousStorageStreams": 2,
+      "retained": {
+        "sites": {
+          "objects": 111,
+          "bytes": 1999416
+        },
+        "assets": {
+          "objects": 2,
+          "bytes": 10485760
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 520262,
+        "cursorBytes": 2
+      },
+      "retryStorm": {
+        "1": {
+          "requests": 242,
+          "reads": 203558,
+          "writes": 364,
+          "queueOperations": 354,
+          "r2ClassA": 115,
+          "r2ClassB": 224
+        },
+        "3": {
+          "requests": 726,
+          "reads": 610674,
+          "writes": 1092,
+          "queueOperations": 1062,
+          "r2ClassA": 345,
+          "r2ClassB": 672
+        },
+        "10": {
+          "requests": 2420,
+          "reads": 2035580,
+          "writes": 3640,
+          "queueOperations": 3540,
+          "r2ClassA": 1150,
+          "r2ClassB": 2240
+        }
+      },
+      "exceeded": ["reads", "queueOperations"],
+      "publicationCapacity": {
+        "requests": 159,
+        "reads": 3,
+        "writes": 54,
+        "queueOperations": 16
+      }
+    }
+  ],
+  "limitations": [
+    "No CPU verdict follows from operation counters. Native warm/cold provider evidence is a separate gate.",
+    "Future shared-job estimates are forecasts, not measurements of unimplemented consumers.",
+    "Storage requires separate measured allocation, inventory, retention and cleanup assumptions; operation headroom alone cannot establish storage feasibility."
+  ],
+  "verified": false
+}

@@ -6,6 +6,8 @@ export * from "./legacy-validation";
 export * from "./owner-api";
 export * from "./private-assets";
 export * from "./publication";
+export * from "./publication-index";
+export * from "./publication-tasks";
 export * from "./repositories";
 export * from "./reserved-subdomains";
 export * from "./schema";

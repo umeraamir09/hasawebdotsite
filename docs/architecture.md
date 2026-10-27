@@ -11,7 +11,7 @@
 
 ## 1. Purpose and scope
 
-This document defines the technical architecture for the hasawebsite MVP: the technologies used, how the system is split across Cloudflare services, how data flows, and how the design stays inside Cloudflare's free tier while keeping a one-step upgrade path to Workers Paid ($5/month).
+This document defines the technical architecture for the hasawebsite MVP: the technologies used, how the system is split across Cloudflare services, how data flows, and how local implementation prepares for the owner-approved Workers Paid launch. The [October 27 deployment policy](deployment-policy.md) requires the $5/month-minimum upgrade only during launch preparation and moves paid-provider verification to release.
 
 It covers the MVP as scoped in `product.md`. It does not redesign features, add capabilities, or approve visual design details by implication. The [appearance catalog](appearance-catalog.md) records the approved six-theme/two-decoration catalog and font/default choices. Section 16 records the confirmed decisions and catalog approval.
 
@@ -25,7 +25,7 @@ The October 16 onboarding specification adds required first-user setup and optio
 
 | # | Topic | Decision | Status |
 | --- | --- | --- | --- |
-| D-1 | Budget | Free tier for launch; design so upgrading to Workers Paid ($5/month) is a configuration change, not a rewrite | confirmed |
+| D-1 | Budget | Workers Paid at launch, currently $5/month minimum; local development stays unpaid. Upgrade and verify during launch preparation before activation. See [deployment policy](deployment-policy.md). Supersedes the original Free-at-launch choice on October 27, 2026 | confirmed |
 | D-2 | Target scale | Up to ~100 portfolios (beta/launch) | confirmed |
 | D-3 | Domain | `hasaweb.site`, owner confirmed registration October 15, 2026; Cloudflare full-zone activation/routing verification is in S-3 | confirmed |
 | D-4 | Framework | Next.js (App Router) on Workers via the OpenNext Cloudflare adapter | confirmed |
@@ -56,13 +56,15 @@ These requirements from `product.md` and `acceptance-criteria.md` shape the desi
 | A-4 | Address reservation and claim are **atomic** under concurrent selection and publishes | AC 15.2 | One unique namespace record in D1 with `held`/`claimed` states: the reservation is created on the confirmed Address save and converted to the claim in the same transaction as the pointer flip |
 | A-5 | Autosave detects **stale versions** across tabs and devices | product 14, AC 14.4 | Optimistic concurrency with a draft revision counter |
 | A-6 | Owner-generated pages are served from sibling subdomains of the app domain | product 8, AC 8.3 | No owner HTML/CSS/JS; strict allowlist rendering; strict CSP; host-only cookies |
-| A-7 | **Free-tier limits**: 10 ms CPU per request, 100,000 Worker requests/day, 100 emails/day, 1,000 KV writes/day | Cloudflare docs | Pre-rendering, D1 instead of KV for state, outbox pattern, bounded cron work |
+| A-7 | **Paid launch budget**, with separate provider allowances and retained historical Free comparisons | Cloudflare docs | Pre-rendering, D1 instead of KV for state, outbox pattern, bounded cron work |
 | A-8 | Component library must **grow over time** | rough-idea 4-5 | Component registry: each component is a self-describing module |
 | A-9 | Accessibility and readable generated palettes | product 12, 16 | Pure, tested palette generator; accessible primitives; axe in CI |
 
 ---
 
-## 4. Cloudflare free-tier constraints and what they force
+## 4. Platform budgets and historical Free comparison
+
+The [paid-at-launch policy](deployment-policy.md) controls current implementation and release gates. The table below preserves the original Free constraints for comparison, not as local development blockers. Resend and other provider limits still apply independently.
 
 Verified against Cloudflare's published limits (Workers limits page last updated October 12, 2026). Some third-party articles quote outdated figures (for example a 1 MB script limit or 30 ms CPU); the official documentation is authoritative.
 
@@ -80,7 +82,7 @@ Verified against Cloudflare's published limits (Workers limits page last updated
 | **Resend (free)** | 3,000 emails/month, **100/day**, 3 verified domains | Global and per-site daily email budget guard. |
 | **Turnstile, Email Routing (inbound), Universal SSL, DNS** | Free | Spam protection, `abuse@` inbox, TLS for apex and first-level wildcard. |
 
-Only unavoidable cost at launch: **domain registration** for `hasaweb.site`.
+Launch includes domain registration, the Workers Paid subscription and any metered provider overages. The subscription is not purchased during local development. R2 keeps its separate included allowance and usage charges.
 
 ---
 
@@ -126,7 +128,7 @@ This diagram shows the target responsibilities. Owner APIs already use the named
 
 Splitting these keeps the public path tiny, keeps Next.js CPU off visitor traffic, and means each Worker can scale or be upgraded independently. Cross-Worker calls use service bindings and Workflow bindings.
 
-S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. Keep the web shell and provider authentication in `web`, but route hot owner APIs through an internal service binding to a thin Hono entry in `jobs`. Cache auth configuration per isolate without retaining request identities, and retain real Better Auth session/deletion checks. See [S-2 evidence](../specs/2026-10-15-app-runtime/results.md). Phase 11A's October 16 [full-body experiment](../specs/2026-10-16-owner-api-runtime/results.md) fails at 1 MiB and includes an `exceededCpu` outcome. The owner requested implementation/testing of the bounded follow-up and approved explicit URL/email limits. Use the [tested incremental repository and protocol](../specs/2026-10-16-free-owner-saves/protocol.md), with [CPU evidence and limitations](../specs/2026-10-16-free-owner-saves/results.md) and its separate quota model. Phase 11B adds tracked staging tables and private setup storage, with revision-aware progress and a permanent entry milestone. Phase 13 adds the [production draft/progress APIs and bounded staged legacy validation](../specs/2026-10-17-revision-aware-drafts/protocol.md), with persisted setup/content contexts and post-handoff recovery. Phase 14 supplies the shared browser autosave/recovery controller; Phase 15 adds selected-change review and the fixed same-tab authentication recovery callback. Editor/onboarding adapters remain in their phases. The full-body route remains unsupported for Free saves. Warm p95 evidence cannot guarantee every cold invocation or establish publication/Queue feasibility.
+S-2 measured October 15, 2026 rejects the assumed OpenNext hot-API CPU budget. Keep the web shell and provider authentication in `web`, but route hot owner APIs through an internal service binding to a thin Hono entry in `jobs`. Cache auth configuration per isolate without retaining request identities, and retain real Better Auth session/deletion checks. See [S-2 evidence](../specs/2026-10-15-app-runtime/results.md). Phase 11A's October 16 [full-body experiment](../specs/2026-10-16-owner-api-runtime/results.md) fails at 1 MiB and includes an `exceededCpu` outcome. The owner requested implementation/testing of the bounded follow-up and approved explicit URL/email limits. Use the [tested incremental repository and protocol](../specs/2026-10-16-free-owner-saves/protocol.md), with [CPU evidence and limitations](../specs/2026-10-16-free-owner-saves/results.md) and its separate quota model. Phase 11B adds tracked staging tables and private setup storage, with revision-aware progress and a permanent entry milestone. Phase 13 adds the [production draft/progress APIs and bounded staged legacy validation](../specs/2026-10-17-revision-aware-drafts/protocol.md), with persisted setup/content contexts and post-handoff recovery. Phase 14 supplies the shared browser autosave/recovery controller; Phase 15 adds selected-change review and the fixed same-tab authentication recovery callback. Editor/onboarding adapters remain in their phases. The full-body route remains unsupported by the current save contract, including the Paid launch target; the hosting decision does not authorize a protocol rewrite. Warm p95 evidence cannot guarantee every cold invocation or establish publication/Queue feasibility.
 
 ### 5.3 Domains and routing
 
@@ -188,7 +190,7 @@ This is the target stack, not a list of installed capabilities. **[confirmed]** 
 
 ### 7.1 Principles
 
-1. **The draft is one JSON document** per portfolio, validated by a versioned Zod schema and saved with optimistic concurrency. Small validated changes use one canonical row write. Large changes prepare private bounded operations/string pieces and commit canonical content plus private progress atomically. See the [bounded-save contract](../specs/2026-10-16-free-owner-saves/protocol.md); full-body 1 MiB validation is not a supported Free save route.
+1. **The draft is one JSON document** per portfolio, validated by a versioned Zod schema and saved with optimistic concurrency. Small validated changes use one canonical row write. Large changes prepare private bounded operations/string pieces and commit canonical content plus private progress atomically. See the [bounded-save contract](../specs/2026-10-16-free-owner-saves/protocol.md); full-body 1 MiB validation is not a supported production save route. The paid-at-launch decision preserves this contract.
 2. **Published state is immutable and versioned.** Publishing never edits files in place; it writes a new version and moves a pointer.
 3. **Live data lives outside snapshots** (GitHub activity, contact outbox, counters).
 4. **Every query is scoped to the session's owner** inside a repository layer; handlers never build raw queries.
@@ -304,9 +306,9 @@ Onboarding's combined profile step and editor share reposition/zoom/reset/apply/
 
 ### 8.3 Publish (product 15), the core flow
 
-Publication is pending. Implement durable, replay-safe tasks in `jobs` only after measuring the required Queue/D1 fallback; the former fragment-per-step Workflow design was rejected.
+Publication is pending. The inactive [S-8 follow-up](../specs/2026-10-24-s8-dispatch-feasibility/results.md) supplies reusable bounded preparation, Queue/D1 tasks, page assembly and a named web private-source entry. The October 27 evidence exceeds the old Free CPU/Queue/storage targets, which are superseded as development blockers by the [paid-at-launch policy](deployment-policy.md). The owner authorizes the tested S-8 local milestone for Phase 24 after integration and applicable local checks. Final paid CPU/cost/storage verification is required before public activation. The former fragment-per-step Workflow design was rejected.
 
-S-8 measured the bounded fragment approach on October 15, 2026. The deployed three-page stress experiment also failed the per-invocation API request limit while retaining the old pointer. Even one near-limit portfolio needs 141 durable steps, or 4,230 steps at the planning estimate of 30 publishes/day, before preparation and cleanup. This exceeds the Free daily allowance. Treat the sequence below as logical publication operations, not an approved Free Workflow implementation. Record Queue plus D1 task dispatch as the required fallback to validate before Phase 24. A naive one-message-per-fragment replacement also exceeds the Queue allowance, so measured batching and a complete shared quota model are required. CPU feasibility remains unproven. See [S-8/S-9 results](../specs/2026-10-15-workflow-assets/results.md).
+S-8 measured the bounded fragment approach on October 15, 2026. The deployed three-page stress experiment also failed the per-invocation API request limit while retaining the old pointer. Even one near-limit portfolio needs 141 durable steps, or 4,230 steps at the planning estimate of 30 publishes/day, before preparation and cleanup. This exceeds the Free daily allowance. Treat the sequence below as logical publication operations, not an approved Free Workflow implementation. The measured S-8 Queue/D1 scaffold is now the owner-authorized local milestone under the paid-at-launch policy. Keep batching and complete shared cost accounting; final paid CPU/capacity verification remains a release gate. See [S-8/S-9 results](../specs/2026-10-15-workflow-assets/results.md).
 
 1. **Request.** The planned publish endpoint carries `draftRev`. Route its hot handler through the thin owner API, with uncached session/deletion checks. Reject unless `draftRev` equals the saved revision and autosave has flushed. Specify its final route and bounded validation protocol before implementation.
 2. **Validate.** Share validation rules between the editor checklist and authoritative server checks for profile fields, links, ready assets, GitHub fetch state, verified recipient, resume PDF, catalog membership and the address reservation/claim. Issues carry field paths. Publication needs its own measured bounded validation/snapshot preparation; a pure whole-document helper does not prove a 1 MiB hot invocation fits the CPU budget.
@@ -405,7 +407,7 @@ MVP registry: profile (fixed), projects, skills, work experience, text sections 
 ### 9.2 Rendering model
 
 - **One renderer, two hosts.** Phase 16 implements markup-only React shared by client browser preview and static `react-dom/server` output. Its display-only model excludes private recipient configuration, raw asset IDs, setup/recovery fields and disabled second photos. Callers resolve authorized ready assets before projection. Shared markup renders incomplete drafts honestly. Display strings normalize HTML-parser line endings and invalid scalar cases without changing saved draft input, so client and static DOM text match. See the [renderer contract](../packages/render/README.md) and [protocol](../specs/2026-10-19-shared-portfolio-renderer/protocol.md).
-- **Bounded production entry.** `renderFragment` checks a prepared profile or component against input node/depth/string/byte and output limits. Oversized valid content returns `needs_partitioning`, never truncated HTML. The separate offline full-document helper proves fixture parity only. Phase 24 must implement revision-bound resumable preparation, split large text and nested wrappers without duplication, and measure actual units, CPU, Queue/D1 batching, operations and assembly. A size check alone proves no CPU bound.
+- **Bounded production entry.** `renderFragment` checks prepared profiles, components, bounded component groups and shared project entries against input node/depth/string/byte and output limits. Oversized valid content returns `needs_partitioning`, never truncated HTML. The separate offline full-document helper proves fixture parity only. The inactive S-8 follow-up implements sealed revision inputs, Unicode-safe text/closed-frame units and streaming page assembly. Its native CPU, shared operations/storage, approval and integration gate remains unresolved; Phase 24 must consume only a verified approved revision and remeasure changed work. A size check alone proves no CPU bound.
 - **Zero React on published pages.** Static output loads content-hashed platform CSS and a small vanilla script. Phase 16 shares native theme switching, preference handling and image loading/error behavior with browser preview. Face Reveal, independent decoration playback, GitHub graph drawing, contact submission and resume fallback activate in their later phases. No React hydration is included in snapshot output.
 - **Preview is client-rendered.** The live preview and the full-page preview render the draft in the browser without server rendering. Phase 17's editor uses actual **iframe** viewports of 390 px or 1120 px, independent of the available panel width, so CSS media queries respond correctly. A cancellable display projection reaches the iframe through acknowledged `postMessage` chunks. The shared bridge pins parent window, exact origin, channel and increasing render sequence, validates display data and rechecks asset origins. It supplies no authorization itself. The editor's private-preview adapters authorize the owner before serving or mounting, and reauthorize the original identity after browser restoration. They remain dormant outside handoff fixtures. Product entry, full-page preview routes (`/preview/...`) and ready-asset integration retain Phases 18/39/42E. Private routes require authentication, `noindex` and `no-store`. See the [current preview contract](../packages/components/README.md#browser-adapter).
 - **Renderer versioning.** Each snapshot records `renderer_version`. Retain content-hashed platform CSS/JS so old snapshots keep working after deploy. A future `rerender-all` job must use the same measured bounded dispatcher and pointer flip, including a shared quota budget for a bulk run.
@@ -529,7 +531,9 @@ The following verification settings are **[confirmed]**. They resolve the corres
 
 ## 14. Capacity model at ~100 portfolios, and the upgrade path
 
-### 14.1 Estimated daily usage
+### 14.1 Historical Free comparison
+
+The table below is retained historical planning. Current paid monthly allowances and the approved local/release distinction are in the [deployment policy](deployment-policy.md). Use measured S-8 counters with monthly forecasts; do not block local development on these Free thresholds.
 
 Assumptions: 100 portfolios; 30 owner editing sessions per day averaging ~250 API calls and ~100 autosaves each; 30 publishes per day; 50 visitor page views per portfolio per day; half the portfolios have a GitHub component. **These are planning estimates, not measurements.**
 
@@ -548,6 +552,8 @@ Deployed S-4 observations support Next.js build-file requests bypassing Worker i
 
 The October 16 [bounded-save quota model](../specs/2026-10-16-free-owner-saves/quotas.md) supersedes the save portion of the original estimates. It models about 52,400 conservatively counted web/jobs invocations with maximum-piece uploads, versus the table's original 20,000 baseline, and a 426.2 MB local storage stress result for 100 maximum drafts plus attempts/pieces. Phase 13 adds [measured handler costs](../specs/2026-10-17-revision-aware-drafts/quotas.md), including 268 rows per maximum streamed draft read. Neither the old request/R2 estimates nor warm CPU percentiles prove total capacity. Recalculate the shared budget with publication batching, retries and actual read frequency; observe deployed counters and size before broad autosave traffic.
 
+The [S-8 follow-up ledger](../specs/2026-10-24-s8-dispatch-feasibility/results.md) adds actual candidate/transfer operations and explicit shared forecasts. It does not replace the historical failure evidence or establish general Free feasibility. Candidate source retention, tombstone checks, private transfer, failed candidates and retries must all fit alongside this baseline. The R2 storage estimate above is especially sensitive to maximum-size replacements and retained versions.
+
 ### 14.2 Capacity risks to measure
 
 1. Worker requests from visitor bursts plus web/jobs autosave and staging traffic. The final publication request budget remains unknown.
@@ -557,35 +563,30 @@ The October 16 [bounded-save quota model](../specs/2026-10-16-free-owner-saves/q
 
 ### 14.3 Alert thresholds
 
-Planned alerts log and notify the operator at 60% of daily Worker requests, any `exceededCpu` outcome, 80 emails/day, 50% of daily D1 writes, any failed publish, and before D1 reaches 350 MB per the bounded-save storage model. Observe D1 row reads as well as writes. These operational alerts are not implemented yet.
+Historical Free alert settings are retained as conservative early warnings until Phase 52 configures paid monthly usage/cost alerts. They are not local start blockers. Planned alerts log and notify the operator at 60% of daily Worker requests, any `exceededCpu` outcome, 80 emails/day, 50% of daily D1 writes, any failed publish, and before D1 reaches 350 MB per the bounded-save storage model. Observe D1 row reads as well as writes. These operational alerts are not implemented yet.
 
-### 14.4 One-step upgrade to Workers Paid ($5/month)
+### 14.4 Paid launch and local development
 
-| Change | Effect |
-| --- | --- |
-| Subscribe to Workers Paid | Removes the daily request cap; raises CPU limit (default 30 s); raises subrequests and Cron Trigger limits; larger Queue and D1 allowances |
-| Optionally set `limits.cpu_ms` | Headroom for render and API routes |
-| Optionally swap `EmailProvider` | Cloudflare Email Service (3,000 emails/month included, then metered) replaces Resend; no daily cap |
-| Optionally relax design workarounds | Render all pages in one Workflow step; shorten GitHub TTL; add a Cache API layer or KV pointer cache |
+Workers Paid is now the approved launch target, not an optional fallback to decide after a failed Free test. Upgrade only during launch preparation, before public activation. The [deployment policy](deployment-policy.md) records the included allowances, metered R2/other costs, implementation sequence and release checks.
 
-No schema change, no data migration, and no application rewrite are required, which is the point of the adapters and bounded-work design above.
+Keep local Wrangler configs and synthetic fixtures throughout development. Preserve bounded saves/rendering, private service bindings, leases, cleanup and atomic publication. Paid limits do not authorize whole-draft hot parsing, a Workflow rewrite, a provider swap or cache/privacy changes. Set finite execution limits based on final native measurements. Before public activation, confirm plan/settings, production bindings, final CPU/startup/error behavior, shared monthly costs, storage retention, withdrawal and rollback.
 
 ---
 
 ## 15. Risks and spikes
 
-Do these first, in this order, because each can change a decision above.
+The rows retain original spike questions and measured outcomes. Preserve their completed-phase approvals and apply the [paid-at-launch policy](deployment-policy.md) to remaining work: local implementation uses the integrated S-8 milestone; final paid-provider capacity is a release gate. Unresolved privacy/withdrawal and actual code dependencies still apply.
 
 | # | Risk or assumption | Spike | Fallback |
 | --- | --- | --- | --- |
-| S-1 | Publish render work fits the CPU budget on Free | Whole-page local rendering failed; bounded rendering/storage were tested in S-8 | [S-1 revision](../specs/2026-10-15-publish-render/results.md) remains required. S-8 rejected the unbatched dispatcher; measure the final renderer with Queue/D1 batching before Phase 24. |
-| S-2 | Next.js hot APIs fit the CPU target | Original OpenNext and later thin full-body saves failed. Phase 11A introduced bounded operations; [Phase 13](../specs/2026-10-17-revision-aware-drafts/results.md) implements and measures the production handlers. | Keep the named Hono/jobs entry and current bounded/streamed protocol. All 22 original Phase 13 provider cases met warm p95 below 10 ms in LHE, with recorded tail/cold and D1-cost limits. The [Phase 14 investigation](../specs/2026-10-18-shared-autosave-recovery/performance.md) records the initial KHI failure and bounded-read follow-up; retain location limits before dependent activation. New publish/owner handlers still need measurement; no paid-plan assumption. |
+| S-1 | Publish render work fits the CPU budget on Free | Whole-page local rendering failed; bounded rendering/storage were tested in S-8 | [S-1 revision](../specs/2026-10-15-publish-render/results.md) remains required. S-8 rejected the unbatched dispatcher. The October 27 policy authorizes integrated local S-8 reuse; measure the final renderer/Queue pipeline against Paid before public launch. |
+| S-2 | Next.js hot APIs fit the CPU target | Original OpenNext and later thin full-body saves failed. Phase 11A introduced bounded operations; [Phase 13](../specs/2026-10-17-revision-aware-drafts/results.md) implements and measures the production handlers. | Keep the named Hono/jobs entry and current bounded/streamed protocol. All 22 original Phase 13 provider cases met warm p95 below 10 ms in LHE, with recorded tail/cold and D1-cost limits. The [Phase 14 investigation](../specs/2026-10-18-shared-autosave-recovery/performance.md) records the initial KHI failure and bounded-read follow-up; retain location limits before dependent activation. New publish/owner handlers need paid-target verification before activation under the October 27 deployment policy; historical Free p95 is not a local start gate. |
 | S-3 | Wildcard Worker route coexists with the R2 custom domain and the apex | [Deployed October 15 evidence](../specs/2026-10-15-host-routing/results.md) passes apex/www, wildcard/reserved/invalid hosts, private R2 fixture boundaries and TLS. Explicit assets no-script exception works | Serving assets through `site` would add Worker requests and require a revised budget |
-| S-4 | Static asset requests do not count toward the Workers request limit | [Deployed asset-first measurements](../specs/2026-10-15-host-routing/results.md) report no Worker invocations for existing build files or R2 asset hits/misses. Next.js documents and missing build files invoke Workers. Adaptive counts are approximate | Preserve asset-first handling; remeasure worker-first changes. Paid requires owner approval |
+| S-4 | Static asset requests do not count toward the Workers request limit | [Deployed asset-first measurements](../specs/2026-10-15-host-routing/results.md) report no Worker invocations for existing build files or R2 asset hits/misses. Next.js documents and missing build files invoke Workers. Adaptive counts are approximate | Preserve asset-first handling; remeasure worker-first changes. Paid at launch is owner-approved on October 27; upgrading now is not authorized |
 | S-5 | Better Auth on workerd/D1: per-request init, cookie cache, `__Host-` cookies, account-linking behavior vs AC 2.2 | [October 15 local evidence](../specs/2026-10-15-auth-behavior/results.md): 26 provider-fixture/Chromium checks pass. Adopt exact apex/Origin guards, verified-only linking, and the documented cookie configuration. Copied cache cookies survive D1 sign-out for up to 300 seconds; require uncached checks where immediate revocation matters. Live provider applications and deployed callbacks remain to verify | Custom Arctic-based auth (already evaluated as the alternative) |
 | S-6 | GitHub scopes and private-contribution semantics, token revocation detection | [October 15 fixture and live evidence](../specs/2026-10-15-github-permissions/results.md): 40 workerd/D1/Web Crypto checks pass. Separate narrow-scope apps, matching-account projection, both profile-visibility settings, grant deletion, independent sign-in, and external-revocation detection pass. Visibility-off public/authorized totals are 425/818. The owner approved Phase 06 completion on October 15 with the separate no-scope platform credential check explicitly untested (AC 9.10). Phase 11C [completed the check live](../specs/2026-10-16-github-platform-credential/results.md) on October 17: the separate no-scope credential accepts the 425/0 public baseline, its restricted counts make the baseline unavailable when private contributions are shown, and invalid credentials are platform retry, never owner reconnect | Revisit provider/query strategy if live checks fail; private activity cannot be deferred under the agreed MVP |
 | S-7 | Resend: domain verification (SPF/DKIM) and the 100/day cap against all email types | Verify domain; send each email type; confirm budget guard | Upgrade to Paid and use Cloudflare Email Service |
-| S-8 | Workflows on free: step CPU, step count, concurrency | [October 15 experiment](../specs/2026-10-15-workflow-assets/results.md): concurrent three-page candidates, bounded R2 assembly, retries and atomic commit; deployed three-page stress hits the per-invocation API cap; daily step budget fails even for 30 near-limit single-page portfolios | Validate Queue plus D1 task state with measured batching and full CPU/operation budgets before Phase 24. No naive per-fragment Queue substitution or paid upgrade |
+| S-8 | Workflows on free: step CPU, step count, concurrency | [October 15 experiment](../specs/2026-10-15-workflow-assets/results.md): concurrent three-page candidates, bounded R2 assembly, retries and atomic commit; deployed three-page stress hits the per-invocation API cap; daily step budget fails even for 30 near-limit single-page portfolios | Use the owner-authorized S-8 local milestone after integration/checks for Phase 24. Verify final paid Queue/D1 CPU and operation budgets before release. No naive per-fragment Queue substitution. October 27 authorizes local S-8 reuse under the paid-at-launch policy; final native paid verification is a release gate |
 | S-9 | CDN purge-by-URL removes withdrawn assets promptly (AC 4.14) | [October 15 live evidence and cache policy requirements](../specs/2026-10-15-workflow-assets/results.md). Origin deletion alone leaves CDN HITs; purge acceptance is not completion | Correct browser TTL and query cache-key policy, verify observed absence, and use short edge TTLs for withdrawable assets before Phase 26 |
 | S-10 | `.site` availability on Cloudflare Registrar | Owner already registered hasaweb.site through Porkbun; RDAP and active Cloudflare full-zone/delegation evidence recorded October 15 | External-registrar alternative is in use. No purchase or transfer performed by the spike |
 
@@ -612,11 +613,12 @@ The October 16 [onboarding agreement](onboarding.md) adds confirmed decisions D-
 
 | ID | Decision | Alternatives considered | Why |
 | --- | --- | --- | --- |
+| ADR-20 | Workers Paid only at launch; local development now (October 27, 2026) | Free-only launch; upgrade during development | Owner decision supersedes D-1 and budget-only local blockers. Integrate the tested S-8 local milestone; retain functional/privacy gates and paid-provider verification before public activation. See [deployment policy](deployment-policy.md). |
 | ADR-1 | Next.js via OpenNext on Workers (D-4) | Cloudflare's `vinext` (Wrangler's current auto-configuration target), Astro, React Router | Your preference; OpenNext supports Next.js 16. Revisit if the adapter lags. |
 | ADR-2 | Pre-render at publish, thin serve Worker (D-5) | Per-request SSR; client-side render from JSON | 10 ms CPU makes SSR risky; pre-render gives real SEO and social metadata (AC 17.2) and makes atomic publish a pointer flip. |
 | ADR-3 | D1 for publish pointer and live state; KV unused | KV pointer | KV allows only 1,000 writes/day on free. |
 | ADR-4 | Canonical JSON draft with revision CAS and bounded change/staging protocol | Normalized component tables; rejected full-body hot saves | Atomic canonical content/progress, one row write for ordinary patches; large changes add private preparation, pieces and cleanup. Phase 13 is the current HTTP contract. |
-| ADR-5 | Original Workflows publish choice requires S-8 revision; validate Queue/D1 dispatch before publication | Unbatched Workflows; naive per-fragment Queues | Bounded steps work locally, but daily step allowance fails the planned worst-case volume. Do not infer fresh CPU budgets from durable step boundaries. Queue batching still needs measurement. |
+| ADR-5 | Original Workflows publish choice requires S-8 revision; validate Queue/D1 dispatch before publication | Unbatched Workflows; naive per-fragment Queues | Bounded steps work locally, but daily step allowance fails the planned worst-case volume. Do not infer fresh CPU budgets from durable step boundaries. Keep measured Queue/D1 batching; the paid-at-launch policy permits local continuation and requires final native verification before release. |
 | ADR-6 | Three R2 buckets (draft private, sites private, assets public) | One bucket with prefixes | Hard isolation of drafts (AC 13.7); public bucket needs no Worker, saving requests. |
 | ADR-7 | Markup-only components plus one vanilla `site.js` | Hydrate React on published pages | Zero React on visitor devices; faster pages; same behavior in preview. |
 | ADR-8 | Transactional outbox for contact delivery | Send inline from the request | Honest "accepted" semantics, retries, and survival of Queue retention limits. |

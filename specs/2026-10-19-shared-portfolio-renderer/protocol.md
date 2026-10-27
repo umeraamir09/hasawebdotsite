@@ -1,5 +1,7 @@
 # Phase 16 renderer protocol
 
+October 27, 2026 supersession: the owner approved [Workers Paid at launch and local development now](../../docs/deployment-policy.md). Free-only CPU/quota fit and prohibitions on planning a paid launch no longer block local implementation. Preserve original measurements, phase approvals, renderer/security/content contracts and S-9 withdrawal requirements. Use the integrated S-8 local milestone; final native paid verification is a release gate. No subscription change occurs during local development.
+
 October 20 supersession note. Phase 17 replaces the whole-model preview wire format and browser envelope with the acknowledged chunk protocol in the [current component contract](../../packages/components/README.md#browser-adapter). The original Phase 16 measurements and fixture evidence below remain historical. Static fragment and publication constraints are unchanged.
 
 Recorded October 19, 2026. The [selected design](design.md) supersedes both retained exploration candidates. This increment adds reusable renderer code and isolated evidence. It does not activate editor, public serving, publication or mandatory signup routes.
@@ -23,6 +25,8 @@ The current browser envelope is a 2 MiB accounting budget, 250,000 traversed val
 ## Snapshot boundary
 
 The production entry serializes one prepared profile/component within the [documented fragment guards](../../packages/render/README.md#fragment-boundary). It validates data and asset origins before React serialization and checks output bytes afterward. Oversized input returns `needs_partitioning`, without truncated output. The offline entry can render a complete resident model for fixtures only.
+
+October 25, 2026 follow-up: [S-8](../2026-10-24-s8-dispatch-feasibility/results.md) now supplies inactive preparation/partitioning helpers. Its CPU/shared-cost gate failed; owner approval and integration remain absent. The original requirements below remain prerequisites to publication.
 
 Phase 24 must prepare and split large Unicode strings, nested rich text, descriptions and large collections without repeating wrappers or changing list semantics. Preparation must be revision-bound and resumable or transactionally normalized, rather than parsing/partitioning a whole maximum draft in a hot invocation. Measure the actual final fragments, generated art, CPU, batching, request counts, D1/R2/Queue costs and assembly. The bounded API is not a complete publication pipeline and cannot handle every valid component in one fragment. S-1 and S-8 remain controlling; no new content limit or paid-plan assumption is introduced.
 

@@ -1,0 +1,253 @@
+{
+  "recordedAt": "2026-10-27T05:59:34.803Z",
+  "revision": "5b796accfac88bf40b2875e606b79c52192a3e16",
+  "windows": [
+    {
+      "kind": "empty",
+      "start": "2026-10-27T05:58:55.942Z",
+      "end": "2026-10-27T05:59:02.465Z",
+      "expectedRequests": 10,
+      "calls": [
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 0
+          }
+        }
+      ]
+    },
+    {
+      "kind": "four-tombstones",
+      "start": "2026-10-27T05:59:02.465Z",
+      "end": "2026-10-27T05:59:25.491Z",
+      "expectedRequests": 5,
+      "calls": [
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 4
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 4
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 4
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 4
+          }
+        },
+        {
+          "status": 200,
+          "value": {
+            "woken": 0,
+            "tombstones": 4
+          }
+        }
+      ]
+    }
+  ],
+  "d1": {
+    "baselineBytes": 1372160,
+    "churn": [
+      {
+        "cycle": 1,
+        "payloadBytes": 4194304,
+        "insertMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 12.2024
+          },
+          "duration": 12.2024,
+          "changes": 1,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 5578752,
+          "rows_read": 1,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "allocatedBytes": 5578752,
+        "deleteMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.5354
+          },
+          "duration": 0.5354,
+          "changes": 4,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 1376256,
+          "rows_read": 13,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "afterDeleteBytes": 1372160
+      },
+      {
+        "cycle": 2,
+        "payloadBytes": 4194304,
+        "insertMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 12.0922
+          },
+          "duration": 12.0922,
+          "changes": 1,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 5578752,
+          "rows_read": 1,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "allocatedBytes": 5578752,
+        "deleteMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.8354
+          },
+          "duration": 0.8354,
+          "changes": 4,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 1376256,
+          "rows_read": 13,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "afterDeleteBytes": 1372160
+      },
+      {
+        "cycle": 3,
+        "payloadBytes": 4194304,
+        "insertMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 12.0159
+          },
+          "duration": 12.0159,
+          "changes": 1,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 5578752,
+          "rows_read": 1,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "allocatedBytes": 5578752,
+        "deleteMeta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "CDG",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.6198
+          },
+          "duration": 0.6198,
+          "changes": 4,
+          "last_row_id": 9,
+          "changed_db": true,
+          "size_after": 1376256,
+          "rows_read": 13,
+          "rows_written": 4,
+          "total_attempts": 1
+        },
+        "afterDeleteBytes": 1372160
+      }
+    ]
+  },
+  "limitation": "Synthetic HTTP calls exercise the actual sweep function on the native control Worker. Scheduled-trigger cold behavior is unverified. Allocation-only source rows use direct fixture SQL, not the publication admission path, with four 1-MiB JSON payloads and three delete/reuse cycles. This does not simulate 100 owners or index/page/asset growth. SQLite allocation need not shrink after deletion."
+}

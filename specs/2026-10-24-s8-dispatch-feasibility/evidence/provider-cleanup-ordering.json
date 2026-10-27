@@ -1,0 +1,6 @@
+{
+  "providerErrorCode": 11005,
+  "message": "Cannot delete queue while producer Worker bindings still reference it.",
+  "resolution": "Detach consumer, delete only the owned producer Workers, then delete their Queue, bucket objects/buckets and D1 database. Metadata GET checks confirm all eight resources absent.",
+  "sensitiveData": "No tokens, headers or request bodies retained."
+}

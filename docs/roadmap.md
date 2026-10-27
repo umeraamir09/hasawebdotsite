@@ -1,5 +1,7 @@
 # MVP implementation roadmap
 
+October 27, 2026: the owner approved [Workers Paid at launch and local implementation now](deployment-policy.md). Free-only CPU/quota/storage fit no longer blocks otherwise ready phases. Upgrade only during launch preparation; paid-provider verification and activation remain release gates. This decision does not check any phase complete or waive code dependencies, privacy, recovery or S-9 withdrawal checks.
+
 Build according to the explicit dependencies below; phase numbers identify scope and do not impose a total execution order. Existing IDs remain stable. Owner-approved completion is recorded by the checkboxes and historical approval notes. Use [implementation status](implementation-status.md) for current contracts and constraints and the [agent workflow](agent-workflow.md) for targeted reading, concise records, parallel work and local verification.
 
 ## Sources and scope
@@ -107,7 +109,7 @@ Resolve the [architecture spikes](architecture.md#15-risks-and-spikes) before de
 - Dependencies: completed Phases 01, 03, 05, 10, 11 and the recorded S-2 revision.
 - Implement and measure the thin Hono/jobs owner-API approach through internal bindings with the real session/deletion checks, representative draft validation, and the 1 MiB boundary. Include the planned content/progress write path; keep source identities scoped to each request.
 - October 16, 2026: [thin owner API measurements](../specs/2026-10-16-owner-api-runtime/results.md) fail for full-body 1 MiB saves. The owner requested implementation/testing of the [bounded-save follow-up](../specs/2026-10-16-free-owner-saves/results.md) and approved URL/email byte limits. The reusable repository, isolated integration, CPU/quotas and rollback points are recorded there. Production mapping and autosave remain in their phases. The owner approved Phase 11A completion on October 16, 2026.
-- [x] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. No paid-plan assumption or old completion checkbox substitutes for this follow-up.
+- [x] Complete when measured CPU/startup evidence supports dependent APIs under the confirmed budget, or a revised compatible approach has been agreed before proceeding. Historical follow-up evidence remains valid; the October 27 paid-at-launch policy supersedes Free-only start restrictions without removing bounded-save contracts or final provider checks.
 
 ### Phase 11B. Extend contracts and persistence for initial setup
 
@@ -182,7 +184,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 - Dependencies: 09, 11E, 12 and the recorded rendering constraints.
 - Render the fixed profile and component order through shared markup-only components with the approved default styling/font. Establish responsive styling, security headers, and the small public interaction script used by previews and snapshots. Permit honest private rendering of incomplete drafts.
 - Preserve the imported cat/hands art, source-equivalent CSS, responsive envelope and loading geometry in reusable owner-data markup. Keep the React source reference intact and public output free of React hydration. Source portraits/labels are review fixtures. Later appearance/decorations phases activate catalog selections and playback controls.
-- The [implementation protocol and evidence](../specs/2026-10-19-shared-portfolio-renderer/results.md) record the shared renderer increment. The October 19 audit defects in avatar image geometry and theme semantics are repaired, with failing-before and passing-after browser evidence. The owner approved completion on October 19, 2026 after the final light review. The offline snapshot helper is fixture tooling; Phase 24 still owns resumable preparation, oversized-unit partitioning and measured dispatch.
+- The [implementation protocol and evidence](../specs/2026-10-19-shared-portfolio-renderer/results.md) record the shared renderer increment. The October 19 audit defects in avatar image geometry and theme semantics are repaired, with failing-before and passing-after browser evidence. The owner approved completion on October 19, 2026 after the final light review. The offline snapshot helper is fixture tooling. The separate [S-8 follow-up](../specs/2026-10-24-s8-dispatch-feasibility/results.md) implements inactive preparation/partitioning/dispatch; the October 27 owner decision authorizes its local-development milestone. Integrate it and run applicable local checks before Phase 24; final paid-provider verification is a release gate.
 - [x] Complete when the same fixture renders consistently in private browser preview and publish output with safe links, readable layout, keyboard controls, and unavailable/incomplete states. Onboarding Review later reuses this renderer.
 
 ### Phase 17. Build the editor and live preview
@@ -249,7 +251,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 ### Phase 24. Prepare immutable publication versions
 
-- Dependencies: 02, 08, 11A, 16, 18, 23 and measured S-8 Queue/D1 feasibility with the full shared quota/CPU model. Verify S-9 browser/query-cache requirements before dependent withdrawal behavior.
+- Dependencies: 02, 08, 11A, 16, 18, 23 and the [S-8 follow-up](../specs/2026-10-24-s8-dispatch-feasibility/results.md), authorized by the October 27 owner decision as the S-8 local development milestone under the [paid-at-launch policy](deployment-policy.md). Integrate the tested scaffold and run affected local checks, then record that decision and integration revision in Phase 24's audit. Free-only p95/quota/storage fit and buying the subscription are not local start prerequisites. Final paid-provider verification is required before release. Verify S-9 browser/query-cache requirements before dependent withdrawal behavior.
 - Measure the real Phase 16 renderer, not its offline full-document helper. Prepare immutable revision-bound fragments without whole-draft hot parsing. Oversized profile, text, list, project and description fields can return `needs_partitioning`; implement Unicode-safe splitting and wrapper-preserving assembly without duplication/truncation before publication. Recheck descendant/depth/string/input/output bounds and actual CPU with final generated art/styles and asset descriptions.
 - Record the dispatcher measurements before building the pipeline, including bounded validation/snapshot preparation, retries, invocation API calls and shared contact/GitHub Queue costs. The existing `RuntimeWorkflow` is a local probe. Durable steps do not establish fresh CPU budgets, and one Queue message per fragment repeats a rejected approach.
 - Specify the authorized source-asset transfer boundary: the private draft bucket is currently bound only to web, so jobs cannot copy its objects directly. Include that boundary in CPU/operation measurements and ownership checks.
@@ -481,6 +483,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 ### Phase 49. Add permanent account deletion
 
 - Dependencies: 10, 11B, 15, 18, 24–26, 41, 48 and retryable cleanup.
+- Include S-8 candidate source/task/transfer/page records and candidate-prefixed output in retryable deletion. These cleanup records survive owner removal; never remove the only cleanup ticket before output absence is established.
 - Dispose the deleted owner's controllers and await their serialized local writes before removing its owner/portfolio IndexedDB range. Add owner-scoped invalidation/tombstones and cross-tab coordination so late writes cannot recreate deleted-account recovery; Phase 14 does not implement that lifecycle service. Include retained review copies, prepared replacements and matching tab continuations in account-scoped cleanup. Recovery callbacks must still check uncached persisted identity before local reads. Preserve other accounts' recovery/continuations and avoid clearing the whole browser database.
 
 - Explain loss and require confirmation. Immediately deny public/owner access, invalidate sessions, revoke grants, and retry removal of draft content, private setup/progress/milestone data, uploads, snapshots, local recovery, and account records. A held but never published address reservation is released; only published claims survive permanently.
@@ -500,7 +503,8 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 - Dependencies: 11B, 13, 18, 25–26, 41, 45, 49 and verified cleanup/budget boundaries.
 - Add suspension/unsuspension, abuse reporting, rerender, purge, outbox inspection, audited operator lookup, bounded garbage collection, and audit cleanup. Protect assets referenced by unfinished setup/partial drafts and delete abandoned unreachable uploads under the existing GC policy. Keep operator controls out of the product UI.
 - Add dormant-owner staging collection beyond Phase 13's explicit owner cleanup. Expiry blocks writes but does not delete rows. Do not release an account's address reservation there; reservations last for the life of the account. Bound piece deletion, protect active attempts and unreconciled commit receipts, and observe D1 size before the recorded 350 MB alert threshold. Preserve global GitHub cleanup state until remote revocation is resolved.
-- Include the [Phase 15 recovery costs](../specs/2026-10-19-conflict-session-recovery/quotas.md) and use the [Phase 14 client costs](../specs/2026-10-18-shared-autosave-recovery/quotas.md) when budgeting staging/cleanup. Repeated maximum-field replacements and dense collection edits exceed the illustrative Free daily model; collection must remain bounded rather than assuming ordinary editing costs.
+- Protect sealed S-8 candidate references during upload collection, including references not yet discovered into transfer rows. Use the inactive candidate admission, source-retention guard and bounded physical tombstone sweeps, then verify their storage and cost assumptions with the actual collector.
+- Include the [Phase 15 recovery costs](../specs/2026-10-19-conflict-session-recovery/quotas.md) and use the [Phase 14 client costs](../specs/2026-10-18-shared-autosave-recovery/quotas.md) when budgeting staging/cleanup. The illustrative Free daily model is historical. Budget against the approved paid monthly plan and separately metered storage; collection must remain bounded rather than assuming ordinary editing costs.
 - [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup cannot delete active setup assets or retain deleted-account setup data. No source-image retention is introduced.
 
 ### Phase 52. Prepare production delivery and recovery
@@ -508,7 +512,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 - Dependencies: all feature/lifecycle increments through 51, including 22A and 42A–42F, and the measured publication/withdrawal revisions.
 - Configure backward-compatible migrations and GitHub Environment approval for jobs/site/web deployment order. Include setup state/address reservation migrations, activity OAuth returns/revocation cleanup, both provider callbacks, fixed same-tab recovery success/error destinations, secrets, cache purge, abuse email, and bindings. Add operational logs, quota/CPU alerts, restore/rollback, and renderer retention/rerender checks.
 - Recheck the Phase 14 CPU/location boundary and current autosave request/D1 model before owner-flow activation. Preserve failed-run evidence, measure intended deployment conditions and establish an agreed compatible response to budget failures; a historical passing location cannot authorize rollout by itself.
-- [ ] Complete when CI and release config cover the architecture's required checks, the full guide is available before required routing is activated, and rollback preserves drafts/milestones. Re-verify provider limits before launch; no application rewrite is needed for the approved upgrade path.
+- [ ] Complete when CI and release config cover the architecture's required checks, the full guide is available before required routing is activated, and rollback preserves drafts/milestones. During launch preparation, upgrade to Workers Paid, confirm actual plan/settings and run isolated native paid checks before public activation. Reconcile final CPU/monthly operations, D1 allocation and metered R2 retention/peaks; verify S-9, callbacks/TLS and rollback. Until then develop locally without buying the plan. The $5 minimum is not a total bill cap.
 
 ### Phase 53. Run the complete acceptance review
 
@@ -520,7 +524,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 11E, 50, 52–53 and the full new-user journey from 42F.
 - Run discovery through required Address/Profile/Links, including the address reservation, skipped optional steps, Review, editor, first Publish, and later republish with target users whose content is ready. Also gather feedback on optional/partial paths and owner/visitor understanding; fix failures and repeat affected checks.
-- [ ] Complete when the unchanged under-15-minute profile-only publishing target and full acceptance review pass, the catalog is approved, and production smoke checks pass through real hosts and controlled consent returns. Record qualitative findings without inventing new onboarding timing/completion targets.
+- [ ] Complete when the unchanged under-15-minute profile-only publishing target and full acceptance review pass, the catalog is approved, and production smoke checks pass through real hosts and controlled consent returns after the launch-time paid upgrade and Phase 52 provider gates. Record qualitative findings without inventing new onboarding timing/completion targets.
 
 After launch, submit `hasaweb.site` to the Public Suffix List as architecture Q-5 requires. Submission acceptance is not an MVP launch prerequisite. Continue monitoring operational limits and failures; expanding the feature scope belongs in a separate roadmap.
 

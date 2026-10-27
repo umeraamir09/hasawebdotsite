@@ -1,0 +1,25 @@
+{
+  "profile": "full",
+  "source": {
+    "revision": "5e81f2b1f0ac6402dc631343a6d24d5f275c352d",
+    "status": "",
+    "workingChangesSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "startedAt": "2026-10-27T06:45:53.615Z",
+  "commands": [
+    {
+      "command": ["pnpm", "check"],
+      "startedAt": "2026-10-27T06:45:53.629Z",
+      "durationMs": 127930,
+      "exitCode": 1,
+      "signal": null
+    }
+  ],
+  "status": "failed",
+  "finishedAt": "2026-10-27T06:48:01.564Z",
+  "finalSource": {
+    "revision": "5e81f2b1f0ac6402dc631343a6d24d5f275c352d",
+    "status": "",
+    "workingChangesSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

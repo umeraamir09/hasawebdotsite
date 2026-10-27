@@ -1,5 +1,7 @@
 # Agent workflow
 
+Budget decision, October 27, 2026: apply the [paid-at-launch policy](deployment-policy.md). The owner authorized local S-8 reuse and removal of Free-only development blockers. Integrate the named milestone and check affected code before consumers start. Paid account activation and native paid verification belong to launch preparation; do not require a subscription during local work. All other dependency, completion-approval and privacy rules below remain in force.
+
 Updated October 20, 2026 after the owner's workflow review. This is current process guidance. The roadmap owns dependencies and approvals, product/acceptance documents own behavior, and architecture/package contracts own technical decisions. Historical specs retain evidence, not authority over how every future task must be run.
 
 ## Start and record the work
@@ -67,6 +69,7 @@ During coding, run the smallest checks that answer the current question. At comp
 | `drafts` | Check, web/jobs builds, draft API, autosave and editor browser suites. Draft/recovery integration. |
 | `auth` | Check, web/jobs builds, auth browser, draft API, autosave and editor suites. Owner/session boundaries. |
 | `persistence` | Check, all application builds and persistence suite. Add draft/auth suites when their contracts change; shared schema/migrations select full. |
+| `publication` | Check, all builds and inactive S-8 renderer/dispatch/private-transfer fixtures. This does not certify deployed CPU or unblock Phase 24. `S8_EVIDENCE` selects retained reproduction output. |
 | `uploads` | Check, all application builds and private upload HTTP/browser suite. Upload framing, private R2 reads and lifecycle failures. Shared storage/auth contract changes still select full. |
 | `runtime` / `full` | Check, all builds and every existing foundation regression suite, including runtime smoke and routing. Infrastructure, shared contracts, dependencies, uncertain impact. |
 
@@ -81,6 +84,8 @@ pnpm verify --profile=checks
 ```
 
 `--build=web,site,jobs` selects affected application builds for ordinary profiles. Include every consuming application; a schema, public contract, dependency or toolchain change requires `full`. Full/runtime profiles always build all applications. Test/tooling-only changes can use `checks`; documentation-only changes use `docs`. Existing individual commands remain available for focused work.
+
+Unit-test discovery excludes `.wrangler` generated state and nested worktrees. Run each worktree's own suites through its local verification profile; never collect another checkout's tests from the shared root.
 
 A local gate is mandatory before completion review. Passing CI is additional evidence. Repeat a gate only when relevant source, contracts, build inputs, environment or integration changed. A later documentation-only edit does not invalidate a passing application gate. Review ordinary changes through the diff. High-risk changes need a separate review of concrete access, race, failure, recovery, migration, withdrawal or budget behavior. Request that review through an authorized chat; do not automatically create chats or subagents.
 

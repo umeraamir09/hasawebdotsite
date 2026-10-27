@@ -1,5 +1,7 @@
 # S-1 publish rendering results
 
+October 27, 2026 supersession: the [owner-approved paid-at-launch policy](../../docs/deployment-policy.md) removes this record's Free-only feasibility requirements as local development blockers. Preserve all original failures, API-limit findings and approvals below. Reuse the integrated S-8 local milestone; verify final paid behavior before launch. S-9 withdrawal/privacy requirements still apply to dependent activation.
+
 October 19, 2026 update. [Phase 16](../2026-10-19-shared-portfolio-renderer/results.md) now supplies the actual shared markup and a bounded fragment boundary. The production renderer statements below describe this historical spike date. Its rejected whole-page assumption and unresolved preparation, CPU and dispatcher prerequisites remain controlling; offline parity is not publication feasibility.
 
 Recorded October 15, 2026 in local workerd. Reproduce with `pnpm spike:render`. The command only bundles with Wrangler dry-run and starts a local Miniflare runtime. It does not deploy or require Cloudflare credentials.

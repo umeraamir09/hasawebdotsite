@@ -1,14 +1,29 @@
-import { PortfolioProfile, PortfolioSection } from "@hasaweb/components";
 import {
+  AssetImage,
+  PortfolioAvatar,
+  PortfolioProfile,
+  PortfolioProject,
+  PortfolioSection,
+} from "@hasaweb/components";
+import {
+  assetSchema,
   componentModelSchema,
   normalizeDisplayStrings,
   profileModelSchema,
+  projectModelSchema,
   withinBounds,
 } from "@hasaweb/components/model";
 import { isWebUrl } from "@hasaweb/schema";
 import { renderToStaticMarkup } from "react-dom/server";
 import { z } from "zod";
+import { partSchema, type RenderPart, renderPart } from "./parts";
 
+const imagePartSchema = z.strictObject({
+  kind: z.literal("asset"),
+  asset: assetSchema,
+  usage: z.enum(["avatar", "banner", "image"]),
+  decoration: z.enum(["none", "cat", "hands"]).default("none"),
+});
 export type RenderContext = "preview" | "public";
 export type PlatformAssets = {
   cssUrl: string;
@@ -24,13 +39,21 @@ export const FRAGMENT_BOUNDS = {
 };
 export const FRAGMENT_MAX_OUTPUT_BYTES = 262_144;
 const fragmentSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("project"), entry: projectModelSchema }),
+  z.strictObject({
+    kind: z.literal("components"),
+    components: z.array(componentModelSchema),
+  }),
   z.strictObject({ kind: z.literal("profile"), profile: profileModelSchema }),
   z.strictObject({
     kind: z.literal("component"),
     component: componentModelSchema,
   }),
 ]);
-export type RenderFragment = z.infer<typeof fragmentSchema>;
+export type RenderFragment =
+  | z.infer<typeof fragmentSchema>
+  | RenderPart
+  | z.infer<typeof imagePartSchema>;
 export type FragmentResult =
   | { status: "ready"; html: string }
   | { status: "needs_partitioning" }
@@ -41,15 +64,46 @@ export function renderFragment(
 ): FragmentResult {
   if (!withinBounds(input, FRAGMENT_BOUNDS))
     return { status: "needs_partitioning" };
+  const part = partSchema.safeParse(input);
+  if (part.success) return { status: "ready", html: renderPart(part.data) };
+  const image = imagePartSchema.safeParse(input);
+  if (image.success) {
+    const { asset, usage, decoration } = image.data;
+    if (
+      asset.state === "ready" &&
+      !assetOrigins.includes(new URL(asset.url).origin)
+    )
+      return { status: "invalid" };
+    const html = renderToStaticMarkup(
+      usage === "avatar" ? (
+        <PortfolioAvatar asset={asset} decoration={decoration} />
+      ) : (
+        <AssetImage asset={asset} kind={usage} />
+      ),
+    );
+    return new TextEncoder().encode(html).byteLength > FRAGMENT_MAX_OUTPUT_BYTES
+      ? { status: "needs_partitioning" }
+      : { status: "ready", html };
+  }
   const parsed = fragmentSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid" };
   const fragment = parsed.data;
+  const components =
+    fragment.kind === "components"
+      ? fragment.components
+      : fragment.kind === "component"
+        ? [fragment.component]
+        : [];
   const images =
     fragment.kind === "profile"
       ? [fragment.profile.avatar, fragment.profile.banner]
-      : fragment.component.type === "projects"
-        ? fragment.component.data.entries.map((entry) => entry.image)
-        : [];
+      : fragment.kind === "project"
+        ? [fragment.entry.image]
+        : components.flatMap((component) =>
+            component.type === "projects"
+              ? component.data.entries.map((entry) => entry.image)
+              : [],
+          );
   if (
     images.some(
       (image) =>
@@ -61,10 +115,15 @@ export function renderFragment(
   const html = renderToStaticMarkup(
     fragment.kind === "profile" ? (
       <PortfolioProfile profile={normalizeDisplayStrings(fragment.profile)} />
+    ) : fragment.kind === "project" ? (
+      <PortfolioProject entry={normalizeDisplayStrings(fragment.entry)} />
     ) : (
-      <PortfolioSection
-        component={normalizeDisplayStrings(fragment.component)}
-      />
+      components.map((component) => (
+        <PortfolioSection
+          key={component.id}
+          component={normalizeDisplayStrings(component)}
+        />
+      ))
     ),
   );
   if (new TextEncoder().encode(html).byteLength > FRAGMENT_MAX_OUTPUT_BYTES)

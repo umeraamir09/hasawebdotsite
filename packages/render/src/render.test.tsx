@@ -366,3 +366,46 @@ describe("safe output and bounded serialization", () => {
     expect(unavailable.headers.get("cache-control")).toBe("no-store");
   });
 });
+
+describe("bounded shared entries and groups", () => {
+  it("rejects untrusted image origins in both project entries and component groups", () => {
+    const source = draft();
+    const component = createComponent("projects", "security-project");
+    component.data.entries = [
+      {
+        id: "entry",
+        title: "Title",
+        summary: "Summary",
+        contribution: "",
+        technologies: [],
+        image: { assetId: "owned" },
+      },
+    ];
+    source.components = [component];
+    const model = projectPortfolio(source, options);
+    const projects = model.components[0];
+    if (projects?.type !== "projects" || !projects.data.entries[0])
+      throw new Error("Project fixture missing");
+    const entry = projects.data.entries[0];
+    entry.image = {
+      state: "ready",
+      url: "https://untrusted.example/image.png",
+      alt: "Image",
+    };
+    expect(renderFragment({ kind: "project", entry }, options).status).toBe(
+      "invalid",
+    );
+    expect(
+      renderFragment(
+        { kind: "components", components: model.components },
+        options,
+      ).status,
+    ).toBe("invalid");
+    expect(
+      renderFragment(
+        { kind: "project", entry: { ...entry, recipientId: "private" } },
+        options,
+      ).status,
+    ).toBe("invalid");
+  });
+});

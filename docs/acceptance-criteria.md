@@ -1,5 +1,7 @@
 # Acceptance criteria
 
+Infrastructure decision, October 27, 2026: the [paid-at-launch policy](deployment-policy.md) replaces Free-only feasibility as a local start gate. Run local feature/recovery checks during implementation; final paid-provider performance, capacity and real deployment checks are required before public launch. The product remains free and its functional/privacy/withdrawal criteria are unchanged.
+
 This document defines how to verify each MVP feature in [product.md](product.md). Section numbers match the product's feature map. Each numbered criterion is a pass/fail requirement, not a claim that the current implementation passes it.
 
 The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13, with Phase 14 shared autosave/recovery controls verified through an isolated fixture. Full editor/onboarding integration remains pending. The ON checks in section 2 still require the guided UI and integrated journey; passing prerequisite fixtures does not pass a whole ON check. See [current status](implementation-status.md).

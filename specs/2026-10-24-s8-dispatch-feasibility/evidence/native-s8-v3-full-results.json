@@ -1,0 +1,916 @@
+{
+  "recordedAt": "2026-10-25T17:58:56.182Z",
+  "checks": [
+    "small: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "mixed: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "unicode: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "surrogate: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "surrogate-boundary: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "description: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "deep: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "dense: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "hands: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "cat: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "face: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "assets: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "max: output parity, ordered wrappers, complete asset copies and disabled-face isolation",
+    "Preparation, replay and cleanup preserve the seeded pointer and claim before account deletion"
+  ],
+  "runs": [
+    {
+      "kind": "small",
+      "id": "61a52df0-3284-4e8c-a1b7-8fdb4c9248a1",
+      "inputBytes": 604,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:35:07.322Z",
+      "sealedRevisionRace": true,
+      "polls": 17,
+      "dispatchCheckpoints": 9,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1074,
+          "sha256": "f8cd4ba40b66cecd8d892792f9c3eae69c676b4e8e77777e410c199d104821c6"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:35:57.914Z",
+      "outputBytes": 1074,
+      "sha256": "f8cd4ba40b66cecd8d892792f9c3eae69c676b4e8e77777e410c199d104821c6",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 3,
+        "bytes": 15728640
+      },
+      "retained": {
+        "sites": {
+          "objects": 3,
+          "bytes": 2148
+        },
+        "assets": {
+          "objects": 2,
+          "bytes": 10485760
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 483,
+        "cursorBytes": 2,
+        "indexBytes": 126
+      },
+      "cleanupStartedAt": "2026-10-25T17:36:01.046Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:36:20.544Z"
+    },
+    {
+      "kind": "mixed",
+      "id": "c17a8bc4-9582-4cc0-8af5-aa1af1618d0b",
+      "inputBytes": 1793,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:36:39.473Z",
+      "polls": 24,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 2938,
+          "sha256": "2a8ca93ad6f8e83c490980427f60679784c054b9aa0325022cc90f6a82c4a5e9"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1239,
+          "sha256": "b5b0aa521adc9e55822d7c9ea4616ad43b66410f807638ba906015606444554b"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1221,
+          "sha256": "c0f2fd783ca73d5d39c195231b83e60558afe415a59384a584e55048841773fc"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:37:52.949Z",
+      "outputBytes": 2938,
+      "sha256": "2a8ca93ad6f8e83c490980427f60679784c054b9aa0325022cc90f6a82c4a5e9",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 10796
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1672,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:37:56.118Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:38:06.625Z"
+    },
+    {
+      "kind": "unicode",
+      "id": "1d8ff3b9-da03-44c8-80f5-03beb002a15d",
+      "inputBytes": 109756,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:38:07.442Z",
+      "polls": 31,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 138894,
+          "sha256": "bd81294d4351d10eb6a0a885dffac292dfa98a12a529c052af06ac521166dc74"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 137195,
+          "sha256": "a5a80c6977da08847efbc5c11043ba7eb52273015845f183b0cc17ed04d31f6d"
+        },
+        {
+          "path": "/resume",
+          "bytes": 137177,
+          "sha256": "bb648d6c632ba15597da561f48740e1a7a028a48d6760b9097d7fc3ba49be4f8"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:39:34.147Z",
+      "outputBytes": 138894,
+      "sha256": "bd81294d4351d10eb6a0a885dffac292dfa98a12a529c052af06ac521166dc74",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 826532
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 109635,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:39:35.463Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:39:46.284Z"
+    },
+    {
+      "kind": "surrogate",
+      "id": "8af3bbe4-4aff-4819-9dd0-bc8b38817b31",
+      "inputBytes": 1771,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:39:48.345Z",
+      "polls": 26,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 2903,
+          "sha256": "72e14458e30c77a2ab5f358174bced74b531c4266477712a0b2e0ccde0bc6cef"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1204,
+          "sha256": "4cf90ddf4b546fbe9b32f5ea85716cb0d7ce0ba65f3277f744b381da8b6f37cf"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1186,
+          "sha256": "27921219fda578dfacc14166912f2e684fc793e8567d0a1c29516f72fe3d485c"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:41:03.519Z",
+      "outputBytes": 2903,
+      "sha256": "72e14458e30c77a2ab5f358174bced74b531c4266477712a0b2e0ccde0bc6cef",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 10586
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1650,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:41:06.184Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:41:16.397Z"
+    },
+    {
+      "kind": "surrogate-boundary",
+      "id": "1fa492d9-d695-459e-8864-718e9d2c95b0",
+      "inputBytes": 109533,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:41:19.235Z",
+      "polls": 28,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 145665,
+          "sha256": "13f1c39d363fab0aed258b1b35f4799e62231f0fe386f087708f6b25f6f11a1c"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 143966,
+          "sha256": "5c334c0a3ccbe3a0bfb4936524e10265c0eeb056233c60b53d7ea2c405c27367"
+        },
+        {
+          "path": "/resume",
+          "bytes": 143948,
+          "sha256": "ec5d1899e0de5ffe54a06f351f96b525be09b72075ae52c85df17f423548a2fd"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:42:37.674Z",
+      "outputBytes": 145665,
+      "sha256": "13f1c39d363fab0aed258b1b35f4799e62231f0fe386f087708f6b25f6f11a1c",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 867158
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 109412,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:42:40.316Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:42:54.474Z"
+    },
+    {
+      "kind": "description",
+      "id": "a498721b-2346-4d3f-b5f2-107aa1007339",
+      "inputBytes": 27787,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:42:55.280Z",
+      "polls": 25,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 50932,
+          "sha256": "e504f0c7db2c315f385add69a51c920884ce6cb3d047a0feec93f2fc1b58cde2"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 49233,
+          "sha256": "c7a41febbd4c320587663edd18ad3c5f18111d47043e819c0a8ecd4f82cea4a7"
+        },
+        {
+          "path": "/resume",
+          "bytes": 49215,
+          "sha256": "3bab77c71cd3ad6d30281c34c98efb7d460bf9d7ce7503f77f9e474aeffc8b9a"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:44:07.686Z",
+      "outputBytes": 50932,
+      "sha256": "e504f0c7db2c315f385add69a51c920884ce6cb3d047a0feec93f2fc1b58cde2",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 298760
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 27666,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:44:09.266Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:44:17.372Z"
+    },
+    {
+      "kind": "deep",
+      "id": "dcc3d59a-b045-4c70-940a-9d91c630c31e",
+      "inputBytes": 1896,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:44:17.955Z",
+      "polls": 42,
+      "dispatchCheckpoints": 31,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1616,
+          "sha256": "effb092387785cf5262d0ec63ea91a8d24abf3b4a86113126f4519678fc776c4"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:45:52.317Z",
+      "outputBytes": 1616,
+      "sha256": "effb092387785cf5262d0ec63ea91a8d24abf3b4a86113126f4519678fc776c4",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 3,
+        "bytes": 15728640
+      },
+      "retained": {
+        "sites": {
+          "objects": 25,
+          "bytes": 4848
+        },
+        "assets": {
+          "objects": 2,
+          "bytes": 10485760
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1775,
+        "cursorBytes": 2,
+        "indexBytes": 126
+      },
+      "cleanupStartedAt": "2026-10-25T17:45:53.470Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:46:05.836Z"
+    },
+    {
+      "kind": "dense",
+      "id": "f5bd77ae-1a23-481a-8928-94a020dfbf5a",
+      "inputBytes": 520383,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:46:07.120Z",
+      "polls": 74,
+      "dispatchCheckpoints": 60,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 499854,
+          "sha256": "eed5e43949e41f43256d3831a2040a812f6f977c234b98b335e397deccf314b3"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:48:49.306Z",
+      "outputBytes": 499854,
+      "sha256": "eed5e43949e41f43256d3831a2040a812f6f977c234b98b335e397deccf314b3",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 3,
+        "bytes": 15728640
+      },
+      "retained": {
+        "sites": {
+          "objects": 54,
+          "bytes": 1499562
+        },
+        "assets": {
+          "objects": 2,
+          "bytes": 10485760
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 520262,
+        "cursorBytes": 2,
+        "indexBytes": 126
+      },
+      "cleanupStartedAt": "2026-10-25T17:48:50.962Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:49:03.258Z"
+    },
+    {
+      "kind": "hands",
+      "id": "030efe7f-8ec8-4b3b-a0c3-0afd73dd2951",
+      "inputBytes": 1816,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:49:05.282Z",
+      "polls": 28,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 10204,
+          "sha256": "05e82828e1e2c2736fc9ae02deba43a35fb5bedb5e3738a7123b32bb75d1569e"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 8505,
+          "sha256": "cb96f1f829b05650bca0b6b37bba33e42e35744de6c3ac605dffcb492fea5e35"
+        },
+        {
+          "path": "/resume",
+          "bytes": 8487,
+          "sha256": "33aac70200aac4de71475b0ecf7e4d3f5b5af34871c7be6906e01ff2dcf01db2"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:50:21.367Z",
+      "outputBytes": 10204,
+      "sha256": "05e82828e1e2c2736fc9ae02deba43a35fb5bedb5e3738a7123b32bb75d1569e",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 54392
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1695,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:50:22.709Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:50:36.852Z"
+    },
+    {
+      "kind": "cat",
+      "id": "4d90d61e-ccb1-4940-b55f-fb0e11e9d332",
+      "inputBytes": 1814,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:50:37.361Z",
+      "polls": 28,
+      "dispatchCheckpoints": 20,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 3251,
+          "sha256": "b754dbc2672cfa09efd3337dc15a37a55e60177c2f24ddc2cd2a4360224dc166"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1552,
+          "sha256": "903c342875a46c2e87616baac6b372ce13593fe8c323e65571414646c33da95b"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1534,
+          "sha256": "6ad96532f9c1c8f46c454a46377421b5cbee88a2098c707a9dbc94f19b27d1f7"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:51:54.535Z",
+      "outputBytes": 3251,
+      "sha256": "b754dbc2672cfa09efd3337dc15a37a55e60177c2f24ddc2cd2a4360224dc166",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 12674
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1693,
+        "cursorBytes": 2,
+        "indexBytes": 297
+      },
+      "cleanupStartedAt": "2026-10-25T17:51:55.828Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:52:06.378Z"
+    },
+    {
+      "kind": "face",
+      "id": "093ac0e6-f557-4ec2-b669-7898ee017317",
+      "inputBytes": 1792,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:52:08.259Z",
+      "polls": 28,
+      "dispatchCheckpoints": 21,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 2938,
+          "sha256": "2e56a08645774963e2d029ac2d6c2d69866fd7e45b38d34443b4f6c1b55aaa82"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1239,
+          "sha256": "2d29d28b7c3775c0135f0b22545e30d7f8398a83f9211f98f4d283f4e00050ee"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1221,
+          "sha256": "6e02154faac7d3c79316625e1bdc47a4c7288b6328442bc874bd806062cd55b5"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:53:27.611Z",
+      "outputBytes": 2938,
+      "sha256": "2e56a08645774963e2d029ac2d6c2d69866fd7e45b38d34443b4f6c1b55aaa82",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "private-face",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 12,
+          "bytes": 10796
+        },
+        "assets": {
+          "objects": 5,
+          "bytes": 31457280
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1727,
+        "cursorBytes": 2,
+        "indexBytes": 336
+      },
+      "cleanupStartedAt": "2026-10-25T17:53:29.083Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:53:43.296Z"
+    },
+    {
+      "kind": "assets",
+      "id": "91e89508-c1b2-432f-9e95-76cce7d38701",
+      "inputBytes": 7099,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:54:09.741Z",
+      "polls": 49,
+      "dispatchCheckpoints": 37,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 15786,
+          "sha256": "32ed380b370e477765bdbee4ac75fc07ecf9aef25af75cd517c82308403f6f70"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1556,
+          "sha256": "c0254b110e4ef82f2d12a230c11686d0bc77ad72833717b15fade6cf613b942f"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1221,
+          "sha256": "65ed8582f97c8ab39d929224ce815b9fe5d1d38bb03290bb6fd11db70dcf293f"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:56:18.623Z",
+      "outputBytes": 15786,
+      "sha256": "32ed380b370e477765bdbee4ac75fc07ecf9aef25af75cd517c82308403f6f70",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "case-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "gallery-image-0",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "gallery-image-1",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "gallery-image-2",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "gallery-image-3",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 9,
+        "bytes": 52428800
+      },
+      "retained": {
+        "sites": {
+          "objects": 24,
+          "bytes": 37126
+        },
+        "assets": {
+          "objects": 8,
+          "bytes": 47185920
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 6978,
+        "cursorBytes": 2,
+        "indexBytes": 477
+      },
+      "cleanupStartedAt": "2026-10-25T17:56:19.845Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:56:38.311Z"
+    },
+    {
+      "kind": "max",
+      "id": "f7782975-20d0-4693-94ad-a14b8fdf3e11",
+      "inputBytes": 1048576,
+      "creation": null,
+      "invocations": [],
+      "startedAt": "2026-10-25T17:56:39.545Z",
+      "polls": 48,
+      "dispatchCheckpoints": 28,
+      "pages": [
+        {
+          "path": "/",
+          "bytes": 1049714,
+          "sha256": "f6fe0de1312841c0cff4fed321516b070cd50476002d953ee909866b85449dc2"
+        },
+        {
+          "path": "/projects/project",
+          "bytes": 1048015,
+          "sha256": "7408f7f3fc15dfcdee7d355f99139d791c841467049b38dd76cdb6c5de489059"
+        },
+        {
+          "path": "/resume",
+          "bytes": 1047997,
+          "sha256": "4583b2e3ad2bd6f3ac45326a452f337dc26aba0432d663a6fcd1211d4eaaf157"
+        }
+      ],
+      "status": "ready",
+      "finishedAt": "2026-10-25T17:58:38.777Z",
+      "outputBytes": 1049714,
+      "sha256": "f6fe0de1312841c0cff4fed321516b070cd50476002d953ee909866b85449dc2",
+      "assets": [
+        {
+          "asset_id": "avatar",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "banner",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "project-image",
+          "bytes": 5242880
+        },
+        {
+          "asset_id": "resume",
+          "bytes": 10485760
+        }
+      ],
+      "privateAssetInventory": {
+        "objects": 5,
+        "bytes": 31457280
+      },
+      "retained": {
+        "sites": {
+          "objects": 20,
+          "bytes": 6291452
+        },
+        "assets": {
+          "objects": 4,
+          "bytes": 26214400
+        }
+      },
+      "privateWorkingState": {
+        "sourceBytes": 1048455,
+        "cursorBytes": 2,
+        "indexBytes": 298
+      },
+      "cleanupStartedAt": "2026-10-25T17:58:40.163Z",
+      "cleanup": [],
+      "cleanupFinishedAt": "2026-10-25T17:58:54.829Z"
+    }
+  ],
+  "sweeps": [],
+  "limitations": [
+    "Local workerd counters are not provider CPU proof.",
+    "Separate boundary review and owner completion approval pending."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "fixture": "A\\ud800B\\udc00Z",
+  "historicalD1Result": "A\ufffd\ufffd\ufffdB\ufffd\ufffd\ufffdZ",
+  "sharedRendererExpected": "A\ufffdB\ufffdZ",
+  "fixedResult": "A\ufffdB\ufffdZ",
+  "reproduction": "S8_CASES=surrogate pnpm verify --profile=publication",
+  "fix": "Hex byte transport normalizes each isolated SQLite CESU-8 surrogate once; byte cursors never consume partial scalars or escapes."
+}

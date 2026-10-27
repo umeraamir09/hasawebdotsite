@@ -4,7 +4,7 @@
 
 ## Fragment boundary
 
-`renderFragment(input, {assetOrigins})` accepts either `{kind: "profile", profile}` or `{kind: "component", component}` from the display-only model. It returns one of these results:
+`renderFragment(input, {assetOrigins})` accepts `{kind: "profile", profile}`, `{kind: "component", component}`, bounded `{kind: "components", components}` groups, `{kind: "project", entry}` project entries, bounded `{kind: "text", text}` and `{kind: "frame", frame, side}` units, or `{kind: "asset", asset, usage, decoration}` image units from the display-only model. It returns one of these results:
 
 - `{status: "ready", html}` contains controlled, escaped static markup.
 - `{status: "needs_partitioning"}` means input failed the accounting envelope. It may be oversized, too deep, cyclic, accessor-bearing or otherwise unsuitable for bounded traversal. No partial HTML is returned.
@@ -12,7 +12,7 @@
 
 The current envelope allows 256 traversed values, depth 32, 4,096 UTF-16 units per string and a 12,288-byte accounting budget. Accounting adds UTF-8 string bytes, key lengths plus four, and eight per scalar. It is not an exact serialized JSON byte bound. Before React serialization, the walk also reserves six bytes per accounted input byte, 512 bytes per traversed value and 24,576 fixed markup bytes under a 262,144-byte output budget. Actual output bytes are checked again.
 
-These conservative guards are not measured CPU guarantees. A whole valid profile, component or nested list may exceed them. Do not truncate owner content, drop a rejected fragment, repeat list wrappers, or call the offline helper from a hot publication handler. Phase 24 must implement immutable revision-bound resumable preparation, Unicode-safe splitting, wrapper-preserving assembly and measured Queue/D1 batching. It must retest the final renderer against all CPU, request, D1, R2 and Queue allowances. S-1/S-8 restrictions and the 1 MiB content allowance remain unchanged.
+Project entries and component groups use the same shared views, normalization and origin checks as complete sections. These conservative guards are not measured CPU guarantees. A whole valid profile, component or nested list may exceed them. Do not truncate owner content, drop a rejected fragment, repeat list wrappers, or call the offline helper from a hot publication handler. The inactive [S-8 follow-up](../../specs/2026-10-24-s8-dispatch-feasibility/results.md) supplies revision-bound preparation, Unicode-safe parts, shared frames and streaming assembly. The [October 27 paid-at-launch decision](../../docs/deployment-policy.md) authorizes the tested S-8 local milestone. Integrate and check it before dependent local code, then retest changed renderer/delivery work. Free-only fit is no longer a local prerequisite; paid-provider verification remains a release gate. Bounded rendering and the 1 MiB content allowance remain unchanged.
 
 ## Document and response policy
 

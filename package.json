@@ -45,7 +45,8 @@
     "verify": "node scripts/verify.mjs",
     "test:runtime:smoke": "node scripts/app-runtime-benchmark.mjs --smoke",
     "test:editor": "node scripts/owner-draft-api.mjs --editor",
-    "test:uploads": "node scripts/private-uploads.mjs"
+    "test:uploads": "node scripts/private-uploads.mjs",
+    "test:publication-dispatch": "S8_MAX_ASSETS=true node scripts/publication-dispatch.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
