@@ -21,6 +21,11 @@ import {
   publishSavedDraft,
 } from "../lib/draft/publish";
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
+import {
+  canRemoveEditorComponent,
+  removeEditorComponent,
+} from "../lib/editor/components";
+import { ComponentRemovalDialog } from "./component-controls";
 import { DraftTextField } from "./draft-text-field";
 
 export function publicationFieldLabel(
@@ -340,6 +345,7 @@ export function PublicationCorrection({
   disabled: boolean;
   onClose(): void;
 }) {
+  const [removing, setRemoving] = useState(false);
   const state = useStore(controller.store);
   const region = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -455,42 +461,21 @@ export function PublicationCorrection({
           <button
             type="button"
             disabled={disabled}
-            onClick={() => {
-              const current = controller.store.getState().working;
-              if (!current) return;
-              const removedIndex = current.components.findIndex(
-                (item) => item.id === component.id,
-              );
-              for (const input of Object.values(
-                controller.store.getState().inputs,
-              )) {
-                const reference = input.path[1];
-                if (
-                  input.path[0] === "components" &&
-                  ((typeof reference === "object" &&
-                    reference.id === component.id) ||
-                    (typeof reference === "number" &&
-                      reference === removedIndex))
-                ) {
-                  controller.clearInput(input.path);
-                }
-              }
-              controller.update(
-                clearSample(
-                  {
-                    ...current,
-                    components: current.components.filter(
-                      (item) => item.id !== component.id,
-                    ),
-                  },
-                  `components.${component.id}`,
-                ),
-              );
-              onClose();
-            }}
+            onClick={() => setRemoving(true)}
           >
             Remove this section
           </button>
+          {removing && (
+            <ComponentRemovalDialog
+              title={componentRegistry[component.type].picker.title}
+              disabled={disabled}
+              allowed={canRemoveEditorComponent(component)}
+              onCancel={() => setRemoving(false)}
+              onRemove={() => {
+                if (removeEditorComponent(controller, component.id)) onClose();
+              }}
+            />
+          )}
         </>
       )}
       {issue.path[0] === "profile" && issue.path[1] === "faceReveal" && (

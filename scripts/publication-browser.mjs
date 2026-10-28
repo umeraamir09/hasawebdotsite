@@ -142,6 +142,10 @@ export async function checkPublicationControls({
       await getPage()
         .getByRole("button", { name: "Remove this section" })
         .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Remove section", exact: true })
+        .click();
       await getPage().waitForFunction(() => {
         const state = window.editorFixture.recovery.store
           .getState()
@@ -191,7 +195,10 @@ export async function checkPublicationControls({
         0,
       );
       await getPage()
-        .getByRole("button", { name: "Text section", exact: true })
+        .locator(
+          '[data-order-id="optional-sample"] .ordered-item-heading button',
+        )
+        .nth(1)
         .click();
       await getPage().getByLabel("Section title").fill("My section");
       await checklist()
@@ -274,6 +281,21 @@ export async function checkPublicationControls({
       await getPage().getByLabel("Address name").fill("unfinished-");
       await getPage()
         .getByRole("button", { name: "Remove this section", exact: true })
+        .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Cancel", exact: true })
+        .click();
+      assert.equal(
+        await getPage().getByLabel("Required value").inputValue(),
+        "2026-",
+      );
+      await getPage()
+        .getByRole("button", { name: "Remove this section", exact: true })
+        .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Remove section", exact: true })
         .click();
       await getPage()
         .getByRole("region", { name: "Publication correction" })

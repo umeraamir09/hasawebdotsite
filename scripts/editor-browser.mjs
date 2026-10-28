@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
@@ -533,8 +534,8 @@ export async function checkEditor({
           "unfinished@",
         );
         await page
-          .getByRole("button", { name: "Text section", exact: true })
-          .first()
+          .locator('[data-order-id="text-1"] .ordered-item-heading button')
+          .nth(1)
           .click();
         await page.getByLabel("Section title").fill("Accepted section");
         await frame().waitForFunction(
@@ -1229,6 +1230,7 @@ export async function checkEditor({
       browserOrigin,
       authority,
     };
+    await checkComponentControls(controls);
     await checkCropControls(controls);
     await checkProfileControls(controls);
     await checkSocialLinks(controls);

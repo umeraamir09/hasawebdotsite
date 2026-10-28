@@ -4,7 +4,7 @@ import type {
   PreviewIdentity,
   PreviewSelection,
 } from "@hasaweb/components/browser";
-import { componentRegistry, type PublicationIssue } from "@hasaweb/schema";
+import type { PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { createDraftController } from "../lib/draft/controller";
@@ -14,6 +14,7 @@ import {
 } from "../lib/draft/recovery-coordinator";
 import { AddressControl } from "./address-control";
 import { Brand } from "./brand";
+import { ComponentControls } from "./component-controls";
 import { DraftRecovery } from "./draft-recovery";
 import { EditorFields } from "./editor-fields";
 import { EditorPreview } from "./editor-preview";
@@ -122,7 +123,9 @@ function Scope({
   const choose = (value: PreviewSelection) => {
     if (
       value.kind === "component" &&
-      !draft?.components.some((component) => component.id === value.id)
+      !controller.store
+        .getState()
+        .working?.components.some((component) => component.id === value.id)
     )
       return;
     setSelection(value);
@@ -233,34 +236,12 @@ function Scope({
           )}
           {panel === "content" ? (
             <>
-              <nav
-                className="editor-components"
-                aria-label="Portfolio sections"
-              >
-                <button
-                  type="button"
-                  aria-current={active.kind === "profile" ? "true" : undefined}
-                  onClick={() => choose({ kind: "profile" })}
-                >
-                  Profile
-                </button>
-                {draft?.components.map((component) => (
-                  <button
-                    key={component.id}
-                    type="button"
-                    aria-current={
-                      active.kind === "component" && active.id === component.id
-                        ? "true"
-                        : undefined
-                    }
-                    onClick={() =>
-                      choose({ kind: "component", id: component.id })
-                    }
-                  >
-                    {componentRegistry[component.type].picker.title}
-                  </button>
-                ))}
-              </nav>
+              <ComponentControls
+                controller={controller}
+                selection={active}
+                disabled={disabled}
+                onSelect={choose}
+              />
               <AddressControl
                 controller={controller}
                 disabled={disabled}
