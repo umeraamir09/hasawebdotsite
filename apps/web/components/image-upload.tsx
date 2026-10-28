@@ -40,7 +40,7 @@ export function ImageUpload({
   onPendingChange,
 }: {
   label: string;
-  purpose: CropPurpose;
+  purpose: CropPurpose | "project";
   value: ImageReference | undefined;
   description: string;
   descriptionInvalid?: boolean;
@@ -101,7 +101,10 @@ export function ImageUpload({
       const image = await openLocalImage(blob);
       if (expected !== generation.current || current.current.disabled)
         image.release();
-      else setState({ kind: "cropping", image });
+      else if (purpose === "project") {
+        image.release();
+        await upload(blob);
+      } else setState({ kind: "cropping", image });
     } catch (cause) {
       if (expected === generation.current)
         setState({
@@ -256,13 +259,15 @@ export function ImageUpload({
         />
         {value && (
           <>
-            <button
-              type="button"
-              disabled={disabled || busy}
-              onClick={() => void cropExisting()}
-            >
-              Crop {purpose}
-            </button>
+            {purpose !== "project" && (
+              <button
+                type="button"
+                disabled={disabled || busy}
+                onClick={() => void cropExisting()}
+              >
+                Crop {purpose}
+              </button>
+            )}
             <button
               type="button"
               disabled={disabled || busy}
@@ -272,12 +277,16 @@ export function ImageUpload({
               }}
             >
               Remove {purpose}
+              {purpose === "project" ? " image" : ""}
             </button>
           </>
         )}
       </div>
       <p id={`${id}-formats`} className="profile-image-note">
-        JPEG, PNG or WebP. Up to 5 MiB. Only the finished crop is saved.
+        JPEG, PNG or WebP. Up to 5 MiB.{" "}
+        {purpose === "project"
+          ? "The supplied image is saved without cropping."
+          : "Only the finished crop is saved."}
       </p>
       {providerPortfolioId && (
         <p className="profile-image-note">
@@ -353,7 +362,7 @@ export function ImageUpload({
           )}
         </div>
       )}
-      {state.kind === "cropping" && (
+      {state.kind === "cropping" && purpose !== "project" && (
         <ImageCropDialog
           image={state.image}
           purpose={purpose}

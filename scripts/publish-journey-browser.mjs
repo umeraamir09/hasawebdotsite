@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import {
+  assertPublishedProjects,
+  preparePublishedProjects,
+} from "./project-controls-browser.mjs";
 
 export async function checkPublishJourney({
   getPage,
@@ -368,6 +372,7 @@ export async function checkPublishJourney({
       );
       await page.getByLabel("Name", { exact: true }).fill("Republished owner");
       await upload("avatar");
+      await preparePublishedProjects(page, image);
       let blockedCommit = true;
       await page.route("**/api/owner/publication/commit", async (route) => {
         if (blockedCommit) {
@@ -464,6 +469,11 @@ export async function checkPublishJourney({
       assert.ok(
         (await (await publicRead()).text()).includes("Republished owner"),
       );
+      const cards = await assertPublishedProjects(
+        page,
+        await (await publicRead()).text(),
+      );
+      assert.equal((await publicRead(cards[1].image)).status, 200);
       for (const url of [oldAvatarUrl, `${oldAvatarUrl}?warm=query`]) {
         assert.equal((await publicRead(url)).status, 404);
         assert.equal((await publicRead(url, "HEAD")).status, 404);
@@ -520,6 +530,35 @@ export async function checkPublishJourney({
         `/__fixture/public-object?key=${encodeURIComponent(new URL(oldAvatarUrl).pathname.slice(1))}`,
       );
       assert.equal((await object.json()).exists, false);
+      await page
+        .getByRole("region", { name: "Portfolio sections", exact: true })
+        .getByRole("button", { name: "Projects", exact: true })
+        .click();
+      const fullProject = page.locator("[data-project-id]").filter({
+        has: page
+          .getByLabel("Project title", { exact: true })
+          .and(page.locator('input[value="Owner project"]')),
+      });
+      await fullProject
+        .getByRole("button", { name: "Remove project", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Confirm remove project", exact: true })
+        .click();
+      await page.evaluate(() =>
+        window.editorFixture.recovery.store.getState().controller.flushValid(),
+      );
+      await assertPublishedProjects(page, await (await publicRead()).text());
+      await checklist
+        .getByRole("button", { name: "Publish", exact: true })
+        .click();
+      await checklist
+        .getByText("Publication complete.", { exact: true })
+        .waitFor({ timeout: 120000 });
+      const removedHtml = await (await publicRead()).text();
+      assert.ok(removedHtml.includes("Minimal project"));
+      assert.ok(!removedHtml.includes("Owner project"));
+      assert.equal((await publicRead(cards[1].image)).status, 404);
       await page.screenshot({
         path: join(evidence, "published-profile.png"),
         fullPage: true,

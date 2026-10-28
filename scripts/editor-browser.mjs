@@ -8,6 +8,7 @@ import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
+import { checkProjectControls } from "./project-controls-browser.mjs";
 import { checkPublicationControls } from "./publication-browser.mjs";
 import { checkPublishJourney } from "./publish-journey-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
@@ -1235,6 +1236,7 @@ export async function checkEditor({
     await checkCropControls(controls);
     await checkProfileControls(controls);
     await checkSocialLinks(controls);
+    await checkProjectControls(controls);
     await checkPublishJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
