@@ -8,10 +8,12 @@ import type { PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { createDraftController } from "../lib/draft/controller";
+import { getAt } from "../lib/draft/planner";
 import {
   createRecoveryCoordinator,
   type RecoveryCoordinator,
 } from "../lib/draft/recovery-coordinator";
+import type { FieldPath } from "../lib/draft/types";
 import { AddressControl } from "./address-control";
 import { Brand } from "./brand";
 import { ComponentControls } from "./component-controls";
@@ -106,6 +108,7 @@ function Scope({
   const [correction, setCorrection] = useState<{
     issue: PublicationIssue;
     componentId: string | null;
+    target: FieldPath;
   } | null>(null);
   const [publicationKey, setPublicationKey] = useState("");
   const draft = state.working;
@@ -201,7 +204,22 @@ function Scope({
                 issue.path[1] === "faceReveal" ||
                 issue.path[0] === "seo"
               )
-                setCorrection({ issue, componentId: component?.id ?? null });
+                setCorrection({
+                  issue,
+                  componentId: component?.id ?? null,
+                  target: issue.path.map((part, position) => {
+                    const value =
+                      typeof part === "number"
+                        ? getAt(draft, issue.path.slice(0, position + 1))
+                        : undefined;
+                    return value &&
+                      typeof value === "object" &&
+                      "id" in value &&
+                      typeof value.id === "string"
+                      ? { id: value.id }
+                      : part;
+                  }),
+                });
               else {
                 setCorrection(null);
                 requestAnimationFrame(() => {
@@ -230,6 +248,7 @@ function Scope({
               key={JSON.stringify(correction)}
               issue={correction.issue}
               componentId={correction.componentId}
+              target={correction.target}
               disabled={disabled}
               onClose={() => setCorrection(null)}
             />

@@ -1230,11 +1230,11 @@ export async function checkEditor({
       browserOrigin,
       authority,
     };
+    await checkPublicationControls(controls);
     await checkComponentControls(controls);
     await checkCropControls(controls);
     await checkProfileControls(controls);
     await checkSocialLinks(controls);
-    await checkPublicationControls(controls);
     await checkPublishJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({

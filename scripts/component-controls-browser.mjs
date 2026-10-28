@@ -95,10 +95,14 @@ export async function checkComponentControls({
         document.querySelector('.editor-drag-handle[aria-pressed="true"]'),
       );
       await page.keyboard.press("ArrowDown");
-      await page.waitForFunction(() =>
-        [...document.querySelectorAll('[id^="DndLiveRegion"]')].some((node) =>
-          node.textContent.includes("was moved over droppable area"),
-        ),
+      await page.waitForFunction(
+        (targetId) =>
+          [...document.querySelectorAll('[id^="DndLiveRegion"]')].some((node) =>
+            node.textContent.includes(
+              `was moved over droppable area ${targetId}`,
+            ),
+          ),
+        before[0],
       );
       await page.keyboard.press("Space");
       await page.waitForFunction(
@@ -142,6 +146,8 @@ export async function checkComponentControls({
       await page.mouse.move(target.x + 20, target.y + 20, { steps: 15 });
       await page.mouse.up();
       assert.deepEqual(await order(), [before[1], before[0]]);
+      // dnd-kit briefly suppresses clicks after a pointer drag.
+      await page.waitForTimeout(100);
       await sections()
         .getByRole("button", { name: "Remove My story", exact: true })
         .click();

@@ -32,3 +32,7 @@ No commit, push or roadmap checkoff is authorized. Owner completion approval is 
 ## Documentation impact
 
 The [editor contract](../../apps/web/lib/draft/README.md) documents reusable controls, both removal paths, cleanup and deferred integrations. The [implementation baseline](../../docs/implementation-status.md) records the verified capability with owner approval pending. Product requirements and schema contracts do not change. Phase 41 withdrawal and Phase 42E activation remain unresolved prerequisites for those integrations.
+
+October 28 review follow-up: publication correction now binds nested entry selectors to stable IDs when opened, so reordering cannot redirect edits or unfinished input. The editor contract reflects this. The new browser regression failed before the fix by overwriting the second project's title after reordering. The keyboard drag test now waits for the intended destination announcement, addressing a CI timing failure. Phase 41 and Phase 42E prerequisites remain unchanged.
+
+The follow-up `pnpm verify --profile=editor` passed at `.wrangler/verification/2026-10-28T10-15-44.286Z-0J0iRO`: lint, typechecking, 465 unit tests, web/jobs builds, 43 editor browser groups and two API groups. The new regression passed after the fix. Two earlier runs exposed a pointer-drag test clicking during dnd-kit's click-suppression interval; the test now waits for that interval before opening the removal dialog. Seven existing CSS specificity warnings remain.

@@ -336,12 +336,14 @@ export function PublicationCorrection({
   controller,
   issue,
   componentId,
+  target,
   disabled,
   onClose,
 }: {
   controller: DraftController;
   issue: PublicationIssue;
   componentId: string | null;
+  target: FieldPath;
   disabled: boolean;
   onClose(): void;
 }) {
@@ -359,15 +361,12 @@ export function PublicationCorrection({
       ? issue.path[1]
       : null;
   const component = index === null ? undefined : draft.components[index];
-  const target: FieldPath = component
-    ? ["components", { id: component.id }, ...issue.path.slice(2)]
-    : issue.path;
-  const value = getAt(
-    draft,
-    component && index !== null
-      ? ["components", index, ...issue.path.slice(2)]
-      : issue.path,
-  );
+  let value: unknown;
+  try {
+    value = getAt(draft, resolveField(draft, target));
+  } catch {
+    return null;
+  }
   const textInput = state.inputs[JSON.stringify(target)]?.value;
   const catalog = issue.code === "catalog";
   const options =
