@@ -73,7 +73,9 @@ export async function checkProjectControls({
         .click();
       await page.waitForFunction(() =>
         Array.from(document.querySelectorAll("label")).some(
-          (label) => label.textContent.includes("Code URL (optional)") && label.control?.value === "https://",
+          (label) =>
+            label.textContent.includes("Code URL (optional)") &&
+            label.control?.value === "https://",
         ),
       );
       await page.getByLabel("Code URL (optional)", { exact: true }).fill("");
