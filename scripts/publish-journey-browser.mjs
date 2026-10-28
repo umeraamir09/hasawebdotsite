@@ -5,6 +5,11 @@ import {
   preparePublishedProjects,
 } from "./project-controls-browser.mjs";
 
+import {
+  assertPublishedText,
+  preparePublishedText,
+} from "./text-controls-browser.mjs";
+
 export async function checkPublishJourney({
   getPage,
   boot,
@@ -373,6 +378,7 @@ export async function checkPublishJourney({
       await page.getByLabel("Name", { exact: true }).fill("Republished owner");
       await upload("avatar");
       await preparePublishedProjects(page, image);
+      await preparePublishedText(page);
       let blockedCommit = true;
       await page.route("**/api/owner/publication/commit", async (route) => {
         if (blockedCommit) {
@@ -469,6 +475,7 @@ export async function checkPublishJourney({
       assert.ok(
         (await (await publicRead()).text()).includes("Republished owner"),
       );
+      await assertPublishedText(page, await (await publicRead()).text());
       const cards = await assertPublishedProjects(
         page,
         await (await publicRead()).text(),

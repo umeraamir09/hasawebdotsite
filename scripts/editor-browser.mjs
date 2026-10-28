@@ -13,6 +13,8 @@ import { checkPublicationControls } from "./publication-browser.mjs";
 import { checkPublishJourney } from "./publish-journey-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
+import { checkTextControls } from "./text-controls-browser.mjs";
+
 export async function checkEditor({
   root,
   origin,
@@ -1237,6 +1239,7 @@ export async function checkEditor({
     await checkProfileControls(controls);
     await checkSocialLinks(controls);
     await checkProjectControls(controls);
+    await checkTextControls(controls);
     await checkPublishJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({

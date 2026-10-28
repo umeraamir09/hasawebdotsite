@@ -5,11 +5,11 @@ import { componentRegistry } from "@hasaweb/schema";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { moveEditorItem } from "../lib/editor/components";
-import { DraftTextField } from "./draft-text-field";
 import { OrderedItems } from "./ordered-items";
 import { ProfileControls } from "./profile-controls";
 import { ProjectControls } from "./project-controls";
 import { SocialLinksControl } from "./social-links-control";
+import { TextControls } from "./text-controls";
 
 export function EditorFields({
   controller,
@@ -42,19 +42,19 @@ export function EditorFields({
         disabled={disabled}
       />
     );
+  if (component.type === "text")
+    return (
+      <TextControls
+        controller={controller}
+        componentId={component.id}
+        disabled={disabled}
+      />
+    );
   const definition = componentRegistry[component.type];
   return (
     <section aria-label={`${definition.picker.title} controls`}>
       <h2>{definition.picker.title}</h2>
       <p>{definition.picker.description}</p>
-      {component.type === "text" && (
-        <DraftTextField
-          controller={controller}
-          disabled={disabled}
-          label="Section title"
-          path={["components", { id: component.id }, "data", "title"]}
-        />
-      )}
       {(component.type === "skills" ||
         component.type === "work-experience") && (
         <OrderedItems

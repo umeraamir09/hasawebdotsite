@@ -34,6 +34,9 @@
   color: inherit;
   padding: 9px 13px;
 }
+.rich-text-tools button {
+  min-height: 44px;
+}
 .owner-editor button[aria-pressed="true"],
 .owner-editor button[aria-current="true"] {
   background: #bdeb70;
@@ -396,4 +399,31 @@
 }
 .profile-image-preview-project img {
   object-fit: contain;
+}
+
+.rich-text-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+}
+.rich-text-input {
+  min-height: 180px;
+  padding: 12px 16px;
+  border: 1px solid #7a856e;
+  border-radius: 12px;
+  background: #f7f8f5;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.5;
+}
+.rich-text-input:focus-visible {
+  outline: 2px solid #596f34;
+  outline-offset: 3px;
+}
+.rich-text-input a {
+  color: inherit;
+  text-decoration: underline;
 }
