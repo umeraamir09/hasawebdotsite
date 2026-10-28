@@ -1,0 +1,66 @@
+import {
+  ownerPublicationOperations,
+  PublicationCommitError,
+  type PublicationPolicy,
+  privateJson,
+  SaveError,
+} from "@hasaweb/db";
+import {
+  publicationCommitRequestSchema,
+  publicationStatusCommandSchema,
+} from "@hasaweb/schema";
+import type { Hono } from "hono";
+import { ZodError } from "zod";
+import { readBody } from "./draft-routes";
+import type { OwnerBindings } from "./owner-api";
+
+export type PublicationBindings = {
+  ASSET_ORIGIN: string;
+  PUBLICATION_QUEUE: PublicationPolicy["queue"];
+};
+export function addPublicationRoutes(app: Hono<OwnerBindings>) {
+  for (const action of ["start", "status", "commit"] as const) {
+    app.post(`/api/owner/publication/${action}`, async (c) => {
+      if (!c.env.ASSET_ORIGIN || !c.env.PUBLICATION_QUEUE)
+        return privateJson({ error: "publication_unavailable" }, 503);
+      const policy = {
+        assetOrigin: c.env.ASSET_ORIGIN,
+        batchSize: 16,
+        queue: c.env.PUBLICATION_QUEUE,
+      };
+      const operations = ownerPublicationOperations(
+        c.env.DB,
+        c.get("identity"),
+        policy,
+      );
+      try {
+        const raw = await readBody(c.req.raw, 1024);
+        if (action === "start") return privateJson(await operations.start(raw));
+        if (action === "status") {
+          const command = publicationStatusCommandSchema.parse(raw);
+          return privateJson(
+            await operations.status(command.portfolioId, command.operationId),
+          );
+        }
+        const command = publicationCommitRequestSchema.parse(raw);
+        return privateJson(
+          await operations.commit(command.portfolioId, command.operationId),
+        );
+      } catch (error) {
+        if (error instanceof ZodError)
+          return privateJson({ error: "invalid_input" }, 422);
+        if (error instanceof SaveError)
+          return privateJson({ error: error.code }, error.status);
+        if (error instanceof PublicationCommitError)
+          return privateJson(
+            { error: error.code },
+            error.code === "unauthorized" ? 401 : 409,
+          );
+        return privateJson({ error: "publication_unavailable" }, 503);
+      }
+    });
+    app.all(`/api/owner/publication/${action}`, () =>
+      privateJson({ error: "invalid_input" }, 405),
+    );
+  }
+}

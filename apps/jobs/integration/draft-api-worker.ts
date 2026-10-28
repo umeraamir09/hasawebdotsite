@@ -2,14 +2,20 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { privateJson } from "@hasaweb/db";
+import { servePublic } from "../../site/src/public-serving";
+import jobsWorker from "../src/index";
 import { ownerRouter } from "../src/owner-api";
+import { purgePublicationHosts } from "../src/publication-cache";
+import type { DispatchEnv } from "../src/publication-dispatch";
+import { withdrawPublication } from "../src/publication-withdrawal";
 import { measureDb } from "./measure-db";
 
-type Env = AuthEnvironment & {
-  RUNTIME_KEY: string;
-  RUNTIME_ENABLED: string;
-  MEASURE_DB?: string;
-};
+type Env = AuthEnvironment &
+  DispatchEnv & {
+    RUNTIME_KEY: string;
+    RUNTIME_ENABLED: string;
+    MEASURE_DB?: string;
+  };
 let previousEnvironment: Env | undefined;
 let previousDatabase: D1Database | undefined;
 export class RuntimeOwnerApi extends WorkerEntrypoint<Env> {
@@ -91,6 +97,56 @@ export default {
       request.headers.get("X-Runtime-Key") !== env.RUNTIME_KEY
     )
       return privateJson(null, 404);
+    if (new URL(request.url).pathname === "/__fixture/public-object")
+      return privateJson({
+        exists: !!(await env.PUBLIC_ASSETS_BUCKET.head(
+          new URL(request.url).searchParams.get("key") ?? "",
+        )),
+      });
+    if (new URL(request.url).pathname === "/__fixture/withdraw-check") {
+      const id = new URL(request.url).searchParams.get("id") ?? "";
+      const verified = request.headers.get("X-Fixture-Verified") === "true";
+      try {
+        const checked = {
+          ...env,
+          APP_ENV: "production",
+          CLOUDFLARE_ZONE_ID: "0".repeat(32),
+          CLOUDFLARE_CACHE_PURGE_TOKEN: "fixture-only",
+          CACHE_HTTP: {
+            fetch: async (input: RequestInfo | URL) => {
+              const url = String(input);
+              if (url.startsWith("https://api.cloudflare.com/"))
+                return Response.json({ success: true });
+              return verified
+                ? servePublic(new Request(url), env)
+                : new Response("stale cached content", {
+                    headers: {
+                      "Cache-Control": "public,max-age=3600",
+                      "CF-Cache-Status": "HIT",
+                    },
+                  });
+            },
+          },
+        };
+        await purgePublicationHosts(checked, [
+          "publication-final.hasaweb.site",
+        ]);
+        await withdrawPublication(checked, id);
+        return privateJson({ complete: true });
+      } catch {
+        return privateJson({ complete: false }, 503);
+      }
+    }
+    if (
+      new URL(request.url).pathname === "/__fixture/public" &&
+      request.method === "POST"
+    ) {
+      const body = await request.json<{ url: string; method?: string }>();
+      return servePublic(
+        new Request(body.url, { method: body.method ?? "GET" }),
+        env,
+      );
+    }
     if (
       new URL(request.url).pathname === "/__fixture/sql" &&
       request.method === "POST"
@@ -107,4 +163,28 @@ export default {
     }
     return privateJson(null, 404);
   },
+  async queue(
+    batch: Parameters<typeof jobsWorker.queue>[0],
+    env: Parameters<typeof jobsWorker.queue>[1],
+  ) {
+    const failure = await env.DB.prepare(
+      "SELECT value FROM runtime_probe WHERE key='publication-withdrawal-failure'",
+    ).first();
+    if (!failure) return jobsWorker.queue(batch, env);
+    const bucket = env.PUBLIC_ASSETS_BUCKET;
+    return jobsWorker.queue(batch, {
+      ...env,
+      PUBLIC_ASSETS_BUCKET: new Proxy(bucket, {
+        get(target, key) {
+          if (key === "delete")
+            return async () => {
+              throw new Error("injected_withdrawal_delete_failure");
+            };
+          const value = Reflect.get(target, key);
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      }),
+    });
+  },
+  scheduled: jobsWorker.scheduled,
 };

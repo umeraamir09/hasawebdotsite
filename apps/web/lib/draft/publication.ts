@@ -44,7 +44,7 @@ export function preparePublication(
     return { kind: "preparing" as const, ...prepared };
   });
 }
-async function withPublication<T>(
+export async function withPublication<T>(
   controller: DraftController,
   send: typeof fetch,
   complete: (result: Readiness) => Promise<T>,

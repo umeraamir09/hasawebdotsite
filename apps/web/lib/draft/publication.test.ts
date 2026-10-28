@@ -201,3 +201,85 @@ it("never admits a candidate with unfinished uploads, raw input or checklist iss
   expect(submit).not.toHaveBeenCalled();
   expect(controller.store.getState().suspended).toBe(false);
 });
+
+it("publishes one confirmed revision and verifies the persisted commit response", async () => {
+  const { publishSavedDraft } = await import("./publish");
+  const controller = await setup();
+  const stages: string[] = [];
+  const calls: string[] = [];
+  let operationId = "";
+  const send = vi.fn<typeof fetch>(async (input, init) => {
+    const path = String(input);
+    calls.push(path);
+    const body = JSON.parse(String(init?.body));
+    expect(controller.store.getState().suspended).toBe(true);
+    if (path.endsWith("/check"))
+      return Response.json({
+        portfolioId: body.portfolioId,
+        revision: body.revision,
+        issues: [],
+        hasMoreIssues: false,
+        nextAssetOffset: null,
+      });
+    if (path.endsWith("/status")) return Response.json(null);
+    if (path.endsWith("/start")) {
+      operationId = body.operationId;
+      return Response.json({
+        operationId,
+        portfolioId: body.portfolioId,
+        revision: body.revision,
+        stage: "ready",
+      });
+    }
+    return Response.json({
+      operationId,
+      portfolioId: body.portfolioId,
+      revision: controller.store.getState().confirmed?.revision,
+      stage: "published",
+      url: "https://owner.hasaweb.site",
+    });
+  });
+  const result = await publishSavedDraft(
+    controller,
+    (operation) => stages.push(operation.stage),
+    new AbortController().signal,
+    send,
+  );
+  expect(result.kind).toBe("published");
+  expect(stages).toEqual(["ready", "published"]);
+  expect(calls.filter((path) => path.endsWith("/commit"))).toHaveLength(1);
+  expect(controller.store.getState().suspended).toBe(false);
+});
+
+it("never reports success when a commit acknowledgement is lost", async () => {
+  const { publishSavedDraft } = await import("./publish");
+  const controller = await setup();
+  const progress = vi.fn();
+  const send = vi.fn<typeof fetch>(async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith("/check"))
+      return Response.json({
+        portfolioId: body.portfolioId,
+        revision: body.revision,
+        issues: [],
+        hasMoreIssues: false,
+        nextAssetOffset: null,
+      });
+    if (String(input).endsWith("/status")) return Response.json(null);
+    if (String(input).endsWith("/start"))
+      return Response.json({
+        operationId: body.operationId,
+        portfolioId: body.portfolioId,
+        revision: body.revision,
+        stage: "ready",
+      });
+    throw new Error("lost acknowledgement");
+  });
+  await expect(
+    publishSavedDraft(controller, progress, new AbortController().signal, send),
+  ).rejects.toThrow("lost acknowledgement");
+  expect(progress.mock.calls.map(([operation]) => operation.stage)).toEqual([
+    "ready",
+  ]);
+  expect(controller.store.getState().suspended).toBe(false);
+});

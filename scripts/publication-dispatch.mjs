@@ -320,6 +320,13 @@ try {
     "small,mixed,privacy,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,assets,assets-face,max"
   ).split(",")) {
     const draft = makeDraft(kind);
+    if (commitMode && kind === "small") draft.profile.faceReveal.enabled = true;
+    if (commitMode && kind === "cat") {
+      const projects = draft.components.find(
+        (item) => item.type === "projects",
+      );
+      delete projects.data.entries[0].image;
+    }
     for (const ref of assetReferences(draft)) {
       if (assets.has(ref.id)) continue;
       const size =
@@ -376,7 +383,7 @@ try {
       startedAt,
     };
     runs.push(run);
-    if (kind === "small") {
+    if (kind === "small" && !commitMode) {
       await sql(
         "UPDATE portfolio SET draft=json_set(draft,'$.profile.name','Next saved revision'),draft_rev=draft_rev+1 WHERE id='s8-portfolio'",
       );
@@ -791,6 +798,12 @@ try {
           ).status,
           200,
         );
+        const removedFaceUrl = `https://s8-assets.invalid/candidate/${first.id}/assets/private-face`;
+        assert.equal((await visitor(removedFaceUrl)).status, 404);
+        assert.equal(
+          (await visitor(`${removedFaceUrl}?variant=warm`)).status,
+          404,
+        );
         const replay = await commitPublication(command(first, null, "draft"));
         assert.equal(replay.status, 200);
         assert.equal(replay.value.replayed, true);
@@ -835,6 +848,17 @@ try {
           "claimed",
         );
         assert.equal((await visitor(publicUrl)).status, 200);
+        const removedAsset = preparedForCommit[1].manifest.files.find(
+          (file) => file.path === "/assets/project-image",
+        );
+        assert.ok(removedAsset);
+        const removedUrl = `https://s8-assets.invalid/candidate/${preparedForCommit[1].id}${removedAsset.path}`;
+        assert.equal((await visitor(removedUrl)).status, 404);
+        assert.equal((await visitor(`${removedUrl}?variant=warm`)).status, 404);
+        assert.equal(
+          (await visitor(removedUrl, { method: "HEAD" })).status,
+          404,
+        );
       }
     } else {
       run.cleanupStartedAt = new Date().toISOString();
@@ -862,6 +886,28 @@ try {
   // biome-ignore format: Keep the existing S-8 suite's layout stable.
   if (commitMode) {
     assert.equal(preparedForCommit.length, 3);
+    if (!remote) {
+      const revision = (await sql("SELECT draft_rev FROM portfolio WHERE id='s8-portfolio'")).results[0].draft_rev;
+      const staleId = (await api("/create", { revision })).value.id;
+      for (let n=0; n<1000; n++) {
+        await api(`/advance?id=${staleId}`);
+        if ((await api(`/status?id=${staleId}`)).value.status === "ready") break;
+      }
+      assert.equal((await api(`/status?id=${staleId}`)).value.status, "ready");
+      await sql("UPDATE portfolio SET draft_rev=draft_rev+1 WHERE id='s8-portfolio'");
+      const staleRevision = await commitPublication({ portfolioId: "s8-portfolio", candidateId: staleId, expectedVersion: 3, expectedStatus: "published" });
+      assert.equal(staleRevision.status, 409);
+      assert.equal(staleRevision.value.code, "revision_conflict");
+      assert.equal((await sql("SELECT published_version FROM portfolio WHERE id='s8-portfolio'")).results[0].published_version, 3);
+      assert.equal((await sql("SELECT state FROM subdomain_claim WHERE name='s8-fixture'")).results[0].state, "claimed");
+      assert.equal((await visitor("https://s8-fixture.hasaweb.site/")).status, 200);
+      await api(`/cleanup?id=${staleId}`, {});
+      for (let n=0; n<1000; n++) {
+        await api(`/advance?id=${staleId}`);
+        if ((await api(`/status?id=${staleId}`)).value.status === "cleaned") break;
+      }
+      assert.equal((await api(`/status?id=${staleId}`)).value.status, "cleaned");
+    }
     checks.push("First claim, failure rollback, complete version serving, stale and delayed retries, retained dependencies, privacy, no-store query policy and republish after unpublish");
   } else {
   assert.equal(

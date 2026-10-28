@@ -4,7 +4,8 @@
   "workers_dev": false,
   "vars": {
     "APP_ENV": "local",
-    "APP_ORIGIN": "http://127.0.0.1:8787"
+    "APP_ORIGIN": "http://127.0.0.1:8787",
+    "ASSET_ORIGIN": "https://assets.hasaweb.site"
   },
   "d1_databases": [
     {
@@ -42,6 +43,10 @@
       {
         "binding": "GITHUB_QUEUE",
         "queue": "hasaweb-github-local"
+      },
+      {
+        "binding": "PUBLICATION_QUEUE",
+        "queue": "hasaweb-publication-local"
       }
     ],
     "consumers": [
@@ -54,10 +59,28 @@
         "queue": "hasaweb-github-local",
         "max_batch_size": 1,
         "max_batch_timeout": 1
+      },
+      {
+        "queue": "hasaweb-publication-local",
+        "max_batch_size": 1,
+        "max_batch_timeout": 1,
+        "max_retries": 4
       }
     ]
   },
   "triggers": {
-    "crons": ["0 0 * * *"]
-  }
+    "crons": ["* * * * *"]
+  },
+  "assets": {
+    "directory": "dist/platform",
+    "binding": "PLATFORM_ASSETS",
+    "run_worker_first": true
+  },
+  "services": [
+    {
+      "binding": "PRIVATE_SOURCE",
+      "service": "hasaweb-web-local",
+      "entrypoint": "PublicationAssets"
+    }
+  ]
 }

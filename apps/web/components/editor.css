@@ -282,3 +282,24 @@
   border-radius: 999px;
   background: #bdeb70;
 }
+
+.publication-checklist > button + button {
+  margin: 12px 0 0;
+  width: 100%;
+}
+.publication-url {
+  margin-top: 16px;
+  padding: 16px;
+  background: #e7f2d7;
+  border-radius: 12px;
+  overflow-wrap: anywhere;
+}
+.publication-url a {
+  display: inline-block;
+  padding: 12px 0;
+  color: #365414;
+}
+.publication-checklist .publication-url button {
+  display: block;
+  border-radius: 12px;
+}

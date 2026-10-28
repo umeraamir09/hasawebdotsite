@@ -300,7 +300,40 @@ if (!remote) {
           migrations_dir: join(root, "packages/db/migrations"),
         },
       ],
+      assets: {
+        directory: join(root, "apps/jobs/dist/platform"),
+        binding: "PLATFORM_ASSETS",
+        run_worker_first: true,
+      },
+      r2_buckets: [
+        { binding: "SITES_BUCKET", bucket_name: "draft-api-sites" },
+        {
+          binding: "PUBLIC_ASSETS_BUCKET",
+          bucket_name: "draft-api-public-assets",
+        },
+      ],
+      services: [
+        {
+          binding: "PRIVATE_SOURCE",
+          service: "draft-api-web-local",
+          entrypoint: "PublicationAssets",
+        },
+      ],
+      queues: {
+        producers: [
+          { binding: "PUBLICATION_QUEUE", queue: "hasaweb-publication-local" },
+        ],
+        consumers: [
+          {
+            queue: "hasaweb-publication-local",
+            max_batch_size: 1,
+            max_batch_timeout: 1,
+            max_retries: 4,
+          },
+        ],
+      },
       vars: {
+        ASSET_ORIGIN: "https://assets.hasaweb.site",
         APP_ENV: "test",
         MEASURE_DB: "true",
         APP_ORIGIN: "https://hasaweb.site",
@@ -418,6 +451,9 @@ async function validateUntilStop(attempt, options = {}) {
 }
 try {
   if (!remote) await start();
+  await sql(
+    "CREATE TABLE IF NOT EXISTS runtime_probe(key TEXT PRIMARY KEY,value TEXT NOT NULL)",
+  );
   await sql("DELETE FROM user WHERE id LIKE 'draft-%'");
   for (const id of Object.keys(tokens)) {
     const owner = id === "alice-other" ? "alice" : id,

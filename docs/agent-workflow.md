@@ -69,7 +69,7 @@ During coding, run the smallest checks that answer the current question. At comp
 | `drafts` | Check, web/jobs builds, draft API, autosave and editor browser suites. Draft/recovery integration. |
 | `auth` | Check, web/jobs builds, auth browser, draft API, autosave and editor suites. Owner/session boundaries. |
 | `persistence` | Check, all application builds and persistence suite. Add draft/auth suites when their contracts change; shared schema/migrations select full. |
-| `publication` | Check, all builds and dormant candidate renderer/dispatch/private-transfer/finalization fixtures. Covers complete artifacts, hashes, replay and cleanup. Does not certify deployed CPU or public activation. `S8_EVIDENCE` selects retained reproduction output. |
+| `publication` | Check, all builds, candidate renderer/dispatch/private-transfer/finalization fixtures, and editor publication/recovery browser checks. Covers complete artifacts, hashes, replay and cleanup. Does not certify deployed CPU or public activation. `S8_EVIDENCE` selects retained reproduction output. |
 | `uploads` | Check, all application builds and private upload HTTP/browser suite. Upload framing, private R2 reads and lifecycle failures. Shared storage/auth contract changes still select full. |
 | `runtime` / `full` | Check, all builds and every existing foundation regression suite, including runtime smoke and routing. Infrastructure, shared contracts, dependencies, uncertain impact. |
 

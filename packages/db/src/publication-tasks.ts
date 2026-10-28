@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { activeSaveSession, saveSessionParams } from "./draft-api";
+import {
+  activeSaveSession,
+  assertSaveSession,
+  saveSessionParams,
+} from "./draft-api";
 import { ownerPublication } from "./publication";
 import { candidateUnretained, publicationFacts } from "./publication-facts";
 import type { SessionIdentity } from "./repositories";
@@ -73,8 +77,21 @@ export function publicationTasks(db: D1Database) {
       identity: SessionIdentity,
       portfolioId: string,
       revision: number,
-      policy: { batchSize: number; assetOrigin: string },
+      policy: { batchSize: number; assetOrigin: string; candidateId?: string },
     ) {
+      if (policy.candidateId) {
+        const existing = await get(policy.candidateId);
+        if (existing) {
+          if (
+            existing.owner_id !== identity.user.id ||
+            existing.portfolio_id !== portfolioId ||
+            existing.source_revision !== revision
+          )
+            throw new Error("Candidate command conflict");
+          await assertSaveSession(db, identity);
+          return existing.id;
+        }
+      }
       const facts = await db
         .prepare(
           `SELECT ${publicationFacts} AS value FROM portfolio p WHERE p.id=? AND p.user_id=? AND p.draft_rev=?`,
@@ -92,7 +109,7 @@ export function publicationTasks(db: D1Database) {
           `Publication requirements incomplete ${JSON.stringify(validation.issues)}`,
         );
       // Bounded discovery checks every captured reference against private R2.
-      const id = crypto.randomUUID(),
+      const id = policy.candidateId ?? crypto.randomUUID(),
         now = Date.now();
       const row = await db
         .prepare(`INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,facts,renderer_version,task_batch,asset_origin,status,cursor,next_attempt_at,deadline_at,created_at,updated_at)

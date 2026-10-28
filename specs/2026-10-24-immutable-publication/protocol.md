@@ -4,6 +4,8 @@ October 27, 2026. This extends the integrated [S-8 dispatcher](../2026-10-24-s8-
 
 October 27, 2026 supersession: [Phase 25](../2026-10-27-commit-public-serving/results.md) implements the internal commit and manifest-authorized site reads described below. This Phase 24 record still describes what candidate preparation alone exposes. Phase 26 retains the owner-facing operation and withdrawal cleanup.
 
+October 27, 2026 supersession: [Phase 26](../2026-10-27-publication-finish/results.md) adds the authenticated operation/progress adapter and activates Queue/source/platform bindings locally. Candidate preparation still preserves its captured revision when a later draft is saved; commit now rejects that obsolete revision before changing the pointer. Local verification does not activate the production editor or complete deployed S-9/paid-provider checks.
+
 ## Admission and revision
 
 `preparePublication(controller, submit, send)` flushes valid autosave, rejects unfinished input/uploads/recovery, quiesces the existing controller and checks every readiness page at one confirmed revision. The admission adapter runs before releasing that pause. A candidate receipt means `preparing`, never `live`. The supplied adapter is dormant until Phase 26 chooses its authenticated operation and progress protocol.

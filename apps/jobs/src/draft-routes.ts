@@ -14,7 +14,10 @@ import {
 import type { Hono } from "hono";
 import type { OwnerBindings } from "./owner-api";
 
-async function readBody(request: Request): Promise<unknown> {
+export async function readBody(
+  request: Request,
+  limit = SAVE_REQUEST_BYTES,
+): Promise<unknown> {
   if (!request.body)
     throw new SaveError(400, "Missing JSON body", "invalid_input");
   const reader = request.body.getReader(),
@@ -26,7 +29,7 @@ async function readBody(request: Request): Promise<unknown> {
       const chunk = await reader.read();
       if (chunk.done) break;
       bytes += chunk.value.byteLength;
-      if (bytes > SAVE_REQUEST_BYTES) {
+      if (bytes > limit) {
         void reader.cancel().catch(() => {});
         throw new SaveError(413, "Request exceeds byte limit");
       }

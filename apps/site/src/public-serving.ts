@@ -136,8 +136,9 @@ async function portfolioFile(db: D1Database, name: string, path: string) {
 }
 
 async function assetFile(db: D1Database, candidateId: string, path: string) {
-  // Candidate URLs are public only while a published portfolio retains the
-  // corresponding version. An uncommitted candidate has no visitor route.
+  // A retained URL remains public only while the active version includes the
+  // same asset bytes. This denies removed uploads at the origin immediately
+  // when the pointer changes, even before durable cleanup and purge complete.
   return db
     .prepare(
       `SELECT v.candidate_id,
@@ -151,11 +152,16 @@ async function assetFile(db: D1Database, candidateId: string, path: string) {
        JOIN portfolio p ON p.id=v.portfolio_id
        JOIN subdomain_claim claim ON claim.portfolio_id=p.id AND claim.name=p.subdomain AND claim.state='claimed'
        JOIN publish_version current ON current.portfolio_id=p.id AND current.n=p.published_version AND current.status='live'
+       JOIN publication_candidate_index active_index ON active_index.candidate_id=current.candidate_id
        JOIN publication_candidate c ON c.id=v.candidate_id AND c.status='ready'
        JOIN publication_candidate_index x ON x.candidate_id=c.id
        JOIN json_each(x.value,'$.receipts') f
        WHERE v.candidate_id=? AND v.status IN ('live','superseded') AND p.status='published'
          AND NOT EXISTS(SELECT 1 FROM reserved_subdomain r WHERE r.name=claim.name)
+         AND EXISTS(SELECT 1 FROM json_each(active_index.value,'$.receipts') active_file
+           WHERE json_extract(active_file.value,'$.path')=json_extract(f.value,'$.path')
+             AND json_extract(active_file.value,'$.sha256')=json_extract(f.value,'$.sha256')
+             AND json_extract(active_file.value,'$.bucket')='assets')
          AND json_extract(f.value,'$.path')=? LIMIT 1`,
     )
     .bind(candidateId, path)
