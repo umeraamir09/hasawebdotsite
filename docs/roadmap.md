@@ -282,7 +282,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 - Dependencies: 09, 13–15, 17. Draft component registration, ordering and removal can be built without the publication pipeline. Preserve validation hooks for later component integration and Phase 41 private-activity withdrawal.
 - Explain each component's requirements, enforce instance limits, and support drag and drop plus Move up/Move down. Confirm removal of entered content and provide entry ordering. Build controls reusable by guided content adapters; private GitHub withdrawal is integrated in 41.
-- [ ] Complete when profile stays first, multiple text sections work, singleton duplicates fail, and keyboard/mobile ordering and cancelled deletion preserve the intended draft.
+- [Implementation and verification record](../specs/2026-10-28-component-controls/results.md). The owner approved completion on October 28, 2026 after PR #38 merged to `main` at `406900d`.
+- [x] Complete when profile stays first, multiple text sections work, singleton duplicates fail, and keyboard/mobile ordering and cancelled deletion preserve the intended draft.
 
 ### Phase 28. Add project cards
 

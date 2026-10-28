@@ -27,11 +27,11 @@ Reproduction and repair: on an empty draft, Add component then Add Text section 
 
 Normal diff and React review checked controller replacement, disabled recovery state, stable identities, modal cancellation/focus, input/sample cleanup and private GitHub refusal. Inspected the 390 px mobile screenshot in the focused run: controls and fields fit, with 44 px minimum targets for new controls. Updated documentation links and final whitespace checks pass.
 
-No commit, push or roadmap checkoff is authorized. Owner completion approval is pending. Verification uses local Workers/D1 and fixture provider authority. Production editor/guide activation remains Phase 42E; private GitHub withdrawal remains Phase 41. Paid-provider and release checks remain separate.
+The owner approved phase completion on October 28, 2026, after PR #38 merged to `main` at `406900d`. Verification uses local Workers/D1 and fixture provider authority. Production editor/guide activation remains Phase 42E; private GitHub withdrawal remains Phase 41. Paid-provider and release checks remain separate.
 
 ## Documentation impact
 
-The [editor contract](../../apps/web/lib/draft/README.md) documents reusable controls, both removal paths, cleanup and deferred integrations. The [implementation baseline](../../docs/implementation-status.md) records the verified capability with owner approval pending. Product requirements and schema contracts do not change. Phase 41 withdrawal and Phase 42E activation remain unresolved prerequisites for those integrations.
+The [editor contract](../../apps/web/lib/draft/README.md) documents reusable controls, both removal paths, cleanup and deferred integrations. The [implementation baseline](../../docs/implementation-status.md) and roadmap record owner approval. Product requirements and schema contracts do not change. Phase 41 withdrawal and Phase 42E activation remain unresolved prerequisites for those integrations.
 
 October 28 review follow-up: publication correction now binds nested entry selectors to stable IDs when opened, so reordering cannot redirect edits or unfinished input. The editor contract reflects this. The new browser regression failed before the fix by overwriting the second project's title after reordering. The keyboard drag test now waits for the intended destination announcement, addressing a CI timing failure. Phase 41 and Phase 42E prerequisites remain unchanged.
 
