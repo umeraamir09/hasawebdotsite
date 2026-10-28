@@ -46,6 +46,63 @@ export async function checkPublicationControls({
       .waitFor();
   }
   await run(
+    "publication correction follows its project when entries are reordered",
+    async () => {
+      const draft = await clean();
+      draft.components = [
+        {
+          id: "projects",
+          type: "projects",
+          version: 1,
+          data: {
+            entries: [
+              {
+                id: "first",
+                title: "",
+                summary: "First summary",
+                technologies: [],
+                contribution: "",
+              },
+              {
+                id: "second",
+                title: "Second",
+                summary: "Second summary",
+                technologies: [],
+                contribution: "",
+              },
+            ],
+          },
+        },
+      ];
+      await boot(draft);
+      await check();
+      await checklist()
+        .getByRole("button", {
+          name: "Complete your projects title",
+          exact: true,
+        })
+        .first()
+        .click();
+      await getPage()
+        .getByRole("button", { name: "Move Second up", exact: true })
+        .click();
+      await getPage().getByLabel("Required value").fill("First project");
+      const entries = await getPage().evaluate(
+        () =>
+          window.editorFixture.recovery.store
+            .getState()
+            .controller.store.getState().working.components[0].data.entries,
+      );
+      assert.deepEqual(
+        entries.map(({ id, title }) => [id, title]),
+        [
+          ["second", "Second"],
+          ["first", "First project"],
+        ],
+      );
+    },
+  );
+  await run(
     "publication issues open profile, image, link and address controls on desktop and mobile",
     async () => {
       await clean();
@@ -142,6 +199,10 @@ export async function checkPublicationControls({
       await getPage()
         .getByRole("button", { name: "Remove this section" })
         .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Remove section", exact: true })
+        .click();
       await getPage().waitForFunction(() => {
         const state = window.editorFixture.recovery.store
           .getState()
@@ -191,7 +252,10 @@ export async function checkPublicationControls({
         0,
       );
       await getPage()
-        .getByRole("button", { name: "Text section", exact: true })
+        .locator(
+          '[data-order-id="optional-sample"] .ordered-item-heading button',
+        )
+        .nth(1)
         .click();
       await getPage().getByLabel("Section title").fill("My section");
       await checklist()
@@ -274,6 +338,21 @@ export async function checkPublicationControls({
       await getPage().getByLabel("Address name").fill("unfinished-");
       await getPage()
         .getByRole("button", { name: "Remove this section", exact: true })
+        .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Cancel", exact: true })
+        .click();
+      assert.equal(
+        await getPage().getByLabel("Required value").inputValue(),
+        "2026-",
+      );
+      await getPage()
+        .getByRole("button", { name: "Remove this section", exact: true })
+        .click();
+      await getPage()
+        .getByRole("dialog")
+        .getByRole("button", { name: "Remove section", exact: true })
         .click();
       await getPage()
         .getByRole("region", { name: "Publication correction" })

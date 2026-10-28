@@ -219,7 +219,7 @@ export async function checkSocialLinks({
             .length === 2,
       );
       await page
-        .getByRole("navigation", { name: "Portfolio sections" })
+        .getByRole("region", { name: "Portfolio sections", exact: true })
         .getByRole("button", { name: "Social links", exact: true })
         .click();
       assert.equal(await entries().count(), 2);

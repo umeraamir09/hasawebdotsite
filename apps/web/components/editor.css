@@ -58,16 +58,6 @@
   gap: 8px;
   margin-bottom: 24px;
 }
-.editor-components {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #dce1d6;
-}
-.editor-components button {
-  font-size: 12px;
-}
 .editor-controls h2 {
   font-size: 24px;
   letter-spacing: -0.7px;
@@ -302,4 +292,90 @@
 .publication-checklist .publication-url button {
   display: block;
   border-radius: 12px;
+}
+
+.component-controls {
+  padding-bottom: 24px;
+  border-bottom: 1px solid #dde2d8;
+}
+.ordered-items {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.ordered-items > li,
+.component-picker article {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #dde2d8;
+  border-radius: 12px;
+  background: #f7f8f5;
+  overflow-wrap: anywhere;
+}
+.ordered-item-heading,
+.editor-order-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ordered-item-heading > span {
+  flex: 1;
+  min-width: 0;
+}
+.editor-order-actions {
+  margin-top: 8px;
+}
+.component-controls button,
+.ordered-items button,
+.component-removal button {
+  min-height: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.component-controls > button:last-of-type {
+  background: #bdeb70;
+  border-radius: 999px;
+  min-height: 48px;
+}
+.owner-editor .editor-drag-handle {
+  touch-action: none;
+  cursor: grab;
+}
+.editor-order-status:empty {
+  display: none;
+}
+.editor-order-status,
+.component-picker p,
+.component-picker li {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.component-picker {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+.component-removal {
+  color: #20241e;
+  background: #fcfdf9;
+  border: 1px solid #dde2d8;
+  border-radius: 24px;
+  padding: 32px;
+  max-width: min(480px, calc(100vw - 36px));
+}
+.component-removal::backdrop {
+  background: #20241e80;
+}
+.component-removal button {
+  font: inherit;
+  padding: 12px;
+  border: 1px solid #7a856e;
+  border-radius: 999px;
+  background: #bdeb70;
+}
+.component-removal button:focus-visible {
+  outline: 2px solid #596f34;
+  outline-offset: 3px;
 }

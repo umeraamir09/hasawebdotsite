@@ -10,10 +10,15 @@
     "generate:avatar": "node scripts/regenerate-avatar-safe.mjs"
   },
   "dependencies": {
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
     "@hasaweb/auth": "workspace:*",
+    "@hasaweb/components": "workspace:*",
     "@hasaweb/config": "workspace:*",
     "@hasaweb/db": "workspace:*",
     "@hasaweb/schema": "workspace:*",
+    "@hasaweb/theme": "workspace:*",
     "@opennextjs/cloudflare": "1.20.11",
     "better-auth": "1.7.7",
     "drizzle-orm": "0.45.4",
@@ -21,10 +26,8 @@
     "next": "16.3.8",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "zustand": "5.0.15",
-    "@hasaweb/components": "workspace:*",
-    "@hasaweb/theme": "workspace:*",
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@types/react": "19.3.0",
