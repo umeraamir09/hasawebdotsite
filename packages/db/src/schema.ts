@@ -603,3 +603,33 @@ export const publicationCommit = sqliteTable(
     check("publication_commit_version", sql`${t.version} > 0`),
   ],
 );
+
+export const publicationOperation = sqliteTable(
+  "publication_operation",
+  {
+    id: text("id").primaryKey(),
+    portfolioId: portfolioId(),
+    ownerId: text("owner_id").notNull(),
+    sourceRevision: integer("source_revision").notNull(),
+    expectedVersion: integer("expected_version"),
+    expectedStatus: text("expected_status", {
+      enum: ["draft", "published", "unpublished"],
+    }).notNull(),
+    failedCode: text("failed_code"),
+    cleanupCursor: text("cleanup_cursor").notNull().default(""),
+    cleanupAttempts: integer("cleanup_attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at").notNull().default(0),
+    completedAt: integer("completed_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("publication_operation_active")
+      .on(t.portfolioId)
+      .where(sql`${t.completedAt} is null and ${t.failedCode} is null`),
+    index("publication_operation_due").on(t.completedAt, t.nextAttemptAt),
+    check(
+      "publication_operation_status",
+      sql`${t.expectedStatus} in ('draft','published','unpublished')`,
+    ),
+  ],
+);

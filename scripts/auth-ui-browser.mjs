@@ -85,6 +85,7 @@ export async function checkAuthUi({
     await readFile(join(root, "apps/jobs/wrangler.jsonc"), "utf8"),
   );
   jobs.main = join(root, "apps/jobs/src/index.ts");
+  jobs.assets.directory = join(root, "apps/jobs/dist/platform");
   jobs.d1_databases[0].migrations_dir = join(root, "packages/db/migrations");
   jobs.vars = {
     APP_ENV: "local",

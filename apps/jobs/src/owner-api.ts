@@ -14,6 +14,10 @@ import {
 } from "@hasaweb/db";
 import { Hono } from "hono";
 import { addDraftRoutes } from "./draft-routes";
+import {
+  addPublicationRoutes,
+  type PublicationBindings,
+} from "./publication-routes";
 
 type Owner = NonNullable<Awaited<ReturnType<typeof currentOwner>>>;
 
@@ -52,7 +56,7 @@ async function initializationBody(request: Request): Promise<400 | 413 | null> {
   }
 }
 export type OwnerBindings = {
-  Bindings: AuthEnvironment;
+  Bindings: AuthEnvironment & Partial<PublicationBindings>;
   Variables: { owner: Owner; identity: Owner["identity"] };
 };
 
@@ -63,7 +67,8 @@ export function createOwnerRouter() {
       return privateJson({ error: error.code }, error.status);
     const draftApi =
       c.req.path.startsWith("/api/owner/draft") ||
-      c.req.path === "/api/owner/progress";
+      c.req.path === "/api/owner/progress" ||
+      c.req.path.startsWith("/api/owner/publication/");
     const unauthorized = error instanceof OwnerAccessError;
     return privateJson(
       draftApi
@@ -124,7 +129,8 @@ export function createOwnerRouter() {
     const draftRequest =
       c.req.path === "/api/owner/progress" ||
       c.req.path === "/api/owner/draft" ||
-      c.req.path.startsWith("/api/owner/draft/");
+      c.req.path.startsWith("/api/owner/draft/") ||
+      c.req.path.startsWith("/api/owner/publication/");
     if (draftRequest) {
       // Draft handlers do not use the general owner repositories. Keep their
       // persisted access precheck without constructing those repositories.
@@ -192,6 +198,7 @@ export function createOwnerRouter() {
   });
   app.all("/api/owner/entry", () => privateJson(null, 405));
   addDraftRoutes(app);
+  addPublicationRoutes(app);
   return app;
 }
 

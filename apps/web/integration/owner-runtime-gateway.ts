@@ -2,6 +2,9 @@
 import { privateJson } from "@hasaweb/db";
 import { measureDb } from "../../jobs/integration/measure-db";
 import worker from "../worker";
+
+export { PublicationAssets } from "../lib/assets/publication-source";
+
 import {
   providerRequests,
   releaseProviderPhoto,

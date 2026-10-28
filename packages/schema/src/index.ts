@@ -8,6 +8,7 @@ export * from "./owner-saves";
 export * from "./primitives";
 export * from "./profile";
 export * from "./publication";
+export * from "./publication-operation";
 export * from "./registry";
 export * from "./rich-text";
 export * from "./samples";

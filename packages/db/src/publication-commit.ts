@@ -26,6 +26,7 @@ export type PublicationCommitErrorCode =
   | "unauthorized"
   | "unavailable_address"
   | "candidate_unavailable"
+  | "revision_conflict"
   | "stale_publication"
   | "command_conflict";
 
@@ -133,6 +134,7 @@ export function ownerPublicationCommit(
                WHERE c.id=? AND c.portfolio_id=? AND c.owner_id=? AND c.status='ready'
                  AND c.renderer_version=? AND c.asset_origin=?
                  AND p.user_id=? AND p.status=? AND p.published_version IS ?
+                 AND p.draft_rev=c.source_revision
                  AND p.status!='deleting' AND ${activeSaveSession}
                  AND NOT EXISTS(SELECT 1 FROM owner_save_attempt a WHERE a.user_id=p.user_id AND a.state IN ('open','string') AND a.expires_at>?)
                  AND NOT EXISTS(SELECT 1 FROM reserved_subdomain r WHERE r.name=s.name)
@@ -212,7 +214,7 @@ export function ownerPublicationCommit(
           db
             .prepare(
               `INSERT INTO publication_commit(candidate_id,portfolio_id,payload_hash,version,address,committed_at,applied)
-               SELECT ?,p.id,?,p.published_version,p.subdomain,?,changes() FROM portfolio p WHERE p.id=?`,
+               SELECT ?,p.id,?,coalesce(p.published_version,1),coalesce(p.subdomain,''),?,changes() FROM portfolio p WHERE p.id=?`,
             )
             .bind(command.candidateId, hash, now, command.portfolioId),
         ]);
@@ -230,7 +232,7 @@ export function ownerPublicationCommit(
         });
         const state = await db
           .prepare(
-            `SELECT p.status,p.published_version,p.subdomain,c.status AS candidate_status,
+            `SELECT p.status,p.published_version,p.subdomain,p.draft_rev,c.source_revision,c.status AS candidate_status,
               s.name AS held_name,s.state AS claim_state,
               json_extract(p.draft,'$.requestedSubdomain') AS requested,
               EXISTS(SELECT 1 FROM reserved_subdomain r WHERE r.name=s.name) AS reserved
@@ -243,6 +245,8 @@ export function ownerPublicationCommit(
             published_version: number | null;
             subdomain: string | null;
             candidate_status: string | null;
+            draft_rev: number;
+            source_revision: number | null;
             held_name: string | null;
             claim_state: string | null;
             requested: string | null;
@@ -271,6 +275,15 @@ export function ownerPublicationCommit(
           throw new PublicationCommitError(
             "unavailable_address",
             "The saved address is unavailable; choose or repair the address before publishing",
+          );
+        if (
+          state &&
+          state.source_revision !== null &&
+          state.draft_rev !== state.source_revision
+        )
+          throw new PublicationCommitError(
+            "revision_conflict",
+            "The saved draft changed after preparation; publish the current saved draft",
           );
         if (state?.candidate_status !== "ready")
           throw new PublicationCommitError(

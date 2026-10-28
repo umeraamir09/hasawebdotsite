@@ -5,6 +5,7 @@ import {
   componentRegistry,
   type DraftDoc,
   type PublicationIssue,
+  type PublicationOperation,
   richText,
 } from "@hasaweb/schema";
 import { appearanceCatalog } from "@hasaweb/theme";
@@ -13,6 +14,12 @@ import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { getAt, resolveField } from "../lib/draft/planner";
 import { checkPublication } from "../lib/draft/publication";
+import {
+  PublishFailure,
+  publicationMessages,
+  publicationRequest,
+  publishSavedDraft,
+} from "../lib/draft/publish";
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
 import { DraftTextField } from "./draft-text-field";
 
@@ -85,10 +92,12 @@ export function PublicationChecklist({
   controller,
   disabled,
   onOpen,
+  onPublished,
 }: {
   controller: DraftController;
   disabled: boolean;
   onOpen(issue: PublicationIssue): void;
+  onPublished?(): void;
 }) {
   const state = useStore(controller.store);
   const [result, setResult] = useState<Awaited<
@@ -96,13 +105,22 @@ export function PublicationChecklist({
   > | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [operation, setOperation] = useState<PublicationOperation | null>(null);
+  const [copied, setCopied] = useState(false);
+  const publishing = useRef<AbortController | null>(null);
   const alive = useRef(true);
   useEffect(() => {
     alive.current = true;
+    void publicationRequest(controller, "status", {})
+      .then((current) => {
+        if (alive.current && !publishing.current) setOperation(current);
+      })
+      .catch(() => {});
     return () => {
       alive.current = false;
+      publishing.current?.abort();
     };
-  }, []);
+  }, [controller]);
   const current =
     result &&
     result.revision === state.confirmed?.revision &&
@@ -130,6 +148,65 @@ export function PublicationChecklist({
       if (alive.current) setBusy(false);
     }
   }
+  async function publish() {
+    if (publishing.current) return;
+    const abort = new AbortController();
+    publishing.current = abort;
+    setBusy(true);
+    setError("");
+    setCopied(false);
+    setOperation(null);
+    let notified = false;
+    try {
+      const next = await publishSavedDraft(
+        controller,
+        (current) => {
+          if (alive.current) {
+            setOperation(current);
+            if (
+              !notified &&
+              (current.stage === "withdrawing" || current.stage === "published")
+            ) {
+              notified = true;
+              onPublished?.();
+            }
+          }
+        },
+        abort.signal,
+      );
+      if (!alive.current) return;
+      if (next.kind === "blocked") setResult(next);
+      else {
+        setOperation(next.operation);
+        if (!notified) onPublished?.();
+      }
+    } catch (cause) {
+      if (alive.current)
+        setError(
+          publicationMessages[
+            cause instanceof DraftFailure || cause instanceof PublishFailure
+              ? cause.code
+              : "publication_unavailable"
+          ] ??
+            publicationMessages.publication_unavailable ??
+            "Retry publication.",
+        );
+    } finally {
+      publishing.current = null;
+      if (alive.current) setBusy(false);
+    }
+  }
+  const stageLabel = {
+    admitting: "Saving publication request...",
+    preparing: "Preparing your saved content...",
+    assembling: "Building complete pages...",
+    transferring: "Preparing images and files...",
+    ready: "Publishing your portfolio...",
+    withdrawing:
+      "Your new version is live. Finishing removal of withdrawn files...",
+    published: "Publication complete.",
+    failed: "Publication did not complete.",
+  };
   return (
     <section
       className="publication-checklist"
@@ -147,12 +224,25 @@ export function PublicationChecklist({
       >
         {busy ? "Checking saved draft..." : "Check publication readiness"}
       </button>
+      <button
+        type="button"
+        disabled={disabled || busy}
+        onClick={() => void publish()}
+      >
+        {busy && publishing.current
+          ? "Publishing..."
+          : error ||
+              (operation &&
+                operation.stage !== "published" &&
+                operation.stage !== "failed")
+            ? "Retry Publish"
+            : "Publish"}
+      </button>
       {error && <p role="alert">{error}</p>}
       <div role="status" aria-live="polite">
+        {operation && <p>{stageLabel[operation.stage]}</p>}
         {current && !current.issues.length && !current.hasMoreIssues && (
-          <p>
-            Saved draft passed the checklist. Publishing is not available yet.
-          </p>
+          <p>Saved draft passed the checklist. You can publish it now.</p>
         )}
         {!current && result && (
           <p>Your draft changed. Check it again before publishing.</p>
@@ -161,6 +251,32 @@ export function PublicationChecklist({
           <p>More issues remain. Fix the listed items and check again.</p>
         )}
       </div>
+      {operation &&
+        (operation.stage === "published" ||
+          operation.stage === "withdrawing") && (
+          <div className="publication-url">
+            <p>Published portfolio</p>
+            <a href={operation.url} target="_blank" rel="noopener noreferrer">
+              Open published portfolio
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                void navigator.clipboard
+                  .writeText(operation.url)
+                  .then(() => setCopied(true))
+                  .catch(() =>
+                    setError(
+                      "Could not copy the URL. Select and copy the address below.",
+                    ),
+                  );
+              }}
+            >
+              {copied ? "Copied" : "Copy public URL"}
+            </button>
+            <p>{operation.url}</p>
+          </div>
+        )}
       {Object.values(state.inputs).length > 0 && (
         <ul>
           {Object.values(state.inputs).map((input) => {

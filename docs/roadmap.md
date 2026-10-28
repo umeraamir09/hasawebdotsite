@@ -271,6 +271,7 @@ Build the shared primitives before onboarding adapters. Earlier editor/publicati
 
 - Dependencies: 14–15, 23–25 and verified S-9 withdrawal/cache policy.
 - Add Publish progress, actionable errors, Retry, and public URL Open/Copy. Remove withdrawn public assets and purge caches after successful version changes. Verify the portfolio's reservation before the first publish conversion and permit a replacement before first publication without rerunning setup; a failed or unavailable replacement keeps the existing hold.
+- [Implementation and verification record](../specs/2026-10-27-publication-finish/results.md). Local implementation and the full verification set are complete. The separate publication/privacy boundary review found no blocking issues; owner completion approval remains pending. Deployed S-9 and paid-provider checks remain release gates under the deployment policy.
 - [ ] Complete when a profile-only handoff fixture can publish, reopen its saved editor draft, and republish at the same URL. Unsaved edits, unfinished uploads, and failures cannot report false success or corrupt the live site. The real signup-to-publication journey is verified in 42F and 54.
 
 ## Optional content and public pages

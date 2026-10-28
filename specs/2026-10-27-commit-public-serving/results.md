@@ -30,6 +30,8 @@ October 27, 2026 separate publication, privacy and withdrawal boundary review of
 
 The serving code deliberately permits direct access to superseded candidate uploads while the portfolio remains published, including after a later version omits them. Unpublishing denies those requests at the origin, but republishing can make retained older uploads accessible again until cleanup removes their version references or objects. Phase 26 must complete withdrawal cleanup and verify origin and cache absence before reporting withdrawal complete. The local `no-store` headers do not establish deployed browser or CDN behavior.
 
+October 27, 2026 supersession: the in-progress [Phase 26 origin guard](../2026-10-27-publication-finish/results.md) denies superseded upload URLs when the active manifest no longer includes the same path and hash. The guard alone does not delete the public object or verify cache withdrawal; the Phase 26 operation adds durable deletion, purge and observation. Phase 26 also requires the candidate source revision to remain current at commit and returns an actionable revision conflict on a changed draft. The captured Phase 24 source stays immutable during preparation.
+
 The owner approved Phase 25 completion and directed roadmap checkoff on October 27, 2026 after PR #36 merged to main. The owner-facing Publish route, progress/retry UI, cleanup and observed CDN purge belong to Phase 26. Production routing, paid-provider CPU/capacity and S-9 browser/edge cache behavior remain release gates.
 
 ## Documentation impact

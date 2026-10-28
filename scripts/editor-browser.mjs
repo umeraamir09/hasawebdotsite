@@ -8,6 +8,7 @@ import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
 import { checkPublicationControls } from "./publication-browser.mjs";
+import { checkPublishJourney } from "./publish-journey-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
 export async function checkEditor({
@@ -82,6 +83,22 @@ export async function checkEditor({
         /(?:^|;\s*)fixture-session=([^;]+)/.exec(
           req.headers.cookie ?? "",
         )?.[1] ?? "none";
+      if (url.pathname === "/_public") {
+        const response = await authority(
+          "/__fixture/public",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              url: url.searchParams.get("target"),
+              method: req.method,
+            }),
+          },
+          "none",
+        );
+        await relay(response, res);
+        return;
+      }
       if (url.pathname === "/private/editor-preview") {
         const response = await serveEditorPreview(
           new Request(url, { headers: { Cookie: req.headers.cookie ?? "" } }),
@@ -1216,6 +1233,7 @@ export async function checkEditor({
     await checkProfileControls(controls);
     await checkSocialLinks(controls);
     await checkPublicationControls(controls);
+    await checkPublishJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

@@ -15,7 +15,11 @@ const suites = {
   auth: ["test:auth:browser", "test:draft-api", "test:autosave", "test:editor"],
   persistence: ["test:persistence"],
   uploads: ["test:uploads"],
-  publication: ["test:publication-dispatch", "test:publication-serving"],
+  publication: [
+    "test:publication-dispatch",
+    "test:publication-serving",
+    "test:editor",
+  ],
   full: [
     "test:renderer",
     "test:auth:browser",

@@ -106,6 +106,7 @@ function Scope({
     issue: PublicationIssue;
     componentId: string | null;
   } | null>(null);
+  const [publicationKey, setPublicationKey] = useState("");
   const draft = state.working;
   const active: PreviewSelection =
     selection.kind === "component" &&
@@ -175,6 +176,7 @@ function Scope({
           <PublicationChecklist
             controller={controller}
             disabled={disabled}
+            onPublished={() => setPublicationKey(crypto.randomUUID())}
             onOpen={(issue) => {
               setPanel("content");
               setView("edit");
@@ -259,7 +261,11 @@ function Scope({
                   </button>
                 ))}
               </nav>
-              <AddressControl controller={controller} disabled={disabled} />
+              <AddressControl
+                controller={controller}
+                disabled={disabled}
+                key={publicationKey}
+              />
               <EditorFields
                 controller={controller}
                 selection={active}
