@@ -177,10 +177,12 @@ export function PortfolioProject({
           ))}
         </ul>
       )}
-      <div className="pf-links">
-        {entry.codeUrl && <SafeLink href={entry.codeUrl}>Code</SafeLink>}
-        {entry.demoUrl && <SafeLink href={entry.demoUrl}>Demo</SafeLink>}
-      </div>
+      {(entry.codeUrl || entry.demoUrl) && (
+        <div className="pf-links">
+          {entry.codeUrl && <SafeLink href={entry.codeUrl}>Code</SafeLink>}
+          {entry.demoUrl && <SafeLink href={entry.demoUrl}>Demo</SafeLink>}
+        </div>
+      )}
       {entry.hasCaseStudy && <Empty>Case study unavailable.</Empty>}
     </article>
   );

@@ -14,7 +14,7 @@ export function readEditorField(state: DraftState, path: FieldPath): string {
 export function editEditorField(
   controller: DraftController,
   path: FieldPath,
-  value: string,
+  value: string | string[],
 ): boolean {
   if (!controller.edit(path, value)) return false;
   const draft = controller.store.getState().working;

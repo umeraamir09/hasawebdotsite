@@ -8,6 +8,7 @@ import { moveEditorItem } from "../lib/editor/components";
 import { DraftTextField } from "./draft-text-field";
 import { OrderedItems } from "./ordered-items";
 import { ProfileControls } from "./profile-controls";
+import { ProjectControls } from "./project-controls";
 import { SocialLinksControl } from "./social-links-control";
 
 export function EditorFields({
@@ -33,6 +34,14 @@ export function EditorFields({
   if (!component) return null;
   if (component.type === "social-links")
     return <SocialLinksControl controller={controller} disabled={disabled} />;
+  if (component.type === "projects")
+    return (
+      <ProjectControls
+        controller={controller}
+        componentId={component.id}
+        disabled={disabled}
+      />
+    );
   const definition = componentRegistry[component.type];
   return (
     <section aria-label={`${definition.picker.title} controls`}>
@@ -46,8 +55,7 @@ export function EditorFields({
           path={["components", { id: component.id }, "data", "title"]}
         />
       )}
-      {(component.type === "projects" ||
-        component.type === "skills" ||
+      {(component.type === "skills" ||
         component.type === "work-experience") && (
         <OrderedItems
           label="Entry order"
@@ -55,11 +63,8 @@ export function EditorFields({
           items={component.data.entries.map((entry, index) => ({
             id: entry.id,
             label:
-              ("title" in entry
-                ? entry.title
-                : "name" in entry
-                  ? entry.name
-                  : entry.role) || `Entry ${index + 1}`,
+              ("name" in entry ? entry.name : entry.role) ||
+              `Entry ${index + 1}`,
           }))}
           onMove={(id, target) =>
             moveEditorItem(controller, id, target, {

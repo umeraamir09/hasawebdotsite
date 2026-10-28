@@ -379,3 +379,21 @@
   outline: 2px solid #596f34;
   outline-offset: 3px;
 }
+
+.project-entry {
+  min-width: 0;
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #dce1d6;
+  border-radius: 16px;
+}
+.project-entry legend {
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
+.profile-image-preview-project {
+  aspect-ratio: 16 / 9;
+}
+.profile-image-preview-project img {
+  object-fit: contain;
+}

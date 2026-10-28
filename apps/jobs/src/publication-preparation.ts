@@ -562,14 +562,16 @@ export async function advancePreparation(
           ...((await count(".technologies"))
             ? wrap("tags", [each("skill", `${p}.technologies`)])
             : []),
-          ...wrap("link-row", [
-            ...(code
-              ? wrap("link", [literal("Code")], { href: String(code) })
-              : []),
-            ...(demo
-              ? wrap("link", [literal("Demo")], { href: String(demo) })
-              : []),
-          ]),
+          ...(code || demo
+            ? wrap("link-row", [
+                ...(code
+                  ? wrap("link", [literal("Code")], { href: String(code) })
+                  : []),
+                ...(demo
+                  ? wrap("link", [literal("Demo")], { href: String(demo) })
+                  : []),
+              ])
+            : []),
           ...((await source.read(`${p}.caseStudy`)).type
             ? empty("Case study unavailable.")
             : []),

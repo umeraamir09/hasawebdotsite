@@ -12,12 +12,14 @@ export function DraftTextField({
   label,
   path,
   multiline = false,
+  error,
 }: {
   controller: DraftController;
   disabled: boolean;
   label: string;
   path: FieldPath;
   multiline?: boolean;
+  error?: string | undefined;
 }) {
   const id = useId();
   const state = useStore(controller.store);
@@ -26,8 +28,8 @@ export function DraftTextField({
     id,
     value: readEditorField(state, path),
     disabled,
-    "aria-invalid": raw,
-    "aria-describedby": raw ? `${id}-note` : undefined,
+    "aria-invalid": raw || Boolean(error),
+    "aria-describedby": raw || error ? `${id}-note` : undefined,
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
@@ -43,10 +45,11 @@ export function DraftTextField({
     >
       <label htmlFor={id}>{label}</label>
       {multiline ? <textarea {...props} rows={4} /> : <input {...props} />}
-      {raw && (
+      {(raw || error) && (
         <span className="editor-input-note" id={`${id}-note`}>
-          Unfinished input stays in this browser. The preview keeps the last
-          valid value.
+          {raw
+            ? "Unfinished input stays in this browser. The preview keeps the last valid value."
+            : error}
         </span>
       )}
     </div>
