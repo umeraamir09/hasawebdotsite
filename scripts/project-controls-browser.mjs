@@ -71,11 +71,10 @@ export async function checkProjectControls({
       await sections
         .getByRole("button", { name: "Projects", exact: true })
         .click();
-      assert.equal(
-        await page
-          .getByLabel("Code URL (optional)", { exact: true })
-          .inputValue(),
-        "https://",
+      await page.waitForFunction(() =>
+        Array.from(document.querySelectorAll("label")).some(
+          (label) => label.textContent.includes("Code URL (optional)") && label.control?.value === "https://",
+        ),
       );
       await page.getByLabel("Code URL (optional)", { exact: true }).fill("");
       await page.getByLabel("Summary", { exact: true }).fill("First summary");
