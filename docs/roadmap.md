@@ -290,8 +290,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 19, 27.
 - Integration before full completion: 23, 26 for publication blockers and real published-card parity. An approved project-control milestone can unblock an adapter; it does not establish this parity.
 - Implement manual project creation/editing/deletion/ordering with title, summary, image, technologies, individual contribution, and optional code/demo links. Reuse controls and stable entry IDs during onboarding. New owners receive no sample project.
-- [Implementation and verification record](../specs/2026-10-28-project-cards/results.md). Completion approval remains pending.
-- [ ] Complete when title/summary validation works, partial owner entries remain recoverable and block publication until repaired/removed, omitted optional fields create no empty controls, and published cards match chosen content/order.
+- [Implementation and verification record](../specs/2026-10-28-project-cards/results.md). The owner approved completion on October 28, 2026 after integration into `main`.
+- [x] Complete when title/summary validation works, partial owner entries remain recoverable and block publication until repaired/removed, omitted optional fields create no empty controls, and published cards match chosen content/order.
 
 ### Phase 29. Add safe rich text and text sections
 

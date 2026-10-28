@@ -26,7 +26,7 @@ Verification on base `8e7cf72` plus these uncommitted changes:
 
 Local Wrangler proxy connection losses interrupted unrelated D1 fixture and address/cleanup requests. No conflicting Worker process remained. Failed evidence is retained in ignored verification directories; clean filtered reruns preserve prior passing groups. Browser proof is Chromium in the handoff fixture with real local APIs/D1/R2, not an activated production editor or a live-provider measurement. Mobile project-control screenshot inspected; fields fit without clipping.
 
-Normal diff review covers stable entry paths, scoped raw-input cleanup, upload readiness/cancellation, empty optional output and bounded-renderer parity. No authentication, schema, migration, dependency or publication authorization contract changed. No completion approval, commit or push recorded.
+Normal diff review covers stable entry paths, scoped raw-input cleanup, upload readiness/cancellation, empty optional output and bounded-renderer parity. No authentication, schema, migration, dependency or publication authorization contract changed. At the time of this review, no completion approval, commit or push had been recorded.
 
 ### PR 39 CI follow-up, October 28, 2026
 
@@ -39,4 +39,4 @@ CI run `40691531099` failed at `pnpm check`: commit `b11de0c` changed the raw-in
 The CI follow-up changes no product or workflow assumptions; existing verification guidance already requires `pnpm check`, so no guidance changes are needed.
 
 
-Changed assumption: project editing is available in the handoff fixture, and cards without supplied code/demo URLs have no empty link row. Updated the implementation baseline, roadmap record link, editor controller guide, private upload guide and component rendering contract. Downstream onboarding guidance already requires shared project controls and needs no scope change. Changed relative links and the final diff were checked. Production onboarding/editor activation remains Phase 42E; case studies remain Phase 30. Owner completion approval and shared-base integration remain pending. Paid-provider and deployed withdrawal checks remain release gates.
+Changed assumption: project editing is available in the handoff fixture, and cards without supplied code/demo URLs have no empty link row. Updated the implementation baseline, roadmap record link, editor controller guide, private upload guide and component rendering contract. Downstream onboarding guidance already requires shared project controls and needs no scope change. Changed relative links and the final diff were checked. Production onboarding/editor activation remains Phase 42E; case studies remain Phase 30. The owner approved completion on October 28, 2026 after integration into `main`. Paid-provider and deployed withdrawal checks remain release gates.
