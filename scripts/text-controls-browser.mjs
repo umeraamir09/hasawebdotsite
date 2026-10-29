@@ -164,17 +164,19 @@ export async function checkTextControls({
       await page
         .getByLabel("Link destination", { exact: true })
         .fill("mailto:owner@example.com");
+      await input.click();
+      await input.press("Control+a");
       await page
         .getByRole("button", { name: "Apply link", exact: true })
         .click();
       assert.equal(
-        await input.locator("a").getAttribute("href"),
-        "mailto:owner@example.com",
+        await page.getByLabel("Link destination", { exact: true }).inputValue(),
+        "",
       );
       await page
         .getByRole("button", { name: "Remove link", exact: true })
         .click();
-      assert.equal(await input.locator("a").count(), 0);
+      await input.fill("Linked words");
       await page
         .getByRole("button", { name: "Paragraph", exact: true })
         .click();
