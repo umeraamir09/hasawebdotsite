@@ -1,4 +1,5 @@
 import {
+  ownerCaseStudyAddresses,
   ownerPublicationOperations,
   PublicationCommitError,
   type PublicationPolicy,
@@ -6,6 +7,7 @@ import {
   SaveError,
 } from "@hasaweb/db";
 import {
+  caseStudyAddressCommandSchema,
   publicationCommitRequestSchema,
   publicationStatusCommandSchema,
 } from "@hasaweb/schema";
@@ -19,6 +21,29 @@ export type PublicationBindings = {
   PUBLICATION_QUEUE: PublicationPolicy["queue"];
 };
 export function addPublicationRoutes(app: Hono<OwnerBindings>) {
+  app.post("/api/owner/publication/case-studies", async (c) => {
+    try {
+      const command = caseStudyAddressCommandSchema.parse(
+        await readBody(c.req.raw, 1024),
+      );
+      return privateJson(
+        await ownerCaseStudyAddresses(
+          c.env.DB,
+          c.get("identity"),
+          command.portfolioId,
+        ),
+      );
+    } catch (error) {
+      if (error instanceof ZodError)
+        return privateJson({ error: "invalid_input" }, 422);
+      if (error instanceof SaveError)
+        return privateJson({ error: error.code }, error.status);
+      return privateJson({ error: "publication_unavailable" }, 503);
+    }
+  });
+  app.all("/api/owner/publication/case-studies", () =>
+    privateJson({ error: "invalid_input" }, 405),
+  );
   for (const action of ["start", "status", "commit"] as const) {
     app.post(`/api/owner/publication/${action}`, async (c) => {
       if (!c.env.ASSET_ORIGIN || !c.env.PUBLICATION_QUEUE)

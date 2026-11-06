@@ -232,7 +232,19 @@ export async function servePublic(request: Request, env: PublicEnv) {
   const name = host.slice(0, -SITE_SUFFIX.length);
   if (!LABEL.test(name) || RESERVED.has(name)) return unavailableResponse();
   const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "");
-  if (!allowedPath(path) || path.startsWith("/assets/"))
-    return unavailableResponse();
-  return serveFile(request, env, await portfolioFile(env.DB, name, path), path);
+  if (path.startsWith("/assets/")) return unavailableResponse();
+  const row = allowedPath(path)
+    ? await portfolioFile(env.DB, name, path)
+    : null;
+  if (row || path === "/" || PLATFORM.test(path))
+    return serveFile(request, env, row, path);
+  // A missing or withdrawn page of a published portfolio, such as a removed
+  // case study, gets that version's page-unavailable state with a route home.
+  // Unpublished and unknown hosts have no live /404 and stay generic.
+  return serveFile(
+    request,
+    env,
+    await portfolioFile(env.DB, name, "/404"),
+    "/404",
+  );
 }

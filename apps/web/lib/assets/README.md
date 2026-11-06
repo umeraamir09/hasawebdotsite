@@ -48,7 +48,7 @@ Only HTTP 201 with a matching ready receipt can replace a reference. Cancellatio
 
 `resolvePreviewImages` checks owner, purpose, readiness and existence through private GET before returning trusted same-origin URLs to the display projection. The preview iframe reauthorizes its owner before mounting and after browser restoration. Publication still requires its separate readiness validation, immutable promotion and serving contracts.
 
-`ProjectControls` also reuses `ImageUpload` with purpose `project`, keyed by controller scope, component and entry ID. It validates and decodes the local JPEG/PNG/WebP, then uploads the supplied bytes without a forced crop. Replacement, removal, description, pending-publication flags and retry use the same private asset/controller boundary. Only a matching ready receipt replaces the previous reference. Project sources and retry blobs remain transient. Avatar/banner crop geometry and encoding remain unchanged.
+`ProjectControls` also reuses `ImageUpload` with purpose `project`, keyed by controller scope, component and entry ID. It validates and decodes the local JPEG/PNG/WebP, then uploads the supplied bytes without a forced crop. Replacement, removal, description, pending-publication flags and retry use the same private asset/controller boundary. Only a matching ready receipt replaces the previous reference. Project sources and retry blobs remain transient. Avatar/banner crop geometry and encoding remain unchanged. Phase 30 case-study images use the same uncropped path with purpose `case_study`, and the upload's ready asset ID is the only way an image node enters a case-study body.
 
 ## Provider photo import
 

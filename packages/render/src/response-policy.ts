@@ -44,3 +44,8 @@ export function unavailableResponse(): Response {
     { status: 404, headers },
   );
 }
+
+// A published portfolio's missing or withdrawn page. The link returns to the
+// portfolio root, which is still published when this page is served.
+export const PAGE_UNAVAILABLE_HTML =
+  '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Page unavailable</title><main><h1>Page unavailable</h1><p>This page is not available. It may have been removed.</p><p><a href="/">Back to portfolio</a></p></main></html>';

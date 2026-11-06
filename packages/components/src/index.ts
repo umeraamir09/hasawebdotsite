@@ -19,6 +19,7 @@ export {
 } from "./model";
 export {
   Portfolio,
+  PortfolioCaseStudy,
   PortfolioLayout,
   PortfolioProfile,
   PortfolioProject,

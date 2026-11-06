@@ -1,5 +1,6 @@
 import { createComponent, createEmptyDraft } from "@hasaweb/schema";
 import { ownerPublication } from "../src/publication";
+import { ownerCaseStudyAddresses } from "../src/publication-operation";
 import type { SessionIdentity } from "../src/repositories";
 
 function assert(value: unknown, message: string): asserts value {
@@ -179,5 +180,179 @@ export async function runPublicationChecks(
       },
     );
   }
+  const caseProject = (id: string, title: string, slug: string) => ({
+    id,
+    title,
+    summary: "Summary",
+    technologies: [],
+    contribution: "",
+    caseStudy: {
+      slug,
+      body: {
+        type: "doc" as const,
+        content: [
+          {
+            type: "paragraph" as const,
+            content: [{ type: "text" as const, text: "Body" }],
+          },
+        ],
+      },
+    },
+  });
+  async function live(cases: { id: string | null; slug: string }[]) {
+    const candidate = crypto.randomUUID();
+    await db.batch([
+      db
+        .prepare("DELETE FROM publish_version WHERE portfolio_id=?")
+        .bind(portfolioId),
+      db
+        .prepare(
+          "INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,status,cursor,next_attempt_at,deadline_at,created_at,updated_at) VALUES(?,?,?,0,'ready','[]',0,0,1,1)",
+        )
+        .bind(candidate, portfolioId, user),
+      db
+        .prepare(
+          "INSERT INTO publication_candidate_index(candidate_id,value) VALUES(?,json_object('cases',json(?)))",
+        )
+        .bind(
+          candidate,
+          JSON.stringify(
+            cases.map((item, index) => ({
+              path: `$.components[0].data.entries[${index}]`,
+              ...item,
+            })),
+          ),
+        ),
+      db
+        .prepare(
+          "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES(?,?,1,'live','publication-v2',?,1,1)",
+        )
+        .bind(candidate, portfolioId, candidate),
+      db
+        .prepare("UPDATE portfolio SET published_version=1 WHERE id=?")
+        .bind(portfolioId),
+    ]);
+  }
+  async function slugIssues(entries: ReturnType<typeof caseProject>[]) {
+    const projects = createComponent("projects", "case-projects");
+    projects.data.entries = entries;
+    await db
+      .prepare("UPDATE portfolio SET draft=? WHERE id=?")
+      .bind(JSON.stringify({ ...draft, components: [projects] }), portfolioId)
+      .run();
+    const result = await ownerPublication(db, identity, async () => true).check(
+      command,
+    );
+    return result.issues
+      .filter((issue) => issue.code === "case_study_url")
+      .map((issue) => issue.path.join("."));
+  }
+  const slugPath = (index: number) =>
+    `components.0.data.entries.${index}.caseStudy.slug`;
+  await check(
+    "publication: a published case-study URL stays frozen after a title edit",
+    async () => {
+      await live([{ id: "first", slug: "original-title" }]);
+      assert(
+        (await slugIssues([caseProject("first", "Renamed", "original-title")]))
+          .length === 0,
+        "Frozen slug with a new title was rejected",
+      );
+      const changed = await slugIssues([
+        caseProject("first", "Renamed", "renamed"),
+      ]);
+      assert(
+        changed.join() === slugPath(0),
+        `Changed frozen slug was accepted: ${changed.join()}`,
+      );
+    },
+  );
+  await check(
+    "publication: a deleted project's live slug is not reassigned before its removal publishes",
+    async () => {
+      await live([{ id: "deleted", slug: "shared" }]);
+      const taken = await slugIssues([
+        caseProject("newer", "Shared", "shared"),
+      ]);
+      assert(
+        taken.join() === slugPath(0),
+        `Live slug was silently reassigned: ${taken.join()}`,
+      );
+      assert(
+        (await slugIssues([caseProject("newer", "Shared", "shared-2")]))
+          .length === 0,
+        "Suffixed slug was rejected",
+      );
+      // After the deletion publishes, the live index no longer has the slug.
+      await live([]);
+      assert(
+        (await slugIssues([caseProject("newer", "Shared", "shared")]))
+          .length === 0,
+        "Slug freed by a published deletion stayed blocked",
+      );
+    },
+  );
+  await check(
+    "publication: unpublished portfolios freeze no case-study URLs",
+    async () => {
+      await db
+        .prepare("UPDATE portfolio SET published_version=NULL WHERE id=?")
+        .bind(portfolioId)
+        .run();
+      assert(
+        (await slugIssues([caseProject("first", "Any", "any")])).length === 0,
+        "Draft-only slug was frozen",
+      );
+      const addresses = await ownerCaseStudyAddresses(
+        db,
+        identity,
+        portfolioId,
+      );
+      assert(
+        addresses.version === null && addresses.addresses.length === 0,
+        "Unpublished portfolio returned addresses",
+      );
+      await live([
+        { id: "first", slug: "first" },
+        { id: null, slug: "legacy" },
+      ]);
+      const published = await ownerCaseStudyAddresses(
+        db,
+        identity,
+        portfolioId,
+      );
+      assert(
+        published.version === 1 &&
+          JSON.stringify(published.addresses) ===
+            JSON.stringify([
+              { projectId: "first", slug: "first" },
+              { projectId: null, slug: "legacy" },
+            ]),
+        `Live addresses differ: ${JSON.stringify(published)}`,
+      );
+      let denied = false;
+      await ownerCaseStudyAddresses(
+        db,
+        { user: { id: "someone-else" }, session: { id: session } },
+        portfolioId,
+      ).catch(() => {
+        denied = true;
+      });
+      assert(denied, "Another owner read the case-study addresses");
+      await db.batch([
+        db
+          .prepare(
+            "UPDATE portfolio SET published_version=NULL,draft=? WHERE id=?",
+          )
+          .bind(JSON.stringify(draft), portfolioId),
+        db
+          .prepare("DELETE FROM publish_version WHERE portfolio_id=?")
+          .bind(portfolioId),
+        db
+          .prepare("DELETE FROM publication_candidate WHERE portfolio_id=?")
+          .bind(portfolioId),
+      ]);
+    },
+  );
   await db.prepare("DELETE FROM user WHERE id=?").bind(user).run();
 }

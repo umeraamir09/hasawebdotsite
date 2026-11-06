@@ -1,6 +1,13 @@
 import { isSafeLink } from "@hasaweb/schema";
 import { createElement, type ReactNode } from "react";
 import { z } from "zod";
+
+// Same-site page paths only: the portfolio root or a generated case-study slug.
+// Owner destinations use `href`, which keeps the external-link allowlist.
+export const pagePathSchema = z
+  .string()
+  .max(96)
+  .regex(/^\/(?:projects\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/);
 // Closed vocabulary for resumable wrappers. No owner-selected tag or attribute.
 export const frameSchema = z.enum([
   "profile",
@@ -20,6 +27,8 @@ export const frameSchema = z.enum([
   "item",
   "span",
   "link",
+  "page-link",
+  "page-nav",
   "h1",
   "h2",
   "h3",
@@ -48,6 +57,7 @@ export const frameInputSchema = z.strictObject({
     .optional(),
   href: z.string().max(2048).refine(isSafeLink).optional(),
   start: z.number().int().positive().optional(),
+  path: pagePathSchema.optional(),
 });
 export type FrameInput = z.infer<typeof frameInputSchema>;
 const definitions: Record<FrameName, { tag: string; className?: string }> = {
@@ -68,6 +78,8 @@ const definitions: Record<FrameName, { tag: string; className?: string }> = {
   item: { tag: "li" },
   span: { tag: "span" },
   link: { tag: "a" },
+  "page-link": { tag: "a", className: "pf-page-link" },
+  "page-nav": { tag: "nav", className: "pf-page-nav" },
   h1: { tag: "h1" },
   h2: { tag: "h2" },
   h3: { tag: "h3" },
@@ -97,6 +109,8 @@ export function PortfolioFrame({
       ...(frame.name === "link"
         ? { href: frame.href, rel: "noopener noreferrer" }
         : {}),
+      ...(frame.name === "page-link" ? { href: frame.path ?? "/" } : {}),
+      ...(frame.name === "page-nav" ? { "aria-label": "Portfolio" } : {}),
     },
     children,
   );

@@ -9,7 +9,12 @@ import type { ReactNode } from "react";
 import { AssetImage } from "./asset";
 import { PortfolioAvatar } from "./avatar";
 import { PortfolioFrame } from "./frames";
-import type { ComponentModel, PortfolioModel, ProfileModel } from "./model";
+import type {
+  ComponentModel,
+  DisplayAsset,
+  PortfolioModel,
+  ProfileModel,
+} from "./model";
 
 function SafeLink({
   href,
@@ -50,9 +55,7 @@ function RichNodeView({
   images,
 }: {
   node: RichNode;
-  images?:
-    | ((id: string, alt: string) => import("./model").DisplayAsset)
-    | undefined;
+  images?: ((id: string, alt: string) => DisplayAsset) | undefined;
 }): ReactNode {
   switch (node.type) {
     case "image":
@@ -130,9 +133,7 @@ export function RichText({
   images,
 }: {
   document: RichTextDocument | CaseStudyDocument;
-  images?:
-    | ((id: string, alt: string) => import("./model").DisplayAsset)
-    | undefined;
+  images?: ((id: string, alt: string) => DisplayAsset) | undefined;
 }) {
   return (
     <div className="pf-rich-text">
@@ -183,7 +184,13 @@ export function PortfolioProject({
           {entry.demoUrl && <SafeLink href={entry.demoUrl}>Demo</SafeLink>}
         </div>
       )}
-      {entry.hasCaseStudy && <Empty>Case study unavailable.</Empty>}
+      {entry.caseStudyPath && (
+        <p>
+          <a className="pf-page-link" href={entry.caseStudyPath}>
+            Read case study: {entry.title || "Untitled project"}
+          </a>
+        </p>
+      )}
     </article>
   );
 }
@@ -317,6 +324,35 @@ export function PortfolioSection({ component }: { component: ComponentModel }) {
     >
       <SectionContent component={component} />
     </PortfolioFrame>
+  );
+}
+// The body of a case-study page after the shared profile header. Bounded
+// publication emits the same frames; keep both in step.
+export function PortfolioCaseStudy({
+  title,
+  document,
+  images,
+  index,
+}: {
+  title: string;
+  document: CaseStudyDocument;
+  images?: ((id: string, alt: string) => DisplayAsset) | undefined;
+  index: number;
+}) {
+  return (
+    <>
+      <PortfolioFrame frame={{ name: "page-nav" }}>
+        <PortfolioFrame frame={{ name: "page-link", path: "/" }}>
+          Back to portfolio
+        </PortfolioFrame>
+      </PortfolioFrame>
+      <PortfolioFrame
+        frame={{ name: "section", component: "text", id: `case-${index}` }}
+      >
+        <h2>{title || "Untitled project"}</h2>
+        <RichText document={document} images={images} />
+      </PortfolioFrame>
+    </>
   );
 }
 export function PortfolioLayout({ children }: { children: ReactNode }) {

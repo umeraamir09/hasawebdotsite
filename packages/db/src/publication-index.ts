@@ -7,7 +7,7 @@ export async function preparePublicationIndex(db: D1Database, row: Candidate) {
     .prepare(`WITH p AS MATERIALIZED (SELECT id,source FROM publication_candidate WHERE id=? AND lease_token=? AND lease_until>? AND status='preparing'),
     c AS MATERIALIZED (SELECT j.key AS idx,j.value,json_extract(j.value,'$.type') AS kind FROM p,json_each(p.source,'$.components') j WHERE json_extract(j.value,'$.type') IN ('projects','resume')),
     projects AS MATERIALIZED (SELECT c.idx,e.key AS entry,e.value FROM c,json_each(c.value,'$.data.entries') e WHERE c.kind='projects'),
-    cases AS MATERIALIZED (SELECT '$.components['||idx||'].data.entries['||entry||']' AS path,json_extract(value,'$.caseStudy.slug') AS slug FROM projects WHERE json_type(value,'$.caseStudy')='object' ORDER BY idx,entry),
+    cases AS MATERIALIZED (SELECT '$.components['||idx||'].data.entries['||entry||']' AS path,json_extract(value,'$.caseStudy.slug') AS slug,json_extract(value,'$.id') AS id FROM projects WHERE json_type(value,'$.caseStudy')='object' ORDER BY idx,entry),
     refs AS (SELECT * FROM (
       SELECT json_extract(source,'$.profile.avatar.assetId') AS id,'avatar' AS purpose FROM p
       UNION ALL SELECT json_extract(source,'$.profile.banner.assetId'),'banner' FROM p
@@ -19,7 +19,7 @@ export async function preparePublicationIndex(db: D1Database, row: Candidate) {
     )) INSERT INTO publication_candidate_index(candidate_id,value)
     SELECT p.id,json_object(
       'assets',json((SELECT json_group_array(json_object('id',id,'purpose',purpose)) FROM (SELECT DISTINCT id,purpose FROM refs WHERE id IS NOT NULL ORDER BY id,purpose))),
-      'cases',json((SELECT json_group_array(json_object('path',path,'slug',slug)) FROM cases)),
+      'cases',json((SELECT json_group_array(json_object('path',path,'slug',slug,'id',id)) FROM cases)),
       'resume',json((SELECT json_object('path','$.components['||idx||']','ordinal',(SELECT count(*)+1 FROM cases)) FROM c WHERE kind='resume' ORDER BY idx LIMIT 1)))
     FROM p WHERE true ON CONFLICT DO NOTHING`)
     .bind(row.id, row.lease_token, Date.now())

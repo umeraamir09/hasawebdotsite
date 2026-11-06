@@ -21,7 +21,11 @@ import { partSchema, type RenderPart, renderPart } from "./parts";
 import type { RenderContext } from "./response-policy";
 
 export type { RenderContext } from "./response-policy";
-export { portfolioHeaders, unavailableResponse } from "./response-policy";
+export {
+  PAGE_UNAVAILABLE_HTML,
+  portfolioHeaders,
+  unavailableResponse,
+} from "./response-policy";
 
 const imagePartSchema = z.strictObject({
   kind: z.literal("asset"),

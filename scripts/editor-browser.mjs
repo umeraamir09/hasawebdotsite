@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
@@ -1241,6 +1242,7 @@ export async function checkEditor({
     await checkProjectControls(controls);
     await checkTextControls(controls);
     await checkPublishJourney(controls);
+    await checkCaseStudyJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

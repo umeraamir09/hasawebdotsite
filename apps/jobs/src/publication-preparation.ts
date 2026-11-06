@@ -5,6 +5,7 @@ import {
   frameInputSchema,
   renderFragment,
 } from "@hasaweb/render";
+import { caseStudyPath } from "@hasaweb/schema";
 import { z } from "zod";
 
 const path = z.string().max(4096);
@@ -340,13 +341,16 @@ export async function advancePreparation(
         {
           kind: "page-start",
           ordinal: command.index + 1,
-          path: `/projects/${page.slug}`,
+          path: caseStudyPath(page.slug),
         },
         visit("profile", "$.profile"),
+        ...wrap("page-nav", [
+          ...wrap("page-link", [literal("Back to portfolio")], { path: "/" }),
+        ]),
         ...wrap(
           "section",
           [
-            ...field("h2", `${page.path}.title`),
+            ...field("h2", `${page.path}.title`, "Untitled project"),
             ...wrap("rich", [
               each("rich", `${page.path}.caseStudy.body.content`),
             ]),
@@ -417,6 +421,22 @@ export async function advancePreparation(
   }
   const p = command.path;
   const value = async (suffix: string) => (await source.read(p + suffix)).value;
+  // Mirrors PortfolioProject's card link. Slugs come from the validated draft.
+  const caseStudyLink = async (entry: string): Promise<Command[]> => {
+    const slug = (await source.read(`${entry}.caseStudy.slug`)).value;
+    if (typeof slug !== "string") return [];
+    return wrap(
+      "paragraph",
+      wrap(
+        "page-link",
+        [
+          literal("Read case study: "),
+          text(`${entry}.title`, "Untitled project"),
+        ],
+        { path: caseStudyPath(slug) },
+      ),
+    );
+  };
   const count = async (suffix: string) => (await source.read(p + suffix)).count;
   switch (command.view) {
     case "profile": {
@@ -572,9 +592,7 @@ export async function advancePreparation(
                   : []),
               ])
             : []),
-          ...((await source.read(`${p}.caseStudy`)).type
-            ? empty("Case study unavailable.")
-            : []),
+          ...(await caseStudyLink(p)),
         ]),
       );
       break;

@@ -12,6 +12,7 @@ export const publicationIssueSchema = z.strictObject({
     "asset",
     "github",
     "recipient",
+    "case_study_url",
   ]),
   path: z
     .array(z.union([z.string().max(128), z.number().int().nonnegative()]))

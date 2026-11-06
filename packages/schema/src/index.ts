@@ -1,4 +1,5 @@
 export * from "./assets";
+export * from "./case-study";
 export * from "./draft";
 export * from "./draft-inspection";
 export * from "./json";

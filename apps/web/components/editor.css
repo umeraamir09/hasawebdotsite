@@ -427,3 +427,22 @@
   color: inherit;
   text-decoration: underline;
 }
+.rich-text-image {
+  margin: 12px 0;
+}
+.rich-text-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.rich-text-image.ProseMirror-selectednode {
+  outline: 2px solid #596f34;
+  outline-offset: 3px;
+}
+.case-study-controls,
+.case-study-images {
+  border: 0;
+  padding: 0;
+  margin: 20px 0;
+}

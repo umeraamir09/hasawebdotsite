@@ -1,12 +1,21 @@
 "use client";
 
 import { clearSample } from "@hasaweb/schema";
-import { useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
+import {
+  readCaseStudyAddresses,
+  reconcileCaseStudies,
+  syncCaseStudySlug,
+} from "../lib/editor/case-studies";
 import { moveEditorItem } from "../lib/editor/components";
 import { editEditorField, readEditorField } from "../lib/editor/fields";
 import { addProject, removeProject } from "../lib/editor/projects";
+import {
+  type CaseStudyAddressState,
+  CaseStudyControls,
+} from "./case-study-controls";
 import { DraftTextField } from "./draft-text-field";
 import { ImageUpload } from "./image-upload";
 import { OrderedItems } from "./ordered-items";
@@ -15,6 +24,7 @@ export function ProjectControls(props: {
   controller: DraftController;
   componentId: string;
   disabled: boolean;
+  publicationKey?: string | undefined;
 }) {
   return (
     <Controls
@@ -27,12 +37,42 @@ function Controls({
   controller,
   componentId,
   disabled,
+  publicationKey = "",
 }: {
   controller: DraftController;
   componentId: string;
   disabled: boolean;
+  publicationKey?: string | undefined;
 }) {
   const state = useStore(controller.store);
+  const [addresses, setAddresses] = useState<CaseStudyAddressState>({
+    status: "loading",
+  });
+  const loadAddresses = useCallback(() => {
+    let current = true;
+    setAddresses({ status: "loading" });
+    readCaseStudyAddresses(controller)
+      .then((list) => {
+        if (!current) return;
+        setAddresses({ status: "ready", addresses: list });
+        // Restore frozen slugs and move unfrozen ones off still-live URLs.
+        // Unfrozen slugs otherwise change only when their title changes.
+        try {
+          reconcileCaseStudies(controller, componentId, list);
+        } catch {
+          // A paused or suspended draft is repaired on the next load.
+        }
+      })
+      .catch(() => {
+        if (current) setAddresses({ status: "error" });
+      });
+    return () => {
+      current = false;
+    };
+  }, [controller, componentId]);
+  // The live slug set changes only on a successful Publish.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: publicationKey is the reload signal.
+  useEffect(() => loadAddresses(), [loadAddresses, publicationKey]);
   const prefix = useId();
   const section = useRef<HTMLElement>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -99,6 +139,15 @@ function Controls({
               disabled={inactive}
               label="Project title"
               path={[...path, "title"]}
+              onEdited={() => {
+                if (addresses.status === "ready")
+                  syncCaseStudySlug(
+                    controller,
+                    componentId,
+                    entry.id,
+                    addresses.addresses,
+                  );
+              }}
               error={
                 !readEditorField(state, [...path, "title"]).trim()
                   ? "Add a project title before Publish."
@@ -243,6 +292,14 @@ function Controls({
               onDescription={(value) =>
                 editEditorField(controller, [...path, "image", "alt"], value)
               }
+            />
+            <CaseStudyControls
+              controller={controller}
+              componentId={componentId}
+              entry={entry}
+              inactive={inactive}
+              addresses={addresses}
+              onRetry={loadAddresses}
             />
             <button type="button" onClick={() => setRemoving(entry.id)}>
               Remove project

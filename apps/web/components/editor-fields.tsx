@@ -15,10 +15,12 @@ export function EditorFields({
   controller,
   selection,
   disabled,
+  publicationKey,
 }: {
   controller: DraftController;
   selection: PreviewSelection;
   disabled: boolean;
+  publicationKey?: string | undefined;
 }) {
   const state = useStore(controller.store);
   const draft = state.working;
@@ -40,6 +42,7 @@ export function EditorFields({
         controller={controller}
         componentId={component.id}
         disabled={disabled}
+        publicationKey={publicationKey}
       />
     );
   if (component.type === "text")

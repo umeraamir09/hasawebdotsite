@@ -741,6 +741,108 @@ try {
     },
   );
   await check(
+    "case-study image nodes cannot bypass rich-text sanitization",
+    async () => {
+      revision = await setDraft(fixture);
+      const before = await read();
+      const caseBody = [
+        "components",
+        0,
+        "data",
+        "entries",
+        0,
+        "caseStudy",
+        "body",
+      ];
+      const doc = (...content) => ({ type: "doc", content });
+      const image = (attrs) => ({ type: "image", attrs });
+      for (const [path, body] of [
+        // Remote or script URLs, event handlers and extra attributes.
+        [
+          caseBody,
+          doc(
+            image({ assetId: "case-image", src: "https://evil.example/x.png" }),
+          ),
+        ],
+        [
+          caseBody,
+          doc(image({ assetId: "case-image", alt: "x", onerror: "alert(1)" })),
+        ],
+        [
+          caseBody,
+          doc(image({ assetId: "case-image", style: "position:fixed" })),
+        ],
+        [caseBody, doc(image({ src: "javascript:alert(1)" }))],
+        [caseBody, doc(image({ assetId: "../../etc/passwd" }))],
+        [caseBody, doc(image({ assetId: "case-image", alt: 1 }))],
+        [
+          caseBody,
+          doc({
+            ...image({ assetId: "case-image" }),
+            content: [{ type: "text", text: "x" }],
+          }),
+        ],
+        [
+          caseBody,
+          doc({
+            ...image({ assetId: "case-image" }),
+            marks: [{ type: "link", attrs: { href: "https://example.com" } }],
+          }),
+        ],
+        [
+          caseBody,
+          doc({ type: "img", attrs: { src: "https://evil.example/x.png" } }),
+        ],
+        [caseBody, '<img src="x" onerror="alert(1)">'],
+        // Images are blocks in case studies only: not inline, in lists or text sections.
+        [
+          caseBody,
+          doc({
+            type: "paragraph",
+            content: [image({ assetId: "case-image" })],
+          }),
+        ],
+        [
+          caseBody,
+          doc({
+            type: "bulletList",
+            content: [
+              {
+                type: "listItem",
+                content: [
+                  { type: "paragraph" },
+                  image({ assetId: "case-image" }),
+                ],
+              },
+            ],
+          }),
+        ],
+        [
+          ["components", 3, "data", "body"],
+          doc(image({ assetId: "case-image" })),
+        ],
+        [
+          [
+            "components",
+            0,
+            "data",
+            "entries",
+            0,
+            "caseStudy",
+            "body",
+            "content",
+            3,
+            "attrs",
+          ],
+          { assetId: "case-image", src: "https://evil.example/x.png" },
+        ],
+      ]) {
+        await patch(revision, path, body, { status: 422 });
+        assert.deepEqual(await read(), before);
+      }
+    },
+  );
+  await check(
     "attempt ownership, retries, transfer, stale commits and commit receipts",
     async () => {
       const attempt = await request("begin", {

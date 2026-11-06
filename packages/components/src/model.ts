@@ -2,6 +2,7 @@ import {
   type AssetPurpose,
   type ComponentOf,
   type ComponentType,
+  caseStudyPath,
   componentRegistry,
   DRAFT_MAX_BYTES,
   type DraftDoc,
@@ -14,6 +15,7 @@ import {
   URL_MAX_BYTES,
 } from "@hasaweb/schema";
 import { z } from "zod";
+import { pagePathSchema } from "./frames";
 import { yieldPreviewTask } from "./preview-task";
 
 export const assetSchema = z.discriminatedUnion("state", [
@@ -33,7 +35,7 @@ const linkSchema = z.strictObject({
 type ProjectDisplay = Omit<
   ComponentOf<"projects">["data"]["entries"][number],
   "id" | "image" | "caseStudy"
-> & { image: DisplayAsset; hasCaseStudy: boolean };
+> & { image: DisplayAsset; caseStudyPath?: string | undefined };
 export const projectModelSchema = z.strictObject({
   title: z.string(),
   summary: z.string(),
@@ -42,7 +44,7 @@ export const projectModelSchema = z.strictObject({
   codeUrl: draftWebUrlSchema.optional(),
   demoUrl: draftWebUrlSchema.optional(),
   image: assetSchema,
-  hasCaseStudy: z.boolean(),
+  caseStudyPath: pagePathSchema.optional(),
 }) satisfies z.ZodType<ProjectDisplay>;
 const { id: _workId, ...workFields } =
   componentRegistry["work-experience"].schema.shape.entries.element.shape;
@@ -187,7 +189,7 @@ const adapters = {
         ...(codeUrl ? { codeUrl } : {}),
         ...(demoUrl ? { demoUrl } : {}),
         image: resolveImage(image, "project", options),
-        hasCaseStudy: !!caseStudy,
+        ...(caseStudy ? { caseStudyPath: caseStudyPath(caseStudy.slug) } : {}),
       }),
     );
     return { id, type: "projects", data: { entries } };
