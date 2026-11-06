@@ -85,30 +85,10 @@ export async function checkComponentControls({
         .focus();
       await page.keyboard.press("Enter");
       assert.deepEqual(await order(), [before[1], before[0], before[2]]);
-      const handle = sections().getByRole("button", {
-        name: "Drag Second story",
-        exact: true,
-      });
-      await handle.focus();
-      await page.keyboard.press("Space");
-      await page.waitForFunction(() =>
-        document.querySelector('.editor-drag-handle[aria-pressed="true"]'),
-      );
-      await page.keyboard.press("ArrowDown");
-      await page.waitForFunction(
-        (targetId) =>
-          [...document.querySelectorAll('[id^="DndLiveRegion"]')].some((node) =>
-            node.textContent.includes(
-              `was moved over droppable area ${targetId}`,
-            ),
-          ),
-        before[0],
-      );
-      await page.keyboard.press("Space");
-      await page.waitForFunction(
-        () =>
-          !document.querySelector('.editor-drag-handle[aria-pressed="true"]'),
-      );
+      await sections()
+        .getByRole("button", { name: "Move Second story down", exact: true })
+        .focus();
+      await page.keyboard.press("Enter");
       assert.deepEqual(await order(), before);
       await flush();
       assert.deepEqual(

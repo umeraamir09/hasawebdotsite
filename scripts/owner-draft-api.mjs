@@ -699,6 +699,48 @@ try {
     },
   );
   await check(
+    "rich-text submissions reject executable nodes and preserve canonical content",
+    async () => {
+      revision = await setDraft(fixture);
+      const before = await read();
+      for (const body of [
+        "<script>alert(1)</script>",
+        { type: "doc", content: [{ type: "script", content: "alert(1)" }] },
+        {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              attrs: { onclick: "alert(1)", style: "color:red" },
+            },
+          ],
+        },
+        {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              content: [
+                {
+                  type: "text",
+                  text: "Unsafe link",
+                  marks: [
+                    { type: "link", attrs: { href: "javascript:alert(1)" } },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      ]) {
+        await patch(revision, ["components", 3, "data", "body"], body, {
+          status: 422,
+        });
+        assert.deepEqual(await read(), before);
+      }
+    },
+  );
+  await check(
     "attempt ownership, retries, transfer, stale commits and commit receipts",
     async () => {
       const attempt = await request("begin", {
@@ -996,6 +1038,26 @@ try {
         v.components[3].data.body = {
           type: "doc",
           content: [{ type: "heading", attrs: { level: 1 } }],
+        };
+      });
+      mutate((v) => {
+        v.components[3].data.body = "<script>alert(1)</script>";
+      });
+      mutate((v) => {
+        v.components[3].data.body = {
+          type: "doc",
+          content: [{ type: "script", content: "alert(1)" }],
+        };
+      });
+      mutate((v) => {
+        v.components[3].data.body = {
+          type: "doc",
+          content: [
+            {
+              type: "paragraph",
+              attrs: { onclick: "alert(1)", style: "color:red" },
+            },
+          ],
         };
       });
       revision = await setDraft({ ...fixture, schemaVersion: 1 }, 0);
