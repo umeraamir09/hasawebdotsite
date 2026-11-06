@@ -66,6 +66,7 @@ Limitations:
 - Fallback content cannot be detected with CSS, so the fallback keeps the viewer's fixed height. On browsers without inline PDF support, that leaves an empty framed area above the download control.
 - The local fixture does not establish deployed CDN/browser withdrawal (S-9), paid CPU budgets or real mobile-browser PDF behaviour.
 - Saved theme/font/mode for `/resume` follows Phase 35.
+- In the private editor preview, the download control fetches the owner-authorized draft PDF. `View resume` is a same-site `/resume` path, like Phase 30's case-study links, so the preview does not render a `/resume` page.
 - No separate publication/withdrawal boundary review has been run. This change touches public serving headers and withdrawal behaviour, so the workflow calls for one.
 
 Approval: owner completion approval is pending.
