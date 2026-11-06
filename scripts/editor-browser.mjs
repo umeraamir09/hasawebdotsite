@@ -7,6 +7,7 @@ import { chromium } from "playwright";
 import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
+import { createGroupRunner } from "./lib/browser-groups.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
 import { checkProjectControls } from "./project-controls-browser.mjs";
@@ -264,15 +265,34 @@ export async function checkEditor({
       await page.waitForTimeout(50);
     }
   }
-  async function run(name, work) {
-    const filter = process.argv
-      .find((argument) => argument.startsWith("--browser-filter="))
-      ?.slice("--browser-filter=".length);
-    if (filter && !new RegExp(filter).test(name)) return;
-    await work();
-    checks.push({ name, passed: true });
-    console.log(`PASS editor: ${name}`);
-  }
+  const run = createGroupRunner({
+    label: "editor",
+    evidence,
+    checks,
+    errors,
+    getPage: () => page,
+    // Separates a stale preview from a lost edit when a group fails.
+    diagnose: (current) =>
+      current.evaluate(() => {
+        const status = document.querySelector("[data-preview-state]");
+        const recovery = window.editorFixture?.recovery?.store.getState();
+        const draft = recovery?.controller.store.getState();
+        return {
+          preview: status && { ...status.dataset },
+          recoveryBusy: recovery?.busy,
+          recoveryError: recovery?.error,
+          suspended: draft?.suspended,
+          saveStatus: draft?.status,
+          draftError: draft?.error,
+          inputs: draft ? Object.keys(draft.inputs) : null,
+          components: draft?.working?.components.map((component) => ({
+            id: component.id,
+            type: component.type,
+            data: JSON.stringify(component.data).slice(0, 2000),
+          })),
+        };
+      }),
+  });
   async function seed(kind = "ordinary") {
     return page.evaluate(async (kind) => {
       const f = window.editorFixture,
@@ -462,6 +482,35 @@ export async function checkEditor({
             await context.request.get(`${browserOrigin}/editor/preview`)
           ).status(),
           404,
+        );
+      },
+    );
+    await run(
+      "preview status leaves up to date in the same task as a committed edit",
+      async () => {
+        await boot();
+        // Microtasks let React commit the store update but run no later task,
+        // so a deferred passive effect would still report the old display.
+        const observed = await page.evaluate(async () => {
+          const status = () => ({
+            ...document.querySelector("[data-preview-state]").dataset,
+          });
+          const before = status();
+          window.editorFixture.recovery.store
+            .getState()
+            .controller.edit(["profile", "name"], "Same task owner");
+          for (let i = 0; i < 5; i++) await Promise.resolve();
+          return { before, after: status() };
+        });
+        assert.equal(observed.before.previewState, "displayed");
+        assert.notEqual(observed.after.previewState, "displayed");
+        assert.ok(
+          Number(observed.after.previewSequence) >
+            Number(observed.before.previewSequence),
+        );
+        await displayed();
+        await frame().waitForFunction(
+          () => document.querySelector("h1")?.textContent === "Same task owner",
         );
       },
     );
