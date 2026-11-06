@@ -60,3 +60,7 @@ Tradeoff: total runner minutes rise because each job repeats checkout and instal
 ## Documentation impact
 
 The changed assumptions are that CI is no longer one serial job, and that editor browser groups support sharding, time limits and failure evidence. Updated [CI guidance and local options](../../docs/agent-workflow.md#ci-and-future-improvements) and the [architecture CI summary](../../docs/architecture.md#123-cicd-github-actions). README and implementation-status links to the workflow stay accurate. No prerequisites are unresolved.
+
+## Approval
+
+The owner approved this change for merge on November 6, 2026, after reviewing PR #46.
