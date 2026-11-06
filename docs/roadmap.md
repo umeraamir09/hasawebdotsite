@@ -306,7 +306,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 18–19, 28–29.
 - Integration before full completion: 23–26 for immutable page assets, frozen URLs, atomic publication and published removal.
 - Extend the rich-text editor with uploaded images for case studies. Generate and freeze `/projects/{slug}` URLs using the architecture's collision and reuse rules.
-- [ ] Complete when cards and case studies publish together, back navigation works, and a published removal returns the unavailable-page state. Title changes after first publication retain the URL.
+- [Implementation and verification record](../specs/2026-11-06-project-case-studies/results.md). The owner approved completion on November 6, 2026 on branch `feat/30-project-case-studies` at `bdff3bb`. The separate publication/withdrawal boundary review was not run before approval.
+- [x] Complete when cards and case studies publish together, back navigation works, and a published removal returns the unavailable-page state. Title changes after first publication retain the URL.
 
 ### Phase 31. Add skills and technology categories
 

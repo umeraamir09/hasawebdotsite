@@ -45,6 +45,9 @@ const required = (key: "name" | "bio" | "avatar" | "banner") =>
     setupRequirements[key],
   );
 const componentRows = `c, json_each(c.value,'$.data.entries') e`;
+// The live version's indexed case studies for portfolio row `p`.
+export const liveCaseStudies = `SELECT k.value FROM p AS live,publish_version v,publication_candidate_index x,json_each(x.value,'$.cases') k
+  WHERE v.portfolio_id=live.id AND v.n=live.published_version AND x.candidate_id=v.candidate_id`;
 const rules = [
   ...(["name", "bio", "avatar", "banner"] as const).map(required),
   issue("required", path("links"), "p AS portfolio", setupRequirements.links),
@@ -152,6 +155,17 @@ const rules = [
     ep("caseStudy"),
     componentRows,
     `c.type!='projects' OR json_type(e.value,'$.caseStudy') IS NULL OR EXISTS(SELECT 1 FROM json_tree(e.value,'$.caseStudy.body') t WHERE (t.key='text' AND ${present("t.atom")}) OR (t.key='type' AND t.atom='image'))`,
+  ),
+  // Frozen URLs come from the live manifest index, so they change atomically
+  // with the publication pointer. A published slug stays with its project, and
+  // another project cannot take it until the owning project's removal is live.
+  issue(
+    "case_study_url",
+    `json_array('components',c.idx,'data','entries',e.key,'caseStudy','slug')`,
+    componentRows,
+    `c.type!='projects' OR json_type(e.value,'$.caseStudy') IS NULL OR NOT EXISTS(${liveCaseStudies} AND (
+      (json_extract(k.value,'$.id')=json_extract(e.value,'$.id') AND json_extract(k.value,'$.slug')!=json_extract(e.value,'$.caseStudy.slug'))
+      OR (json_extract(k.value,'$.slug')=json_extract(e.value,'$.caseStudy.slug') AND json_extract(k.value,'$.id') IS NOT NULL AND json_extract(k.value,'$.id')!=json_extract(e.value,'$.id'))))`,
   ),
   issue(
     "required",

@@ -1,6 +1,7 @@
 import {
   Portfolio,
   PortfolioAvatar,
+  PortfolioCaseStudy,
   projectPortfolio,
 } from "@hasaweb/components";
 import { parsePortfolioModel, withinBounds } from "@hasaweb/components/model";
@@ -9,8 +10,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
   FRAGMENT_BOUNDS,
+  PAGE_UNAVAILABLE_HTML,
   portfolioHeaders,
   renderFragment,
+  renderPart,
   unavailableResponse,
 } from "./index";
 import { renderFixtureDocument } from "./offline";
@@ -407,5 +410,106 @@ describe("bounded shared entries and groups", () => {
         options,
       ).status,
     ).toBe("invalid");
+  });
+});
+
+describe("case-study pages", () => {
+  function projectDraft() {
+    const source = draft();
+    const projects = createComponent("projects", "projects");
+    projects.data.entries = [
+      {
+        id: "with-case",
+        title: "Case <b>title</b>",
+        summary: "Summary",
+        technologies: [],
+        contribution: "",
+        caseStudy: {
+          slug: "case-title",
+          body: { type: "doc", content: [] },
+        },
+      },
+      {
+        id: "plain",
+        title: "Plain",
+        summary: "Summary",
+        technologies: [],
+        contribution: "",
+      },
+    ];
+    source.components = [projects];
+    return source;
+  }
+
+  it("links a card to its frozen same-site case-study path", () => {
+    const html = renderToStaticMarkup(
+      <Portfolio model={projectPortfolio(projectDraft(), options)} />,
+    );
+    expect(html).toContain(
+      '<a class="pf-page-link" href="/projects/case-title">Read case study: Case &lt;b&gt;title&lt;/b&gt;</a>',
+    );
+    expect(html).not.toContain("Case study unavailable");
+    expect(html.match(/pf-page-link/g)).toHaveLength(1);
+  });
+
+  it("renders matching bounded frame parts for the card link and back navigation", () => {
+    const open = (frame: object) =>
+      renderPart({ kind: "frame", frame, side: "open" });
+    expect(open({ name: "page-link", path: "/projects/case-title" })).toBe(
+      '<a class="pf-page-link" href="/projects/case-title">',
+    );
+    expect(open({ name: "page-link", path: "/" })).toBe(
+      '<a class="pf-page-link" href="/">',
+    );
+    expect(open({ name: "page-nav" })).toBe(
+      '<nav class="pf-page-nav" aria-label="Portfolio">',
+    );
+    const page = renderToStaticMarkup(
+      <PortfolioCaseStudy
+        title="Case"
+        document={{ type: "doc", content: [] }}
+        index={0}
+      />,
+    );
+    expect(
+      page.startsWith(
+        '<nav class="pf-page-nav" aria-label="Portfolio"><a class="pf-page-link" href="/">Back to portfolio</a></nav>',
+      ),
+    ).toBe(true);
+  });
+
+  it.each([
+    "https://evil.example/",
+    "//evil.example",
+    "javascript:alert(1)",
+    "/projects/../admin",
+    "/projects/UPPER",
+    "/resume",
+    "/projects/",
+  ])("rejects page path %j", (path) => {
+    expect(() =>
+      renderPart({
+        kind: "frame",
+        frame: { name: "page-link", path },
+        side: "open",
+      }),
+    ).toThrow();
+  });
+
+  it("rejects a display model whose case-study path leaves the site", () => {
+    const model = projectPortfolio(projectDraft(), options);
+    const projects = model.components[0];
+    if (projects?.type !== "projects") throw new Error("Missing projects");
+    const entry = projects.data.entries[0];
+    if (!entry) throw new Error("Missing entry");
+    entry.caseStudyPath = "https://evil.example/projects/x";
+    expect(parsePortfolioModel(model)).toBeUndefined();
+  });
+
+  it("serves a published page-unavailable state with a route home", () => {
+    expect(PAGE_UNAVAILABLE_HTML).toContain(
+      '<a href="/">Back to portfolio</a>',
+    );
+    expect(PAGE_UNAVAILABLE_HTML).toContain("Page unavailable");
   });
 });

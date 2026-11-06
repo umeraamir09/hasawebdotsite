@@ -217,6 +217,22 @@ export function planChanges(
       });
     }
   }
+  // Case-study slugs are unique. Field-level slug changes are safe in any
+  // order unless a new slug takes another entry's previous slug, as in a swap.
+  function slugSwap(old: unknown[], value: unknown[]) {
+    const slug = (entry: unknown) =>
+      object(entry) && object(entry.caseStudy)
+        ? entry.caseStudy.slug
+        : undefined;
+    return value.some((entry, index) => {
+      const next = slug(entry);
+      return (
+        next !== undefined &&
+        next !== slug(old[index]) &&
+        old.some((other, at) => at !== index && slug(other) === next)
+      );
+    });
+  }
   function visit(path: DraftPath, value: unknown) {
     const old = getAt(working, path);
     if (equal(old, value)) return;
@@ -232,19 +248,7 @@ export function planChanges(
             ? entry.id === old[index].id && entry.type === old[index].type
             : entry.type === old[index].type),
       ) &&
-      !value.some(
-        (entry, index) =>
-          object(entry) &&
-          "caseStudy" in entry &&
-          !equal(
-            (entry.caseStudy as { slug?: string } | undefined)?.slug,
-            (
-              (old[index] as Record<string, unknown>).caseStudy as
-                | { slug?: string }
-                | undefined
-            )?.slug,
-          ),
-      )
+      !slugSwap(old, value)
     ) {
       for (let index = 0; index < value.length; index++)
         visit([...path, index], value[index]);

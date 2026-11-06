@@ -2,8 +2,8 @@ import { Buffer } from "node:buffer";
 import { type Candidate, candidateActive } from "@hasaweb/db";
 import {
   documentShell,
+  PAGE_UNAVAILABLE_HTML,
   portfolioDocumentFrame,
-  unavailableResponse,
 } from "@hasaweb/render";
 import { z } from "zod";
 import type { DispatchEnv } from "./publication-dispatch";
@@ -371,10 +371,7 @@ export async function finalizePublication(
       );
       cursor = { stage: "pages", index: cursor.index + 1 };
     } else {
-      await env.SITES_BUCKET.put(
-        `${root}404.html`,
-        await unavailableResponse().text(),
-      );
+      await env.SITES_BUCKET.put(`${root}404.html`, PAGE_UNAVAILABLE_HTML);
       await recordObject(
         env,
         row,

@@ -1,4 +1,6 @@
 import {
+  type CaseStudyAddresses,
+  caseStudyAddressesSchema,
   type PublicationOperation,
   publicationOperationSchema,
   publicationStartSchema,
@@ -21,6 +23,29 @@ export type PublicationPolicy = {
   batchSize: number;
   queue: Queue<Wake>;
 };
+// Frozen case-study URLs for the editor, read from the same live manifest
+// index that the publication check enforces.
+export async function ownerCaseStudyAddresses(
+  db: D1Database,
+  identity: SessionIdentity,
+  portfolioId: string,
+): Promise<CaseStudyAddresses> {
+  await assertSaveSession(db, identity);
+  const live = await db
+    .prepare(`SELECT p.published_version AS version,
+      (SELECT json_group_array(json_object('projectId',json_extract(k.value,'$.id'),'slug',json_extract(k.value,'$.slug')))
+        FROM publish_version v,publication_candidate_index x,json_each(x.value,'$.cases') k
+        WHERE v.portfolio_id=p.id AND v.n=p.published_version AND x.candidate_id=v.candidate_id) AS addresses
+      FROM portfolio p WHERE p.id=? AND p.user_id=? AND p.status!='deleting' AND ${activeSaveSession}`)
+    .bind(portfolioId, identity.user.id, ...saveSessionParams(identity))
+    .first<{ version: number | null; addresses: string | null }>();
+  if (!live) throw new SaveError(409, "Portfolio changed", "owner_changed");
+  return caseStudyAddressesSchema.parse({
+    portfolioId,
+    version: live.version,
+    addresses: live.version === null ? [] : JSON.parse(live.addresses ?? "[]"),
+  });
+}
 export function ownerPublicationOperations(
   db: D1Database,
   identity: SessionIdentity,

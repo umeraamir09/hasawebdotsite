@@ -13,6 +13,7 @@ export function DraftTextField({
   path,
   multiline = false,
   error,
+  onEdited,
 }: {
   controller: DraftController;
   disabled: boolean;
@@ -20,6 +21,7 @@ export function DraftTextField({
   path: FieldPath;
   multiline?: boolean;
   error?: string | undefined;
+  onEdited?: (() => void) | undefined;
 }) {
   const id = useId();
   const state = useStore(controller.store);
@@ -33,7 +35,7 @@ export function DraftTextField({
     onChange: (
       event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
-      editEditorField(controller, path, event.target.value);
+      if (editEditorField(controller, path, event.target.value)) onEdited?.();
     },
   };
   return (

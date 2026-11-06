@@ -22,7 +22,7 @@ Project entries and component groups use the same shared views, normalization an
 
 `portfolioHeaders("public", {assetOrigins})` retains the existing `public, max-age=0, must-revalidate` policy. It allows platform scripts, styles, fonts and images only at self and explicitly configured trusted asset origins. Inline scripts/styles, arbitrary frames, objects, form submission, base URLs and connections remain blocked. Later graph/contact/PDF integration must add only the capabilities it needs. These headers do not prove CDN/browser withdrawal.
 
-`unavailableResponse()` returns a generic 404 HTML response with no owner data, no-store and noindex. Phase 25's site Worker imports only `@hasaweb/render/response-policy`, so visitor requests do not load React. It applies the CSP and other document headers while using `no-store` for current public files and query variants until deployed S-9 browser/edge behavior is verified. This stricter cache header does not establish actual provider withdrawal.
+`unavailableResponse()` returns a generic 404 HTML response with no owner data, no-store and noindex. `PAGE_UNAVAILABLE_HTML` is the published version's `/404` document for a missing or withdrawn page, with a link back to the portfolio; the site Worker serves it only for published portfolios. Phase 25's site Worker imports only `@hasaweb/render/response-policy`, so visitor requests do not load React. It applies the CSP and other document headers while using `no-store` for current public files and query variants until deployed S-9 browser/edge behavior is verified. This stricter cache header does not establish actual provider withdrawal.
 
 ## Reproduce parity evidence
 

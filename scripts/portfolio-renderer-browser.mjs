@@ -654,6 +654,11 @@ if (process.argv.includes("--serve")) {
             ),
           );
           for (const [, href, rel] of preview.links) {
+            // Case-study cards link to a same-site generated page path.
+            if (href.startsWith("/")) {
+              assert.match(href, /^\/projects\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+              continue;
+            }
             assert.match(href, /^(https?:|mailto:)/);
             assert.ok(rel.includes("noopener"));
           }

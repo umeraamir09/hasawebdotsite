@@ -89,6 +89,8 @@ export function publicationIssueLabel(
     asset: `Replace the unavailable ${field}`,
     github: "Connect GitHub and fetch activity",
     recipient: "Verify your contact recipient",
+    case_study_url:
+      "Reload the editor to restore this case study's published address",
   } satisfies Record<PublicationIssue["code"], string>;
   return message[issue.code];
 }

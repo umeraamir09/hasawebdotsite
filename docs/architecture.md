@@ -163,7 +163,7 @@ This is the target stack, not a list of installed capabilities. **[confirmed]** 
 | Animation | GSAP for other effects; native CSS keyframes and animated WebP for imported avatar decorations | Preserve the cat/hands source choreography and reduced-motion states; Phase 38 adds independent playback controls |
 | Drag and drop | dnd-kit (pointer + keyboard sensors) | Component and entry reordering, with Move up/down fallback buttons |
 | Rich text | Tiptap (ProseMirror), client-side only | Text sections and case studies |
-| Image cropping | `react-easy-crop` + Canvas re-encode **[default]** | Avatar, banner, project, and case-study images |
+| Image cropping | `react-easy-crop` + Canvas re-encode **[default]** | Avatar and banner crops. Project (Phase 28) and case-study (Phase 30) images are validated and re-encoded without a forced crop |
 | Editor state | Zustand **[default]** | Draft state, save status, preview sync |
 | Data fetching | Explicit fetch for the implemented draft protocol; TanStack Query remains a default for later unrelated APIs | The draft controller owns sequencing, reconciliation and save status; no generic mutation retry queue |
 | Validation | Zod | Draft schema, API payloads, per-component schemas |
@@ -328,11 +328,13 @@ Regenerate the slug when the title changes before the case study's first success
 
 Deleting a case study from the draft does not change the published site. After the deletion is published, its old URL returns `404` and the slug becomes available to another project in that portfolio. If a new project reuses it, old links point to the new project.
 
+Phase 30 implementation, with the owner's November 6, 2026 confirmation of this rule plus a reuse guard. The live version's candidate index records each case study's project ID and slug, so frozen slugs change atomically with the publication pointer and need no separate table. Until a deletion is published, its slug stays reserved for the deleted project: a new project in the same draft gets the next suffix, so no single Publish moves a URL from one project to another. The authoritative publication check (`case_study_url` issue) rejects a draft that changes a frozen slug or takes another project's live slug, and the editor restores frozen slugs from `POST /api/owner/publication/case-studies`. A published portfolio serves its version's page-unavailable `/404` page, with a link back to `/`, for missing or withdrawn pages. Unpublished and unknown hosts keep the generic unavailable response. Versions indexed before Phase 30 lack project IDs; their slugs are matched by name only. See [Phase 30 results](../specs/2026-11-06-project-case-studies/results.md).
+
 ### 8.4 Visitor request (the `site` Worker)
 
 1. Parse the host; accept only a single label before `hasaweb.site`; platform-reserved or unknown hosts get a generic platform page.
 2. One D1 query by subdomain: `status`, `published_version`, `id`. Anything other than `published` returns the generic "unavailable" page (covers unpublished, suspended, deleted).
-3. Resolve the path through the active candidate manifest receipts and stream its authorized R2 key, honoring `If-None-Match` and `HEAD`. Arbitrary bucket keys and private snapshot files have no visitor route.
+3. Resolve the path through the active candidate manifest receipts and stream its authorized R2 key, honoring `If-None-Match` and `HEAD`. Arbitrary bucket keys and private snapshot files have no visitor route. Since Phase 30, a page path missing from a published portfolio's manifest returns that version's `/404` page-unavailable document with a route back to the portfolio.
 4. Special paths: `/resume.pdf` (served same-origin with `Content-Disposition` so the download button works), `/_/github.json`, `/_/contact`.
 5. Responses carry strict security headers. Phase 25 uses `Cache-Control: no-store` and `CDN-Cache-Control: no-store` for all served files while deployed browser/edge withdrawal remains unverified. Query variants resolve to the same manifest entry. Phase 26 tests the no-store browser and query policy locally. Deployed browser/edge absence remains the S-9 release gate; changing the policy requires new withdrawal verification.
 

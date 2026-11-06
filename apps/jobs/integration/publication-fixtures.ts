@@ -1,9 +1,9 @@
 import {
   PortfolioAvatar,
+  PortfolioCaseStudy,
   PortfolioProfile,
   PortfolioSection,
   projectPortfolio,
-  RichText,
 } from "@hasaweb/components";
 import {
   createComponent,
@@ -321,19 +321,12 @@ export function expectedPages(draft: DraftDoc, id: string) {
       continue;
     for (const entry of component.data.entries) {
       if (!entry.caseStudy) continue;
-      const body = createElement(
-        "section",
-        {
-          className: "pf-section",
-          "data-component": "text",
-          "data-component-id": `case-${ordinal - 1}`,
-        },
-        createElement("h2", null, entry.title),
-        createElement(RichText, {
-          document: entry.caseStudy.body,
-          images: image,
-        }),
-      );
+      const body = createElement(PortfolioCaseStudy, {
+        title: entry.title,
+        document: entry.caseStudy.body,
+        images: image,
+        index: ordinal - 1,
+      });
       pages.push({
         path: `/projects/${entry.caseStudy.slug}`,
         html: profileHtml(draft, model.profile) + renderToStaticMarkup(body),

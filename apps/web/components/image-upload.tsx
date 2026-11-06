@@ -28,6 +28,7 @@ type UploadState =
 export function ImageUpload({
   label,
   purpose,
+  noun = purpose,
   value,
   description,
   descriptionInvalid = false,
@@ -40,7 +41,8 @@ export function ImageUpload({
   onPendingChange,
 }: {
   label: string;
-  purpose: CropPurpose | "project";
+  purpose: CropPurpose | "project" | "case_study";
+  noun?: string;
   value: ImageReference | undefined;
   description: string;
   descriptionInvalid?: boolean;
@@ -101,7 +103,7 @@ export function ImageUpload({
       const image = await openLocalImage(blob);
       if (expected !== generation.current || current.current.disabled)
         image.release();
-      else if (purpose === "project") {
+      else if (purpose === "project" || purpose === "case_study") {
         image.release();
         await upload(blob);
       } else setState({ kind: "cropping", image });
@@ -203,6 +205,9 @@ export function ImageUpload({
     }
   }
   const busy = state.kind === "loading" || state.kind === "uploading";
+  // Project and case-study images keep the validated, re-encoded upload as
+  // supplied. Only avatar and banner have fixed crop shapes.
+  const uncropped = purpose === "project" || purpose === "case_study";
   return (
     <section className="profile-image-control" aria-label={`${label} image`}>
       <h3>{label}</h3>
@@ -217,7 +222,7 @@ export function ImageUpload({
           <span>
             {value
               ? "Image unavailable. Retry the preview or replace it."
-              : `Add your ${purpose}`}
+              : `Add your ${noun}`}
           </span>
         )}
       </div>
@@ -237,11 +242,11 @@ export function ImageUpload({
             disabled={disabled || busy}
             onClick={() => setUnavailable(null)}
           >
-            Retry {purpose} preview
+            Retry {noun} preview
           </button>
         )}
         <label className="profile-image-file" htmlFor={`${id}-file`}>
-          {value ? `Replace ${purpose}` : `Upload ${purpose}`}
+          {value ? `Replace ${noun}` : `Upload ${noun}`}
         </label>
         <input
           ref={file}
@@ -259,7 +264,7 @@ export function ImageUpload({
         />
         {value && (
           <>
-            {purpose !== "project" && (
+            {!uncropped && (
               <button
                 type="button"
                 disabled={disabled || busy}
@@ -276,7 +281,7 @@ export function ImageUpload({
                 onRemove();
               }}
             >
-              Remove {purpose}
+              Remove {noun}
               {purpose === "project" ? " image" : ""}
             </button>
           </>
@@ -284,7 +289,7 @@ export function ImageUpload({
       </div>
       <p id={`${id}-formats`} className="profile-image-note">
         JPEG, PNG or WebP. Up to 5 MiB.{" "}
-        {purpose === "project"
+        {uncropped
           ? "The supplied image is saved without cropping."
           : "Only the finished crop is saved."}
       </p>
@@ -362,14 +367,16 @@ export function ImageUpload({
           )}
         </div>
       )}
-      {state.kind === "cropping" && purpose !== "project" && (
-        <ImageCropDialog
-          image={state.image}
-          purpose={purpose}
-          onCancel={cancel}
-          onApply={(blob) => void upload(blob)}
-        />
-      )}
+      {state.kind === "cropping" &&
+        purpose !== "project" &&
+        purpose !== "case_study" && (
+          <ImageCropDialog
+            image={state.image}
+            purpose={purpose}
+            onCancel={cancel}
+            onApply={(blob) => void upload(blob)}
+          />
+        )}
     </section>
   );
 }

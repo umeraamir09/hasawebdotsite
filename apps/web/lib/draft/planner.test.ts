@@ -128,6 +128,59 @@ describe("bounded browser save planner", () => {
     replacement.data.entries[0].title = "Changed title";
     expect(simulate(from, target)).toHaveLength(1);
   });
+  it("saves a regenerated slug as a field change without restaging the body", () => {
+    const from = completeDraft();
+    const projects = from.components.find((entry) => entry.type === "projects");
+    const entry =
+      projects?.type === "projects" ? projects.data.entries[0] : undefined;
+    if (!entry?.caseStudy) throw new Error("Missing project fixture");
+    entry.caseStudy.body = {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "body".repeat(5000) }],
+        },
+      ],
+    };
+    const target = structuredClone(from);
+    const replacement = target.components.find(
+      (item) => item.type === "projects",
+    );
+    const changed =
+      replacement?.type === "projects"
+        ? replacement.data.entries[0]
+        : undefined;
+    if (!changed?.caseStudy) throw new Error("Missing target");
+    changed.title = "Renamed";
+    changed.caseStudy.slug = "renamed";
+    const commands = simulate(from, target);
+    expect(commands).toHaveLength(2);
+    expect(commands.every((command) => command.action === "change")).toBe(true);
+  });
+  it("keeps every intermediate valid when two case-study slugs swap", () => {
+    const from = completeDraft();
+    const projects = from.components.find((entry) => entry.type === "projects");
+    if (projects?.type !== "projects" || !projects.data.entries[0]?.caseStudy)
+      throw new Error("Missing project fixture");
+    projects.data.entries.push({
+      ...structuredClone(projects.data.entries[0]),
+      id: "second-project",
+      caseStudy: { slug: "second", body: { type: "doc", content: [] } },
+    });
+    const target = structuredClone(from);
+    const swapped = target.components.find(
+      (entry) => entry.type === "projects",
+    );
+    if (swapped?.type !== "projects") throw new Error("Missing target");
+    const [first, second] = swapped.data.entries;
+    if (!first?.caseStudy || !second?.caseStudy) throw new Error("Missing");
+    [first.caseStudy.slug, second.caseStudy.slug] = [
+      second.caseStudy.slug,
+      first.caseStudy.slug,
+    ];
+    simulate(from, target);
+  });
   it("emits no commands for unchanged data and one leaf change for ordinary edits", () => {
     const from = empty(),
       target = structuredClone(from);

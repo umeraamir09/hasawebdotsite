@@ -270,6 +270,7 @@ function Scope({
                 controller={controller}
                 selection={active}
                 disabled={disabled}
+                publicationKey={publicationKey}
               />
             </>
           ) : (
