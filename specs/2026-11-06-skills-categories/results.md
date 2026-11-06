@@ -36,3 +36,7 @@ Verification (local, 2026-11-06): `pnpm verify --profile=checks` passed (46 file
 ## Documentation impact
 
 Changed assumption: the skills controls were a placeholder of two order lists. Updated the implementation-status row set (new Skills row), and the components README projection paragraph (group order, category removal, no ratings). Unresolved prerequisites: Phase 42C onboarding name entry and empty-step adapter; owner approval of completion. No schema, registry, fixture or publication SQL change was needed.
+
+## Approval
+
+The owner approved completion on November 6, 2026 after integration into `main` (`0557587`) and a passing full local verification gate. Production guide/editor activation remains Phase 42E.

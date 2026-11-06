@@ -314,14 +314,16 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 17, 27.
 - Integration before full completion: 23, 26 for registry validation and the shared publication path. Draft-only controls can be approved separately if they unblock 42C.
 - Implement one skills component with manually entered names, optional named categories, and entry/category ordering. Onboarding reuses simple name entry; category controls stay in the editor.
-- [ ] Complete when grouped/uncategorized entries render in saved order and no ratings or automatic extraction appear. Verify the empty-step-to-no-component adapter behavior later in 42C rather than making this increment depend on onboarding screens.
+- [Implementation and verification record](../specs/2026-11-06-skills-categories/results.md). The owner approved completion on November 6, 2026 after integration into `main`.
+- [x] Complete when grouped/uncategorized entries render in saved order and no ratings or automatic extraction appear. Verify the empty-step-to-no-component adapter behavior later in 42C rather than making this increment depend on onboarding screens.
 
 ### Phase 32. Add work experience
 
 - Dependencies: 17, 27. Work-description entry does not require the general rich-text editor from 29.
 - Integration before full completion: 23, 26 for validation and published entry/link parity.
 - Implement role, organization, dates, current-role status, description, optional organization link, and entry ordering.
-- [ ] Complete when ongoing roles require no end date, reversed dates fail with a field error, and published entries and links match the draft. Education remains outside the component library.
+- [Implementation and verification record](../specs/2026-11-06-work-experience/results.md). The owner approved completion on November 6, 2026 after integration into `main`.
+- [x] Complete when ongoing roles require no end date, reversed dates fail with a field error, and published entries and links match the draft. Education remains outside the component library.
 
 ### Phase 33. Add the separate social links component
 

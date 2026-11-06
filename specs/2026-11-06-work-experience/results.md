@@ -34,3 +34,7 @@ Verification: `pnpm verify --profile=editor` (check, web/jobs builds, editor bro
 ## Documentation impact
 
 Changed assumption: work experience was a placeholder "Entry order" list. Updated: the implementation-status row ("Work experience controls"), the packages/components README paragraph on line-break and link rendering, and this record. Education remains outside the component library. Unresolved prerequisites: Phase 42E guide/editor activation; owner approval for completion; the Phase 31 branch edits the same shared files, so the lead reconciles `implementation-status.md`, `editor.css`, `portfolio.css`, `editor-browser.mjs` and `publish-journey-browser.mjs` at integration.
+
+## Approval
+
+The owner approved completion on November 6, 2026 after integration into `main` (`0557587`) and a passing full local verification gate. Production guide/editor activation remains Phase 42E.
