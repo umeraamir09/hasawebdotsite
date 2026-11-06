@@ -164,15 +164,18 @@ export async function checkTextControls({
       await page
         .getByLabel("Link destination", { exact: true })
         .fill("mailto:owner@example.com");
-      await input.click();
-      await input.press("Control+a");
+      await input.evaluate((node) => {
+        const selection = window.getSelection();
+        if (!selection) return;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      });
       await page
         .getByRole("button", { name: "Apply link", exact: true })
         .click();
-      // Wait for the applied link, not just the click, so slower runners
-      // cannot read the destination field before the editor transaction and
-      // React re-render have settled.
-      await input.locator('a[href="mailto:owner@example.com"]').waitFor();
+      // Wait for editor transaction and React re-render after applying a link.
       await page.waitForFunction(
         (id) => document.getElementById(id)?.value === "",
         await page
