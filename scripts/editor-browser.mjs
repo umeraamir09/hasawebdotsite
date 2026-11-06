@@ -13,6 +13,7 @@ import { checkProjectControls } from "./project-controls-browser.mjs";
 import { checkPublicationControls } from "./publication-browser.mjs";
 import { checkPublishJourney } from "./publish-journey-browser.mjs";
 import { checkResumeJourney } from "./resume-browser.mjs";
+import { checkSkillsControls } from "./skills-controls-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
 import { checkTextControls } from "./text-controls-browser.mjs";
@@ -1250,6 +1251,7 @@ export async function checkEditor({
     await checkProfileControls(controls);
     await checkSocialLinks(controls);
     await checkProjectControls(controls);
+    await checkSkillsControls(controls);
     await checkTextControls(controls);
     await checkPublishJourney(controls);
     await checkCaseStudyJourney(controls);

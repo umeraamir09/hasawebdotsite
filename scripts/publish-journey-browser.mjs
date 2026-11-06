@@ -6,6 +6,10 @@ import {
 } from "./project-controls-browser.mjs";
 
 import {
+  assertPublishedSkills,
+  preparePublishedSkills,
+} from "./skills-controls-browser.mjs";
+import {
   assertPublishedText,
   preparePublishedText,
 } from "./text-controls-browser.mjs";
@@ -379,6 +383,7 @@ export async function checkPublishJourney({
       await upload("avatar");
       await preparePublishedProjects(page, image);
       await preparePublishedText(page);
+      await preparePublishedSkills(page);
       let blockedCommit = true;
       await page.route("**/api/owner/publication/commit", async (route) => {
         if (blockedCommit) {
@@ -496,6 +501,7 @@ export async function checkPublishJourney({
         (await (await publicRead()).text()).includes("Republished owner"),
       );
       await assertPublishedText(page, await (await publicRead()).text());
+      await assertPublishedSkills(page, await (await publicRead()).text());
       const cards = await assertPublishedProjects(
         page,
         await (await publicRead()).text(),
