@@ -298,8 +298,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 09, 17, 27.
 - Integration before full completion: 23, 26 for allowed-content validation and real save/Publish parity. Keep the hostile-paste/submission checks in this phase.
 - Use Tiptap for headings, paragraphs, lists, and links. Render only allowed structured content and permit multiple titled text sections.
-- [Implementation and verification record](../specs/2026-10-28-safe-rich-text/results.md). Owner completion approval remains pending.
-- [ ] Complete when formatting survives save and Publish, unsafe pasted/submitted HTML or scripts cannot execute, and sections can be edited, reordered, and removed.
+- [Implementation and verification record](../specs/2026-10-28-safe-rich-text/results.md). The owner approved completion on November 6, 2026 after integration into `main` in PR #40.
+- [x] Complete when formatting survives save and Publish, unsafe pasted/submitted HTML or scripts cannot execute, and sections can be edited, reordered, and removed.
 
 ### Phase 30. Add project case studies
 
