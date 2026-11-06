@@ -17,6 +17,7 @@ import { checkSkillsControls } from "./skills-controls-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
 import { checkTextControls } from "./text-controls-browser.mjs";
+import { checkWorkExperienceControls } from "./work-experience-browser.mjs";
 
 export async function checkEditor({
   root,
@@ -1253,6 +1254,7 @@ export async function checkEditor({
     await checkProjectControls(controls);
     await checkSkillsControls(controls);
     await checkTextControls(controls);
+    await checkWorkExperienceControls(controls);
     await checkPublishJourney(controls);
     await checkCaseStudyJourney(controls);
     await checkResumeJourney(controls);

@@ -253,3 +253,9 @@ p {
     scroll-behavior: auto;
   }
 }
+
+/* Work experience: keep owner line breaks in the plain-text description. */
+[data-component="work-experience"] .pf-entry > p:last-child {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}

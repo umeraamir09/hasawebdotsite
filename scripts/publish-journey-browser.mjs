@@ -4,7 +4,6 @@ import {
   assertPublishedProjects,
   preparePublishedProjects,
 } from "./project-controls-browser.mjs";
-
 import {
   assertPublishedSkills,
   preparePublishedSkills,
@@ -13,6 +12,10 @@ import {
   assertPublishedText,
   preparePublishedText,
 } from "./text-controls-browser.mjs";
+import {
+  assertPublishedWork,
+  preparePublishedWork,
+} from "./work-experience-browser.mjs";
 
 export async function checkPublishJourney({
   getPage,
@@ -382,6 +385,7 @@ export async function checkPublishJourney({
       await page.getByLabel("Name", { exact: true }).fill("Republished owner");
       await upload("avatar");
       await preparePublishedProjects(page, image);
+      await preparePublishedWork(page);
       await preparePublishedText(page);
       await preparePublishedSkills(page);
       let blockedCommit = true;
@@ -506,6 +510,7 @@ export async function checkPublishJourney({
         page,
         await (await publicRead()).text(),
       );
+      await assertPublishedWork(page, await (await publicRead()).text());
       assert.equal((await publicRead(cards[1].image)).status, 200);
       for (const url of [oldAvatarUrl, `${oldAvatarUrl}?warm=query`]) {
         assert.equal((await publicRead(url)).status, 404);
