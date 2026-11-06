@@ -12,6 +12,7 @@ import { PortfolioFrame } from "./frames";
 import type {
   ComponentModel,
   DisplayAsset,
+  DisplayFile,
   PortfolioModel,
   ProfileModel,
 } from "./model";
@@ -194,6 +195,64 @@ export function PortfolioProject({
     </article>
   );
 }
+// The asset origin serves this URL as an attachment. A cross-origin `download`
+// attribute is ignored, so the response header decides the download.
+function ResumeDownload({
+  file,
+}: {
+  file: Extract<DisplayFile, { state: "ready" }>;
+}) {
+  return (
+    <a
+      className="pf-button"
+      href={file.url}
+      download="resume.pdf"
+      type="application/pdf"
+      data-resume-download=""
+    >
+      Download resume (PDF)
+    </a>
+  );
+}
+// The body of /resume after the shared profile header. It embeds the same
+// published PDF that every download control uses. Browsers that cannot
+// display PDFs inline render the fallback and keep the download control.
+export function PortfolioResume({ file }: { file: DisplayFile }) {
+  return (
+    <>
+      <PortfolioFrame frame={{ name: "page-nav" }}>
+        <PortfolioFrame frame={{ name: "page-link", path: "/" }}>
+          Back to portfolio
+        </PortfolioFrame>
+      </PortfolioFrame>
+      <PortfolioFrame
+        frame={{ name: "section", component: "resume", id: "resume-page" }}
+      >
+        <h2>Resume</h2>
+        {file.state === "ready" ? (
+          <>
+            <object
+              className="pf-resume-viewer"
+              data={file.viewUrl}
+              type="application/pdf"
+              aria-label="Resume PDF"
+            >
+              <p className="pf-muted" data-resume-fallback="">
+                This browser cannot show the resume here. Use Download resume
+                (PDF) instead.
+              </p>
+            </object>
+            <p className="pf-links">
+              <ResumeDownload file={file} />
+            </p>
+          </>
+        ) : (
+          <Empty>Resume unavailable.</Empty>
+        )}
+      </PortfolioFrame>
+    </>
+  );
+}
 function SectionContent({
   component,
 }: {
@@ -308,7 +367,16 @@ function SectionContent({
       return (
         <>
           <h2>Resume</h2>
-          <Empty>Resume unavailable.</Empty>
+          {component.data.file.state === "ready" ? (
+            <div className="pf-links">
+              <ResumeDownload file={component.data.file} />
+              <PortfolioFrame frame={{ name: "page-link", path: "/resume" }}>
+                View resume
+              </PortfolioFrame>
+            </div>
+          ) : (
+            <Empty>Resume unavailable.</Empty>
+          )}
         </>
       );
     default: {

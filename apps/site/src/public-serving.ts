@@ -44,6 +44,7 @@ type FileRow = {
   bytes: number;
   sha256: string;
   content_type: string;
+  subdomain?: string;
 };
 
 function allowedPath(path: string) {
@@ -147,7 +148,8 @@ async function assetFile(db: D1Database, candidateId: string, path: string) {
         json_extract(f.value,'$.path') AS path,
         json_extract(f.value,'$.bytes') AS bytes,
         json_extract(f.value,'$.sha256') AS sha256,
-        json_extract(f.value,'$.contentType') AS content_type
+        json_extract(f.value,'$.contentType') AS content_type,
+        p.subdomain AS subdomain
        FROM publish_version v
        JOIN portfolio p ON p.id=v.portfolio_id
        JOIN subdomain_claim claim ON claim.portfolio_id=p.id AND claim.name=p.subdomain AND claim.state='claimed'
@@ -173,23 +175,38 @@ async function serveFile(
   env: PublicEnv,
   row: FileRow | null,
   path: string,
+  { view = false }: { view?: boolean } = {},
 ) {
   if (!isValidFile(row, path)) return unavailableResponse();
   const file = row;
+  const pdf = file.content_type === "application/pdf";
+  // Only a resume PDF has an embeddable variant, framed by its own portfolio.
+  if (view && (!pdf || !file.subdomain || !LABEL.test(file.subdomain)))
+    return unavailableResponse();
   const bucket =
     file.bucket === "assets" ? env.PUBLIC_ASSETS_BUCKET : env.SITES_BUCKET;
   const object = await bucket.get(file.key);
   if (!object || object.size !== file.bytes) return unavailableResponse();
+  const assetOrigin = env.ASSET_ORIGIN ?? "https://assets.hasaweb.site";
   const headers = portfolioHeaders("public", {
-    assetOrigins: [env.ASSET_ORIGIN ?? "https://assets.hasaweb.site"],
+    assetOrigins: [assetOrigin],
+    ...(path === "/resume" ? { objectOrigins: [assetOrigin] } : {}),
   });
   headers.set("Content-Type", file.content_type);
   headers.set("ETag", `"${file.sha256}"`);
   // These files can be withdrawn. Query variants cannot extend their lifetime.
   headers.set("Cache-Control", "no-store");
   headers.set("CDN-Cache-Control", "no-store");
-  if (file.content_type === "application/pdf")
-    headers.set("Content-Disposition", "attachment");
+  if (pdf && view) {
+    // Browser PDF viewers need to run inside the frame, so the document CSP is
+    // replaced by a framing restriction to the owning portfolio host.
+    headers.set(
+      "Content-Security-Policy",
+      `frame-ancestors https://${file.subdomain}${SITE_SUFFIX}`,
+    );
+    headers.set("Content-Disposition", 'inline; filename="resume.pdf"');
+  } else if (pdf)
+    headers.set("Content-Disposition", 'attachment; filename="resume.pdf"');
   const match = request.headers
     .get("If-None-Match")
     ?.split(",")
@@ -210,7 +227,9 @@ export async function servePublic(request: Request, env: PublicEnv) {
   if (
     host === new URL(env.ASSET_ORIGIN ?? "https://assets.hasaweb.site").hostname
   ) {
-    const match = /^\/candidate\/([^/]+)\/assets\/([^/]+)$/.exec(url.pathname);
+    const match = /^\/candidate\/([^/]+)\/assets\/([^/]+?)(\/view)?$/.exec(
+      url.pathname,
+    );
     const candidateId = match?.[1];
     const assetId = match?.[2];
     if (
@@ -226,6 +245,7 @@ export async function servePublic(request: Request, env: PublicEnv) {
       env,
       await assetFile(env.DB, candidateId, path),
       path,
+      { view: match?.[3] === "/view" },
     );
   }
   if (!host.endsWith(SITE_SUFFIX)) return unavailableResponse();

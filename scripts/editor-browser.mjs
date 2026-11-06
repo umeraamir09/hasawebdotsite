@@ -12,6 +12,7 @@ import { checkProfileControls } from "./profile-controls-browser.mjs";
 import { checkProjectControls } from "./project-controls-browser.mjs";
 import { checkPublicationControls } from "./publication-browser.mjs";
 import { checkPublishJourney } from "./publish-journey-browser.mjs";
+import { checkResumeJourney } from "./resume-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 
 import { checkTextControls } from "./text-controls-browser.mjs";
@@ -1252,6 +1253,7 @@ export async function checkEditor({
     await checkTextControls(controls);
     await checkPublishJourney(controls);
     await checkCaseStudyJourney(controls);
+    await checkResumeJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

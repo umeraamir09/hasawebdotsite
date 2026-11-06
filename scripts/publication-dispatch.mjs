@@ -452,7 +452,7 @@ try {
     assert.equal(manifest.format, "hasaweb-candidate-v1");
     assert.equal(manifest.candidateId, id);
     assert.equal(manifest.sourceRevision, revision);
-    assert.equal(manifest.rendererVersion, "publication-v2");
+    assert.equal(manifest.rendererVersion, "publication-v3");
     const seal = (
       await sql(
         "SELECT json_extract(value,'$.manifest') AS seal FROM publication_candidate_index WHERE candidate_id=?",

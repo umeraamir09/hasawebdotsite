@@ -225,7 +225,7 @@ export async function runPublicationChecks(
         ),
       db
         .prepare(
-          "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES(?,?,1,'live','publication-v2',?,1,1)",
+          "INSERT INTO publish_version(id,portfolio_id,n,status,renderer_version,candidate_id,created_at,updated_at) VALUES(?,?,1,'live','publication-v3',?,1,1)",
         )
         .bind(candidate, portfolioId, candidate),
       db

@@ -136,6 +136,38 @@ p {
 .pf-page-nav {
   margin-bottom: 24px;
 }
+.pf-links a.pf-button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--pf-control);
+  border-radius: 999px;
+  background: var(--pf-raised);
+  color: var(--pf-ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+.pf-links a.pf-button:hover {
+  text-decoration: underline;
+}
+.pf-links .pf-page-link {
+  align-self: center;
+}
+.pf-resume-viewer {
+  display: block;
+  width: 100%;
+  height: min(80vh, 1100px);
+  min-height: 320px;
+  margin-top: 16px;
+  border: 1px solid var(--pf-border);
+  border-radius: 12px;
+  background: var(--pf-raised);
+}
+.pf-resume-viewer > p {
+  margin: 0;
+  padding: 24px;
+}
 .pf-tags {
   gap: 8px;
   margin-bottom: 16px;

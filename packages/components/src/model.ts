@@ -28,6 +28,18 @@ export const assetSchema = z.discriminatedUnion("state", [
   }),
 ]);
 export type DisplayAsset = z.infer<typeof assetSchema>;
+// A published or privately previewed resume PDF. `url` downloads the file;
+// `viewUrl` serves the same bytes for embedded viewing on /resume.
+export const fileSchema = z.discriminatedUnion("state", [
+  z.strictObject({ state: z.literal("missing") }),
+  z.strictObject({ state: z.literal("unavailable") }),
+  z.strictObject({
+    state: z.literal("ready"),
+    url: z.string().refine(isWebUrl),
+    viewUrl: z.string().refine(isWebUrl),
+  }),
+]);
+export type DisplayFile = z.infer<typeof fileSchema>;
 const linkSchema = z.strictObject({
   label: z.string(),
   href: z.string().refine(isSafeLink),
@@ -96,7 +108,7 @@ const schemas = {
   resume: z.strictObject({
     ...identity,
     type: z.literal("resume"),
-    data: z.strictObject({ available: z.literal(false) }),
+    data: z.strictObject({ file: fileSchema }),
   }),
 } satisfies Record<ComponentType, z.ZodType>;
 export const componentModelSchema = z.discriminatedUnion("type", [
@@ -127,9 +139,48 @@ export type ProjectionOptions = {
   resolveAsset: (asset: {
     assetId: string;
     purpose: AssetPurpose;
-  }) => { state: "ready"; url: string } | { state: "unavailable" };
+  }) =>
+    | { state: "ready"; url: string; viewUrl?: string | undefined }
+    | { state: "unavailable" };
   assetOrigins: readonly string[];
 };
+
+function trustedUrl(value: string | undefined, options: ProjectionOptions) {
+  return (
+    value !== undefined &&
+    isWebUrl(value) &&
+    options.assetOrigins.includes(new URL(value).origin)
+  );
+}
+function resolveFile(
+  reference: { assetId: string } | undefined,
+  options: ProjectionOptions,
+): DisplayFile {
+  if (!reference) return { state: "missing" };
+  const resolved = options.resolveAsset({
+    assetId: reference.assetId,
+    purpose: "resume",
+  });
+  if (resolved.state !== "ready") return { state: "unavailable" };
+  const viewUrl = resolved.viewUrl ?? resolved.url;
+  if (!trustedUrl(resolved.url, options) || !trustedUrl(viewUrl, options))
+    return { state: "unavailable" };
+  return { state: "ready", url: resolved.url, viewUrl };
+}
+/** Owner-supplied asset URLs in a display model, for origin rechecks. */
+export function modelAssetUrls(
+  components: readonly ComponentModel[],
+): string[] {
+  return components.flatMap((component) =>
+    component.type === "projects"
+      ? component.data.entries.flatMap((entry) =>
+          entry.image.state === "ready" ? [entry.image.url] : [],
+        )
+      : component.type === "resume" && component.data.file.state === "ready"
+        ? [component.data.file.url, component.data.file.viewUrl]
+        : [],
+  );
+}
 
 function resolveImage(
   reference: { assetId: string; alt?: string | undefined } | undefined,
@@ -268,9 +319,13 @@ const adapters = {
     yield;
     return { id: component.id, type: "contact", data: { available: false } };
   },
-  *resume(component) {
+  *resume(component, _draft, options) {
     yield;
-    return { id: component.id, type: "resume", data: { available: false } };
+    return {
+      id: component.id,
+      type: "resume",
+      data: { file: resolveFile(component.data.file, options) },
+    };
   },
 } satisfies Adapters;
 function* displayLinks(
@@ -321,7 +376,7 @@ function* projectSteps(
         components.push(yield* adapters.contact(component));
         break;
       case "resume":
-        components.push(yield* adapters.resume(component));
+        components.push(yield* adapters.resume(component, draft, options));
         break;
       default: {
         const exhaustive: never = component;

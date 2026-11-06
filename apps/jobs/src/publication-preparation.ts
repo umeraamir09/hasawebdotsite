@@ -39,6 +39,11 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("resume-page") }),
   z.strictObject({
+    kind: z.literal("resume-file"),
+    path,
+    variant: z.enum(["component", "page"]),
+  }),
+  z.strictObject({
     kind: z.literal("discover"),
     index: z.number().int().nonnegative(),
   }),
@@ -94,6 +99,9 @@ export interface PreparationSource {
   discover(index: number): Promise<boolean>;
   caseAt(index: number): Promise<{ path: string; slug: string } | null>;
   resumeAt(): Promise<{ path: string; ordinal: number } | null>;
+  // Renders the resume component section or the /resume page body with the
+  // candidate's published PDF URLs. Both use the same transferred asset.
+  resume(path: string, variant: "component" | "page"): Promise<string>;
   project(path: string): Promise<string | null>;
   components(
     path: string,
@@ -368,11 +376,13 @@ export async function advancePreparation(
       push([
         { kind: "page-start", ordinal: page.ordinal, path: "/resume" },
         visit("profile", "$.profile"),
-        visit("component", page.path),
+        { kind: "resume-file", path: page.path, variant: "page" },
         { kind: "page-end" },
       ]);
     return "";
   }
+  if (command.kind === "resume-file")
+    return source.resume(command.path, command.variant);
   if (command.kind === "root") {
     push([
       { kind: "page-start", ordinal: 0, path: "/" },
@@ -482,6 +492,7 @@ export async function advancePreparation(
           "resume",
         ])
         .parse(await value(".type"));
+      if (type === "resume") return source.resume(p, "component");
       const id = z.string().parse(await value(".id"));
       const titles = {
         projects: "Projects",
@@ -491,7 +502,6 @@ export async function advancePreparation(
         "social-links": "Social links",
         github: "GitHub contributions",
         contact: "Contact",
-        resume: "Resume",
       };
       const children: Command[] =
         type === "text"
@@ -549,9 +559,6 @@ export async function advancePreparation(
         }
         case "contact":
           children.push(...empty("Contact form unavailable."));
-          break;
-        case "resume":
-          children.push(...empty("Resume unavailable."));
           break;
       }
       push(wrap("section", children, { id, component: type }));

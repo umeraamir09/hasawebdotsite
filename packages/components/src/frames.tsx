@@ -2,12 +2,13 @@ import { isSafeLink } from "@hasaweb/schema";
 import { createElement, type ReactNode } from "react";
 import { z } from "zod";
 
-// Same-site page paths only: the portfolio root or a generated case-study slug.
-// Owner destinations use `href`, which keeps the external-link allowlist.
+// Same-site page paths only: the portfolio root, /resume or a generated
+// case-study slug. Owner destinations use `href`, which keeps the external-link
+// allowlist.
 export const pagePathSchema = z
   .string()
   .max(96)
-  .regex(/^\/(?:projects\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/);
+  .regex(/^\/(?:resume|projects\/[a-z0-9]+(?:-[a-z0-9]+)*)?$/);
 // Closed vocabulary for resumable wrappers. No owner-selected tag or attribute.
 export const frameSchema = z.enum([
   "profile",

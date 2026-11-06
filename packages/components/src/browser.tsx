@@ -1,6 +1,10 @@
 import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
-import { type PortfolioModel, parsePortfolioModel } from "./model";
+import {
+  modelAssetUrls,
+  type PortfolioModel,
+  parsePortfolioModel,
+} from "./model";
 import { Portfolio } from "./portfolio";
 import { installSite } from "./site";
 
@@ -11,22 +15,13 @@ function trustedModel(
 ): PortfolioModel | undefined {
   const model = parsePortfolioModel(input);
   if (!model) return undefined;
-  const images = [
-    model.profile.avatar,
-    model.profile.banner,
-    ...model.components.flatMap((component) =>
-      component.type === "projects"
-        ? component.data.entries.map((entry) => entry.image)
-        : [],
+  const urls = [
+    ...[model.profile.avatar, model.profile.banner].flatMap((image) =>
+      image.state === "ready" ? [image.url] : [],
     ),
+    ...modelAssetUrls(model.components),
   ];
-  if (
-    images.some(
-      (image) =>
-        image.state === "ready" &&
-        !options.assetOrigins.includes(new URL(image.url).origin),
-    )
-  )
+  if (urls.some((url) => !options.assetOrigins.includes(new URL(url).origin)))
     return undefined;
   return model;
 }

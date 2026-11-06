@@ -11,6 +11,7 @@ export { PortfolioAvatar } from "./avatar";
 export {
   type ComponentModel,
   type DisplayAsset,
+  type DisplayFile,
   type PortfolioModel,
   type ProfileModel,
   type ProjectionOptions,
@@ -23,6 +24,7 @@ export {
   PortfolioLayout,
   PortfolioProfile,
   PortfolioProject,
+  PortfolioResume,
   PortfolioSection,
   RichText,
 } from "./portfolio";

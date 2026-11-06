@@ -6,14 +6,26 @@ export function portfolioHeaders(
   context: RenderContext,
   {
     assetOrigins = [],
+    objectOrigins = [],
     parentOrigin,
-  }: { assetOrigins?: readonly string[]; parentOrigin?: string } = {},
+  }: {
+    assetOrigins?: readonly string[];
+    // Embedded documents, used only by the /resume PDF viewer.
+    objectOrigins?: readonly string[];
+    parentOrigin?: string;
+  } = {},
 ): Headers {
-  const origins = assetOrigins.map((origin) => {
-    if (!isWebUrl(origin) || new URL(origin).origin !== origin)
-      throw new Error("Expected an asset origin");
-    return origin;
-  });
+  const checked = (values: readonly string[]) =>
+    values.map((origin) => {
+      if (!isWebUrl(origin) || new URL(origin).origin !== origin)
+        throw new Error("Expected an asset origin");
+      return origin;
+    });
+  const origins = checked(assetOrigins);
+  const objects = checked(objectOrigins);
+  const embed = objects.length
+    ? `object-src ${objects.join(" ")}; frame-src ${objects.join(" ")}`
+    : "object-src 'none'";
   if (
     parentOrigin &&
     (!isWebUrl(parentOrigin) || new URL(parentOrigin).origin !== parentOrigin)
@@ -25,7 +37,7 @@ export function portfolioHeaders(
       context === "preview"
         ? "private, no-store"
         : "public, max-age=0, must-revalidate",
-    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
+    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src 'none'; ${embed}; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",

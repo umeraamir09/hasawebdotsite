@@ -484,7 +484,8 @@ describe("case-study pages", () => {
     "javascript:alert(1)",
     "/projects/../admin",
     "/projects/UPPER",
-    "/resume",
+    "/resume/",
+    "/resumes",
     "/projects/",
   ])("rejects page path %j", (path) => {
     expect(() =>
@@ -511,5 +512,122 @@ describe("case-study pages", () => {
       '<a href="/">Back to portfolio</a>',
     );
     expect(PAGE_UNAVAILABLE_HTML).toContain("Page unavailable");
+  });
+});
+
+describe("resume download and page", () => {
+  const url = "https://assets.example/candidate/c/assets/resume-pdf";
+  const file = { state: "ready", url, viewUrl: `${url}/view` } as const;
+  function resumeDraft(withFile = true) {
+    const value = draft();
+    const resume = createComponent("resume", "resume-1");
+    if (withFile) resume.data = { file: { assetId: "resume-pdf" } };
+    value.components = [resume];
+    return value;
+  }
+  it("projects the one PDF to both download and embedded URLs", () => {
+    const model = projectPortfolio(resumeDraft(), {
+      assetOrigins: ["https://assets.example"],
+      resolveAsset: ({ purpose }) =>
+        purpose === "resume"
+          ? { state: "ready", url, viewUrl: `${url}/view` }
+          : { state: "unavailable" },
+    });
+    expect(model.components[0]).toEqual({
+      id: "resume-1",
+      type: "resume",
+      data: { file },
+    });
+    const missing = projectPortfolio(resumeDraft(false), options);
+    expect(missing.components[0]).toMatchObject({
+      data: { file: { state: "missing" } },
+    });
+    const foreign = projectPortfolio(resumeDraft(), {
+      assetOrigins: ["https://assets.example"],
+      resolveAsset: () => ({
+        state: "ready",
+        url,
+        viewUrl: "https://evil.example/resume.pdf",
+      }),
+    });
+    expect(foreign.components[0]).toMatchObject({
+      data: { file: { state: "unavailable" } },
+    });
+  });
+  it("renders the ordered download control and a link to /resume", () => {
+    const result = renderFragment(
+      {
+        kind: "component",
+        component: { id: "resume-1", type: "resume", data: { file } },
+      },
+      { assetOrigins: ["https://assets.example"] },
+    );
+    expect(result.status).toBe("ready");
+    const html = result.status === "ready" ? result.html : "";
+    expect(html).toContain(
+      `<a class="pf-button" href="${url}" download="resume.pdf" type="application/pdf" data-resume-download="">Download resume (PDF)</a>`,
+    );
+    expect(html).toContain(
+      '<a class="pf-page-link" href="/resume">View resume</a>',
+    );
+    expect(html).toContain('data-component="resume"');
+    const empty = renderFragment({
+      kind: "component",
+      component: {
+        id: "resume-1",
+        type: "resume",
+        data: { file: { state: "missing" } },
+      },
+    });
+    expect(empty.status === "ready" && empty.html).toContain(
+      "Resume unavailable.",
+    );
+  });
+  it("renders the page with embed, download fallback and Back to portfolio", () => {
+    const result = renderFragment(
+      { kind: "resume-page", file },
+      { assetOrigins: ["https://assets.example"] },
+    );
+    expect(result.status).toBe("ready");
+    const html = result.status === "ready" ? result.html : "";
+    expect(html).toMatch(
+      /^<nav class="pf-page-nav" aria-label="Portfolio"><a class="pf-page-link" href="\/">Back to portfolio<\/a><\/nav>/,
+    );
+    expect(html).toContain(
+      `<object class="pf-resume-viewer" data="${url}/view" type="application/pdf" aria-label="Resume PDF"><p class="pf-muted" data-resume-fallback="">`,
+    );
+    // The embedded file and every download control use the same asset.
+    expect(html.match(new RegExp(`href="${url}"`, "g"))).toHaveLength(1);
+    expect(html).not.toMatch(/<iframe|<script/);
+  });
+  it("rejects resume URLs outside the published asset origin", () => {
+    for (const fragment of [
+      { kind: "resume-page", file },
+      {
+        kind: "component",
+        component: { id: "resume-1", type: "resume", data: { file } },
+      },
+    ])
+      expect(
+        renderFragment(fragment, { assetOrigins: ["https://other.example"] }),
+      ).toEqual({ status: "invalid" });
+  });
+  it("allows embedded PDFs only where an object origin is supplied", () => {
+    const page = portfolioHeaders("public", {
+      assetOrigins: ["https://assets.example"],
+      objectOrigins: ["https://assets.example"],
+    }).get("Content-Security-Policy");
+    expect(page).toContain(
+      "object-src https://assets.example; frame-src https://assets.example;",
+    );
+    expect(page).toContain("frame-ancestors 'none'");
+    expect(
+      portfolioHeaders("public", {
+        assetOrigins: ["https://assets.example"],
+      }).get("Content-Security-Policy"),
+    ).toContain("object-src 'none';");
+    expect(() =>
+      portfolioHeaders("public", { objectOrigins: ["https://a.example/x"] }),
+    ).toThrow();
   });
 });
