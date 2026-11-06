@@ -144,6 +144,9 @@ export async function checkTextControls({
           document.querySelector(".rich-text-input")?.textContent.length ===
           1_048_576,
       );
+      // Restored content appears while Continue still holds the recovery
+      // lock. Playwright does not retry fill on contenteditable="false".
+      await page.locator('.rich-text-input[contenteditable="true"]').waitFor();
       await input.fill("Linked words");
       await input.press("Control+a");
       await page

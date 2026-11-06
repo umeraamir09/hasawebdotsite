@@ -17,7 +17,8 @@
     "S8_BATCH",
     "S8_CASES",
     "S8_MAX_ASSETS",
-    "S8_PROFILE"
+    "S8_PROFILE",
+    "BROWSER_GROUP_LIMIT_MS"
   ],
   "tasks": {
     "build": {

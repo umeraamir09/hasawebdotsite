@@ -85,6 +85,8 @@ pnpm verify --profile=checks
 
 `--build=web,site,jobs` selects affected application builds for ordinary profiles. Include every consuming application; a schema, public contract, dependency or toolchain change requires `full`. Full/runtime profiles always build all applications. Test/tooling-only changes can use `checks`; documentation-only changes use `docs`. Existing individual commands remain available for focused work.
 
+Editor browser groups accept `--browser-filter=<regexp>` to run matching groups and `--browser-shard=<k>/<n>` to run one CI-style shard, for example `pnpm test:editor --browser-filter='skills and categories'`. Each group has a 120-second limit (`BROWSER_GROUP_LIMIT_MS`). A failing or stuck group reports its name and writes `editor-failure-*.{json,png,html}` to the suite evidence directory. Heavy profiles can exceed a 10-minute tool timeout on this machine; run them in the background rather than under a short foreground timeout.
+
 Unit-test discovery excludes `.wrangler` generated state and nested worktrees. Run each worktree's own suites through its local verification profile; never collect another checkout's tests from the shared root.
 
 A local gate is mandatory before completion review. Passing CI is additional evidence. Repeat a gate only when relevant source, contracts, build inputs, environment or integration changed. A later documentation-only edit does not invalidate a passing application gate. Review ordinary changes through the diff. High-risk changes need a separate review of concrete access, race, failure, recovery, migration, withdrawal or budget behavior. Request that review through an authorized chat; do not automatically create chats or subagents.
@@ -103,6 +105,8 @@ Commit concise results and selected proof needed to reproduce consequential defe
 
 ## CI and future improvements
 
-The existing foundation CI remains the code regression gate. Its runtime benchmark step uses correctness smoke mode; measurement remains explicit. Automatic test selection, documentation-only CI routing, remote build caching and broader CI restructuring are deferred until actual use identifies a worthwhile improvement. Preserve the existing required check name when later changing CI routing.
+Updated November 6, 2026 by the [CI reliability record](../specs/2026-11-06-ci-reliability/results.md). CI remains the code regression gate and runs every foundation suite on each pull request and push to main. One job builds the applications and shares the built workers as an artifact. Lint/typecheck/unit tests and the browser/integration suites then run as parallel jobs, with the editor browser suite split into three shards. The required `foundation` check is an aggregate job that passes only when every other job passed. Keep that name when changing CI routing, and add new suites to an existing or new parallel job rather than to a serial chain. The runtime benchmark step uses correctness smoke mode; measurement remains explicit. Automatic test selection, documentation-only CI routing and remote build caching remain deferred.
+
+When a suite fails in CI, download its `failure-evidence-*` artifact. Editor groups also print the failing group name, duration, page errors and editor/preview state in the log.
 
 Evaluate this workflow through actual phase work. Record observed friction before adding automation. No fixed speedup is claimed, and no extra recurring measurement ledger is required.
