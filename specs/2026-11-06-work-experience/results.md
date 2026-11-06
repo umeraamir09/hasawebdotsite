@@ -18,12 +18,19 @@ The schema (`packages/schema/src/components/work-experience*.ts`), registry entr
 
 ## Decisions
 
-None yet.
+- Controls follow the Phase 28 project pattern: stable entry IDs, an empty entry on Add (no sample), raw owner-scoped recovery for rejected input, `OrderedItems`/`moveEditorItem` ordering and confirmed removal that clears only that entry's raw inputs (`apps/web/lib/editor/work-experience.ts`).
+- Dates use `type="month"` inputs bound to the schema's `draftMonthSchema`; browsers without month inputs fall back to text and an invalid value stays in local recovery.
+- The current-role toggle removes the stored `endDate` and the end-date raw input, hides the end-date field and retries a start date that was only held back by the old end date. Clearing the toggle leaves the end date empty and required.
+- Reversed dates: the schema already issues the error at `endDate`, so the edit is rejected and kept as raw input. The control compares the displayed start and end values and shows "End date must not precede start date." on the end-date field. The raw input shows in the publication checklist as "Finish unsaved ... end date" and Publish is withheld. No SQL rule was added or weakened: stored drafts cannot contain reversed dates.
+- Description is a plain multi-line text area. The renderer outputs it in one paragraph, so a work-experience-scoped `white-space: pre-line` rule in `portfolio.css` keeps line breaks identical in the preview and published pages (both use that stylesheet and the `[data-component="work-experience"] .pf-entry > p:last-child` selector). No markup or schema change.
+- The organization link uses the existing `draftWebUrlSchema`/`isSafeLink` path; an absent or empty link renders a `<span>`, not an anchor.
 
 ## Results
 
-Not started. No completion approval is recorded.
+Implemented: `apps/web/components/work-experience-controls.tsx`, `apps/web/lib/editor/work-experience.ts` and test, `scripts/work-experience-browser.mjs` (editor group plus publish-journey helpers wired into `editor-browser.mjs` and `publish-journey-browser.mjs`), scoped CSS in `editor.css` and `portfolio.css`.
+
+Verification: `pnpm verify --profile=editor` (check, web/jobs builds, editor browser suite including the new work-experience group and a real publish-journey draft-versus-published check of order, text, line breaks, organization link and absent-link) passed: 48 editor browser groups, 2 production API groups. The first two runs failed before passing: one on a test-selector bug in the new group, one on an unrelated Phase 29 Tiptap-readiness timeout in `text-controls-browser.mjs` that did not recur. Targeted: `vitest lib/editor/work-experience.test.ts` (4 tests), `pnpm typecheck`, `biome check`. No completion approval is recorded.
 
 ## Documentation impact
 
-To be completed by the implementer.
+Changed assumption: work experience was a placeholder "Entry order" list. Updated: the implementation-status row ("Work experience controls"), the packages/components README paragraph on line-break and link rendering, and this record. Education remains outside the component library. Unresolved prerequisites: Phase 42E guide/editor activation; owner approval for completion; the Phase 31 branch edits the same shared files, so the lead reconciles `implementation-status.md`, `editor.css`, `portfolio.css`, `editor-browser.mjs` and `publish-journey-browser.mjs` at integration.
