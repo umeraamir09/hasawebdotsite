@@ -446,3 +446,16 @@
   padding: 0;
   margin: 20px 0;
 }
+
+/* Work experience controls */
+.work-entry {
+  min-width: 0;
+  margin: 24px 0;
+  padding: 16px;
+  border: 1px solid #dce1d6;
+  border-radius: 16px;
+}
+.work-entry legend {
+  overflow-wrap: anywhere;
+  font-weight: 500;
+}
