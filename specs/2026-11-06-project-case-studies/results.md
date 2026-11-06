@@ -66,7 +66,7 @@ Every full-gate suite has passed on this source. They passed across one full run
 
 Not verified: deployed CPU, paid-provider capacity, deployed CDN/browser withdrawal (S-9), production routing, and the activated signup journey. Browser proof is Chromium in the authenticated handoff fixture with real local Workers/D1/R2/Queue. The private live preview renders card links, but clicking one navigates the preview iframe to an app route, the same as existing external links. Saved-draft page navigation is Phase 39. All pages keep the title `Portfolio` until Phase 34 adds page-specific metadata.
 
-Normal diff review covered the slug rule, check SQL, owner/session scoping of the new read, frame path validation, preparation/React parity, the site fallback scope and editor input handling. The publication/withdrawal boundary changed, so a separate boundary review is recommended before completion; it has not been run. No commit, push or owner approval is recorded.
+Normal diff review covered the slug rule, check SQL, owner/session scoping of the new read, frame path validation, preparation/React parity, the site fallback scope and editor input handling. The publication/withdrawal boundary changed, so a separate boundary review was recommended before completion; it was not run. The owner approved completion on November 6, 2026, and the implementation was committed as `bdff3bb` on `feat/30-project-case-studies`. It has not been pushed or merged.
 
 ## Documentation impact
 
