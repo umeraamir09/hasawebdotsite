@@ -330,7 +330,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 21, 27.
 - Integration before full completion: 23, 26 for placement, validation and published shared-link updates.
 - Render links selected for social-component placement from the shared identity records, while preserving independent profile placement choices.
-- [ ] Complete when editing one link updates both selected placements after Publish without duplicate entry and the component follows ordering/removal rules.
+- [Verification record](../specs/2026-11-06-social-links-component/results.md). Owner approved completion on November 6, 2026.
+- [x] Complete when editing one link updates both selected placements after Publish without duplicate entry and the component follows ordering/removal rules.
 
 ### Phase 34. Add resume download and `/resume`
 
