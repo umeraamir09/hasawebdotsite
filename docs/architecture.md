@@ -496,7 +496,7 @@ Use the [README commands](../README.md): `pnpm dev` builds and starts all three 
 
 ### 12.3 CI/CD (GitHub Actions)
 
-- **Current CI:** the [foundation workflow](../.github/workflows/ci.yml) runs `pnpm check`, the full build, shared renderer preview/snapshot Chromium parity, auth/Chromium fixtures, persistence, production draft API integration, the isolated autosave Playwright/axe fixture, runtime smoke and local runtime/routing spikes. It runs on pull requests and pushes to main, with no deployment credentials. Complete journey/browser-matrix coverage remains pending Phase 53.
+- **Current CI:** the [CI workflow](../.github/workflows/ci.yml) runs `pnpm check`, the full build, shared renderer preview/snapshot Chromium parity, auth/Chromium fixtures, persistence, private uploads, production draft API integration, the isolated autosave Playwright/axe fixture, the editor browser suite in three shards, runtime smoke and local runtime/routing spikes. The suites run as parallel jobs on one shared build; the required `foundation` check aggregates their results. It runs on pull requests and pushes to main, with no deployment credentials. Complete journey/browser-matrix coverage remains pending Phase 53.
 - **Planned production release, Phase 52:** manual GitHub Environment approval, backward-compatible migrations, then deploy `jobs`, `site`, `web`. Report Wrangler startup measurements and enforce the one-second limit. There is no current automatic main-to-production deployment.
 - **No staging:** mitigate with gradual deployments and instant rollback where Wrangler supports them, feature flags in D1 for risky changes, D1 Time Travel, and the `rerender-all` job for renderer rollouts.
 
