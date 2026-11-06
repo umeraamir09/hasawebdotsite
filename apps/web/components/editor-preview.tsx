@@ -8,7 +8,7 @@ import {
 } from "@hasaweb/components/browser";
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
 import type { DraftDoc } from "@hasaweb/schema";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { resolvePreviewImages } from "../lib/assets/browser";
 
 export function EditorPreview({
@@ -76,7 +76,11 @@ export function EditorPreview({
       bridge.dispose();
     };
   }, [channel, ownerId, portfolioId, images]);
-  useEffect(() => {
+  // A layout effect issues the request in the same commit as the edit. The
+  // status then never reads "Preview up to date" while an older draft is
+  // displayed; React 19 may defer passive effects until after the browser
+  // yields, which left that window open.
+  useLayoutEffect(() => {
     connection.current?.request(async (signal) => {
       const assets = await resolvePreviewImages({
         ownerId,
