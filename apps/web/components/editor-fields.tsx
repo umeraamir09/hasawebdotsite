@@ -8,6 +8,7 @@ import { moveEditorItem } from "../lib/editor/components";
 import { OrderedItems } from "./ordered-items";
 import { ProfileControls } from "./profile-controls";
 import { ProjectControls } from "./project-controls";
+import { ResumeControls } from "./resume-controls";
 import { SocialLinksControl } from "./social-links-control";
 import { TextControls } from "./text-controls";
 
@@ -43,6 +44,14 @@ export function EditorFields({
         componentId={component.id}
         disabled={disabled}
         publicationKey={publicationKey}
+      />
+    );
+  if (component.type === "resume")
+    return (
+      <ResumeControls
+        controller={controller}
+        componentId={component.id}
+        disabled={disabled}
       />
     );
   if (component.type === "text")

@@ -13,7 +13,11 @@ import {
   type Wake,
 } from "@hasaweb/db";
 import { renderFragment } from "@hasaweb/render";
-import { componentContentSchema, createEmptyDraft } from "@hasaweb/schema";
+import {
+  componentContentSchema,
+  createEmptyDraft,
+  idSchema,
+} from "@hasaweb/schema";
 import { z } from "zod";
 import { finalizePublication } from "./publication-finalization";
 import {
@@ -37,6 +41,20 @@ export type DispatchEnv = {
   PUBLICATION_TASK_BATCH?: string;
 };
 const root = (id: string) => `candidate/${id}/`;
+// Resume PDFs download from the asset URL and embed from its /view variant.
+const publicAsset = (
+  origin: string,
+  candidateId: string,
+  assetId: string,
+  purpose: string,
+) => {
+  const url = `${origin}/${root(candidateId)}assets/${assetId}`;
+  return {
+    state: "ready" as const,
+    url,
+    ...(purpose === "resume" ? { viewUrl: `${url}/view` } : {}),
+  };
+};
 const chunk = (id: string, page: number, level: number, index: number) =>
   `${root(id)}page-${page}/level-${level}/${index}`;
 const assemblySchema = z.strictObject({
@@ -211,10 +229,8 @@ export function preparationSource(
       draft.components = [parsed.data];
       const component = projectPortfolio(draft, {
         assetOrigins: [row.asset_origin],
-        resolveAsset: ({ assetId }) => ({
-          state: "ready",
-          url: `${row.asset_origin}/${root(row.id)}assets/${assetId}`,
-        }),
+        resolveAsset: ({ assetId, purpose }) =>
+          publicAsset(row.asset_origin, row.id, assetId, purpose),
       }).components[0];
       if (component?.type !== "projects" || !component.data.entries[0])
         return null;
@@ -258,10 +274,8 @@ export function preparationSource(
       }
       const model = projectPortfolio(draft, {
         assetOrigins: [row.asset_origin],
-        resolveAsset: ({ assetId }) => ({
-          state: "ready",
-          url: `${row.asset_origin}/${root(row.id)}assets/${assetId}`,
-        }),
+        resolveAsset: ({ assetId, purpose }) =>
+          publicAsset(row.asset_origin, row.id, assetId, purpose),
       });
       const render = (
         components: ComponentModel[],
@@ -307,6 +321,29 @@ export function preparationSource(
       )
         .bind(row.id)
         .first<{ path: string; ordinal: number }>();
+    },
+    async resume(path, variant) {
+      const id = idSchema.parse((await read(`${path}.id`)).value);
+      const assetId = (await read(`${path}.data.file.assetId`)).value;
+      const url =
+        typeof assetId === "string" && /^[a-zA-Z0-9_-]{1,128}$/.test(assetId)
+          ? `${row.asset_origin}/${root(row.id)}assets/${assetId}`
+          : null;
+      const file = url
+        ? { state: "ready" as const, url, viewUrl: `${url}/view` }
+        : { state: "missing" as const };
+      const rendered = renderFragment(
+        variant === "page"
+          ? { kind: "resume-page", file }
+          : {
+              kind: "component",
+              component: { id, type: "resume", data: { file } },
+            },
+        { assetOrigins: [row.asset_origin] },
+      );
+      if (rendered.status !== "ready")
+        throw new Error("Resume renderer envelope");
+      return rendered.html;
     },
     async discover(index) {
       if (index === 0) await preparePublicationIndex(env.DB, row);

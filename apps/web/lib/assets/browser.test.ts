@@ -29,8 +29,14 @@ describe("private preview image preparation", () => {
     const draft = images();
     const cache = new Map<string, string>();
     const fetcher = vi.fn(
-      async () =>
-        new Response(null, { headers: { "Content-Type": "image/png" } }),
+      async (url: string) =>
+        new Response(null, {
+          headers: {
+            "Content-Type": url.endsWith("purpose=resume")
+              ? "application/pdf"
+              : "image/png",
+          },
+        }),
     );
     vi.stubGlobal("fetch", fetcher);
     vi.stubGlobal("location", new URL("https://hasaweb.site"));
@@ -109,9 +115,16 @@ describe("private preview image preparation", () => {
       (component) => component.type === "projects",
     );
     if (!projects) throw new Error("Missing fixture projects");
+    const resume = draft.components.find(
+      (component) => component.type === "resume",
+    );
+    if (!resume) throw new Error("Missing fixture resume");
     const sampled = markSample(
-      markSample(draft, "profile.avatar"),
-      `components.${projects.id}`,
+      markSample(
+        markSample(draft, "profile.avatar"),
+        `components.${projects.id}`,
+      ),
+      `components.${resume.id}`,
     );
     const fetcher = vi.fn(
       async () =>
@@ -178,8 +191,42 @@ describe("private preview image preparation", () => {
       draft,
       signal: new AbortController().signal,
     });
-    expect(fetcher).toHaveBeenCalledTimes(12);
+    // Avatar, banner, ten project images and the resume PDF.
+    expect(fetcher).toHaveBeenCalledTimes(13);
     expect(maximum).toBeLessThanOrEqual(4);
+  });
+  it("previews a resume only from a private PDF response", async () => {
+    const draft = images();
+    const resume = draft.components.find(
+      (component) => component.type === "resume",
+    );
+    const assetId = resume?.type === "resume" ? resume.data.file?.assetId : "";
+    if (!assetId) throw new Error("Missing fixture resume");
+    vi.stubGlobal("location", new URL("https://hasaweb.site"));
+    for (const [type, state] of [
+      ["application/pdf", "ready"],
+      ["image/png", "unavailable"],
+    ] as const) {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(
+          async () => new Response(null, { headers: { "Content-Type": type } }),
+        ),
+      );
+      const options = await resolvePreviewImages({
+        ownerId: "owner",
+        draft,
+        signal: new AbortController().signal,
+      });
+      expect(options.resolveAsset({ assetId, purpose: "resume" })).toEqual(
+        state === "ready"
+          ? {
+              state,
+              url: `https://hasaweb.site/api/assets/${assetId}?purpose=resume`,
+            }
+          : { state },
+      );
+    }
   });
   it("cancels before issuing any asset request", async () => {
     const signal = AbortSignal.abort(new Error("superseded"));

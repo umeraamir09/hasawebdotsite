@@ -35,20 +35,46 @@ export function privateImageUrl(id: string, purpose: AssetPurpose) {
   return `/api/assets/${encodeURIComponent(id)}?purpose=${purpose}`;
 }
 
-export function uploadImage({
-  blob,
-  purpose,
-  ownerId,
-  signal,
-  onProgress,
-}: {
+type UploadOptions = {
   blob: Blob;
   purpose: AssetPurpose;
   ownerId: string;
   signal: AbortSignal;
   onProgress(value: number): void;
-}): Promise<string> {
-  validateImageFile(blob);
+};
+export function uploadImage(options: UploadOptions): Promise<string> {
+  validateImageFile(options.blob);
+  return uploadAsset(options);
+}
+export const RESUME_BYTES = 10_485_760;
+// Accept a PDF chosen without a reported type, as some platforms supply.
+export async function resumeFile(file: File | Blob): Promise<Blob> {
+  const named = "name" in file && /\.pdf$/i.test(file.name);
+  if (file.type !== "application/pdf" && !(file.type === "" && named))
+    throw new Error("Choose a PDF file.");
+  if (!file.size) throw new Error("This PDF is empty. Choose another file.");
+  if (file.size > RESUME_BYTES)
+    throw new Error("Choose a PDF of 10 MiB or less.");
+  const head = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...head) !== "%PDF-")
+    throw new Error("This file is not a readable PDF. Choose another file.");
+  return file.type === "application/pdf"
+    ? file
+    : new Blob([file], { type: "application/pdf" });
+}
+export function uploadResume(
+  options: Omit<UploadOptions, "purpose">,
+): Promise<string> {
+  return uploadAsset({ ...options, purpose: "resume" });
+}
+function uploadAsset({
+  blob,
+  purpose,
+  ownerId,
+  signal,
+  onProgress,
+}: UploadOptions): Promise<string> {
+  const pdf = purpose === "resume";
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     const stop = () => request.abort();
@@ -74,14 +100,20 @@ export function uploadImage({
     request.ontimeout = () =>
       fail("Upload timed out. Check your connection and retry.");
     request.onabort = () =>
-      fail("Upload cancelled. Your previous image is unchanged.");
+      fail(
+        `Upload cancelled. Your previous ${pdf ? "resume" : "image"} is unchanged.`,
+      );
     request.onload = () => {
       if (request.status !== 201) {
         fail(
           request.status === 413
-            ? "Choose an image of 5 MiB or less."
+            ? pdf
+              ? "Choose a PDF of 10 MiB or less."
+              : "Choose an image of 5 MiB or less."
             : request.status === 415
-              ? "Choose a JPEG, PNG or WebP image."
+              ? pdf
+                ? "Choose a PDF file."
+                : "Choose a JPEG, PNG or WebP image."
               : request.status === 401 || request.status === 409
                 ? "Your session changed. Sign in again before retrying."
                 : "The upload could not finish. Retry the upload.",
@@ -211,7 +243,9 @@ export async function resolvePreviewImages({
         const type = response.headers.get("Content-Type");
         if (
           response.ok &&
-          ["image/jpeg", "image/png", "image/webp"].includes(type ?? "")
+          (purpose === "resume"
+            ? type === "application/pdf"
+            : ["image/jpeg", "image/png", "image/webp"].includes(type ?? ""))
         )
           ready.set(
             `${purpose}:${assetId}`,

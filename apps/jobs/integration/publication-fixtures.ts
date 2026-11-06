@@ -2,6 +2,7 @@ import {
   PortfolioAvatar,
   PortfolioCaseStudy,
   PortfolioProfile,
+  PortfolioResume,
   PortfolioSection,
   projectPortfolio,
 } from "@hasaweb/components";
@@ -285,10 +286,14 @@ function profileHtml(
 export function expected(draft: DraftDoc, id: string) {
   const model = projectPortfolio(draft, {
     assetOrigins: ["https://s8-assets.invalid"],
-    resolveAsset: ({ assetId }) => ({
-      state: "ready",
-      url: `https://s8-assets.invalid/candidate/${id}/assets/${assetId}`,
-    }),
+    resolveAsset: ({ assetId, purpose }) => {
+      const url = `https://s8-assets.invalid/candidate/${id}/assets/${assetId}`;
+      return {
+        state: "ready",
+        url,
+        ...(purpose === "resume" ? { viewUrl: `${url}/view` } : {}),
+      };
+    },
   });
   return [
     profileHtml(draft, model.profile),
@@ -310,7 +315,12 @@ export function expectedPages(draft: DraftDoc, id: string) {
   });
   const model = projectPortfolio(draft, {
     assetOrigins: [origin],
-    resolveAsset: ({ assetId }) => image(assetId, ""),
+    resolveAsset: ({ assetId, purpose }) => ({
+      ...image(assetId, ""),
+      ...(purpose === "resume"
+        ? { viewUrl: `${image(assetId, "").url}/view` }
+        : {}),
+    }),
   });
   let ordinal = 1;
   for (const component of draft.components) {
@@ -337,13 +347,13 @@ export function expectedPages(draft: DraftDoc, id: string) {
   const resume = model.components.find(
     (component) => component.type === "resume",
   );
-  if (resume)
+  if (resume?.type === "resume")
     pages.push({
       path: "/resume",
       html:
         profileHtml(draft, model.profile) +
         renderToStaticMarkup(
-          createElement(PortfolioSection, { component: resume }),
+          createElement(PortfolioResume, { file: resume.data.file }),
         ),
     });
   return pages.map((page) => ({

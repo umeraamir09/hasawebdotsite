@@ -27,6 +27,7 @@ import {
 } from "../lib/editor/components";
 import { ComponentRemovalDialog } from "./component-controls";
 import { DraftTextField } from "./draft-text-field";
+import { ResumeUpload } from "./resume-controls";
 
 export function publicationFieldLabel(
   issue: PublicationIssue,
@@ -431,6 +432,13 @@ export function PublicationCorrection({
                 multiline
               />
             )}
+          {component.type === "resume" && (
+            <ResumeUpload
+              controller={controller}
+              componentId={component.id}
+              disabled={disabled}
+            />
+          )}
           {component.type === "text" && issue.path.at(-1) === "body" && (
             <label>
               Section text

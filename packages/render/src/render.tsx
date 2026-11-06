@@ -4,11 +4,14 @@ import {
   PortfolioLayout,
   PortfolioProfile,
   PortfolioProject,
+  PortfolioResume,
   PortfolioSection,
 } from "@hasaweb/components";
 import {
   assetSchema,
   componentModelSchema,
+  fileSchema,
+  modelAssetUrls,
   normalizeDisplayStrings,
   profileModelSchema,
   projectModelSchema,
@@ -57,6 +60,7 @@ const fragmentSchema = z.discriminatedUnion("kind", [
     kind: z.literal("component"),
     component: componentModelSchema,
   }),
+  z.strictObject({ kind: z.literal("resume-page"), file: fileSchema }),
 ]);
 export type RenderFragment =
   | z.infer<typeof fragmentSchema>
@@ -102,29 +106,27 @@ export function renderFragment(
       : fragment.kind === "component"
         ? [fragment.component]
         : [];
-  const images =
+  const ready = (image: { state: string; url?: string }) =>
+    image.state === "ready" && image.url ? [image.url] : [];
+  const urls =
     fragment.kind === "profile"
-      ? [fragment.profile.avatar, fragment.profile.banner]
+      ? [...ready(fragment.profile.avatar), ...ready(fragment.profile.banner)]
       : fragment.kind === "project"
-        ? [fragment.entry.image]
-        : components.flatMap((component) =>
-            component.type === "projects"
-              ? component.data.entries.map((entry) => entry.image)
-              : [],
-          );
-  if (
-    images.some(
-      (image) =>
-        image.state === "ready" &&
-        !assetOrigins.includes(new URL(image.url).origin),
-    )
-  )
+        ? ready(fragment.entry.image)
+        : fragment.kind === "resume-page"
+          ? fragment.file.state === "ready"
+            ? [fragment.file.url, fragment.file.viewUrl]
+            : []
+          : modelAssetUrls(components);
+  if (urls.some((url) => !assetOrigins.includes(new URL(url).origin)))
     return { status: "invalid" };
   const html = renderToStaticMarkup(
     fragment.kind === "profile" ? (
       <PortfolioProfile profile={normalizeDisplayStrings(fragment.profile)} />
     ) : fragment.kind === "project" ? (
       <PortfolioProject entry={normalizeDisplayStrings(fragment.entry)} />
+    ) : fragment.kind === "resume-page" ? (
+      <PortfolioResume file={fragment.file} />
     ) : (
       components.map((component) => (
         <PortfolioSection
