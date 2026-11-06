@@ -428,23 +428,43 @@ export async function checkPublishJourney({
           .count(),
         0,
       );
-      assert.equal(
-        (
-          await sql(
-            "SELECT completed_at FROM publication_operation WHERE portfolio_id=? ORDER BY created_at DESC LIMIT 1",
-            [portfolio.id],
-          )
-        )[0].completed_at,
-        null,
-      );
-      await sql(
-        "DELETE FROM runtime_probe WHERE key='publication-withdrawal-failure'",
-      );
+      const pending = (
+        await sql(
+          "SELECT id,completed_at FROM publication_operation WHERE portfolio_id=? ORDER BY created_at DESC LIMIT 1",
+          [portfolio.id],
+        )
+      )[0];
+      assert.equal(pending.completed_at, null);
+      // Queue retries and the cron sweep would otherwise finish cleanup before
+      // the reload reads status. Hold the backoff in the future, with the
+      // failure probe still in place, so the reload must observe the pending
+      // withdrawal. Only Retry Publish's own reset releases the hold.
+      const held = Date.now() + 60 * 60 * 1000;
+      const hold = () =>
+        sql("UPDATE publication_operation SET next_attempt_at=? WHERE id=?", [
+          held,
+          pending.id,
+        ]);
+      await hold();
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
       await checklist
         .getByRole("button", { name: "Retry Publish", exact: true })
         .waitFor();
+      // An attempt admitted before the hold may have failed afterwards and
+      // replaced it with a short backoff. The reload outlasts any such attempt,
+      // so one reapplication leaves later attempts unable to start.
+      const reloaded = (
+        await sql(
+          "SELECT completed_at,next_attempt_at FROM publication_operation WHERE id=?",
+          [pending.id],
+        )
+      )[0];
+      assert.equal(reloaded.completed_at, null);
+      if (reloaded.next_attempt_at !== held) await hold();
+      await sql(
+        "DELETE FROM runtime_probe WHERE key='publication-withdrawal-failure'",
+      );
       await checklist
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
