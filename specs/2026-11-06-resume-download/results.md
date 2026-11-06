@@ -43,7 +43,18 @@ The draft schema, migrations, publication index/validation SQL and upload HTTP c
 
 ## Results
 
-Verification is recorded below after the local gate.
+Local gate: `pnpm verify --profile=full` passed on November 6, 2026 at `e6da449` with a clean working tree (run `2026-11-06T08-29-43.809Z-SK5LIf`). The `full` profile is required because the change touches the shared display model, renderer CSP, publication renderer version and public serving. All 14 commands exited 0, including:
+
+- `pnpm check`: 506 unit tests.
+- Renderer browser: 27 groups.
+- Private uploads: 11 groups.
+- Publication dispatch: 43 S-8 integration groups.
+- Publication serving.
+- Draft API: 19 groups.
+- Editor browser: 47 groups, including the resume journey.
+- Auth, persistence, autosave, runtime smoke and routing (31 boundaries).
+
+The first full run, at `321f6ca`, failed in publication dispatch with `mixed page 2 mismatch`. The offline expected-output fixture still built the old `/resume` body. Commit `e6da449` updated `apps/jobs/integration/publication-fixtures.ts` to expect `PortfolioResume` and the `/view` URL, and the rerun passed.
 
 Focused checks during development:
 
