@@ -169,9 +169,15 @@ export async function checkTextControls({
       await page
         .getByRole("button", { name: "Apply link", exact: true })
         .click();
-      assert.equal(
-        await page.getByLabel("Link destination", { exact: true }).inputValue(),
-        "",
+      // Wait for the applied link, not just the click, so slower runners
+      // cannot read the destination field before the editor transaction and
+      // React re-render have settled.
+      await input.locator('a[href="mailto:owner@example.com"]').waitFor();
+      await page.waitForFunction(
+        (id) => document.getElementById(id)?.value === "",
+        await page
+          .getByLabel("Link destination", { exact: true })
+          .getAttribute("id"),
       );
       await page
         .getByRole("button", { name: "Remove link", exact: true })
