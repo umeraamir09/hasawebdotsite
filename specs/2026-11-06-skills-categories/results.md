@@ -18,12 +18,21 @@ The schema (`packages/schema/src/components/skills-categories*.ts`), registry en
 
 ## Decisions
 
-None yet.
+- **Render order.** The model adapter already emits groups in category order followed by one unnamed trailing group of uncategorized skills; each group keeps saved entry order and empty groups are dropped. The roadmap and [acceptance criteria](../../docs/acceptance-criteria.md#6-skills-and-technologies) ask for "selected grouping, and order", so category order is the owner's saved group order and this adapter is kept unchanged. A flat interleaving of entry order across groups would make category ordering meaningless.
+- **Category removal.** Removing a category keeps its skills as uncategorized, after a confirmation that states how many skills stay. Removing a skill is confirmed like a project.
+- **Publication.** The Phase 23 rules (at least one entry, non-blank skill name, non-blank category name) are unchanged and were exercised through the real publish journey.
+- **Omitted controls.** The category select appears only once a category exists; category order only with two or more categories.
+- **Simple name entry.** `addSkill` and the `Skill name` field are reusable by Phase 42C; category controls stay in the editor.
 
 ## Results
 
-Not started. No completion approval is recorded.
+- `apps/web/components/skills-controls.tsx`: skill name entry, category add/rename/remove, assign or clear category, skill and category ordering through `OrderedItems`/`moveEditorItem`, confirmed removals, field errors for blank names, raw invalid input kept through `DraftTextField`.
+- `apps/web/lib/editor/skills.ts` (+ test): stable-ID add/remove/assign helpers that validate against the draft schema, refuse over-budget changes and clear raw input of removed items.
+- `scripts/skills-controls-browser.mjs`: editor check (preview groups in saved order, confirmed removal, mobile) and publish-journey prepare/assert helpers wired into `editor-browser.mjs` and `publish-journey-browser.mjs` with minimal hunks.
+- Not done: onboarding screens and the empty-step adapter (Phase 42C). No completion approval is recorded.
+
+Verification (local, 2026-11-06): `pnpm verify --profile=checks` passed (46 files, 508 tests, lint, types); `pnpm verify --profile=editor` passed including the new skills controls check and the publish journey, which asserts the published groups (Tools, Languages, uncategorized) equal the saved-draft order with no meters, ratings or levels, and that a blank skill name blocks Publish via the Phase 23 rule. The publication, renderer and full profiles were not run in this worker.
 
 ## Documentation impact
 
-To be completed by the implementer.
+Changed assumption: the skills controls were a placeholder of two order lists. Updated the implementation-status row set (new Skills row), and the components README projection paragraph (group order, category removal, no ratings). Unresolved prerequisites: Phase 42C onboarding name entry and empty-step adapter; owner approval of completion. No schema, registry, fixture or publication SQL change was needed.
