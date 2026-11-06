@@ -338,8 +338,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 17–18, 27.
 - Integration before full completion: 23–26 for included-control validation, PDF promotion, public serving and withdrawal.
 - Manage one PDF with upload, replacement, and removal. Add the optional ordered download component and the themed resume page with embed, download fallback, and Back to portfolio.
-- [Implementation and verification record](../specs/2026-11-06-resume-download/results.md). Owner completion approval is pending.
-- [ ] Complete when page and controls use the same published PDF, invalid included controls block publication, and a removed/unpublished resume stops serving its former file after Publish.
+- [Implementation and verification record](../specs/2026-11-06-resume-download/results.md). Owner approved completion on November 6, 2026.
+- [x] Complete when page and controls use the same published PDF, invalid included controls block publication, and a removed/unpublished resume stops serving its former file after Publish.
 
 ## Appearance and complete preview
 

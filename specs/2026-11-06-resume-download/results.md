@@ -80,7 +80,7 @@ Limitations:
 - In the private editor preview, the download control fetches the owner-authorized draft PDF. `View resume` is a same-site `/resume` path, like Phase 30's case-study links, so the preview does not render a `/resume` page.
 - No separate publication/withdrawal boundary review has been run. This change touches public serving headers and withdrawal behaviour, so the workflow calls for one.
 
-Approval: owner completion approval is pending.
+Approval: owner approved completion on November 6, 2026 (PR #43, `87d2290`).
 
 ## Documentation impact
 
