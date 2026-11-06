@@ -55,7 +55,7 @@ Tradeoff: total runner minutes rise because each job repeats checkout and instal
 - Baseline: run 42216516353 took about 11 minutes serially. Its slowest steps were editor 191 s, autosave 117 s, uploads 114 s and draft API 51 s.
 - Local: `vitest run scripts/browser-groups.test.mjs` passed (shard partition, malformed shards, stuck-group failure evidence). All three editor shards passed: 17, 17 and 16 of 50 groups. The new regression group passed with the fix and failed without it.
 - Local gate: `pnpm verify --profile=editor` passed on the final working changes (recorded against base revision `5a3c6a6` before commits were reorganized): `pnpm check` 47 s, web/jobs build 96 s, editor suite 396 s with 51 groups. The profile covers the changed live-preview component and the editor harness. Workflow and test tooling changes are checked by `pnpm check` and by CI.
-- CI: result of the new workflow recorded below.
+- CI: run 42232280791 on `0d3204c` passed all three attempts, in 4 min 48 s, 4 min 39 s and 4 min 11 s wall-clock, against about 11 min before. In the first attempt the `check` and `build` jobs took about 1.5 min each, and the slowest suite jobs (autosave; renderer, auth and runtime) took about 2.7 min. The editor shards took 2.1–2.4 min. Three passing attempts are evidence of stability, not proof.
 
 ## Documentation impact
 
