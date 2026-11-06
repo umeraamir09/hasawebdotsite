@@ -251,6 +251,15 @@ export async function checkEditor({
     page
       .frames()
       .find((candidate) => candidate.url().includes("/private/editor-preview"));
+  async function readyFrame(timeout = 15000) {
+    const deadline = Date.now() + timeout;
+    for (;;) {
+      const current = frame();
+      if (current) return current;
+      if (Date.now() > deadline) throw new Error("preview frame not found");
+      await page.waitForTimeout(50);
+    }
+  }
   async function run(name, work) {
     const filter = process.argv
       .find((argument) => argument.startsWith("--browser-filter="))
@@ -908,7 +917,7 @@ export async function checkEditor({
         await page
           .getByLabel("Name", { exact: true })
           .fill("New controller edit");
-        await frame().waitForFunction(
+        await (await readyFrame()).waitForFunction(
           () =>
             document.querySelector("h1")?.textContent === "New controller edit",
         );
