@@ -1,0 +1,103 @@
+/* Phase 38: Face Reveal and the visitor pause/play control. The imported
+   source CSS (avatar.css) owns the portrait geometry, the diagonal wipe and
+   the decoration choreography; these rules only adapt it to owner images and
+   add the platform controls. The shared script (site.ts) sets the state. */
+
+/* Both owner images share the portrait box, so the wipe never moves them. */
+.pf-avatar-portraitButton .pf-avatar-portrait {
+  position: absolute;
+  inset: 0;
+}
+
+button.pf-avatar-portraitButton {
+  min-height: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The cat's fur covers the portrait edge, so the frame shows focus too. */
+.pf-avatar-frame:has(> .pf-avatar-portraitButton:focus-visible) {
+  outline: 2px solid var(--pf-focus);
+  outline-offset: 4px;
+}
+
+/* The subtle cue: a small swap badge on the interactive avatar only. */
+.pf-avatar-revealCue {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--pf-control);
+  border-radius: 999px;
+  background: var(--pf-raised);
+  color: var(--pf-ink);
+  pointer-events: none;
+}
+
+.pf-avatar-revealCue svg {
+  display: block;
+  width: 14px;
+  height: 14px;
+}
+
+.pf-avatar-portraitButton:hover ~ .pf-avatar-revealCue,
+.pf-avatar-portraitButton:focus-visible ~ .pf-avatar-revealCue {
+  border-color: var(--pf-focus);
+}
+
+/* Reduced motion switches immediately, even if a wipe had started. */
+@media (prefers-reduced-motion: reduce) {
+  .pf-avatar-portraitButton[data-erasing="true"][data-photo="true"]
+    .pf-avatar-illustration,
+  .pf-avatar-portraitButton[data-erasing="true"][data-photo="false"]
+    .pf-avatar-photo {
+    visibility: hidden;
+    animation: none;
+  }
+}
+
+.pf-avatar-playback {
+  position: absolute;
+  left: calc(100% + 16px);
+  bottom: 0;
+  z-index: 3;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-whenPlaying,
+.pf-avatar-frame:not([data-playback="paused"]) .pf-avatar-whenPaused {
+  display: none;
+}
+
+/* Paused hands use the source reduced-motion still: no running animations
+   and the stationary manicure pose. The paused cat shows its cleaned still
+   because the script points the picture's still source at every medium. */
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-gesture,
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-pose,
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-heart,
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-sparkle {
+  animation: none;
+}
+
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-curled,
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-palm {
+  opacity: 0;
+}
+
+.pf-avatar-frame[data-playback="paused"] .pf-avatar-nails {
+  opacity: 1;
+}
+
+/* Keep the control beside the larger cat envelope at phone widths. */
+@media (max-width: 760px) {
+  .pf-avatar-playback {
+    left: calc(100% + 8px);
+    padding: 9px 12px;
+    font-size: 0.8125rem;
+  }
+}

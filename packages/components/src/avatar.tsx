@@ -91,20 +91,65 @@ function DecorationHand({ side }: { side: "left" | "right" }) {
   );
 }
 
+// Phase 38: with Face Reveal the portrait is the source's native button with
+// both owner images and the product labels; the shared platform script
+// (site.ts) toggles it. A selected decoration adds the visitor pause/play
+// control, which the script reveals unless reduced motion is requested.
 export function PortfolioAvatar({
   asset,
   decoration = "none",
+  faceReveal,
 }: {
   asset: DisplayAsset;
   decoration?: "none" | "cat" | "hands";
+  faceReveal?: DisplayAsset | undefined;
 }) {
   return (
     <div className="pf-avatar-envelope">
       <div className="pf-avatar-slot">
-        <div className="pf-avatar-frame" data-decoration={decoration}>
-          <div className="pf-avatar-portraitButton">
-            <AssetImage asset={asset} kind="avatar" />
-          </div>
+        <div
+          className="pf-avatar-frame"
+          data-decoration={decoration}
+          data-playback={decoration === "none" ? undefined : "playing"}
+        >
+          {faceReveal ? (
+            <button
+              type="button"
+              className="pf-avatar-portraitButton"
+              data-face-reveal=""
+              data-photo="false"
+              data-erasing="false"
+              aria-label="Reveal face"
+            >
+              <AssetImage
+                asset={asset}
+                kind="avatar"
+                className="pf-avatar-portrait pf-avatar-illustration"
+              />
+              <AssetImage
+                asset={faceReveal}
+                kind="face"
+                className="pf-avatar-portrait pf-avatar-photo"
+              />
+            </button>
+          ) : (
+            <div className="pf-avatar-portraitButton">
+              <AssetImage asset={asset} kind="avatar" />
+            </div>
+          )}
+          {faceReveal && (
+            <span className="pf-avatar-revealCue" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" focusable="false">
+                <path
+                  d="M4 7.5h11l-3-3M16 12.5H5l3 3"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          )}
           {decoration === "cat" && (
             <picture
               className={"pf-avatar-catDecoration"}
@@ -169,6 +214,17 @@ export function PortfolioAvatar({
                 ),
               )}
             </div>
+          )}
+          {decoration !== "none" && (
+            <button
+              type="button"
+              className="pf-avatar-playback"
+              data-avatar-playback=""
+              hidden
+            >
+              <span className="pf-avatar-whenPlaying">Pause animation</span>
+              <span className="pf-avatar-whenPaused">Play animation</span>
+            </button>
           )}
         </div>
       </div>

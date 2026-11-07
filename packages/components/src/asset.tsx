@@ -4,14 +4,17 @@ import type { DisplayAsset } from "./model";
 export function AssetImage({
   asset,
   kind = "image",
+  className,
 }: {
   asset: DisplayAsset;
-  kind?: "image" | "avatar" | "banner";
+  kind?: "image" | "avatar" | "face" | "banner";
+  // Extra classes for the slot, such as the Face Reveal portrait layers.
+  className?: string | undefined;
 }) {
   const ready = asset.state === "ready" && isWebUrl(asset.url);
   return (
     <div
-      className={`pf-image pf-image-${kind}`}
+      className={`pf-image pf-image-${kind}${className ? ` ${className}` : ""}`}
       data-asset-state={
         ready
           ? "loading"
