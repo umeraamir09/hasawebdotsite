@@ -7,6 +7,12 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+import {
+  FIRST_PAINT_SAMPLER,
+  paintedFrames,
+  resolvedMode,
+  rgb,
+} from "./lib/first-paint.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
@@ -64,7 +70,7 @@ const hostCss = resource(
   "text/css; charset=utf-8",
 );
 const siteBytes = await bundle(
-  "scripts/fixtures/portfolio-site.ts",
+  "packages/components/src/site-entry.ts",
   "browser",
   "iife",
 );
@@ -212,6 +218,30 @@ async function handle(request, response) {
   if (url.pathname === "/decorations") {
     response.writeHead(200, headers);
     response.end(decorations);
+    return;
+  }
+  if (url.pathname === "/appearance") {
+    // The real document shell with a chosen saved appearance. The deferred
+    // variant reproduces the pre-Phase 35 script placement as a control.
+    const body = fixture.html.slice(
+      fixture.html.indexOf("<body>") + 6,
+      fixture.html.lastIndexOf("</body>"),
+    );
+    let html = policy.documentShell({
+      markup: body,
+      title: "Appearance fixture",
+      context: "public",
+      assets: { cssUrl, scriptUrl },
+      appearance: {
+        themeId: url.searchParams.get("theme"),
+        fontId: url.searchParams.get("font"),
+        colorMode: url.searchParams.get("mode"),
+      },
+    });
+    if (url.searchParams.get("script") === "deferred")
+      html = html.replace("<script src=", "<script defer src=");
+    response.writeHead(200, headers);
+    response.end(html);
     return;
   }
   if (url.pathname === "/published") {
@@ -1033,6 +1063,281 @@ if (process.argv.includes("--serve")) {
         activeAnimationElements: families.length,
       });
     }
+    const catalog = JSON.parse(
+      await readFile(join(root, "packages/theme/catalog.json"), "utf8"),
+    );
+    const paintContext = await browser.newContext({
+      viewport: { width: 1280, height: 900 },
+    });
+    await paintContext.addInitScript(FIRST_PAINT_SAMPLER);
+    // Holding the platform script widens any window in which a wrong mode
+    // could be painted before it runs.
+    await paintContext.route(`${origin}${scriptUrl}`, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await route.continue();
+    });
+    const paintPage = await paintContext.newPage();
+    paintPage.on("pageerror", (error) => errors.push(error.message));
+    const fontRequests = [];
+    paintPage.on("request", (request) => {
+      if (request.url().endsWith(".ttf")) fontRequests.push(request.url());
+    });
+    async function openAppearance({ theme, font, initial, system, stored }) {
+      await paintPage.emulateMedia({ colorScheme: system });
+      await paintPage.goto(`${origin}/unavailable`);
+      await paintPage.evaluate((mode) => {
+        if (mode) localStorage.setItem("hasaweb-color-mode", mode);
+        else localStorage.clear();
+      }, stored ?? null);
+      fontRequests.length = 0;
+      await paintPage.goto(
+        `${origin}/appearance?theme=${theme.id}&font=${font.id}&mode=${initial}`,
+      );
+      return paintedFrames(paintPage);
+    }
+    const paintCases = [];
+    let index = 0;
+    for (const initial of ["system", "light", "dark"])
+      for (const system of ["light", "dark"])
+        for (const stored of [undefined, "light", "dark"]) {
+          const theme = catalog.themes[index % catalog.themes.length];
+          const font = catalog.fonts[index % catalog.fonts.length];
+          index++;
+          const frames = await openAppearance({
+            theme,
+            font,
+            initial,
+            system,
+            stored,
+          });
+          const mode = resolvedMode({ initial, system, stored });
+          const expected = rgb(theme[mode].page);
+          const family = new RegExp(`^"?${font.family}"?, `);
+          const wrong = frames.filter(
+            (frame) =>
+              frame.background !== expected || !family.test(frame.fontFamily),
+          );
+          assert.deepEqual(
+            wrong,
+            [],
+            `${theme.id}/${font.id} initial ${initial}, system ${system}, stored ${stored ?? "none"}`,
+          );
+          assert.ok(frames[0].bodyChildren > 0, "first sample has content");
+          assert.equal(
+            await paintPage.evaluate(
+              () => document.documentElement.dataset.colorMode,
+            ),
+            mode,
+          );
+          await paintPage.evaluate(() => document.fonts.ready);
+          const loaded = await paintPage.evaluate(() =>
+            [...document.fonts]
+              .filter((face) => face.status === "loaded")
+              .map((face) => face.family.replaceAll('"', "")),
+          );
+          assert.deepEqual([...new Set(loaded)], [font.family]);
+          assert.ok(
+            fontRequests.length >= 1 &&
+              fontRequests.every((url) =>
+                url.endsWith(font.asset.split("/").at(-1)),
+              ),
+            `only ${font.id} is requested`,
+          );
+          // The visitor switch flips the mode and is kept for the next page.
+          const button = paintPage.locator("[data-theme-toggle]");
+          await button.click();
+          const flipped = mode === "dark" ? "light" : "dark";
+          assert.equal(
+            await paintPage.evaluate(
+              () => document.documentElement.dataset.colorMode,
+            ),
+            flipped,
+          );
+          assert.equal(
+            await button.textContent(),
+            flipped === "dark" ? "Light mode" : "Dark mode",
+          );
+          await paintPage.reload();
+          const after = await paintedFrames(paintPage);
+          assert.ok(
+            after.every(
+              (frame) => frame.background === rgb(theme[flipped].page),
+            ),
+            "stored switch is painted on the next load",
+          );
+          paintCases.push({
+            theme: theme.id,
+            font: font.id,
+            initial,
+            system,
+            stored: stored ?? null,
+            mode,
+            frames: frames.length,
+          });
+        }
+    // Every preset in both modes passes the same WCAG AA rules as Leaf.
+    const presetAccessibility = [];
+    for (const theme of catalog.themes)
+      for (const mode of ["light", "dark"]) {
+        await paintPage.emulateMedia({ colorScheme: "light" });
+        await paintPage.goto(`${origin}/unavailable`);
+        await paintPage.evaluate(() => localStorage.clear());
+        await paintPage.goto(
+          `${origin}/appearance?theme=${theme.id}&font=dm-sans&mode=${mode}`,
+        );
+        await paintedFrames(paintPage);
+        await paintPage.evaluate(axe);
+        const violations = await paintPage.evaluate(async () => {
+          const results = await window.axe.run(document, {
+            runOnly: {
+              type: "tag",
+              values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"],
+            },
+          });
+          return results.violations.map(({ id, nodes }) => ({
+            id,
+            nodes: nodes.map((node) => node.target),
+          }));
+        });
+        presetAccessibility.push({ theme: theme.id, mode, violations });
+      }
+    assert.deepEqual(
+      presetAccessibility.filter((entry) => entry.violations.length),
+      [],
+    );
+    checks.push({
+      check: "axe WCAG 2.2 AA passes for all six presets in light and dark",
+      passed: true,
+      combinations: presetAccessibility.length,
+    });
+    // Control: the same stored choice with the old deferred script placement
+    // paints the owner's initial mode first, so the sampler detects a flash.
+    const light = catalog.themes[1];
+    await paintPage.emulateMedia({ colorScheme: "light" });
+    await paintPage.goto(`${origin}/unavailable`);
+    await paintPage.evaluate(() =>
+      localStorage.setItem("hasaweb-color-mode", "dark"),
+    );
+    await paintPage.goto(
+      `${origin}/appearance?theme=${light.id}&font=manrope&mode=light&script=deferred`,
+    );
+    const control = await paintedFrames(paintPage);
+    assert.equal(control[0].background, rgb(light.light.page));
+    assert.equal(control.at(-1).background, rgb(light.dark.page));
+    checks.push({
+      check:
+        "saved presets, fonts and initial system/light/dark mode paint correctly from the first frame, with and without a stored visitor choice; only the selected font downloads; a deferred-script control does flash",
+      passed: true,
+      cases: paintCases,
+      controlFrames: control.length,
+    });
+
+    // Preview: the same CSS and attributes, applied from the display model.
+    await previewPage.goto(`${origin}/private/host`);
+    const appearanceFrame = () =>
+      previewPage
+        .frames()
+        .find((candidate) => candidate.url().includes("/private/preview"));
+    await previewPage.waitForFunction(
+      () => window.rendererState?.kind === "displayed",
+    );
+    const sendAppearance = (appearance, name) =>
+      previewPage.evaluate(
+        async ({ appearance, name }) => {
+          const response = await fetch("/private/model");
+          const model = await response.json();
+          if (name) model.profile.name = name;
+          window.rendererBridge.request(async () => ({ ...model, appearance }));
+        },
+        { appearance, name },
+      );
+    const violet = catalog.themes.find((theme) => theme.id === "violet");
+    await sendAppearance({
+      themeId: "violet",
+      fontId: "lora",
+      colorMode: "dark",
+    });
+    const previewFrame = appearanceFrame();
+    await previewFrame.waitForFunction(
+      () => document.documentElement.dataset.theme === "violet",
+    );
+    const previewStyle = () =>
+      previewFrame.evaluate(() => {
+        const style = getComputedStyle(document.documentElement);
+        return {
+          background: style.backgroundColor,
+          fontFamily: style.fontFamily,
+          mode: document.documentElement.dataset.colorMode,
+        };
+      });
+    const previewed = await previewStyle();
+    assert.deepEqual(previewed, {
+      background: rgb(violet.dark.page),
+      fontFamily: 'Lora, Georgia, "Times New Roman", serif',
+      mode: "dark",
+    });
+    await paintPage.emulateMedia({ colorScheme: "light" });
+    await paintPage.goto(`${origin}/unavailable`);
+    await paintPage.evaluate(() => localStorage.clear());
+    await paintPage.goto(
+      `${origin}/appearance?theme=violet&font=lora&mode=dark`,
+    );
+    const published = await paintPage.evaluate(() => {
+      const style = getComputedStyle(document.documentElement);
+      return {
+        background: style.backgroundColor,
+        fontFamily: style.fontFamily,
+        mode: document.documentElement.dataset.colorMode,
+      };
+    });
+    assert.deepEqual(previewed, published, "preview matches public page");
+    await previewFrame.locator("[data-theme-toggle]").click();
+    assert.equal((await previewStyle()).mode, "light");
+    await sendAppearance(
+      { themeId: "violet", fontId: "lora", colorMode: "dark" },
+      "Renamed owner",
+    );
+    await previewFrame.getByText("Renamed owner").waitFor();
+    assert.equal(
+      (await previewStyle()).mode,
+      "light",
+      "preview switch survives content edits",
+    );
+    await sendAppearance({
+      themeId: "coffee",
+      fontId: "manrope",
+      colorMode: "light",
+    });
+    await previewFrame.waitForFunction(
+      () => document.documentElement.dataset.theme === "coffee",
+    );
+    await sendAppearance({
+      themeId: "coffee",
+      fontId: "manrope",
+      colorMode: "dark",
+    });
+    await previewFrame.waitForFunction(
+      () => document.documentElement.dataset.initialMode === "dark",
+    );
+    const coffee = catalog.themes.find((theme) => theme.id === "coffee");
+    assert.deepEqual(await previewStyle(), {
+      background: rgb(coffee.dark.page),
+      fontFamily: "Manrope, Arial, sans-serif",
+      mode: "dark",
+    });
+    assert.equal(
+      await previewFrame.evaluate(() =>
+        localStorage.getItem("hasaweb-color-mode"),
+      ),
+      null,
+      "preview never stores a visitor choice",
+    );
+    await paintContext.close();
+    checks.push({
+      check:
+        "preview applies saved appearance immediately with public-page parity; a preview switch is kept across content edits, reset by a saved mode change and never stored",
+      passed: true,
+    });
     assert.deepEqual(errors, []);
     assert.deepEqual(failures, []);
     await context.close();

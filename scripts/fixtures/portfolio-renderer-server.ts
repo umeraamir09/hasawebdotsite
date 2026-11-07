@@ -1,6 +1,7 @@
 import { createElement as h } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
+  DEFAULT_APPEARANCE,
   PortfolioAvatar,
   projectPortfolio,
 } from "../../packages/components/src/index";
@@ -75,6 +76,7 @@ export function createFixtures(
     title: "Owner-data decorations",
     context: "public",
     assets,
+    appearance: DEFAULT_APPEARANCE,
   });
   return { fixtures, policy, decorations };
 }

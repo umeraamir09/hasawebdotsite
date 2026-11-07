@@ -23,6 +23,7 @@
     "react-dom": "19.3.0",
     "@hasaweb/schema": "workspace:*",
     "@hasaweb/components": "workspace:*",
+    "@hasaweb/theme": "workspace:*",
     "zod": "4.6.7"
   }
 }

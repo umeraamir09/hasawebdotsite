@@ -6,6 +6,18 @@ export {
   type DraftComponent,
   profileDefinition,
 } from "@hasaweb/schema";
+export {
+  type AppearanceModel,
+  appearanceAttributes,
+  appearanceModelSchema,
+  COLOR_MODES,
+  type ColorMode,
+  DEFAULT_APPEARANCE,
+  displayAppearance,
+  FONT_IDS,
+  fontFileName,
+  THEME_IDS,
+} from "./appearance";
 export { AssetImage } from "./asset";
 export { PortfolioAvatar } from "./avatar";
 export {

@@ -15,6 +15,7 @@ import {
   URL_MAX_BYTES,
 } from "@hasaweb/schema";
 import { z } from "zod";
+import { appearanceModelSchema, displayAppearance } from "./appearance";
 import { pagePathSchema } from "./frames";
 import { yieldPreviewTask } from "./preview-task";
 
@@ -131,6 +132,8 @@ export const profileModelSchema = profileSchema
 export const portfolioModelSchema = z.strictObject({
   profile: profileModelSchema,
   components: z.array(componentModelSchema),
+  // Absent means the approved defaults (Leaf, DM Sans, system).
+  appearance: appearanceModelSchema.optional(),
 });
 export type PortfolioModel = z.infer<typeof portfolioModelSchema>;
 export type ProfileModel = PortfolioModel["profile"];
@@ -404,6 +407,7 @@ function* projectSteps(
       links: yield* displayLinks(draft.links, "showInProfile"),
     },
     components,
+    appearance: displayAppearance(draft.appearance),
   };
 }
 export function projectPortfolio(

@@ -4,10 +4,14 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
-const assetSource = (name) =>
-  name.endsWith(".ttf")
-    ? `packages/theme/assets/fonts/dm-sans/${name}`
+const catalog = JSON.parse(readFileSync("packages/theme/catalog.json", "utf8"));
+const fontFile = (font) => font.asset.split("/").at(-1);
+const assetSource = (name) => {
+  const font = catalog.fonts.find((entry) => fontFile(entry) === name);
+  return font
+    ? `packages/theme/${font.asset}`
     : `apps/web/public/assets/${name}`;
+};
 const hashed = (name) =>
   `/portfolio-platform/${createHash("sha256")
     .update(readFileSync(assetSource(name)))
@@ -17,7 +21,7 @@ const platformAssets = Object.fromEntries(
   [
     "avatar-ginger-cat-clean-loop.webp",
     "avatar-ginger-cat-clean-still.webp",
-    "dm-sans-variable.ttf",
+    ...catalog.fonts.map(fontFile),
   ].map((name) => [name, hashed(name)]),
 );
 writeFileSync(
@@ -70,18 +74,20 @@ for (const name of [
     `apps/web/public/assets/${name}`,
     `packages/components/static/${name}`,
   );
-copyFileSync(
-  assetSource("dm-sans-variable.ttf"),
-  "packages/components/static/dm-sans-variable.ttf",
-);
-copyFileSync(
-  "packages/theme/assets/fonts/dm-sans/OFL.txt",
-  "packages/components/static/OFL.txt",
-);
+// Every approved font ships unmodified with its SIL OFL notice. DM Sans keeps
+// the original OFL.txt name; the others are suffixed with their font ID.
+for (const font of catalog.fonts) {
+  copyFileSync(
+    assetSource(fontFile(font)),
+    `packages/components/static/${fontFile(font)}`,
+  );
+  copyFileSync(
+    `packages/theme/${font.license}`,
+    `packages/components/static/${font.id === "dm-sans" ? "OFL.txt" : `OFL-${font.id}.txt`}`,
+  );
+}
 
-const catalog = JSON.parse(readFileSync("packages/theme/catalog.json", "utf8"));
-const leaf = catalog.themes.find((theme) => theme.id === "leaf");
-const tokens = (mode) =>
+const tokens = (palette) =>
   Object.entries({
     "pf-page": "page",
     "pf-surface": "surface",
@@ -94,24 +100,49 @@ const tokens = (mode) =>
     "pf-link": "link",
     "pf-focus": "focus",
   })
-    .map(([name, key]) => `--${name}:${leaf[mode][key]};`)
+    .map(([name, key]) => `--${name}:${palette[key]};`)
     .join("");
+// Attributes on <html>: data-theme and data-font select the saved preset and
+// font, data-initial-mode is the owner's saved mode and data-color-mode is
+// the visitor's choice. All but the last are in the server-rendered HTML.
+// Dark applies for an explicit dark choice, an owner dark initial mode
+// without an explicit light choice, or a dark system preference when neither
+// the visitor nor the owner chose light. Leaf also covers a missing theme.
+const themeRules = catalog.themes
+  .map((theme) => {
+    const roots =
+      theme.id === catalog.defaults.appearance.themeId
+        ? [":root", `:root[data-theme="${theme.id}"]`]
+        : [`:root[data-theme="${theme.id}"]`];
+    const scoped = (suffix) =>
+      roots
+        .map((root) =>
+          root === ":root"
+            ? `:root:not([data-theme])${suffix}`
+            : `${root}${suffix}`,
+        )
+        .join(",");
+    const dark = `color-scheme:dark;${tokens(theme.dark)}`;
+    return [
+      `${roots.join(",")} { color-scheme:light;${tokens(theme.light)} }`,
+      `@media (prefers-color-scheme:dark) { ${scoped(':not([data-color-mode="light"]):not([data-initial-mode="light"])')} { ${dark} } }`,
+      `${scoped('[data-initial-mode="dark"]:not([data-color-mode="light"])')} { ${dark} }`,
+      `${scoped('[data-color-mode="dark"]')} { ${dark} }`,
+    ].join("\n");
+  })
+  .join("\n");
+// Each face downloads only when its family is used, so a page fetches just
+// the saved font. The platform package retains all three.
+const fontRules = catalog.fonts
+  .map(
+    (font) =>
+      `@font-face { font-family:"${font.family}"; src:url("${platformAssets[fontFile(font)]}") format("truetype"); font-weight:${font.weight[0]} ${font.weight[1]}; font-style:${font.style}; font-display:swap; }\n:root[data-font="${font.id}"] { font-family:"${font.family}", ${font.fallback}; }`,
+  )
+  .join("\n");
 writeFileSync(
-  "packages/components/static/default-theme.css",
-  `:root { color-scheme:light; ${tokens("light")} }\n@media (prefers-color-scheme:dark) { :root:not([data-color-mode="light"]) { color-scheme:dark; ${tokens("dark")} } }\n:root[data-color-mode="dark"] { color-scheme:dark; ${tokens("dark")} }\n`,
+  "packages/components/static/themes.css",
+  `${fontRules}\n${themeRules}\n`,
 );
-const stylesheet = readFileSync(
-  "packages/components/static/portfolio.css",
-  "utf8",
-);
-writeFileSync(
-  "packages/components/static/portfolio.css",
-  stylesheet.replace(
-    /\/portfolio-platform\/(?:[a-f0-9]{16}-)?dm-sans-variable\.ttf/,
-    platformAssets["dm-sans-variable.ttf"],
-  ),
-);
-
 execFileSync(
   "node_modules/.bin/biome",
   [
@@ -119,7 +150,7 @@ execFileSync(
     "--write",
     "packages/components/src/avatar.tsx",
     "packages/components/static/avatar.css",
-    "packages/components/static/default-theme.css",
+    "packages/components/static/themes.css",
     "packages/components/static/manifest.json",
   ],
   { stdio: "inherit" },

@@ -1,4 +1,8 @@
-import { Portfolio, type PortfolioModel } from "@hasaweb/components";
+import {
+  DEFAULT_APPEARANCE,
+  Portfolio,
+  type PortfolioModel,
+} from "@hasaweb/components";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   documentShell,
@@ -19,5 +23,6 @@ export function renderFixtureDocument(
     title,
     context,
     assets,
+    appearance: model.appearance ?? DEFAULT_APPEARANCE,
   });
 }
