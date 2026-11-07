@@ -223,10 +223,45 @@ describe("private preview image preparation", () => {
           ? {
               state,
               url: `https://hasaweb.site/api/assets/${assetId}?purpose=resume`,
+              viewUrl: `https://hasaweb.site/api/assets/${assetId}/view?purpose=resume`,
             }
           : { state },
       );
     }
+  });
+  it("requests case-study images only for full-page previews", async () => {
+    const draft = images();
+    const requested: string[] = [];
+    vi.stubGlobal("location", new URL("https://hasaweb.site"));
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        requested.push(url);
+        return new Response(null, { headers: { "Content-Type": "image/png" } });
+      }),
+    );
+    await resolvePreviewImages({
+      ownerId: "owner",
+      draft,
+      signal: new AbortController().signal,
+    });
+    expect(requested.filter((url) => url.includes("case_study"))).toEqual([]);
+    requested.length = 0;
+    const options = await resolvePreviewImages({
+      ownerId: "owner",
+      draft,
+      signal: new AbortController().signal,
+      caseStudies: true,
+    });
+    const urls = requested.filter((url) => url.includes("purpose=case_study"));
+    expect(urls.length).toBeGreaterThan(0);
+    const id = /assets\/([^?]+)/.exec(urls[0] ?? "")?.[1] ?? "";
+    expect(
+      options.resolveAsset({ assetId: id, purpose: "case_study" }),
+    ).toEqual({
+      state: "ready",
+      url: `https://hasaweb.site/api/assets/${id}?purpose=case_study`,
+    });
   });
   it("cancels before issuing any asset request", async () => {
     const signal = AbortSignal.abort(new Error("superseded"));

@@ -113,6 +113,14 @@ export function EditorPreview({
             Mobile
           </button>
         </fieldset>
+        <a
+          className="editor-full-preview-link"
+          href="/preview"
+          target="_blank"
+          rel="noopener"
+        >
+          Open full-page preview (saved draft)
+        </a>
         <span
           role="status"
           data-preview-state={state.kind}

@@ -77,10 +77,17 @@ export async function privateAssetRequest(
     if ((upload && !expected) || (expected && expected !== identity.user.id))
       throw new UploadError(409);
     if (read) {
-      const id = url.pathname.slice("/api/assets/".length);
+      // `/{id}/view` is the inline variant of a private resume PDF for the
+      // full-page preview's embedded viewer. It repeats every owner check.
+      const view = url.pathname.endsWith("/view");
+      const id = url.pathname.slice(
+        "/api/assets/".length,
+        view ? -"/view".length : undefined,
+      );
       if (!/^[a-f0-9-]{36}$/.test(id)) return response(404);
       const purpose = url.searchParams.get("purpose");
       if (purpose !== null && !isAssetPurpose(purpose)) return response(404);
+      if (view && purpose !== "resume") return response(404);
       const row = await privateAssets(env.DB, identity).ready(
         id,
         purpose ?? undefined,
@@ -88,13 +95,26 @@ export async function privateAssetRequest(
       if (!row) return response(404);
       const resolved = await resolvePrivateAsset(env, identity, id, row.kind);
       if (!resolved) return response(404);
+      if (view && resolved.asset.contentType !== "application/pdf") {
+        void resolved.object.body.cancel().catch(() => {});
+        return response(404);
+      }
       return new Response(resolved.object.body, {
         headers: {
           ...headers,
           "Content-Type": resolved.asset.contentType,
           "Content-Length": String(resolved.asset.bytes),
           ...(resolved.asset.contentType === "application/pdf"
-            ? { "Content-Disposition": 'attachment; filename="resume.pdf"' }
+            ? {
+                "Content-Disposition": `${view ? "inline" : "attachment"}; filename="resume.pdf"`,
+              }
+            : {}),
+          // Only the same-origin preview page may frame the inline variant.
+          ...(view
+            ? {
+                "Content-Security-Policy": "frame-ancestors 'self'",
+                "X-Frame-Options": "SAMEORIGIN",
+              }
             : {}),
         },
       });
