@@ -1,5 +1,4 @@
 import {
-  PortfolioAvatar,
   PortfolioCaseStudy,
   PortfolioProfile,
   PortfolioResume,
@@ -253,35 +252,12 @@ export function assetReferences(draft: DraftDoc) {
   visit(draft, "");
   return [...found.values()];
 }
-function profileHtml(
-  draft: DraftDoc,
-  profile: import("@hasaweb/components").ProfileModel,
-) {
-  const strip = (html: string) =>
-    html.replace(/<link rel="preload"[^>]*\/>/g, "");
-  const html = strip(
-    renderToStaticMarkup(createElement(PortfolioProfile, { profile })),
-  );
-  if (
-    draft.profile.decorationId !== "cat" &&
-    draft.profile.decorationId !== "hands"
-  )
-    return html;
-  return html.replace(
-    strip(
-      renderToStaticMarkup(
-        createElement(PortfolioAvatar, { asset: profile.avatar }),
-      ),
-    ),
-    strip(
-      renderToStaticMarkup(
-        createElement(PortfolioAvatar, {
-          asset: profile.avatar,
-          decoration: draft.profile.decorationId,
-        }),
-      ),
-    ),
-  );
+// The display projection carries the saved decoration, so the expected profile
+// is exactly the shared renderer's output for the model.
+function profileHtml(profile: import("@hasaweb/components").ProfileModel) {
+  return renderToStaticMarkup(
+    createElement(PortfolioProfile, { profile }),
+  ).replace(/<link rel="preload"[^>]*\/>/g, "");
 }
 export function expected(draft: DraftDoc, id: string) {
   const model = projectPortfolio(draft, {
@@ -296,7 +272,7 @@ export function expected(draft: DraftDoc, id: string) {
     },
   });
   return [
-    profileHtml(draft, model.profile),
+    profileHtml(model.profile),
     ...model.components.map((component) =>
       renderToStaticMarkup(createElement(PortfolioSection, { component })),
     ),
@@ -339,7 +315,7 @@ export function expectedPages(draft: DraftDoc, id: string) {
       });
       pages.push({
         path: `/projects/${entry.caseStudy.slug}`,
-        html: profileHtml(draft, model.profile) + renderToStaticMarkup(body),
+        html: profileHtml(model.profile) + renderToStaticMarkup(body),
       });
       ordinal++;
     }
@@ -351,7 +327,7 @@ export function expectedPages(draft: DraftDoc, id: string) {
     pages.push({
       path: "/resume",
       html:
-        profileHtml(draft, model.profile) +
+        profileHtml(model.profile) +
         renderToStaticMarkup(
           createElement(PortfolioResume, { file: resume.data.file }),
         ),

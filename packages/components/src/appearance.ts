@@ -1,12 +1,14 @@
 import { appearanceCatalog } from "@hasaweb/theme";
 import { z } from "zod";
 
-// Saved preset appearance as the renderer displays it. Custom colors and
-// decorations are separate later integrations and never reach this model.
+// Saved preset appearance as the renderer displays it. Custom colors are a
+// separate later integration and never reach this model. The selected avatar
+// decoration is projected with the profile (see `displayDecoration`).
 const ids = <T extends { id: string }>(items: readonly T[]) =>
   items.map((item) => item.id) as [string, ...string[]];
 export const THEME_IDS = ids(appearanceCatalog.themes);
 export const FONT_IDS = ids(appearanceCatalog.fonts);
+export const DECORATION_IDS = ids(appearanceCatalog.decorations);
 export const COLOR_MODES = ["light", "dark", "system"] as const;
 export type ColorMode = (typeof COLOR_MODES)[number];
 
@@ -72,4 +74,16 @@ export function applyAppearance(
 export function clearAppearance(element: HTMLElement): void {
   for (const name of ["data-theme", "data-font", "data-initial-mode"])
     element.removeAttribute(name);
+}
+
+// The avatar decoration as the renderer displays it. An absent selection is
+// "none". The saved ID is opaque, so an unknown historical ID also shows no
+// decoration in preview; publication validation rejects it with a correction.
+// A unit test keeps this list equal to the approved catalog.
+export const decorationModelSchema = z.enum(["none", "cat", "hands"]);
+export type DecorationModel = z.infer<typeof decorationModelSchema>;
+export function displayDecoration(saved: string | undefined): DecorationModel {
+  return saved !== undefined && DECORATION_IDS.includes(saved)
+    ? (saved as DecorationModel)
+    : "none";
 }

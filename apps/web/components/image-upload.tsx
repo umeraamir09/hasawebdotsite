@@ -270,7 +270,7 @@ export function ImageUpload({
                 disabled={disabled || busy}
                 onClick={() => void cropExisting()}
               >
-                Crop {purpose}
+                Crop {noun}
               </button>
             )}
             <button

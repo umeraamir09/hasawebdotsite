@@ -157,8 +157,8 @@ export function AppearanceControls({
         ))}
       </fieldset>
       <p className="editor-muted">
-        Custom color and decoration controls will be available with the
-        appearance tools.
+        Custom color controls will be available with the appearance tools.
+        Avatar decoration and Face Reveal are under Profile.
       </p>
     </section>
   );

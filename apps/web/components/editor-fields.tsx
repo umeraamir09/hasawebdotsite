@@ -4,6 +4,7 @@ import type { PreviewSelection } from "@hasaweb/components/browser";
 import { componentRegistry } from "@hasaweb/schema";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
+import { AvatarExtrasControls } from "./avatar-extras-controls";
 import { ProfileControls } from "./profile-controls";
 import { ProjectControls } from "./project-controls";
 import { ResumeControls } from "./resume-controls";
@@ -30,6 +31,7 @@ export function EditorFields({
     return (
       <>
         <ProfileControls controller={controller} disabled={disabled} />
+        <AvatarExtrasControls controller={controller} disabled={disabled} />
         <SocialLinksControl controller={controller} disabled={disabled} />
       </>
     );

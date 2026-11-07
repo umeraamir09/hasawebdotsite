@@ -5,6 +5,7 @@ import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { checkAppearanceJourney } from "./appearance-browser.mjs";
+import { checkAvatarExtrasJourney } from "./avatar-extras-browser.mjs";
 import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
@@ -1324,6 +1325,7 @@ export async function checkEditor({
     await checkResumeJourney(controls);
     await checkSocialLinksJourney(controls);
     await checkAppearanceJourney(controls);
+    await checkAvatarExtrasJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

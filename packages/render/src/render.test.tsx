@@ -1,12 +1,15 @@
 import {
   type AppearanceModel,
   COLOR_MODES,
+  DECORATION_IDS,
   DEFAULT_APPEARANCE,
+  decorationModelSchema,
   displayAppearance,
   FONT_IDS,
   Portfolio,
   PortfolioAvatar,
   PortfolioCaseStudy,
+  PortfolioProfile,
   projectPortfolio,
   THEME_IDS,
 } from "@hasaweb/components";
@@ -301,6 +304,48 @@ describe("safe output and bounded serialization", () => {
     expect(html).not.toContain("Umer");
     expect(html).not.toContain("umer-avatar-photo");
     expect(html).not.toContain("<button");
+  });
+  it("projects the saved decoration so the preview profile matches the published avatar", () => {
+    expect(["none", ...DECORATION_IDS]).toEqual(decorationModelSchema.options);
+    const source = draft();
+    expect(projectPortfolio(source, options).profile.decoration).toBe("none");
+    for (const id of ["cat", "hands"] as const) {
+      source.profile.decorationId = id;
+      const { profile } = projectPortfolio(source, options);
+      expect(profile.decoration).toBe(id);
+      const html = renderToStaticMarkup(<PortfolioProfile profile={profile} />);
+      expect(html).toContain(`data-decoration="${id}"`);
+      // The profile's avatar is the shared decorated avatar, byte for byte.
+      expect(html).toContain(
+        renderToStaticMarkup(
+          <PortfolioAvatar asset={profile.avatar} decoration={id} />,
+        ),
+      );
+    }
+    // A removed selection omits the key and shows no decoration.
+    delete source.profile.decorationId;
+    const none = projectPortfolio(source, options).profile;
+    expect(none.decoration).toBe("none");
+    expect(renderToStaticMarkup(<PortfolioProfile profile={none} />)).toContain(
+      'data-decoration="none"',
+    );
+    // An unknown historical ID shows no decoration; publication rejects it.
+    source.profile.decorationId = "leaf-static";
+    expect(projectPortfolio(source, options).profile.decoration).toBe("none");
+  });
+  it("accepts a profile fragment without a decoration as none", () => {
+    const model = projectPortfolio(draft(), options);
+    const { decoration: _omitted, ...profile } = model.profile;
+    const fragment = renderFragment(
+      { kind: "profile", profile },
+      { assetOrigins: [] },
+    );
+    expect(fragment.status).toBe("ready");
+    const bad = renderFragment({
+      kind: "profile",
+      profile: { ...profile, decoration: "static" },
+    });
+    expect(bad).toEqual({ status: "invalid" });
   });
   it("keeps complete snapshots offline with no React runtime and escaped document title", () => {
     const html = renderFixtureDocument(projectPortfolio(draft(), options), {

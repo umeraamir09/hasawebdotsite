@@ -366,7 +366,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Integration before full completion: 23–26 for enabled-image validation, selected manifest assets and published selection parity.
 - Reuse Phase 16 owner-data avatar markup and its generated source-equivalent CSS/hashed assets. Its explicit decoration specimens are reusable markup, not saved selection activation. Extend the display projection and publication manifest together when activating selection.
 - Reuse only the approved Ginger cat and Hands gallery, with an unselected initial state and change/remove controls. Keep original art/choreography, geometry and reduced-motion specimens in previews. Add the optional Face Reveal second-image toggle/upload/crop/replace/remove/description. Explain public accessibility of the published photo. Keep these controls out of onboarding.
-- [ ] Complete when owners can select, change and remove both cat and hands, saved selections match preview, and removal omits `decorationId`. New drafts have no decoration and Face Reveal off. Enabled incomplete Face Reveal uploads block publication; disabling retains a ready second photo privately. Custom decoration uploads remain absent. Public pause/play behavior is verified in Phase 38.
+- [Implementation and verification record](../specs/2026-11-07-decorations-setup/results.md). Owner approved completion on November 7, 2026.
+- [x] Complete when owners can select, change and remove both cat and hands, saved selections match preview, and removal omits `decorationId`. New drafts have no decoration and Face Reveal off. Enabled incomplete Face Reveal uploads block publication; disabling retains a ready second photo privately. Custom decoration uploads remain absent. Public pause/play behavior is verified in Phase 38.
 
 ### Phase 38. Add Face Reveal interaction and withdrawal
 

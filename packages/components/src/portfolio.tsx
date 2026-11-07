@@ -148,7 +148,7 @@ export function PortfolioProfile({ profile }: { profile: ProfileModel }) {
   return (
     <PortfolioFrame frame={{ name: "profile" }}>
       <AssetImage asset={profile.banner} kind="banner" />
-      <PortfolioAvatar asset={profile.avatar} />
+      <PortfolioAvatar asset={profile.avatar} decoration={profile.decoration} />
       <div className="pf-profile-copy">
         <h1>{profile.name || "Name not added"}</h1>
         <p className="pf-bio">{profile.bio || "Bio not added."}</p>

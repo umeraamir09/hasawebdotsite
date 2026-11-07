@@ -87,6 +87,7 @@ export async function openEditorPreview(root: HTMLElement) {
             bio: "",
             avatar: { state: "missing" },
             banner: { state: "missing" },
+            decoration: "none",
             links: [],
           },
           components: [],
