@@ -1,1 +1,0 @@
-../../../../.agents/skills/verify-hasaweb/features/README.md
