@@ -349,7 +349,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Integration before full completion: 25, 30, 34 for first paint/CSP and preset/font/mode parity across all real public page types.
 - Extend the Phase 16 default-only display model/CSS and system/visitor behavior to saved owner appearance, including initial light/dark/system and theme initialization before first paint under the final CSP. Preserve parity across the retained platform asset delivery path.
 - Reuse the catalog decision rather than repeat it. Add exactly six preset-theme choices (Leaf, Violet, Clay, Matcha, Strawberry and Coffee), curated self-hosted fonts, and initial light/dark/system mode across page types. The existing default styles support setup without adding an appearance step.
-- [ ] Complete when approved presets/fonts apply across all pages without changing content, order, or template, and visitor mode switching works on each page type.
+- [Implementation and verification record](../specs/2026-11-07-preset-appearance/results.md). Owner approved completion on November 7, 2026.
+- [x] Complete when approved presets/fonts apply across all pages without changing content, order, or template, and visitor mode switching works on each page type.
 
 ### Phase 36. Generate coordinated custom colors
 

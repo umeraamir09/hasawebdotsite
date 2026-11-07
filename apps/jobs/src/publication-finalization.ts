@@ -1,4 +1,5 @@
 import { Buffer } from "node:buffer";
+import { appearanceModelSchema, fontFileName } from "@hasaweb/components";
 import { type Candidate, candidateActive } from "@hasaweb/db";
 import {
   documentShell,
@@ -164,13 +165,20 @@ export async function finalizePublication(
       if (!response.ok || Number(response.headers.get("Content-Length")) > 8192)
         throw new Error("Platform pack unavailable");
       const pack = packSchema.parse(await response.json());
-      const decoration = await env.DB.prepare(
-        "SELECT json_extract(source,'$.profile.decorationId') AS decoration FROM publication_candidate WHERE id=?",
+      const selected = await env.DB.prepare(
+        "SELECT json_extract(source,'$.profile.decorationId') AS decoration,json_extract(source,'$.appearance.fontId') AS font FROM publication_candidate WHERE id=?",
       )
         .bind(row.id)
-        .first<{ decoration: string | null }>();
+        .first<{ decoration: string | null; font: string | null }>();
+      // Only the saved font and decoration art are retained with a version.
+      // The stylesheet declares every approved face, but a browser fetches
+      // only the family that the page's data-font selects.
+      const font = fontFileName(selected?.font ?? "");
       pack.files = pack.files.filter(
-        (file) => file.role !== "cat" || decoration?.decoration === "cat",
+        (file) =>
+          (file.role !== "cat" || selected?.decoration === "cat") &&
+          (file.role !== "font" ||
+            (font !== undefined && file.path.endsWith(`-${font}`))),
       );
       if (
         ["css", "script", "font"].some(
@@ -336,12 +344,18 @@ export async function finalizePublication(
       .bind(row.id, cursor.index)
       .first<{ ordinal: number; path: string }>();
     if (page) {
+      // The sealed source's appearance applies to every page of this version.
+      // Publication validation already checked catalog membership; the strict
+      // parse fails the candidate rather than publish a different appearance.
       const packed = await env.DB.prepare(
-        "SELECT json_extract(value,'$.platform') AS pack FROM publication_candidate_index WHERE candidate_id=?",
+        "SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?",
       )
         .bind(row.id)
-        .first<{ pack: string }>();
+        .first<{ pack: string; appearance: string }>();
       const files = packSchema.parse(JSON.parse(packed?.pack ?? "null")).files;
+      const appearance = appearanceModelSchema.parse(
+        JSON.parse(packed?.appearance ?? "null"),
+      );
       const css = files.find((file) => file.role === "css"),
         script = files.find((file) => file.role === "script");
       if (!css || !script) throw new Error("Candidate platform incomplete");
@@ -352,6 +366,7 @@ export async function finalizePublication(
         title: "Portfolio",
         context: "public",
         assets: { cssUrl: css.path, scriptUrl: script.path },
+        appearance,
       });
       // Resource paths remain rooted for Phase 25's manifest-authorized serving.
       const [open, close] = shell.split(marker);

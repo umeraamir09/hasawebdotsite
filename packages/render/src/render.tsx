@@ -1,5 +1,7 @@
 import {
+  type AppearanceModel,
   AssetImage,
+  appearanceAttributes,
   PortfolioAvatar,
   PortfolioLayout,
   PortfolioProfile,
@@ -155,18 +157,27 @@ function escapeText(value: string): string {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#39;");
 }
+// The stylesheet comes first so the browser fetches both platform files in
+// parallel. The script is deliberately render-blocking: its first statement
+// applies the visitor's stored light/dark choice before <body> is parsed.
+// Appearance attributes are validated against the approved catalog.
 export function documentShell({
   markup,
   title,
   context,
   assets,
+  appearance,
 }: {
   markup: string;
   title: string;
   context: RenderContext;
   assets: PlatformAssets;
+  appearance: AppearanceModel;
 }): string {
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title><link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}" defer></script></head><body>${markup}</body></html>`;
+  const attributes = Object.entries(appearanceAttributes(appearance))
+    .map(([name, value]) => ` ${name}="${escapeText(value)}"`)
+    .join("");
+  return `<!doctype html><html lang="en"${attributes}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title><link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}"></script></head><body>${markup}</body></html>`;
 }
 export function portfolioDocumentFrame() {
   const marker = "HASA_CONTROLLED_PAGE_FRAME";

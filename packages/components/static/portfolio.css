@@ -1,13 +1,5 @@
 @import url("./avatar.css");
-@import url("./default-theme.css");
-@font-face {
-  font-family: "DM Sans";
-  src: url("/portfolio-platform/8cd08d97e89c24d0-dm-sans-variable.ttf")
-    format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
+@import url("./themes.css");
 * {
   box-sizing: border-box;
 }

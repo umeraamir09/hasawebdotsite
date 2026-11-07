@@ -1,14 +1,21 @@
 import {
+  type AppearanceModel,
+  COLOR_MODES,
+  DEFAULT_APPEARANCE,
+  displayAppearance,
+  FONT_IDS,
   Portfolio,
   PortfolioAvatar,
   PortfolioCaseStudy,
   projectPortfolio,
+  THEME_IDS,
 } from "@hasaweb/components";
 import { parsePortfolioModel, withinBounds } from "@hasaweb/components/model";
 import { createComponent, createEmptyDraft, richText } from "@hasaweb/schema";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
+  documentShell,
   FRAGMENT_BOUNDS,
   PAGE_UNAVAILABLE_HTML,
   portfolioHeaders,
@@ -629,5 +636,110 @@ describe("resume download and page", () => {
     expect(() =>
       portfolioHeaders("public", { objectOrigins: ["https://a.example/x"] }),
     ).toThrow();
+  });
+});
+
+describe("saved preset appearance", () => {
+  const shellFor = (appearance: AppearanceModel) =>
+    documentShell({
+      markup: "<main></main>",
+      title: "Portfolio",
+      context: "public",
+      assets,
+      appearance,
+    });
+
+  it("projects the saved preset, font and mode without custom color", () => {
+    const saved = {
+      ...draft(),
+      appearance: {
+        themeId: "strawberry",
+        fontId: "lora",
+        colorMode: "dark" as const,
+        customColor: "#4285fa",
+      },
+    };
+    const model = projectPortfolio(saved, options);
+    expect(model.appearance).toEqual({
+      themeId: "strawberry",
+      fontId: "lora",
+      colorMode: "dark",
+    });
+    expect(parsePortfolioModel(model)?.appearance).toEqual(model.appearance);
+    // Content, order and template are independent of appearance.
+    const plain = projectPortfolio(draft(), options);
+    expect(renderToStaticMarkup(<Portfolio model={model} />)).toBe(
+      renderToStaticMarkup(<Portfolio model={plain} />),
+    );
+  });
+
+  it("shows defaults in preview for an unknown historical ID", () => {
+    expect(
+      displayAppearance({
+        themeId: "retired",
+        fontId: "comic",
+        colorMode: "dim",
+      }),
+    ).toEqual(DEFAULT_APPEARANCE);
+    expect(
+      parsePortfolioModel({
+        ...projectPortfolio(draft(), options),
+        appearance: { themeId: "retired", fontId: "lora", colorMode: "dark" },
+      }),
+    ).toBeUndefined();
+    expect(
+      parsePortfolioModel({
+        ...projectPortfolio(draft(), options),
+        appearance: { ...DEFAULT_APPEARANCE, customColor: "#000000" },
+      }),
+    ).toBeUndefined();
+  });
+
+  it("puts every catalog choice on <html> before the platform files", () => {
+    for (const themeId of THEME_IDS)
+      for (const fontId of FONT_IDS)
+        for (const colorMode of COLOR_MODES) {
+          const html = shellFor({ themeId, fontId, colorMode });
+          expect(html).toMatch(
+            new RegExp(
+              `^<!doctype html><html lang="en" data-theme="${themeId}" data-font="${fontId}" data-initial-mode="${colorMode}"><head>`,
+            ),
+          );
+        }
+    expect(() =>
+      shellFor({ ...DEFAULT_APPEARANCE, themeId: '"><script>' }),
+    ).toThrow();
+    expect(() =>
+      shellFor({ ...DEFAULT_APPEARANCE, fontId: "comic" }),
+    ).toThrow();
+  });
+
+  it("initializes the stored mode from a blocking platform script, not inline code", () => {
+    const html = shellFor(DEFAULT_APPEARANCE);
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    const scripts = [...html.matchAll(/<script\b[^>]*>/g)].map((m) => m[0]);
+    expect(scripts).toEqual(['<script src="/platform/0123456789abcdef.js">']);
+    expect(head.indexOf('<link rel="stylesheet"')).toBeLessThan(
+      head.indexOf("<script"),
+    );
+    expect(head).toContain("</script>");
+    expect(html).not.toMatch(/\b(defer|async|style=|<style)/);
+  });
+
+  it("keeps the strict public and preview CSP unchanged", () => {
+    const strict =
+      "default-src 'none'; script-src 'self' https://assets.hasaweb.site; style-src 'self' https://assets.hasaweb.site; img-src 'self' https://assets.hasaweb.site; font-src 'self' https://assets.hasaweb.site; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
+    expect(
+      portfolioHeaders("public", {
+        assetOrigins: ["https://assets.hasaweb.site"],
+      }).get("content-security-policy"),
+    ).toBe(strict);
+    for (const policy of [
+      portfolioHeaders("public").get("content-security-policy"),
+      portfolioHeaders("preview", {
+        parentOrigin: "https://hasaweb.site",
+      }).get("content-security-policy"),
+    ])
+      expect(policy).not.toMatch(/unsafe-|sha256-|nonce-/);
   });
 });

@@ -15,6 +15,7 @@ import {
 } from "../lib/draft/recovery-coordinator";
 import type { FieldPath } from "../lib/draft/types";
 import { AddressControl } from "./address-control";
+import { AppearanceControls } from "./appearance-controls";
 import { Brand } from "./brand";
 import { ComponentControls } from "./component-controls";
 import { DraftRecovery } from "./draft-recovery";
@@ -274,14 +275,7 @@ function Scope({
               />
             </>
           ) : (
-            <section aria-label="Customization">
-              <h2>Make it yours</h2>
-              <p>Your preview uses the approved Leaf palette and DM Sans.</p>
-              <p className="editor-muted">
-                Theme, font, custom color and decoration controls will be
-                available with the appearance tools.
-              </p>
-            </section>
+            <AppearanceControls controller={controller} disabled={disabled} />
           )}
           <DraftRecovery recovery={recovery} />
         </aside>

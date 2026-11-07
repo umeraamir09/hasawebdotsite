@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { checkAppearanceJourney } from "./appearance-browser.mjs";
 import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
@@ -646,9 +647,21 @@ export async function checkEditor({
         await page
           .getByRole("button", { name: "Customization", exact: true })
           .click();
+        // This fixture draft stores non-catalog IDs, so the panel lists the
+        // six approved presets and asks the owner to choose.
+        const customization = page.getByRole("region", {
+          name: "Customization",
+        });
+        assert.equal(
+          await customization
+            .getByRole("group", { name: "Theme", exact: true })
+            .getByRole("radio")
+            .count(),
+          6,
+        );
         assert.match(
-          await page.getByRole("region", { name: "Customization" }).innerText(),
-          /Leaf palette/,
+          await customization.innerText(),
+          /Your saved theme is no longer available\. Choose a theme\./,
         );
       },
     );
@@ -1295,6 +1308,7 @@ export async function checkEditor({
       evidence,
       browserOrigin,
       authority,
+      root,
     };
     await checkPublicationControls(controls);
     await checkComponentControls(controls);
@@ -1309,6 +1323,7 @@ export async function checkEditor({
     await checkCaseStudyJourney(controls);
     await checkResumeJourney(controls);
     await checkSocialLinksJourney(controls);
+    await checkAppearanceJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

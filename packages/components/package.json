@@ -12,7 +12,8 @@
     "./static/*": "./static/*",
     "./model": "./src/model.ts",
     "./site-entry": "./src/site-entry.ts",
-    "./frames": "./src/frames.tsx"
+    "./frames": "./src/frames.tsx",
+    "./appearance": "./src/appearance.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@hasaweb/schema": "workspace:*",
+    "@hasaweb/theme": "workspace:*",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.6.7"
