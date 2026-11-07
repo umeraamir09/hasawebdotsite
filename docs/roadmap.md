@@ -381,7 +381,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 - Dependencies: 17, 30, 34–35, 38.
 - Add authenticated saved-draft navigation for portfolio, case studies, and `/resume`. Exercise outbound links, theme switching, Face Reveal, and embedded/download resume behavior.
-- [ ] Complete when preview routes are private, noindex, and no-store, and preview-only contact forms cannot send messages. Later contact phases add the explicit settings test action.
+- [Implementation and verification record](../specs/2026-11-07-draft-preview/results.md). Owner approved completion on November 7, 2026 after the local `full` gate. The separate boundary review of access and header handling is pending at the owner's request.
+- [x] Complete when preview routes are private, noindex, and no-store, and preview-only contact forms cannot send messages. Later contact phases add the explicit settings test action.
 
 ## Connected activity and message delivery
 

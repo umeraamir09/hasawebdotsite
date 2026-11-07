@@ -13,3 +13,6 @@ dist/
 !.env.example
 coverage/
 .claude/worktrees
+# Full-page preview build products
+/apps/web/public/portfolio-platform/
+/apps/web/public/preview-assets/

@@ -1,5 +1,9 @@
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
-import type { AssetPurpose, DraftDoc } from "@hasaweb/schema";
+import {
+  type AssetPurpose,
+  collectDraftAssetReferences,
+  type DraftDoc,
+} from "@hasaweb/schema";
 import { profileSuggestions } from "../editor/provider-suggestions";
 import { validateImageFile } from "./crop";
 
@@ -33,6 +37,10 @@ export async function readProviderPhoto({
 
 export function privateImageUrl(id: string, purpose: AssetPurpose) {
   return `/api/assets/${encodeURIComponent(id)}?purpose=${purpose}`;
+}
+// The inline variant of a private resume PDF, for the embedded viewer.
+export function privateResumeViewUrl(id: string) {
+  return `/api/assets/${encodeURIComponent(id)}/view?purpose=resume`;
 }
 
 type UploadOptions = {
@@ -197,11 +205,15 @@ export async function resolvePreviewImages({
   draft,
   signal,
   cache = new Map<string, string>(),
+  caseStudies = false,
 }: {
   ownerId: string;
   draft: DraftDoc;
   signal: AbortSignal;
   cache?: Map<string, string>;
+  // Case-study pages need their body images. The editor's live preview shows
+  // only the portfolio page and skips them.
+  caseStudies?: boolean;
 }) {
   const requested = new Map<
     string,
@@ -219,6 +231,16 @@ export async function resolvePreviewImages({
     },
     signal,
   );
+  if (caseStudies)
+    for (const reference of collectDraftAssetReferences(draft))
+      if (
+        reference.kind === "case_study" &&
+        /^[a-f0-9-]{36}$/.test(reference.assetId)
+      )
+        requested.set(`case_study:${reference.assetId}`, {
+          assetId: reference.assetId,
+          purpose: "case_study",
+        });
   const images = [...requested.values()];
   const ready = new Map<string, string>();
   let next = 0;
@@ -272,7 +294,18 @@ export async function resolvePreviewImages({
     }) => {
       const url = ready.get(`${purpose}:${assetId}`);
       return url
-        ? { state: "ready" as const, url }
+        ? {
+            state: "ready" as const,
+            url,
+            ...(purpose === "resume"
+              ? {
+                  viewUrl: new URL(
+                    privateResumeViewUrl(assetId),
+                    location.origin,
+                  ).href,
+                }
+              : {}),
+          }
         : { state: "unavailable" as const };
     },
   };

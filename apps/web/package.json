@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
-    "build": "opennextjs-cloudflare build",
+    "build": "node scripts/build-preview-assets.mjs && opennextjs-cloudflare build",
     "build:next": "next build",
     "typecheck": "tsc --noEmit",
     "generate:avatar": "node scripts/regenerate-avatar-safe.mjs"

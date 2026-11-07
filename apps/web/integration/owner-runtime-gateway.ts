@@ -77,6 +77,18 @@ export default {
         ...env,
         ...(measured ? { DB: measured.db } : {}),
         APP_ORIGIN: virtual.origin,
+        // The fixture owner API refuses callers without the runtime key. The
+        // Worker's own owner-check requests (full-page preview) carry only the
+        // visitor's cookie, so this wrapper supplies the key it requires.
+        OWNER_API: {
+          fetch: (input: Request) => {
+            if (input.headers.has("X-Runtime-Key"))
+              return env.OWNER_API.fetch(input);
+            const headers = new Headers(input.headers);
+            headers.set("X-Runtime-Key", env.RUNTIME_KEY);
+            return env.OWNER_API.fetch(new Request(input, { headers }));
+          },
+        },
       } as unknown as CloudflareEnv,
       ctx,
     );

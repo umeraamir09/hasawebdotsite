@@ -1,8 +1,10 @@
 import {
   type AssetPurpose,
+  type CaseStudyDocument,
   type ComponentOf,
   type ComponentType,
   caseStudyPath,
+  caseStudyRichTextContentSchema,
   componentRegistry,
   DRAFT_MAX_BYTES,
   type DraftDoc,
@@ -472,8 +474,21 @@ export function normalizeDisplayStrings(model: ProfileModel): ProfileModel;
 export function normalizeDisplayStrings(model: ComponentModel): ComponentModel;
 export function normalizeDisplayStrings(model: ProjectDisplay): ProjectDisplay;
 export function normalizeDisplayStrings(
-  model: PortfolioModel | ProfileModel | ComponentModel | ProjectDisplay,
-): PortfolioModel | ProfileModel | ComponentModel | ProjectDisplay {
+  model: PreviewPageModel,
+): PreviewPageModel;
+export function normalizeDisplayStrings(
+  model:
+    | PortfolioModel
+    | ProfileModel
+    | ComponentModel
+    | ProjectDisplay
+    | PreviewPageModel,
+):
+  | PortfolioModel
+  | ProfileModel
+  | ComponentModel
+  | ProjectDisplay
+  | PreviewPageModel {
   const copy = structuredClone(model);
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: false });
@@ -587,4 +602,116 @@ export function parsePortfolioModel(
   if (!withinBounds(input, PREVIEW_BOUNDS)) return undefined;
   const result = portfolioModelSchema.safeParse(input);
   return result.success ? normalizeDisplayStrings(result.data) : undefined;
+}
+
+// Full-page preview. Each page of the private draft is one document: the
+// shared profile plus either the portfolio sections, one case study or the
+// resume page, mirroring the published page types.
+const pageImageSchema = z.discriminatedUnion("state", [
+  z.strictObject({ state: z.literal("unavailable") }),
+  z.strictObject({
+    state: z.literal("ready"),
+    url: z.string().refine(isWebUrl),
+  }),
+]);
+export const previewPageSchema = z.discriminatedUnion("kind", [
+  z.strictObject({ kind: z.literal("portfolio") }),
+  z.strictObject({
+    kind: z.literal("case-study"),
+    // Position among the draft's case studies; published pages use it for
+    // the section ID.
+    index: z.number().int().nonnegative(),
+    title: z.string(),
+    body: caseStudyRichTextContentSchema,
+    images: z.record(z.string(), pageImageSchema),
+  }),
+  z.strictObject({ kind: z.literal("resume"), file: fileSchema }),
+]);
+export type PreviewPage = z.infer<typeof previewPageSchema>;
+export const previewPageModelSchema = z.strictObject({
+  model: portfolioModelSchema,
+  page: previewPageSchema,
+});
+export type PreviewPageModel = z.infer<typeof previewPageModelSchema>;
+
+/** Asset URLs that a page model asks the browser to load, for origin checks. */
+export function previewPageAssetUrls(page: PreviewPage): string[] {
+  if (page.kind === "case-study")
+    return Object.values(page.images).flatMap((image) =>
+      image.state === "ready" ? [image.url] : [],
+    );
+  if (page.kind === "resume")
+    return page.file.state === "ready"
+      ? [page.file.url, page.file.viewUrl]
+      : [];
+  return [];
+}
+export function parsePreviewPageModel(
+  input: unknown,
+): PreviewPageModel | undefined {
+  if (!withinBounds(input, PREVIEW_BOUNDS)) return undefined;
+  const result = previewPageModelSchema.safeParse(input);
+  return result.success ? normalizeDisplayStrings(result.data) : undefined;
+}
+
+/**
+ * Projects the saved draft as the page published at `path`: `/`, `/resume` or
+ * `/projects/{slug}`. Returns undefined where a published portfolio would show
+ * its page-unavailable state: no such case study, or no resume component.
+ */
+export function projectPreviewPage(
+  draft: DraftDoc,
+  path: string,
+  options: ProjectionOptions,
+): PreviewPageModel | undefined {
+  const portfolio = projectPortfolio(draft, options);
+  if (path === "/") return { model: portfolio, page: { kind: "portfolio" } };
+  const profile = { ...portfolio, components: [] };
+  if (path === "/resume") {
+    const resume = portfolio.components.find(
+      (component) => component.type === "resume",
+    );
+    return resume?.type === "resume"
+      ? {
+          model: profile,
+          page: { kind: "resume", file: resume.data.file },
+        }
+      : undefined;
+  }
+  let index = 0;
+  for (const component of draft.components) {
+    if (component.type !== "projects") continue;
+    if (draft.samples[`components.${component.id}`]) continue;
+    for (const entry of component.data.entries) {
+      if (!entry.caseStudy) continue;
+      if (caseStudyPath(entry.caseStudy.slug) === path) {
+        const body: CaseStudyDocument = entry.caseStudy.body;
+        const images: Record<string, z.infer<typeof pageImageSchema>> = {};
+        for (const node of body.content) {
+          if (node.type !== "image" || images[node.attrs.assetId]) continue;
+          const resolved = resolveImage(
+            { assetId: node.attrs.assetId },
+            "case_study",
+            options,
+          );
+          images[node.attrs.assetId] =
+            resolved.state === "ready"
+              ? { state: "ready", url: resolved.url }
+              : { state: "unavailable" };
+        }
+        return normalizeDisplayStrings({
+          model: profile,
+          page: {
+            kind: "case-study",
+            index,
+            title: entry.title,
+            body,
+            images,
+          },
+        });
+      }
+      index++;
+    }
+  }
+  return undefined;
 }

@@ -9,6 +9,7 @@ import { checkAvatarExtrasJourney } from "./avatar-extras-browser.mjs";
 import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
+import { checkDraftPreviewJourney } from "./draft-preview-browser.mjs";
 import { checkFaceRevealJourney } from "./face-reveal-browser.mjs";
 import { createGroupRunner } from "./lib/browser-groups.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
@@ -37,10 +38,18 @@ export async function checkEditor({
   const directory = join(root, ".wrangler/editor-browser");
   await mkdir(directory, { recursive: true });
   await esbuild.build({
-    entryPoints: [
-      join(root, "apps/web/integration/editor-fixture.tsx"),
-      join(root, "apps/web/integration/editor-preview-fixture.ts"),
-    ],
+    entryPoints: {
+      "editor-fixture": join(root, "apps/web/integration/editor-fixture.tsx"),
+      "editor-preview-fixture": join(
+        root,
+        "apps/web/integration/editor-preview-fixture.ts",
+      ),
+      // The shipped full-page preview client, served as /preview-assets/app.*.
+      "full-preview-entry": join(
+        root,
+        "apps/web/lib/editor/full-preview-entry.ts",
+      ),
+    },
     bundle: true,
     platform: "browser",
     format: "esm",
@@ -122,6 +131,25 @@ export async function checkEditor({
           shell("editor-preview-fixture", true),
         );
         await relay(response, res);
+        return;
+      }
+      // The full-page preview goes through the production Worker gate.
+      if (url.pathname === "/preview" || url.pathname.startsWith("/preview/")) {
+        await relay(
+          await authority(req.url, { method: req.method }, session),
+          res,
+        );
+        return;
+      }
+      if (/^\/preview-assets\/app\.(?:js|css)$/.test(url.pathname)) {
+        const extension = url.pathname.slice(-2) === "js" ? "js" : "css";
+        res.setHeader(
+          "Content-Type",
+          extension === "js" ? "text/javascript" : "text/css",
+        );
+        res.end(
+          await readFile(join(directory, `full-preview-entry.${extension}`)),
+        );
         return;
       }
       if (
@@ -1310,6 +1338,7 @@ export async function checkEditor({
       evidence,
       browserOrigin,
       authority,
+      cookie,
       root,
     };
     await checkPublicationControls(controls);
@@ -1328,6 +1357,7 @@ export async function checkEditor({
     await checkAppearanceJourney(controls);
     await checkAvatarExtrasJourney(controls);
     await checkFaceRevealJourney(controls);
+    await checkDraftPreviewJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),
