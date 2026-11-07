@@ -374,7 +374,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 37.
 - Integration before full completion: 25–26 and verified S-9 policy for real public interaction and second-photo withdrawal.
 - Implement the reversible diagonal wipe, stable image dimensions, original cat/hands overlays, keyboard controls, changing accessible label, visual cue and reduced-motion switch using owner images. Preserve both full animation sequences. Add an independent keyboard-accessible visitor pause/play control, even with Face Reveal off. Pause uses the cleaned cat still or stationary hands without toggling the portrait. Reduced motion takes priority and changing preference applies immediately. Share this behavior between editor preview and the markup-only public renderer; keep the faithful React reference unchanged.
-- [ ] Complete when every page load starts with the original avatar, both decorations and independent playback controls work with Face Reveal on/off, reduced motion uses the correct still states, and preview matches public behavior. Disabling and republishing removes the second photo from public storage/cache while preserving the private draft asset.
+- [Implementation and verification record](../specs/2026-11-07-face-reveal/results.md). Owner approved completion on November 7, 2026. The deployed S-9 withdrawal check remains a release gate.
+- [x] Complete when every page load starts with the original avatar, both decorations and independent playback controls work with Face Reveal on/off, reduced motion uses the correct still states, and preview matches public behavior. Disabling and republishing removes the second photo from public storage/cache while preserving the private draft asset.
 
 ### Phase 39. Finish full-page draft preview
 

@@ -15,6 +15,7 @@ import {
   fileSchema,
   modelAssetUrls,
   normalizeDisplayStrings,
+  profileAssetUrls,
   profileModelSchema,
   projectModelSchema,
   withinBounds,
@@ -37,6 +38,8 @@ const imagePartSchema = z.strictObject({
   asset: assetSchema,
   usage: z.enum(["avatar", "banner", "image"]),
   decoration: z.enum(["none", "cat", "hands"]).default("none"),
+  // Avatar only: the enabled Face Reveal photo.
+  faceReveal: assetSchema.optional(),
 });
 export type PlatformAssets = {
   cssUrl: string;
@@ -82,15 +85,23 @@ export function renderFragment(
   if (part.success) return { status: "ready", html: renderPart(part.data) };
   const image = imagePartSchema.safeParse(input);
   if (image.success) {
-    const { asset, usage, decoration } = image.data;
+    const { asset, usage, decoration, faceReveal } = image.data;
+    if (faceReveal && usage !== "avatar") return { status: "invalid" };
     if (
-      asset.state === "ready" &&
-      !assetOrigins.includes(new URL(asset.url).origin)
+      [asset, faceReveal].some(
+        (item) =>
+          item?.state === "ready" &&
+          !assetOrigins.includes(new URL(item.url).origin),
+      )
     )
       return { status: "invalid" };
     const html = renderToStaticMarkup(
       usage === "avatar" ? (
-        <PortfolioAvatar asset={asset} decoration={decoration} />
+        <PortfolioAvatar
+          asset={asset}
+          decoration={decoration}
+          faceReveal={faceReveal}
+        />
       ) : (
         <AssetImage asset={asset} kind={usage} />
       ),
@@ -112,7 +123,7 @@ export function renderFragment(
     image.state === "ready" && image.url ? [image.url] : [];
   const urls =
     fragment.kind === "profile"
-      ? [...ready(fragment.profile.avatar), ...ready(fragment.profile.banner)]
+      ? profileAssetUrls(fragment.profile)
       : fragment.kind === "project"
         ? ready(fragment.entry.image)
         : fragment.kind === "resume-page"

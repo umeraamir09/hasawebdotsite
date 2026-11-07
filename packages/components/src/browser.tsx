@@ -5,6 +5,7 @@ import {
   modelAssetUrls,
   type PortfolioModel,
   parsePortfolioModel,
+  profileAssetUrls,
 } from "./model";
 import { Portfolio } from "./portfolio";
 import { installSite, type ModeStore, type VisitorMode } from "./site";
@@ -17,9 +18,7 @@ function trustedModel(
   const model = parsePortfolioModel(input);
   if (!model) return undefined;
   const urls = [
-    ...[model.profile.avatar, model.profile.banner].flatMap((image) =>
-      image.state === "ready" ? [image.url] : [],
-    ),
+    ...profileAssetUrls(model.profile),
     ...modelAssetUrls(model.components),
   ];
   if (urls.some((url) => !options.assetOrigins.includes(new URL(url).origin)))

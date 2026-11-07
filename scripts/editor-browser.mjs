@@ -9,6 +9,7 @@ import { checkAvatarExtrasJourney } from "./avatar-extras-browser.mjs";
 import { checkCaseStudyJourney } from "./case-study-browser.mjs";
 import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
+import { checkFaceRevealJourney } from "./face-reveal-browser.mjs";
 import { createGroupRunner } from "./lib/browser-groups.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
@@ -1326,6 +1327,7 @@ export async function checkEditor({
     await checkSocialLinksJourney(controls);
     await checkAppearanceJourney(controls);
     await checkAvatarExtrasJourney(controls);
+    await checkFaceRevealJourney(controls);
     assert.deepEqual(errors, []);
     await page.screenshot({
       path: join(evidence, "editor-final.png"),

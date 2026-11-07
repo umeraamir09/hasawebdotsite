@@ -4,7 +4,8 @@ import { createRequire } from "node:module";
 
 // Phase 37: the owner controls for the approved Ginger cat and Hands
 // decorations and the optional Face Reveal second photo, from the editor
-// through Publish. Public pause/play and the reveal interaction are Phase 38.
+// through Publish. Public pause/play and the reveal interaction are Phase 38
+// (face-reveal-browser.mjs).
 
 // The avatar slot as a canonical tree, without the owner's image URL (private
 // in preview, public once published), runtime loading state or attribute
@@ -22,10 +23,14 @@ function avatarShape(target, markup) {
       if (node.nodeType !== 1) return "";
       if (node.classList.contains("pf-image-status")) return "";
       const owner = node.closest(".pf-avatar-portraitButton") !== null;
+      // The platform script reveals the playback control (Phase 38).
+      const scripted = node.hasAttribute("data-avatar-playback");
       const attributes = [...node.attributes]
         .filter(
           ({ name }) =>
-            !volatile.has(name) && !(owner && /^(src|srcset)$/.test(name)),
+            !volatile.has(name) &&
+            !(owner && /^(src|srcset)$/.test(name)) &&
+            !(scripted && name === "hidden"),
         )
         .map(({ name, value }) => `${name}=${value}`)
         .sort()

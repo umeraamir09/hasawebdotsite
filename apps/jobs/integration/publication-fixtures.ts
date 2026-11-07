@@ -218,6 +218,15 @@ export function makeDraft(kind: string): DraftDoc {
       draft.profile.banner.alt = '😀<&>"\r\n'.repeat(2000);
   }
   if (kind === "hands" || kind === "cat") draft.profile.decorationId = kind;
+  // Phase 38: a decoration over both Face Reveal images, with a photo
+  // description that needs escaping in its own streamed slot.
+  if (kind === "cat-face") {
+    draft.profile.decorationId = "cat";
+    draft.profile.faceReveal = {
+      enabled: true,
+      image: { assetId: "private-face", alt: 'Me 😀 <&> "quoted"' },
+    };
+  }
   if (kind === "face" || kind === "assets-face")
     draft.profile.faceReveal.enabled = true;
   if (kind === "surrogate-boundary")

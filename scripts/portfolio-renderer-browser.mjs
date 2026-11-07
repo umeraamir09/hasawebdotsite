@@ -6,6 +6,7 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
+import { checkFaceRevealParity } from "./face-reveal-renderer-browser.mjs";
 import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
 import {
   FIRST_PAINT_SAMPLER,
@@ -118,6 +119,7 @@ const media = {
   "avatar.png":
     "apps/web/public/assets/ed716e56-02ad-4f30-a9e8-803c79346a83.png",
   "banner.png": "apps/web/public/auth/assembly-desktop.png",
+  "face.png": "apps/web/public/auth/assembly-mobile.png",
 };
 function authorized(request) {
   return request.headers.cookie
@@ -1338,6 +1340,7 @@ if (process.argv.includes("--serve")) {
         "preview applies saved appearance immediately with public-page parity; a preview switch is kept across content edits, reset by a saved mode change and never stored",
       passed: true,
     });
+    checks.push(await checkFaceRevealParity({ browser, origin, evidence }));
     assert.deepEqual(errors, []);
     assert.deepEqual(failures, []);
     await context.close();

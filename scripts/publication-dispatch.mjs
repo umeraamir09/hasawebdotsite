@@ -317,7 +317,7 @@ try {
   const assets = new Map();
   for (const kind of (
     process.env.S8_CASES ??
-    "small,mixed,privacy,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,assets,assets-face,max"
+    "small,mixed,privacy,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,cat-face,assets,assets-face,max"
   ).split(",")) {
     const draft = makeDraft(kind);
     if (commitMode && kind === "small") draft.profile.faceReveal.enabled = true;
@@ -452,7 +452,7 @@ try {
     assert.equal(manifest.format, "hasaweb-candidate-v1");
     assert.equal(manifest.candidateId, id);
     assert.equal(manifest.sourceRevision, revision);
-    assert.equal(manifest.rendererVersion, "publication-v4");
+    assert.equal(manifest.rendererVersion, "publication-v5");
     const seal = (
       await sql(
         "SELECT json_extract(value,'$.manifest') AS seal FROM publication_candidate_index WHERE candidate_id=?",
@@ -530,7 +530,7 @@ try {
       assert.ok(!/portrait|reference|raw|generator|source-map/.test(file.path));
     }
     const art = manifest.files.filter((file) => file.path.endsWith(".webp"));
-    assert.equal(art.length, kind === "cat" ? 2 : 0);
+    assert.equal(art.length, kind === "cat" || kind === "cat-face" ? 2 : 0);
     assert.equal(
       manifest.files.filter((file) => file.path.endsWith(".ttf")).length,
       1,

@@ -81,7 +81,8 @@ export const commandSchema = z.discriminatedUnion("kind", [
     kind: z.literal("image"),
     path,
     purpose: z.enum(["avatar", "banner", "project", "case_study"]),
-    side: z.enum(["open", "close"]).default("open"),
+    // "face" is the markup between the avatar and Face Reveal descriptions.
+    side: z.enum(["open", "face", "close"]).default("open"),
   }),
 ]);
 type View = z.infer<typeof view>;
@@ -119,8 +120,15 @@ export interface PreparationSource {
   image(
     path: string,
     purpose: "avatar" | "banner" | "project" | "case_study",
-    side: "open" | "close",
+    side: "open" | "face" | "close",
   ): Promise<string>;
+}
+async function faceRevealEnabled(source: PreparationSource) {
+  if ((await source.read("$.profile.faceReveal.enabled")).type !== "true")
+    return false;
+  return (
+    (await source.read("$.profile.faceReveal.image.assetId")).type === "text"
+  );
 }
 const cmd = (
   name: FrameName,
@@ -331,8 +339,21 @@ export async function advancePreparation(
     return "";
   }
   if (command.kind === "image") {
+    // An enabled Face Reveal photo adds its description after the avatar's.
+    const face =
+      command.purpose === "avatar" &&
+      command.side === "open" &&
+      (await faceRevealEnabled(source));
     if (command.side === "open")
-      push([text(`${command.path}.alt`), { ...command, side: "close" }]);
+      push([
+        text(`${command.path}.alt`),
+        { ...command, side: face ? "face" : "close" },
+      ]);
+    if (command.side === "face")
+      push([
+        text("$.profile.faceReveal.image.alt"),
+        { ...command, side: "close" },
+      ]);
     return source.image(command.path, command.purpose, command.side);
   }
   if (

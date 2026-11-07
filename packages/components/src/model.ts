@@ -134,6 +134,9 @@ export const profileModelSchema = profileSchema
     banner: assetSchema,
     // Absent means no decoration, the draft default.
     decoration: decorationModelSchema.default("none"),
+    // Present only while Face Reveal is enabled. A disabled second photo
+    // stays private in the draft and never reaches the display model.
+    faceReveal: z.strictObject({ image: assetSchema }).optional(),
     links: z.array(linkSchema),
   });
 export const portfolioModelSchema = z.strictObject({
@@ -189,6 +192,13 @@ export function modelAssetUrls(
       : component.type === "resume" && component.data.file.state === "ready"
         ? [component.data.file.url, component.data.file.viewUrl]
         : [],
+  );
+}
+
+// Every ready profile image URL, including the enabled Face Reveal photo.
+export function profileAssetUrls(profile: ProfileModel): string[] {
+  return [profile.avatar, profile.banner, profile.faceReveal?.image].flatMap(
+    (image) => (image?.state === "ready" ? [image.url] : []),
   );
 }
 
@@ -412,6 +422,17 @@ function* projectSteps(
         options,
       ),
       decoration: displayDecoration(draft.profile.decorationId),
+      ...(draft.profile.faceReveal.enabled
+        ? {
+            faceReveal: {
+              image: resolveImage(
+                draft.profile.faceReveal.image,
+                "face",
+                options,
+              ),
+            },
+          }
+        : {}),
       links: yield* displayLinks(draft.links, "showInProfile"),
     },
     components,
@@ -484,8 +505,10 @@ export type InputBounds = {
 };
 const SOURCE_ACCOUNTING_FACTOR = 8;
 const MIN_PROJECT_IMAGE_ENTRY_BYTES = 94;
+// The fixed profile adds at most three images: avatar, banner and the
+// enabled Face Reveal photo.
 const MAX_RESOLVED_ASSETS =
-  Math.floor(DRAFT_MAX_BYTES / MIN_PROJECT_IMAGE_ENTRY_BYTES) + 2;
+  Math.floor(DRAFT_MAX_BYTES / MIN_PROJECT_IMAGE_ENTRY_BYTES) + 3;
 const MAX_ASSET_WIRE_BYTES = 2 * URL_MAX_BYTES + 128;
 export const PREVIEW_MAX_BYTES =
   SOURCE_ACCOUNTING_FACTOR * DRAFT_MAX_BYTES +
