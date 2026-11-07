@@ -408,13 +408,16 @@ export function preparationSource(
       const ref = await read(`${path}.assetId`);
       if (!ref.value && purpose === "project") return "";
       const marker = "S8_CONTROLLED_IMAGE_DESCRIPTION";
+      const faceMarker = "S8_CONTROLLED_FACE_DESCRIPTION";
+      const url = (id: unknown) =>
+        `${row.asset_origin}/${root(row.id)}assets/${id}`;
       const asset = ref.value
-        ? {
-            state: "ready",
-            url: `${row.asset_origin}/${root(row.id)}assets/${ref.value}`,
-            alt: marker,
-          }
+        ? { state: "ready", url: url(ref.value), alt: marker }
         : { state: "missing" };
+      // The enabled Face Reveal photo shares the avatar markup. Its
+      // description streams between the avatar's ("face") and the end.
+      const face =
+        purpose === "avatar" ? await faceRevealAsset(read) : undefined;
       const rendered = renderFragment(
         {
           kind: "asset",
@@ -425,20 +428,45 @@ export function preparationSource(
               : "none",
           usage:
             purpose === "avatar" || purpose === "banner" ? purpose : "image",
+          ...(face
+            ? {
+                faceReveal: { state: "ready", url: url(face), alt: faceMarker },
+              }
+            : {}),
         },
         { assetOrigins: [row.asset_origin] },
       );
       if (rendered.status !== "ready")
         throw new Error("Asset renderer envelope");
       const html = rendered.html.replace(/<link rel="preload"[^>]*\/>/g, "");
-      if (!ref.value) return side === "open" ? html : "";
+      if (!ref.value) {
+        if (face) throw new Error("Face Reveal requires the avatar");
+        return side === "open" ? html : "";
+      }
       const index = html.indexOf(`alt="${marker}"`) + 5;
       if (index < 5) throw new Error("Image description slot missing");
-      return side === "open"
-        ? html.slice(0, index)
+      const faceIndex = face ? html.indexOf(`alt="${faceMarker}"`) + 5 : -1;
+      if (face && faceIndex < index)
+        throw new Error("Face description slot missing");
+      if (side === "open") return html.slice(0, index);
+      if (side === "face") {
+        if (!face) throw new Error("Face Reveal photo is not enabled");
+        return html.slice(index + marker.length, faceIndex);
+      }
+      return face
+        ? html.slice(faceIndex + faceMarker.length)
         : html.slice(index + marker.length);
     },
   };
+}
+// The Face Reveal photo's asset ID when the candidate enables it. Candidate
+// sources omit a disabled photo; the enabled flag is checked as well.
+async function faceRevealAsset(
+  read: (path: string) => Promise<SourceNode>,
+): Promise<string | undefined> {
+  if ((await read("$.profile.faceReveal.enabled")).type !== "true") return;
+  const id = (await read("$.profile.faceReveal.image.assetId")).value;
+  return typeof id === "string" && id ? id : undefined;
 }
 async function copyParts(
   env: DispatchEnv,

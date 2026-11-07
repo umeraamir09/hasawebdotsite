@@ -14,7 +14,7 @@ export type Wake = z.infer<typeof wakeSchema>;
 export const LEASE_MS = 60_000;
 export const DEADLINE_MS = 3_600_000;
 export const MAX_ATTEMPTS = 4;
-export const PUBLICATION_RENDERER_VERSION = "publication-v4";
+export const PUBLICATION_RENDERER_VERSION = "publication-v5";
 export const candidateSchema = z.object({
   id: candidateIdSchema,
   portfolio_id: z.string(),
