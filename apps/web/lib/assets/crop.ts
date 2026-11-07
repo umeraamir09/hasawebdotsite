@@ -1,11 +1,13 @@
 import { IMAGE_BYTES, signatureMatches, uploadFormat } from "./formats";
 
-export type CropPurpose = "avatar" | "banner";
+// The Face Reveal photo shares the avatar shape so both images swap in place.
+export type CropPurpose = "avatar" | "banner" | "face";
 export type CropPosition = { zoom: number; x: number; y: number };
 export type ImageDimensions = { width: number; height: number };
 export const initialCrop: CropPosition = { zoom: 1, x: 0.5, y: 0.5 };
 export const cropSizes = {
   avatar: { width: 848, height: 880 },
+  face: { width: 848, height: 880 },
   banner: { width: 1600, height: 480 },
 } satisfies Record<CropPurpose, ImageDimensions>;
 

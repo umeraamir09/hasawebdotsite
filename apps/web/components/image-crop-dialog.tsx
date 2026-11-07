@@ -36,7 +36,12 @@ export function ImageCropDialog({
     height: image.element.naturalHeight,
   };
   const rectangle = cropRectangle(size, purpose, position);
-  const title = purpose === "avatar" ? "Adjust avatar" : "Adjust banner";
+  const title =
+    purpose === "avatar"
+      ? "Adjust avatar"
+      : purpose === "face"
+        ? "Adjust Face Reveal photo"
+        : "Adjust banner";
   useEffect(() => {
     alive.current = true;
     const element = dialog.current;

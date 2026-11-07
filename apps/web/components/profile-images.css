@@ -18,7 +18,8 @@
   background: #eff2eb;
   color: #596053;
 }
-.profile-image-preview-avatar {
+.profile-image-preview-avatar,
+.profile-image-preview-face {
   width: 106px;
   aspect-ratio: 212 / 220;
   border-radius: 18px;
