@@ -303,7 +303,151 @@ describe("safe output and bounded serialization", () => {
     expect(html).toContain('viewBox="0 0 80 112"');
     expect(html).not.toContain("Umer");
     expect(html).not.toContain("umer-avatar-photo");
-    expect(html).not.toContain("<button");
+    // Face Reveal off: plain portrait, no reveal button, cue or second image.
+    expect(html).not.toContain("data-face-reveal");
+    expect(html).not.toContain("Reveal face");
+    expect(html).not.toContain("pf-avatar-revealCue");
+    expect(html).not.toContain("pf-image-face");
+    // The independent playback control still exists, hidden until the
+    // platform script attaches it.
+    expect(html).toContain('data-playback="playing"');
+    expect(html).toMatch(
+      /<button type="button" class="pf-avatar-playback" data-avatar-playback="" hidden="">/,
+    );
+  });
+  it("renders Face Reveal as one button over both owner images, starting on the avatar", () => {
+    const avatar = {
+      state: "ready",
+      url: "https://assets.example/avatar.webp",
+      alt: "Illustrated owner",
+    } as const;
+    const face = {
+      state: "ready",
+      url: "https://assets.example/face.webp",
+      alt: "Owner photo",
+    } as const;
+    for (const decoration of ["none", "cat", "hands"] as const) {
+      const html = renderToStaticMarkup(
+        <PortfolioAvatar
+          asset={avatar}
+          decoration={decoration}
+          faceReveal={face}
+        />,
+      );
+      expect(html).toContain(
+        '<button type="button" class="pf-avatar-portraitButton" data-face-reveal="" data-photo="false" data-erasing="false" aria-label="Reveal face">',
+      );
+      expect(html.match(/<button/g)).toHaveLength(
+        decoration === "none" ? 1 : 2,
+      );
+      expect(html).toContain('class="pf-avatar-revealCue" aria-hidden="true"');
+      // The original avatar precedes the photo in the same portrait box.
+      expect(html.indexOf("avatar.webp")).toBeLessThan(
+        html.indexOf("face.webp"),
+      );
+      expect(html).toContain(
+        "pf-image pf-image-avatar pf-avatar-portrait pf-avatar-illustration",
+      );
+      expect(html).toContain(
+        "pf-image pf-image-face pf-avatar-portrait pf-avatar-photo",
+      );
+      // A selected decoration stays over both images.
+      if (decoration !== "none")
+        expect(html.lastIndexOf("face.webp")).toBeLessThan(
+          html.indexOf(
+            decoration === "cat"
+              ? "pf-avatar-catDecoration"
+              : "pf-avatar-decoration",
+          ),
+        );
+    }
+  });
+  it("projects only an enabled Face Reveal photo and checks its origin", () => {
+    const source = draft();
+    source.profile.avatar = { assetId: "avatar", accepted: true };
+    source.profile.faceReveal = {
+      enabled: false,
+      image: { assetId: "face", alt: "Owner photo" },
+    };
+    const urls: Record<string, string> = {
+      avatar: "https://assets.example/avatar.webp",
+      face: "https://assets.example/face.webp",
+    };
+    const purposes: string[] = [];
+    const resolve = {
+      ...options,
+      resolveAsset: ({
+        assetId,
+        purpose,
+      }: {
+        assetId: string;
+        purpose: string;
+      }) => {
+        purposes.push(purpose);
+        return { state: "ready" as const, url: urls[assetId] ?? "" };
+      },
+    };
+    const off = projectPortfolio(source, resolve);
+    expect("faceReveal" in off.profile).toBe(false);
+    expect(purposes).not.toContain("face");
+    expect(
+      renderToStaticMarkup(<PortfolioProfile profile={off.profile} />),
+    ).not.toContain("face.webp");
+    source.profile.faceReveal.enabled = true;
+    const on = projectPortfolio(source, resolve);
+    expect(on.profile.faceReveal).toEqual({
+      image: { state: "ready", url: urls.face, alt: "Owner photo" },
+    });
+    expect(purposes).toContain("face");
+    const html = renderToStaticMarkup(
+      <PortfolioProfile profile={on.profile} />,
+    );
+    expect(html).toContain("data-face-reveal");
+    expect(html).toContain('alt="Owner photo"');
+    // The fragment renderer applies the same trusted-origin check.
+    expect(
+      renderFragment(
+        { kind: "profile", profile: on.profile },
+        {
+          assetOrigins: ["https://assets.example"],
+        },
+      ).status,
+    ).toBe("ready");
+    expect(
+      renderFragment(
+        {
+          kind: "profile",
+          profile: {
+            ...on.profile,
+            faceReveal: {
+              image: {
+                state: "ready",
+                url: "https://untrusted.test/face",
+                alt: "",
+              },
+            },
+          },
+        },
+        { assetOrigins: ["https://assets.example"] },
+      ).status,
+    ).toBe("invalid");
+    expect(
+      renderFragment(
+        {
+          kind: "asset",
+          usage: "banner",
+          asset: { state: "missing" },
+          faceReveal: on.profile.faceReveal?.image,
+        },
+        { assetOrigins: ["https://assets.example"] },
+      ).status,
+    ).toBe("invalid");
+    // Enabled without a photo: the preview shows the missing state;
+    // publication validation blocks it.
+    delete source.profile.faceReveal.image;
+    expect(projectPortfolio(source, resolve).profile.faceReveal).toEqual({
+      image: { state: "missing" },
+    });
   });
   it("projects the saved decoration so the preview profile matches the published avatar", () => {
     expect(["none", ...DECORATION_IDS]).toEqual(decorationModelSchema.options);

@@ -13,9 +13,29 @@ export function createFixtures(
   origin: string,
   assets: { cssUrl: string; scriptUrl: string },
 ) {
+  // Phase 38: Face Reveal on with each decoration, and playback alone.
+  const revealNames = [
+    "reveal-none",
+    "reveal-cat",
+    "reveal-hands",
+    "playback-cat",
+    "playback-hands",
+  ] as const;
+  const fixtureDraftFor = (name: string) => {
+    const reveal = /^(reveal|playback)-(none|cat|hands)$/.exec(name);
+    if (!reveal) return fixtureDraft(name as (typeof fixtureNames)[number]);
+    const draft = fixtureDraft("complete");
+    if (reveal[2] !== "none")
+      draft.profile.decorationId = reveal[2] as "cat" | "hands";
+    draft.profile.faceReveal = {
+      enabled: reveal[1] === "reveal",
+      image: { assetId: "fixture-face", alt: "Mira's photo" },
+    };
+    return draft;
+  };
   const fixtures = Object.fromEntries(
-    fixtureNames.map((name) => {
-      const draft = fixtureDraft(name);
+    [...fixtureNames, ...revealNames].map((name) => {
+      const draft = fixtureDraftFor(name);
       function project(context: "private" | "published") {
         return projectPortfolio(draft, {
           assetOrigins: [origin],
@@ -23,6 +43,7 @@ export function createFixtures(
             const paths: Record<string, string> = {
               "fixture-avatar": "/avatar.png",
               "fixture-banner": "/banner.png",
+              "fixture-face": "/face.png",
               "broken-project": "/broken.webp",
             };
             const path = paths[assetId];

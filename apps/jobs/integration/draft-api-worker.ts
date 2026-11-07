@@ -106,6 +106,8 @@ export default {
     if (new URL(request.url).pathname === "/__fixture/withdraw-check") {
       const id = new URL(request.url).searchParams.get("id") ?? "";
       const verified = request.headers.get("X-Fixture-Verified") === "true";
+      // Every URL the cleanup observed, so tests can prove what it verified.
+      const observed: string[] = [];
       try {
         const checked = {
           ...env,
@@ -115,6 +117,7 @@ export default {
           CACHE_HTTP: {
             fetch: async (input: RequestInfo | URL) => {
               const url = String(input);
+              observed.push(url);
               if (url.startsWith("https://api.cloudflare.com/"))
                 return Response.json({ success: true });
               return verified
@@ -132,9 +135,9 @@ export default {
           "publication-final.hasaweb.site",
         ]);
         await withdrawPublication(checked, id);
-        return privateJson({ complete: true });
+        return privateJson({ complete: true, observed });
       } catch {
-        return privateJson({ complete: false }, 503);
+        return privateJson({ complete: false, observed }, 503);
       }
     }
     if (
