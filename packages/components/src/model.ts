@@ -15,7 +15,12 @@ import {
   URL_MAX_BYTES,
 } from "@hasaweb/schema";
 import { z } from "zod";
-import { appearanceModelSchema, displayAppearance } from "./appearance";
+import {
+  appearanceModelSchema,
+  decorationModelSchema,
+  displayAppearance,
+  displayDecoration,
+} from "./appearance";
 import { pagePathSchema } from "./frames";
 import { yieldPreviewTask } from "./preview-task";
 
@@ -127,6 +132,8 @@ export const profileModelSchema = profileSchema
   .extend({
     avatar: assetSchema,
     banner: assetSchema,
+    // Absent means no decoration, the draft default.
+    decoration: decorationModelSchema.default("none"),
     links: z.array(linkSchema),
   });
 export const portfolioModelSchema = z.strictObject({
@@ -404,6 +411,7 @@ function* projectSteps(
         "banner",
         options,
       ),
+      decoration: displayDecoration(draft.profile.decorationId),
       links: yield* displayLinks(draft.links, "showInProfile"),
     },
     components,
