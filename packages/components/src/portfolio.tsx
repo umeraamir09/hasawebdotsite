@@ -14,6 +14,7 @@ import type {
   DisplayAsset,
   DisplayFile,
   PortfolioModel,
+  PreviewPageModel,
   ProfileModel,
 } from "./model";
 
@@ -453,6 +454,36 @@ export function Portfolio({ model }: { model: PortfolioModel }) {
       {model.components.map((component) => (
         <PortfolioSection key={component.id} component={component} />
       ))}
+    </PortfolioLayout>
+  );
+}
+
+// One document of the full-page draft preview. It composes the same views as
+// the published pages: the profile followed by the portfolio sections, one
+// case study or the resume page.
+export function PortfolioPage({ model, page }: PreviewPageModel) {
+  return (
+    <PortfolioLayout>
+      <PortfolioProfile profile={model.profile} />
+      {page.kind === "portfolio" ? (
+        model.components.map((component) => (
+          <PortfolioSection key={component.id} component={component} />
+        ))
+      ) : page.kind === "case-study" ? (
+        <PortfolioCaseStudy
+          title={page.title}
+          document={page.body}
+          index={page.index}
+          images={(id, alt) => {
+            const image = page.images[id];
+            return image?.state === "ready"
+              ? { state: "ready", url: image.url, alt }
+              : { state: "unavailable" };
+          }}
+        />
+      ) : (
+        <PortfolioResume file={page.file} />
+      )}
     </PortfolioLayout>
   );
 }
