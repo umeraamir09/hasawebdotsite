@@ -407,9 +407,11 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       scopes: string,
       verifiedIdentity: GitHubIdentity,
     ) {
+      // These throw before the token is queued; the callback then discards it.
+      // "Invalid activity consent" means the token has already been queued.
       const portfolioId = await requirePortfolio();
       if (ticket.portfolioId !== portfolioId)
-        throw new Error("Invalid activity consent");
+        throw new Error("Activity consent portfolio changed");
       parseIdentity(ticket.identity);
       const accepted =
         scopes === "read:user" &&
@@ -480,20 +482,20 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       const row = rows[1]?.results[0] as Connection | undefined;
       return row ? connectionView(row) : null;
     },
-    // A token was delivered but its account could not be verified. Revoke just
-    // that token. The binding names the selected account for AAD only; its
-    // token-only purpose can never withdraw another grant.
+    // A token was delivered but could not be enabled. Revoke just that token.
+    // The binding names the selected account for AAD only; its token-only
+    // purpose can never withdraw another grant. The ticket comes from the
+    // consent row this session consumed, so this deliberately needs no live
+    // session: a session that ended after the exchange must still queue it.
+    // Only the reserved grant of this exact operation can match.
     async discardIssuedToken(
       ticket: ConsentTicket,
       key: CryptoKey,
       token: string,
     ) {
-      const portfolioId = await requirePortfolio();
-      if (ticket.portfolioId !== portfolioId)
-        throw new Error("Invalid activity consent");
       parseIdentity(ticket.identity);
       const binding = credentialBinding(
-        portfolioId,
+        ticket.portfolioId,
         ticket.appId,
         ticket.identity.id,
         ticket.operationId,

@@ -289,6 +289,39 @@ describe("private activity consent routes", () => {
     });
     expect(failed.status).toBe(303);
     expect(await failed.text()).toBe("");
+    // That failure may have queued an issued token, so revocation starts too.
+    expect(db.cleanups).toHaveBeenCalledTimes(2);
+  });
+  it("keeps the public graph up and reports a broken activity key", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const broken = { ...ACTIVITY, GITHUB_ACTIVITY_KEY: btoa("short") };
+    service.status.mockResolvedValue(status);
+    service.preview.mockResolvedValue(null);
+    expect((await call("", { env: broken })).status).toBe(200);
+    expect((await call("/preview", { env: broken })).status).toBe(200);
+    // Private consent fails closed.
+    const start = await call("/consent", {
+      method: "POST",
+      body: { returnTo: "editor" },
+      env: broken,
+    });
+    expect(start.status).toBe(503);
+    expect(consent.start).not.toHaveBeenCalled();
+    // The sweep cannot decrypt queued tokens. It says so instead of passing
+    // as an unconfigured app, and the rows stay queued for a repaired key.
+    const { sweepGitHubCleanups } = await import("./github-routes");
+    await expect(
+      sweepGitHubCleanups({ ...env, ...broken } as never),
+    ).rejects.toThrow("Invalid activity key");
+    expect(db.cleanups).not.toHaveBeenCalled();
+    expect(
+      errors.mock.calls.some((args) =>
+        String(args[0]).includes("activity app misconfigured"),
+      ),
+    ).toBe(true);
+    // Unset is still a quiet no-op.
+    await expect(sweepGitHubCleanups(env as never)).resolves.toEqual([]);
+    errors.mockRestore();
   });
   it("returns a signed-out callback without touching consent", async () => {
     owner.current = false;

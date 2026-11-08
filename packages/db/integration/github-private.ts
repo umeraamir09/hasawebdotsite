@@ -816,6 +816,45 @@ export async function runPrivateActivityChecks(
         "token-only binding",
       );
       equal(await t.cleanup(), ["deleted"]);
+      // A session that ends while the code is exchanged makes finishConsent
+      // throw after a token exists. That token is still queued and revoked,
+      // and the attempt is finished, not left exchanging until the deadline.
+      const ending = await t.consent();
+      const expireSession = (at: number) =>
+        db
+          .prepare("UPDATE session SET expires_at=? WHERE id=?")
+          .bind(at, t.identity.session.id)
+          .run();
+      t.github.control.duringExchange = () => expireSession(1);
+      let threw = false;
+      try {
+        await t.service.callback(ending.params);
+      } catch {
+        threw = true;
+      }
+      ok(threw, "callback reports the ended session");
+      await expireSession(4102444800000);
+      equal((await raw(t.portfolioId))?.private_enabled, 0);
+      equal((await grant(owner))?.state, "pending");
+      ok(
+        JSON.parse(String((await grant(owner))?.token_binding))[0].includes(
+          "token-cleanup",
+        ),
+        "ended-session token is token-only",
+      );
+      equal(
+        (
+          await db
+            .prepare(
+              "SELECT state,outcome FROM github_consent WHERE portfolio_id=? ORDER BY created_at DESC LIMIT 1",
+            )
+            .bind(t.portfolioId)
+            .first()
+        )?.state,
+        "finished",
+      );
+      equal(await t.cleanup(), ["deleted"]);
+      ok(!t.github.valid(owner), "ended-session token revoked");
       // An exchange that settles without a token releases at once.
       t.github.control.exchange = "throw";
       const offline = await t.consent();

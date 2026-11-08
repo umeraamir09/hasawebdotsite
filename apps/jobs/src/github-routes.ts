@@ -95,12 +95,29 @@ export async function activityEnvironment(
   };
 }
 
+// A present but unusable activity secret (for example a key that is not 32
+// bytes). Revocation cannot run without it: queued tokens are encrypted with
+// that key and GitHub's delete needs the token. Rows stay queued until it is
+// repaired, so this must be visible in the logs, never mistaken for "unset".
+function reportMisconfigured(error: unknown) {
+  console.error(
+    "github activity app misconfigured; private consent and grant revocation are paused",
+    error instanceof Error ? error.message : typeof error,
+  );
+}
+
 /** Runs due grant revocations. The scheduled sweep retries what remains. */
 export async function sweepGitHubCleanups(
   env: ActivityBindings & { DB: D1Database },
   appOrigin = "",
 ) {
-  const activity = await activityEnvironment(env, appOrigin).catch(() => null);
+  let activity: PrivateEnvironment | null;
+  try {
+    activity = await activityEnvironment(env, appOrigin);
+  } catch (error) {
+    reportMisconfigured(error);
+    throw error;
+  }
   if (!activity) return [];
   return runGitHubCleanups(env.DB, activity);
 }
@@ -183,10 +200,16 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
       const token = c.env.GITHUB_SERVICE_TOKEN;
       if (!token) return privateJson({ error: "unavailable" }, 503);
       try {
+        // Status, preview, setup, detect and retry need only the platform
+        // credential. A broken activity secret disables private activity
+        // (reported as unavailable) without taking the public graph down.
         const activity = await activityEnvironment(
           c.env,
           authSettings(c.env).origin,
-        );
+        ).catch((error: unknown) => {
+          reportMisconfigured(error);
+          return null;
+        });
         return await handler(
           ownerGraphSetup(c.env.DB, c.get("identity"), {
             transport: transport(c.env),
@@ -273,6 +296,8 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
         "github consent callback failed",
         error instanceof Error ? error.name : typeof error,
       );
+      // A failed callback may have queued an issued token. Revoke it now.
+      await startCleanup(c);
     }
     return consentReturn(returnTo);
   });

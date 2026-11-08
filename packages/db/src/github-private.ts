@@ -520,6 +520,18 @@ export function ownerPrivateActivity(
         await owner.cancelUnissuedConsent(ticket);
         return done(exchanged.reason === "code" ? "expired" : "failed");
       }
+      // From here a live token exists. Any failure before finishConsent
+      // stores it must queue its revocation, or the crashed-exchange release
+      // would later free the reservation with nothing left to revoke.
+      const discard = async (error: unknown): Promise<never> => {
+        try {
+          await owner.discardIssuedToken(ticket, env.key, exchanged.token);
+          await finish(hash, "failed");
+        } catch {
+          // Storage is unavailable. The original error is the one to report.
+        }
+        throw error;
+      };
       const fetchedAt = new Date(now());
       const fetched = await fetchAuthorizedActivity(
         env.transport,
@@ -527,7 +539,7 @@ export function ownerPrivateActivity(
         ticket.identity,
         lastYearRange(fetchedAt),
         fetchedAt.toISOString(),
-      );
+      ).catch(discard);
       if (fetched.status === "failed") {
         // The token's account is unknown, so it cannot be enabled.
         await owner.discardIssuedToken(ticket, env.key, exchanged.token);
@@ -553,7 +565,9 @@ export function ownerPrivateActivity(
             error.message === "Invalid activity consent"
           )
         )
-          throw error;
+          // An ended session, a moved portfolio or a storage failure. The
+          // grant row is unchanged (the batch is atomic), so queue the token.
+          return discard(error);
         return done(
           sameIdentity(fetched.viewer, ticket.identity)
             ? "scope"
