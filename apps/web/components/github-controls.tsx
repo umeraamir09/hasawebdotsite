@@ -234,6 +234,26 @@ export function GitHubSetupPanel({
       current = false;
     };
   }, [saved]);
+  // Revocation at GitHub runs in the background after a withdrawal. Re-read
+  // the status until it settles so Authorize returns without a reload.
+  const cleaning = status?.private?.state === "cleanup";
+  useEffect(() => {
+    if (!cleaning) return;
+    let current = true;
+    const timer = setInterval(() => {
+      readGraphStatus()
+        .then((next) => {
+          if (current) setStatus(next);
+        })
+        .catch(() => {
+          // A missed poll is retried on the next tick.
+        });
+    }, 2000);
+    return () => {
+      current = false;
+      clearInterval(timer);
+    };
+  }, [cleaning]);
   const value = typed ?? (saved || status?.connection?.username || "");
   const candidate = value.trim();
   const profile = LOGIN.test(candidate)
