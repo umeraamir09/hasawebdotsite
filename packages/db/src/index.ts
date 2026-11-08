@@ -3,6 +3,7 @@ export * from "./bounded-save";
 export * from "./draft-api";
 export * from "./github";
 export * from "./github-private";
+export * from "./github-refresh";
 export * from "./github-setup";
 export * from "./legacy-validation";
 export * from "./owner-api";

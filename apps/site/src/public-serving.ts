@@ -1,3 +1,4 @@
+import type { RefreshQueue } from "@hasaweb/db/github-refresh";
 import {
   portfolioHeaders,
   unavailableResponse,
@@ -9,7 +10,11 @@ export type PublicEnv = {
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   ASSET_ORIGIN?: string;
+  // Phase 42 refresh-on-visit. Without it the endpoint serves what it has.
+  GITHUB_QUEUE?: RefreshQueue;
 };
+/** Work that must not delay the visitor's response. */
+export type Background = { waitUntil(work: Promise<unknown>): void };
 
 const SITE_SUFFIX = ".hasaweb.site";
 const RESERVED = new Set([
@@ -221,7 +226,11 @@ async function serveFile(
   });
 }
 
-export async function servePublic(request: Request, env: PublicEnv) {
+export async function servePublic(
+  request: Request,
+  env: PublicEnv,
+  background?: Background,
+) {
   if (request.method !== "GET" && request.method !== "HEAD")
     return unavailableResponse();
   const url = new URL(request.url);
@@ -256,7 +265,15 @@ export async function servePublic(request: Request, env: PublicEnv) {
   if (!LABEL.test(name) || RESERVED.has(name)) return unavailableResponse();
   const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "");
   if (path.startsWith("/assets/")) return unavailableResponse();
-  if (path === "/_/github.json") return serveGitHubGraph(request, env.DB, name);
+  if (path === "/_/github.json")
+    return serveGitHubGraph(
+      request,
+      env.DB,
+      name,
+      env.GITHUB_QUEUE && background
+        ? { queue: env.GITHUB_QUEUE, background }
+        : {},
+    );
   const row = allowedPath(path)
     ? await portfolioFile(env.DB, name, path)
     : null;

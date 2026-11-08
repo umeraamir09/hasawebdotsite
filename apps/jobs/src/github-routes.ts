@@ -1,16 +1,19 @@
 import { authSettings } from "@hasaweb/auth";
 import {
   choosePublicOnly,
+  dueGitHubSweep,
+  enqueueGitHubRefresh,
   type GraphFailure,
   ownerGraphSetup,
   ownerPrivateActivity,
   type PrivateEnvironment,
   privateJson,
   runGitHubCleanups,
+  runGitHubRefresh,
   SaveError,
   withdrawPrivateActivity,
 } from "@hasaweb/db";
-import type { GitHubTransport } from "@hasaweb/github";
+import type { GitHubTransport, RefreshMessage } from "@hasaweb/github";
 import type { Context, Hono } from "hono";
 import { z } from "zod";
 import { readBody } from "./draft-routes";
@@ -27,6 +30,8 @@ export type GitHubBindings = {
   GITHUB_ACTIVITY_CLIENT_SECRET: string;
   // Base64 of 32 random bytes: the AES-GCM key for stored activity tokens.
   GITHUB_ACTIVITY_KEY: string;
+  // Phase 42 refresh messages (also used by the local runtime probe).
+  GITHUB_QUEUE: Queue<RefreshMessage>;
 };
 
 /** The activity app's registered callback, relative to APP_ORIGIN. */
@@ -122,6 +127,62 @@ export async function sweepGitHubCleanups(
   return runGitHubCleanups(env.DB, activity);
 }
 
+type RefreshBindings = ActivityBindings & { DB: D1Database };
+
+/**
+ * Runs one refresh message (Phase 42): the selected account's public
+ * calendar, the authorized calendar while the grant is active, and the
+ * published account's public calendar when the draft selected another. A
+ * refresh that GitHub refused withdraws private data at once and starts
+ * grant revocation. A missing platform credential skips the public steps.
+ */
+export async function processGitHubRefresh(
+  env: RefreshBindings,
+  message: RefreshMessage,
+  now = Date.now(),
+) {
+  let authorized: PrivateEnvironment | null = null;
+  try {
+    authorized = await activityEnvironment(env, "");
+  } catch (error) {
+    // The public graph still refreshes; private refresh waits for repair.
+    reportMisconfigured(error);
+  }
+  const result = await runGitHubRefresh(
+    env.DB,
+    message,
+    {
+      public: env.GITHUB_SERVICE_TOKEN
+        ? { transport: transport(env), platformToken: env.GITHUB_SERVICE_TOKEN }
+        : null,
+      authorized,
+    },
+    now,
+  );
+  if (result.failed.length)
+    console.error("github refresh step failed", result.failed.join(","));
+  if (result.withdrawn) await sweepGitHubCleanups(env).catch(() => []);
+  return result;
+}
+
+/**
+ * Daily private sweep (Phase 42). Each cron tick requests at most one bounded
+ * batch of private connections whose authorized calendar is a day old; the
+ * consumer validates the token, so revocation made on GitHub is detected.
+ */
+export async function sweepGitHubRefreshes(
+  env: RefreshBindings,
+  now = Date.now(),
+) {
+  if (!env.GITHUB_QUEUE) return [];
+  const messages = await dueGitHubSweep(env.DB, now);
+  // A failed send leaves the request recorded; the next tick after the
+  // request window asks again.
+  if (messages.length)
+    await env.GITHUB_QUEUE.sendBatch(messages.map((body) => ({ body })));
+  return messages;
+}
+
 const setupSchema = z.strictObject({ username: z.string().min(1).max(64) });
 const consentSchema = z.strictObject({ returnTo: z.literal("editor") });
 const emptySchema = z.strictObject({});
@@ -158,18 +219,22 @@ const outcome = (result: Result) => {
   return privateJson({ error: result.error }, failureStatus[result.error]);
 };
 
-// Revocation after a withdrawal or a rejected token starts at once and the
-// scheduled sweep retries it. It never delays or changes the response.
-function startCleanup(c: Context<OwnerBindings>) {
-  const work = sweepGitHubCleanups(c.env, authSettings(c.env).origin).catch(
-    () => [],
-  );
+function background(c: Context<OwnerBindings>, work: Promise<unknown>) {
   try {
     c.executionCtx.waitUntil(work);
   } catch {
-    // No execution context (unit tests): the sweep still runs to completion.
+    // No execution context (unit tests): the work still runs to completion.
     return work;
   }
+}
+
+// Revocation after a withdrawal or a rejected token starts at once and the
+// scheduled sweep retries it. It never delays or changes the response.
+function startCleanup(c: Context<OwnerBindings>) {
+  return background(
+    c,
+    sweepGitHubCleanups(c.env, authSettings(c.env).origin).catch(() => []),
+  );
 }
 
 const closed = (error: unknown) => {
@@ -210,11 +275,24 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
           reportMisconfigured(error);
           return null;
         });
+        const queue = c.env.GITHUB_QUEUE;
         return await handler(
           ownerGraphSetup(c.env.DB, c.get("identity"), {
             transport: transport(c.env),
             platformToken: token,
             ...(activity ? { activity } : {}),
+            // A due graph refreshes in the background, never delaying status.
+            ...(queue
+              ? {
+                  requestRefresh: (portfolioId: string) =>
+                    background(
+                      c,
+                      enqueueGitHubRefresh(c.env.DB, queue, portfolioId).catch(
+                        () => null,
+                      ),
+                    ),
+                }
+              : {}),
           }),
           c,
         );

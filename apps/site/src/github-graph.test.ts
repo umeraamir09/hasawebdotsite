@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { serveGitHubGraph } from "./github-graph";
 
 const publicDays = [
@@ -19,6 +19,9 @@ type Fixture = {
   activityGeneration?: number;
   withAuthorized?: boolean;
   deleting?: boolean;
+  // Phase 42: the published account's retained public calendar.
+  retained?: { id: string; login: string; days: typeof publicDays };
+  requests?: unknown[][];
 };
 // Two reads: the active version's frozen configuration, then serving state.
 function database(fixture: Fixture): D1Database {
@@ -29,8 +32,20 @@ function database(fixture: Fixture): D1Database {
   return {
     prepare(sql: string) {
       return {
-        bind: () => ({
+        bind: (...values: unknown[]) => ({
           first: async () => {
+            if (sql.includes("INSERT INTO github_refresh")) {
+              fixture.requests?.push(values);
+              return { requested_at: values[0] };
+            }
+            if (sql.includes("FROM github_published_activity"))
+              return fixture.retained && !fixture.deleting
+                ? {
+                    github_user_id: fixture.retained.id,
+                    login: fixture.retained.login,
+                    public_calendar: calendar(fixture.retained.days),
+                  }
+                : null;
             if (sql.includes("publication_candidate_index"))
               return fixture.graph === undefined
                 ? null
@@ -65,12 +80,25 @@ const frozen = (includePrivate: 0 | 1) => ({
   includePrivate,
 });
 type Graph = { available: boolean; days: unknown[] };
-const serve = (fixture: Fixture, method = "GET") =>
+const serve = (
+  fixture: Fixture,
+  method = "GET",
+  refresh: Parameters<typeof serveGitHubGraph>[3] = {},
+) =>
   serveGitHubGraph(
     new Request("https://site.hasaweb.site/_/github.json", { method }),
     database(fixture),
     "site",
+    refresh,
   );
+// The stored calendars were fetched at 2026-11-03T00:00Z.
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-11-03T01:00:00.000Z"));
+});
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("published GitHub graph endpoint", () => {
   it("serves the allowlisted public calendar with no-store headers", async () => {
@@ -150,5 +178,100 @@ describe("published GitHub graph endpoint", () => {
     const response = await serve({ graph: frozen(0) }, "HEAD");
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("");
+  });
+});
+
+describe("refresh-on-visit and the published account's retained graph (Phase 42)", () => {
+  const visit = async (fixture: Fixture) => {
+    const sent: unknown[] = [];
+    const pending: Promise<unknown>[] = [];
+    const response = await serve(fixture, "GET", {
+      queue: { send: async (message) => sent.push(message) },
+      background: { waitUntil: (work) => pending.push(work) },
+    });
+    await Promise.all(pending);
+    return { response, sent };
+  };
+  it("serves the last good graph at once and requests one refresh past the six-hour TTL", async () => {
+    const fresh = await visit({ graph: frozen(0), requests: [] });
+    expect(fresh.sent).toEqual([]);
+    vi.setSystemTime(new Date("2026-11-03T06:00:00.000Z"));
+    const requests: unknown[][] = [];
+    const due = await visit({ graph: frozen(0), requests });
+    expect(((await due.response.json()) as Graph).days).toEqual(publicDays);
+    expect(due.sent).toEqual([
+      {
+        kind: "github-refresh",
+        portfolioId: "p1",
+        requestedAt: Date.parse("2026-11-03T06:00:00.000Z"),
+      },
+    ]);
+    expect(requests).toHaveLength(1);
+  });
+  it("counts an active grant's authorized calendar toward the TTL", async () => {
+    // Public is fresh; the authorized calendar is old and the grant active.
+    vi.setSystemTime(new Date("2026-11-03T05:00:00.000Z"));
+    expect(
+      (
+        await visit({
+          graph: frozen(1),
+          authorized: true,
+          withAuthorized: true,
+        })
+      ).sent,
+    ).toEqual([]);
+    vi.setSystemTime(new Date("2026-11-03T06:00:00.000Z"));
+    expect(
+      (
+        await visit({
+          graph: frozen(1),
+          authorized: true,
+          withAuthorized: true,
+        })
+      ).sent,
+    ).toHaveLength(1);
+  });
+  it("requests nothing without a queue or a background context", async () => {
+    vi.setSystemTime(new Date("2026-11-04T00:00:00.000Z"));
+    const requests: unknown[][] = [];
+    await serve({ graph: frozen(0), requests });
+    expect(requests).toEqual([]);
+  });
+  it("serves the published account's retained public calendar after a draft account change", async () => {
+    const retained = { id: "node-1", login: "Fixture-Owner", days: publicDays };
+    const { response, sent } = await visit({
+      graph: frozen(1),
+      connection: { login: "someone-else", id: "node-2" },
+      authorized: true,
+      withAuthorized: true,
+      retained,
+    });
+    const body = (await response.json()) as Graph & { username: string };
+    expect(body.username).toBe("Fixture-Owner");
+    expect(body.available).toBe(true);
+    // Only public counts: the retained graph never carries authorization.
+    expect(body.days).toEqual(publicDays);
+    expect(JSON.stringify(body)).not.toContain('"count":9');
+    expect(sent).toEqual([]);
+  });
+  it("never serves a retained calendar of another account", async () => {
+    const body = (await (
+      await serve({
+        graph: frozen(0),
+        connection: { login: "someone-else", id: "node-2" },
+        retained: { id: "node-2", login: "someone-else", days: privateDays },
+      })
+    ).json()) as Graph;
+    // The query is keyed by the frozen account; the mock ignores the key, so
+    // the identity check in the projection is what rejects it here.
+    expect(body.available).toBe(false);
+  });
+  it("requests a refresh that rebuilds a missing retained graph", async () => {
+    const { response, sent } = await visit({
+      graph: frozen(0),
+      connection: { login: "someone-else", id: "node-2" },
+    });
+    expect(((await response.json()) as Graph).available).toBe(false);
+    expect(sent).toHaveLength(1);
   });
 });

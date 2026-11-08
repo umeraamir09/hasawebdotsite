@@ -1,4 +1,5 @@
 import { health, isLocalProbe } from "@hasaweb/config";
+import type { RefreshMessage } from "@hasaweb/github";
 import { servePublic } from "./public-serving";
 
 interface Env {
@@ -7,11 +8,11 @@ interface Env {
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   CONTACT_QUEUE: Queue;
-  GITHUB_QUEUE: Queue;
+  GITHUB_QUEUE: Queue<RefreshMessage>;
   ASSET_ORIGIN?: string;
 }
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const path = new URL(request.url).pathname;
     if (path === "/health") return health("site");
     if (
@@ -30,6 +31,6 @@ export default {
         asset: await asset?.text(),
       });
     }
-    return servePublic(request, env);
+    return servePublic(request, env, ctx);
   },
 } satisfies ExportedHandler<Env>;

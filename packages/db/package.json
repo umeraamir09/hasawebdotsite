@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./github": "./src/github.ts"
+    "./github": "./src/github.ts",
+    "./github-refresh": "./src/github-refresh.ts"
   },
   "scripts": {
     "build": "tsc --noEmit",

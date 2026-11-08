@@ -91,7 +91,7 @@ export class RuntimeOwnerApi extends WorkerEntrypoint<Env> {
   }
 }
 export default {
-  async fetch(request: Request, env: Env) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     if (
       env.RUNTIME_ENABLED !== "true" ||
       request.headers.get("X-Runtime-Key") !== env.RUNTIME_KEY
@@ -145,9 +145,11 @@ export default {
       request.method === "POST"
     ) {
       const body = await request.json<{ url: string; method?: string }>();
+      // The visitor path, including Phase 42 refresh-on-visit.
       return servePublic(
         new Request(body.url, { method: body.method ?? "GET" }),
         env,
+        ctx,
       );
     }
     if (
