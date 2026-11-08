@@ -3,6 +3,7 @@ import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
 import { type Wake, wakeSchema } from "@hasaweb/db";
+import type { GitHubBindings } from "./github-routes";
 import { ownerRouter } from "./owner-api";
 import type { PublicationCacheEnv } from "./publication-cache";
 import {
@@ -18,7 +19,7 @@ import {
 
 // Only a named service binding can reach this API. The default HTTP entry has no owner routes.
 export class OwnerApi extends WorkerEntrypoint<
-  AuthEnvironment & PublicationBindings
+  AuthEnvironment & PublicationBindings & Partial<GitHubBindings>
 > {
   fetch(request: Request) {
     return ownerRouter.fetch(request, this.env, this.ctx);

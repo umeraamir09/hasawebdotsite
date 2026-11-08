@@ -8,14 +8,15 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@hasaweb/config": "workspace:*",
-    "hono": "4.13.13",
     "@hasaweb/auth": "workspace:*",
+    "@hasaweb/components": "workspace:*",
+    "@hasaweb/config": "workspace:*",
     "@hasaweb/db": "workspace:*",
-    "@hasaweb/schema": "workspace:*",
-    "zod": "4.6.7",
+    "@hasaweb/github": "workspace:*",
     "@hasaweb/render": "workspace:*",
-    "@hasaweb/components": "workspace:*"
+    "@hasaweb/schema": "workspace:*",
+    "hono": "4.13.13",
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "typescript": "7.0.2",

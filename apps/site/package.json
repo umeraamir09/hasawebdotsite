@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@hasaweb/config": "workspace:*",
+    "@hasaweb/db": "workspace:*",
+    "@hasaweb/github": "workspace:*",
     "@hasaweb/render": "workspace:*"
   },
   "devDependencies": {

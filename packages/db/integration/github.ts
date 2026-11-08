@@ -10,6 +10,7 @@ import {
   pendingGitHubCleanups,
   runGitHubGrantCleanup,
 } from "../src/github";
+import { GRAPH_RETRY_COOLDOWN_MS, ownerGraphSetup } from "../src/github-setup";
 
 function equal(actual: unknown, expected: unknown) {
   if (JSON.stringify(actual) !== JSON.stringify(expected))
@@ -946,6 +947,276 @@ export async function runGitHubChecks(
             "UPDATE github_activity SET generation=999 WHERE portfolio_id='portfolio-gh-a'",
           )
           .run(),
+      );
+    },
+  );
+  await check(
+    "Public graph setup stores only public data, honors zero, failure, restriction and stale selection",
+    async () => {
+      const id = "gh-setup";
+      await db.batch([
+        db
+          .prepare(
+            "INSERT INTO user(id,name,email,created_at,updated_at) VALUES(?,?,?,1,1)",
+          )
+          .bind(id, id, `${id}@hasaweb.invalid`),
+        db
+          .prepare(
+            "INSERT INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES(?,?,?,4102444800000,1,1)",
+          )
+          .bind(`session-${id}`, `token-${id}`, id),
+        db
+          .prepare(
+            "INSERT INTO portfolio(id,user_id,draft,created_at,updated_at) VALUES(?,?,?,1,1)",
+          )
+          .bind(`portfolio-${id}`, id, draft),
+      ]);
+      const identity = { user: { id }, session: { id: `session-${id}` } };
+      const providers: Record<
+        string,
+        { id: string; restricted: number; count: number }
+      > = {
+        "Zero-User": { id: "node-zero", restricted: 0, count: 0 },
+        "Busy-User": { id: "node-busy", restricted: 0, count: 6 },
+        "Shown-User": { id: "node-shown", restricted: 3, count: 0 },
+      };
+      // `activity` fails only calendar reads, so an account can still be resolved.
+      let outage: false | "all" | "activity" = false;
+      let during: (() => Promise<unknown>) | null = null;
+      const calls: string[] = [];
+      const platform = { id: "platform", login: "platform" };
+      const transport = async (url: string, init: RequestInit) => {
+        const headers = { "X-OAuth-Scopes": "" };
+        const request = JSON.parse(String(init.body));
+        if (
+          outage === "all" ||
+          (outage === "activity" && !request.query.includes("ResolveLogin"))
+        )
+          return new Response("{}", { status: 503, headers });
+        const login: string = request.variables.login;
+        const user =
+          providers[
+            Object.keys(providers).find(
+              (name) => name.toLowerCase() === login.toLowerCase(),
+            ) ?? ""
+          ];
+        calls.push(
+          `${url}:${request.query.includes("ResolveLogin") ? "resolve" : "activity"}:${login}`,
+        );
+        if (!user)
+          return Response.json(
+            {
+              data: { viewer: platform, user: null },
+              errors: [{ type: "NOT_FOUND", path: ["user"] }],
+            },
+            { headers },
+          );
+        const name = Object.keys(providers).find(
+          (key) => providers[key] === user,
+        ) as string;
+        if (request.query.includes("ResolveLogin"))
+          return Response.json(
+            { data: { viewer: platform, user: { id: user.id, login: name } } },
+            { headers },
+          );
+        // A selection can change while the provider is still answering.
+        if (during) {
+          const change = during;
+          during = null;
+          await change();
+        }
+        const from = Date.parse(request.variables.from.slice(0, 10));
+        return Response.json(
+          {
+            data: {
+              viewer: platform,
+              user: {
+                id: user.id,
+                login: name,
+                contributionsCollection: {
+                  restrictedContributionsCount: user.restricted,
+                  contributionCalendar: {
+                    weeks: [
+                      {
+                        contributionDays: [
+                          {
+                            date: new Date(from).toISOString().slice(0, 10),
+                            contributionCount: user.count,
+                          },
+                          {
+                            date: new Date(from + 864e5)
+                              .toISOString()
+                              .slice(0, 10),
+                            contributionCount: 0,
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+          { headers },
+        );
+      };
+      let clock = 1_800_000_000_000;
+      const setup = () =>
+        ownerGraphSetup(db, identity, {
+          transport,
+          platformToken: "platform-token",
+          now: () => clock,
+        });
+      const raw = async (column: string) =>
+        (
+          await db
+            .prepare(
+              `SELECT ${column} AS v FROM github_activity WHERE portfolio_id=?`,
+            )
+            .bind(`portfolio-${id}`)
+            .first<{ v: string | null }>()
+        )?.v ?? null;
+
+      // Nothing is set up, and a missing account selects nothing.
+      equal((await setup().status()).connection, null);
+      equal(await setup().setup("nobody-here"), {
+        ok: false,
+        error: "not_found",
+      });
+      equal(await setup().setup("not a login!"), {
+        ok: false,
+        error: "invalid_username",
+      });
+      equal((await setup().status()).connection, null);
+
+      // Zero contributions is a valid, successful first fetch.
+      const zero = await setup().setup("zero-user");
+      if (!zero.ok) throw new Error("Expected zero-contribution setup to pass");
+      equal(zero.status.connection?.username, "Zero-User");
+      equal(zero.status.connection?.profileUrl, "https://github.com/Zero-User");
+      equal(zero.status.public.state, "ready");
+      equal(
+        zero.status.public.state === "ready" && zero.status.public.total,
+        0,
+      );
+      equal(await raw("authorized_calendar"), null);
+      equal((await setup().preview())?.available, true);
+
+      // Retry is rate limited, then re-fetches the same account.
+      equal(await setup().retry(), { ok: false, error: "too_soon" });
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      const retried = await setup().retry();
+      equal(retried.ok, true);
+
+      // A platform outage on a later refresh keeps the last good graph and date.
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      outage = "all";
+      const kept = await setup().retry();
+      if (!kept.ok || kept.status.public.state !== "ready")
+        throw new Error("Expected the last good graph to remain");
+      equal(kept.status.public.lastError, "retry");
+      equal((await setup().preview())?.available, true);
+      outage = false;
+
+      // A new account clears the old calendar. A restricted profile builds none.
+      // Changing the account shares the retry cooldown.
+      equal(await setup().setup("shown-user"), {
+        ok: false,
+        error: "too_soon",
+      });
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      const shown = await setup().setup("shown-user");
+      if (!shown.ok) throw new Error("Expected restricted setup to complete");
+      equal(shown.status.public.state, "restricted");
+      equal(await raw("public_calendar"), null);
+      equal((await setup().preview())?.available, false);
+
+      // A first-fetch outage selects the account but blocks publication data.
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      outage = "activity";
+      const failed = await setup().setup("busy-user");
+      if (!failed.ok) throw new Error("Expected a selected account");
+      equal(failed.status.connection?.username, "Busy-User");
+      equal(failed.status.public, { state: "error", kind: "retry" });
+      equal((await setup().preview())?.available, false);
+      outage = false;
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      const recovered = await setup().retry();
+      if (!recovered.ok) throw new Error("Expected Retry to recover");
+      equal(recovered.status.public.state, "ready");
+      equal(
+        recovered.status.public.state === "ready" &&
+          recovered.status.public.total,
+        6,
+      );
+
+      // The selection changed while the provider answered: the old result is dropped.
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      const owner = ownerGithub(db, identity);
+      during = async () => {
+        const current = required(await owner.getConnection());
+        required(
+          await owner.select(
+            { id: "node-zero", login: "Zero-User" },
+            current.generation,
+          ),
+        );
+      };
+      equal((await setup().retry()).ok, true);
+      const after = await setup().status();
+      equal(after.connection?.username, "Zero-User");
+      equal(after.public, { state: "pending" });
+      equal(await raw("public_calendar"), null);
+
+      // Same stable account in another capitalization does not reset the graph.
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      equal((await setup().setup("zero-user")).ok, true);
+      const settled = await setup().status();
+      equal(settled.public.state, "ready");
+      clock += GRAPH_RETRY_COOLDOWN_MS + 1;
+      const generation = required(settled.connection).generation;
+      equal((await setup().setup("ZERO-USER")).ok, true);
+      equal(
+        required((await setup().status()).connection).generation,
+        generation,
+      );
+
+      // Private consent does not change what the owner preview or status returns.
+      const lease = required(await owner.beginConsent(app.id, generation));
+      required(
+        await owner.finishConsent(
+          lease,
+          key,
+          "setup-token",
+          "read:user",
+          lease.identity,
+        ),
+      );
+      const consented = required(await owner.getConnection());
+      required(
+        await jobs.refresh(
+          {
+            portfolioId: `portfolio-${id}`,
+            generation: consented.generation,
+            identity: consented.identity,
+          },
+          {
+            kind: "authorized",
+            calendar: {
+              days: [{ date: "2026-11-01", count: 777 }],
+              fetchedAt: "2026-11-02T00:00:00Z",
+            },
+          },
+        ),
+      );
+      const preview = required(await setup().preview());
+      equal(JSON.stringify(preview).includes("777"), false);
+      equal((await setup().status()).public.state === "ready", true);
+      equal(
+        calls.every((call) =>
+          call.startsWith("https://api.github.com/graphql"),
+        ),
+        true,
       );
     },
   );

@@ -208,6 +208,9 @@ importers:
       '@hasaweb/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@hasaweb/github':
+        specifier: workspace:*
+        version: link:../../packages/github
       '@hasaweb/render':
         specifier: workspace:*
         version: link:../../packages/render
@@ -245,6 +248,12 @@ importers:
       '@hasaweb/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@hasaweb/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@hasaweb/github':
+        specifier: workspace:*
+        version: link:../../packages/github
       '@hasaweb/render':
         specifier: workspace:*
         version: link:../../packages/render
