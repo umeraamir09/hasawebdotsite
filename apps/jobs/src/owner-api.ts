@@ -14,6 +14,7 @@ import {
 } from "@hasaweb/db";
 import { Hono } from "hono";
 import { addDraftRoutes } from "./draft-routes";
+import { addGitHubRoutes, type GitHubBindings } from "./github-routes";
 import {
   addPublicationRoutes,
   type PublicationBindings,
@@ -56,7 +57,9 @@ async function initializationBody(request: Request): Promise<400 | 413 | null> {
   }
 }
 export type OwnerBindings = {
-  Bindings: AuthEnvironment & Partial<PublicationBindings>;
+  Bindings: AuthEnvironment &
+    Partial<PublicationBindings> &
+    Partial<GitHubBindings>;
   Variables: { owner: Owner; identity: Owner["identity"] };
 };
 
@@ -199,6 +202,7 @@ export function createOwnerRouter() {
   app.all("/api/owner/entry", () => privateJson(null, 405));
   addDraftRoutes(app);
   addPublicationRoutes(app);
+  addGitHubRoutes(app);
   return app;
 }
 

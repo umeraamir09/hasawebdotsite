@@ -8,11 +8,15 @@ export function portfolioHeaders(
     assetOrigins = [],
     objectOrigins = [],
     parentOrigin,
+    connectSelf = false,
   }: {
     assetOrigins?: readonly string[];
     // Embedded documents, used only by the /resume PDF viewer.
     objectOrigins?: readonly string[];
     parentOrigin?: string;
+    // Published pages read their own origin's live graph endpoint, and
+    // nothing else. Every other document keeps `connect-src 'none'`.
+    connectSelf?: boolean;
   } = {},
 ): Headers {
   const checked = (values: readonly string[]) =>
@@ -37,7 +41,7 @@ export function portfolioHeaders(
       context === "preview"
         ? "private, no-store"
         : "public, max-age=0, must-revalidate",
-    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src 'none'; ${embed}; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
+    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src ${connectSelf ? "'self'" : "'none'"}; ${embed}; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",

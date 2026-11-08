@@ -575,7 +575,9 @@ export async function advancePreparation(
                 }),
               ),
             );
-          children.push(...empty("Contribution graph unavailable."));
+          // Counts are live data and never part of a snapshot. The visitor's
+          // browser fills this placeholder from the graph endpoint.
+          children.push(...wrap("graph", empty("Loading contribution graph.")));
           break;
         }
         case "contact":

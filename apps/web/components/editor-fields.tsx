@@ -5,6 +5,7 @@ import { componentRegistry } from "@hasaweb/schema";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { AvatarExtrasControls } from "./avatar-extras-controls";
+import { GitHubControls } from "./github-controls";
 import { ProfileControls } from "./profile-controls";
 import { ProjectControls } from "./project-controls";
 import { ResumeControls } from "./resume-controls";
@@ -51,6 +52,15 @@ export function EditorFields({
   if (component.type === "resume")
     return (
       <ResumeControls
+        controller={controller}
+        componentId={component.id}
+        disabled={disabled}
+      />
+    );
+  if (component.type === "github")
+    return (
+      <GitHubControls
+        key={`${controller.scopeKey}:${component.id}`}
         controller={controller}
         componentId={component.id}
         disabled={disabled}

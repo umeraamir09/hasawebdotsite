@@ -26,6 +26,7 @@ type Connection = {
   token_binding: string | null;
   private_enabled: number;
   status: "ok" | "needs_reconnect" | "disconnected";
+  last_checked_at: number | null;
 };
 export type ConsentTicket = RefreshTicket & {
   appId: string;
@@ -58,6 +59,7 @@ function connectionView(row: Connection) {
     generation: row.generation,
     privateEnabled: row.private_enabled === 1,
     status: row.status,
+    lastCheckedAt: row.last_checked_at,
   };
 }
 
@@ -271,7 +273,8 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       query(
         db,
         `UPDATE github_connection SET generation=generation+1,login=?,github_user_id=?,private_enabled=0,
-        token_enc=NULL,token_binding=NULL,app_id=NULL,grant_operation=NULL,scopes='',status='disconnected'
+        token_enc=NULL,token_binding=NULL,app_id=NULL,grant_operation=NULL,scopes='',status='disconnected',
+        last_checked_at=NULL
         WHERE ${predicate} RETURNING *`,
         next.login,
         next.id,
@@ -298,6 +301,17 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
     async getConnection() {
       const row = await read();
       return row ? connectionView(row) : undefined;
+    },
+    // The numeric account ID of the owner's GitHub sign-in, if they have one.
+    // It only suggests a username. It never creates or selects a graph.
+    async signInAccountId() {
+      await requirePortfolio();
+      const row = await query(
+        db,
+        `SELECT a.account_id FROM account a WHERE a.user_id=? AND a.provider_id='github' LIMIT 1`,
+        userId,
+      ).first<{ account_id: string }>();
+      return row?.account_id ?? null;
     },
     async getActivity() {
       const row = await query(

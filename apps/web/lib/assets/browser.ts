@@ -4,6 +4,7 @@ import {
   collectDraftAssetReferences,
   type DraftDoc,
 } from "@hasaweb/schema";
+import { loadGraphPreview } from "../editor/github-graph";
 import { profileSuggestions } from "../editor/provider-suggestions";
 import { validateImageFile } from "./crop";
 
@@ -283,7 +284,14 @@ export async function resolvePreviewImages({
   signal.throwIfAborted();
   cache.clear();
   for (const [key, url] of ready) cache.set(key, url);
+  // The owner-authorized public calendar, only when a graph needs it.
+  const graph = draft.components.some(
+    (item) => item.type === "github" && item.data.username,
+  )
+    ? await loadGraphPreview(signal)
+    : null;
   return {
+    graph,
     assetOrigins: [location.origin],
     resolveAsset: ({
       assetId,

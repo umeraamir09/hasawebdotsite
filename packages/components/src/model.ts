@@ -24,6 +24,7 @@ import {
   displayDecoration,
 } from "./appearance";
 import { pagePathSchema } from "./frames";
+import { GRAPH_MAX_DAYS, validGraphDays } from "./graph";
 import { yieldPreviewTask } from "./preview-task";
 
 export const assetSchema = z.discriminatedUnion("state", [
@@ -70,6 +71,22 @@ const { id: _workId, ...workFields } =
   componentRegistry["work-experience"].schema.shape.entries.element.shape;
 const workSchema = z.strictObject(workFields);
 const identity = { id: idSchema };
+// The graph a section can show. `ready` carries preview data the owner
+// already fetched. `live` is the published placeholder that the visitor's
+// browser fills from the graph endpoint. Anything else is unavailable.
+const graphModelSchema = z.discriminatedUnion("state", [
+  z.strictObject({ state: z.literal("unavailable") }),
+  z.strictObject({ state: z.literal("live") }),
+  z.strictObject({
+    state: z.literal("ready"),
+    fetchedAt: z.string().max(64),
+    days: z
+      .array(z.strictObject({ date: z.string().max(10), count: z.number() }))
+      .min(1)
+      .max(GRAPH_MAX_DAYS),
+  }),
+]);
+export type GraphModel = z.infer<typeof graphModelSchema>;
 const schemas = {
   projects: z.strictObject({
     ...identity,
@@ -104,8 +121,8 @@ const schemas = {
     ...identity,
     type: z.literal("github"),
     data: z.strictObject({
-      available: z.literal(false),
       username: componentRegistry.github.schema.shape.username,
+      graph: graphModelSchema,
     }),
   }),
   contact: z.strictObject({
@@ -158,6 +175,14 @@ export type ProjectionOptions = {
     | { state: "ready"; url: string; viewUrl?: string | undefined }
     | { state: "unavailable" };
   assetOrigins: readonly string[];
+  // Absent: no graph data. `live`: the published placeholder. Otherwise the
+  // owner-authorized fetch for one username, shown only when it matches.
+  graph?: "live" | GraphPreview | null | undefined;
+};
+export type GraphPreview = {
+  username: string;
+  fetchedAt: string;
+  days: { date: string; count: number }[];
 };
 
 function trustedUrl(value: string | undefined, options: ProjectionOptions) {
@@ -329,12 +354,22 @@ const adapters = {
       },
     };
   },
-  *github(component) {
+  *github(component, _draft, options) {
     yield;
+    const source = options.graph;
+    const graph: GraphModel =
+      source === "live"
+        ? { state: "live" }
+        : source &&
+            source.username.toLowerCase() ===
+              component.data.username.toLowerCase() &&
+            validGraphDays(source.days)
+          ? { state: "ready", fetchedAt: source.fetchedAt, days: source.days }
+          : { state: "unavailable" };
     return {
       id: component.id,
       type: "github",
-      data: { available: false, username: component.data.username },
+      data: { username: component.data.username, graph },
     };
   },
   *contact(component) {
@@ -392,7 +427,7 @@ function* projectSteps(
         components.push(yield* adapters["social-links"](component, draft));
         break;
       case "github":
-        components.push(yield* adapters.github(component));
+        components.push(yield* adapters.github(component, draft, options));
         break;
       case "contact":
         components.push(yield* adapters.contact(component));

@@ -11,6 +11,7 @@ import { checkComponentControls } from "./component-controls-browser.mjs";
 import { checkCropControls } from "./crop-controls-browser.mjs";
 import { checkDraftPreviewJourney } from "./draft-preview-browser.mjs";
 import { checkFaceRevealJourney } from "./face-reveal-browser.mjs";
+import { checkGitHubGraphJourney } from "./github-graph-browser.mjs";
 import { createGroupRunner } from "./lib/browser-groups.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 import { checkProfileControls } from "./profile-controls-browser.mjs";
@@ -34,6 +35,7 @@ export async function checkEditor({
   esbuild,
   evidence,
   secrets,
+  github,
 }) {
   const directory = join(root, ".wrangler/editor-browser");
   await mkdir(directory, { recursive: true });
@@ -1340,6 +1342,7 @@ export async function checkEditor({
       authority,
       cookie,
       root,
+      github,
     };
     await checkPublicationControls(controls);
     await checkComponentControls(controls);
@@ -1353,6 +1356,7 @@ export async function checkEditor({
     await checkPublishJourney(controls);
     await checkCaseStudyJourney(controls);
     await checkResumeJourney(controls);
+    await checkGitHubGraphJourney(controls);
     await checkSocialLinksJourney(controls);
     await checkAppearanceJourney(controls);
     await checkAvatarExtrasJourney(controls);

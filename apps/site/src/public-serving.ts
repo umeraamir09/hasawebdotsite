@@ -2,6 +2,7 @@ import {
   portfolioHeaders,
   unavailableResponse,
 } from "@hasaweb/render/response-policy";
+import { serveGitHubGraph } from "./github-graph";
 
 export type PublicEnv = {
   DB: D1Database;
@@ -191,6 +192,8 @@ async function serveFile(
   const headers = portfolioHeaders("public", {
     assetOrigins: [assetOrigin],
     ...(path === "/resume" ? { objectOrigins: [assetOrigin] } : {}),
+    // Only portfolio documents draw the live graph from this origin.
+    connectSelf: file.content_type === "text/html; charset=utf-8",
   });
   headers.set("Content-Type", file.content_type);
   headers.set("ETag", `"${file.sha256}"`);
@@ -253,6 +256,7 @@ export async function servePublic(request: Request, env: PublicEnv) {
   if (!LABEL.test(name) || RESERVED.has(name)) return unavailableResponse();
   const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "");
   if (path.startsWith("/assets/")) return unavailableResponse();
+  if (path === "/_/github.json") return serveGitHubGraph(request, env.DB, name);
   const row = allowedPath(path)
     ? await portfolioFile(env.DB, name, path)
     : null;
