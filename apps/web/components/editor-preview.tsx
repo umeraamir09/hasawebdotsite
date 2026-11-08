@@ -8,8 +8,19 @@ import {
 } from "@hasaweb/components/browser";
 import { projectPortfolioCancellable } from "@hasaweb/components/model";
 import type { DraftDoc } from "@hasaweb/schema";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { resolvePreviewImages } from "../lib/assets/browser";
+import {
+  graphRevision,
+  subscribeGraphRevision,
+} from "../lib/editor/github-graph";
 
 export function EditorPreview({
   owner,
@@ -39,6 +50,12 @@ export function EditorPreview({
   const images = useMemo(
     () => ({ ownerId, portfolioId, cache: new Map<string, string>() }),
     [ownerId, portfolioId],
+  );
+  // Setup and Retry change the fetched calendar without changing the draft.
+  const graph = useSyncExternalStore(
+    subscribeGraphRevision,
+    graphRevision,
+    () => 0,
   );
   const currentSelection = useRef(selection);
   currentSelection.current = selection;
@@ -80,6 +97,7 @@ export function EditorPreview({
   // status then never reads "Preview up to date" while an older draft is
   // displayed; React 19 may defer passive effects until after the browser
   // yields, which left that window open.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: a new graph revision re-projects the unchanged draft with the freshly fetched calendar.
   useLayoutEffect(() => {
     connection.current?.request(async (signal) => {
       const assets = await resolvePreviewImages({
@@ -90,7 +108,7 @@ export function EditorPreview({
       });
       return projectPortfolioCancellable(draft, assets, signal);
     });
-  }, [draft, ownerId, images]);
+  }, [draft, ownerId, images, graph]);
   useEffect(() => {
     connection.current?.select(selection);
   }, [selection]);
