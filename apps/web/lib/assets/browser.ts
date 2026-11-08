@@ -284,12 +284,15 @@ export async function resolvePreviewImages({
   signal.throwIfAborted();
   cache.clear();
   for (const [key, url] of ready) cache.set(key, url);
-  // The owner-authorized public calendar, only when a graph needs it.
-  const graph = draft.components.some(
+  // The owner-authorized calendar, only when a graph needs it. Private counts
+  // follow the draft's choice and a currently valid grant (server-checked).
+  const component = draft.components.find(
     (item) => item.type === "github" && item.data.username,
-  )
-    ? await loadGraphPreview(signal)
-    : null;
+  );
+  const graph =
+    component?.type === "github"
+      ? await loadGraphPreview(signal, component.data.includePrivate)
+      : null;
   return {
     graph,
     assetOrigins: [location.origin],

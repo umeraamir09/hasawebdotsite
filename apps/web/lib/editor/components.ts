@@ -103,17 +103,28 @@ export function moveEditorItem(
   controller.update({ ...draft, components, samples });
 }
 
-export function canRemoveEditorComponent(component: DraftComponent): boolean {
-  return component.type !== "github" || !component.data.includePrivate;
+// A GitHub graph is removed only after its private access was withdrawn on
+// the server (Phase 41), even when the draft shows public activity only: an
+// authorized grant can exist without being shown.
+export function canRemoveEditorComponent(
+  component: DraftComponent,
+  accessWithdrawn = false,
+): boolean {
+  return component.type !== "github" || accessWithdrawn;
 }
 
 export function removeEditorComponent(
   controller: DraftController,
   id: string,
+  options: { accessWithdrawn?: boolean } = {},
 ): boolean {
   const draft = controller.store.getState().working;
   const component = draft?.components.find((item) => item.id === id);
-  if (!draft || !component || !canRemoveEditorComponent(component))
+  if (
+    !draft ||
+    !component ||
+    !canRemoveEditorComponent(component, options.accessWithdrawn)
+  )
     return false;
   const removedIndex = draft.components.findIndex((item) => item.id === id);
   const samples = { ...draft.samples };

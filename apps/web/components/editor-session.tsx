@@ -136,6 +136,25 @@ function Scope({
     setPanel("content");
     setView("edit");
   };
+  // GitHub consent returns to `/editor?github=consent`. Open the graph section
+  // once the draft is loaded; its status route reports the persisted outcome.
+  const consentReturn = useRef(
+    typeof location !== "undefined" &&
+      new URLSearchParams(location.search).get("github") === "consent",
+  );
+  useEffect(() => {
+    if (!consentReturn.current || !draft) return;
+    consentReturn.current = false;
+    const url = new URL(location.href);
+    url.searchParams.delete("github");
+    history.replaceState(history.state, "", url);
+    const graph = draft.components.find((item) => item.type === "github");
+    if (graph) {
+      setSelection({ kind: "component", id: graph.id });
+      setPanel("content");
+      setView("edit");
+    }
+  }, [draft]);
   return (
     <main
       className={`owner-editor editor-view-${view}`}

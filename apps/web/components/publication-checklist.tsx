@@ -21,10 +21,8 @@ import {
   publishSavedDraft,
 } from "../lib/draft/publish";
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
-import {
-  canRemoveEditorComponent,
-  removeEditorComponent,
-} from "../lib/editor/components";
+import { removeEditorComponent } from "../lib/editor/components";
+import { withdrawGraphAccess } from "../lib/editor/github-graph";
 import { ComponentRemovalDialog } from "./component-controls";
 import { DraftTextField } from "./draft-text-field";
 import { ResumeUpload } from "./resume-controls";
@@ -478,10 +476,16 @@ export function PublicationCorrection({
             <ComponentRemovalDialog
               title={componentRegistry[component.type].picker.title}
               disabled={disabled}
-              allowed={canRemoveEditorComponent(component)}
+              withdrawal={component.type === "github"}
               onCancel={() => setRemoving(false)}
-              onRemove={() => {
-                if (removeEditorComponent(controller, component.id)) onClose();
+              onRemove={async () => {
+                if (component.type === "github") await withdrawGraphAccess();
+                if (
+                  removeEditorComponent(controller, component.id, {
+                    accessWithdrawn: component.type === "github",
+                  })
+                )
+                  onClose();
               }}
             />
           )}
