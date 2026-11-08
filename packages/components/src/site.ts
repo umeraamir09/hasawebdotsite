@@ -1,3 +1,10 @@
+import {
+  contributionLabel,
+  GRAPH_SOURCE_PATH,
+  graphLayout,
+  graphUpdated,
+  validGraphDays,
+} from "./graph";
 export type VisitorMode = "light" | "dark";
 // Where the visitor's explicit light/dark choice lives. Public pages use
 // per-origin storage, so the choice follows the visitor across that
@@ -80,6 +87,10 @@ export function installSite(
   }
   for (const frame of root.querySelectorAll<HTMLElement>(".pf-avatar-frame"))
     cleanups.push(installAvatar(frame));
+  for (const graph of root.querySelectorAll<HTMLElement>(
+    "[data-github-graph][data-graph-source]",
+  ))
+    cleanups.push(installGraph(graph));
   for (const image of root.querySelectorAll<HTMLImageElement>(
     ".pf-image img",
   )) {
@@ -195,4 +206,88 @@ function installAvatar(frame: HTMLElement): () => void {
     reduced?.removeEventListener("change", motionChanged);
     view?.removeEventListener("pageshow", restored);
   };
+}
+
+function graphMessage(graph: HTMLElement, state: string, message: string) {
+  const document = graph.ownerDocument;
+  const paragraph = document.createElement("p");
+  paragraph.className = "pf-muted";
+  paragraph.textContent = message;
+  graph.dataset.state = state;
+  graph.replaceChildren(paragraph);
+}
+
+// Draws the same markup as the React `GitHubGraph` view from one validated
+// JSON response. Text only goes through textContent, and a response that is
+// not exactly the expected shape shows the unavailable state.
+export function drawGraph(graph: HTMLElement, body: unknown): boolean {
+  const data = body as {
+    available?: unknown;
+    fetchedAt?: unknown;
+    days?: unknown;
+  } | null;
+  if (
+    data?.available !== true ||
+    typeof data.fetchedAt !== "string" ||
+    !validGraphDays(data.days)
+  ) {
+    graphMessage(graph, "unavailable", "Contribution graph unavailable.");
+    return false;
+  }
+  const document = graph.ownerDocument;
+  const layout = graphLayout(data.days);
+  const chart = document.createElement("div");
+  chart.className = "pf-graph-chart";
+  chart.setAttribute("role", "img");
+  chart.setAttribute("aria-label", layout.label);
+  for (const week of layout.weeks) {
+    const column = document.createElement("div");
+    column.className = "pf-graph-week";
+    for (const cell of week) {
+      const day = document.createElement("span");
+      day.className = "pf-graph-day";
+      day.setAttribute("data-level", cell ? String(cell.level) : "blank");
+      if (cell) day.title = contributionLabel(cell.count, cell.date);
+      column.appendChild(day);
+    }
+    chart.appendChild(column);
+  }
+  const updated = document.createElement("p");
+  updated.className = "pf-muted pf-graph-updated";
+  updated.textContent = graphUpdated(data.fetchedAt);
+  graph.dataset.state = "ready";
+  graph.removeAttribute("aria-live");
+  graph.replaceChildren(chart, updated);
+  return true;
+}
+
+// Published pages carry only a placeholder. Counts are live data, so the
+// visitor's browser asks this origin's graph endpoint, never another host.
+function installGraph(graph: HTMLElement): () => void {
+  const view = graph.ownerDocument.defaultView;
+  if (
+    graph.dataset.graphSource !== GRAPH_SOURCE_PATH ||
+    !view ||
+    typeof view.fetch !== "function"
+  ) {
+    graphMessage(graph, "unavailable", "Contribution graph unavailable.");
+    return () => {};
+  }
+  const controller = new AbortController();
+  view
+    .fetch(GRAPH_SOURCE_PATH, {
+      credentials: "omit",
+      cache: "no-store",
+      redirect: "error",
+      signal: controller.signal,
+    })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((body) => {
+      if (!controller.signal.aborted) drawGraph(graph, body);
+    })
+    .catch(() => {
+      if (!controller.signal.aborted)
+        graphMessage(graph, "unavailable", "Contribution graph unavailable.");
+    });
+  return () => controller.abort();
 }

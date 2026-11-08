@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { AssetImage } from "./asset";
 import { PortfolioAvatar } from "./avatar";
 import { PortfolioFrame } from "./frames";
+import { contributionLabel, graphLayout, graphUpdated } from "./graph";
 import type {
   ComponentModel,
   DisplayAsset,
@@ -35,6 +36,56 @@ function SafeLink({
 }
 function Empty({ children }: { children: ReactNode }) {
   return <p className="pf-muted">{children}</p>;
+}
+// The same markup the published script builds from the graph endpoint's JSON.
+// Keep both in step: the shared layout and class names are the contract.
+function GitHubGraph({
+  graph,
+}: {
+  graph: Extract<ComponentModel, { type: "github" }>["data"]["graph"];
+}) {
+  if (graph.state === "live")
+    return (
+      <PortfolioFrame frame={{ name: "graph" }}>
+        <Empty>Loading contribution graph.</Empty>
+      </PortfolioFrame>
+    );
+  if (graph.state === "unavailable")
+    return (
+      <div className="pf-graph" data-github-graph="" data-state="unavailable">
+        <Empty>Contribution graph unavailable.</Empty>
+      </div>
+    );
+  const layout = graphLayout(graph.days);
+  return (
+    <div className="pf-graph" data-github-graph="" data-state="ready">
+      <div className="pf-graph-chart" role="img" aria-label={layout.label}>
+        {layout.weeks.map((week, weekIndex) => (
+          <div className="pf-graph-week" key={weekIndex}>
+            {week.map((cell, index) =>
+              cell ? (
+                <span
+                  className="pf-graph-day"
+                  data-level={cell.level}
+                  title={contributionLabel(cell.count, cell.date)}
+                  key={cell.date}
+                />
+              ) : (
+                <span
+                  className="pf-graph-day"
+                  data-level="blank"
+                  key={`blank-${index}`}
+                />
+              ),
+            )}
+          </div>
+        ))}
+      </div>
+      <p className="pf-muted pf-graph-updated">
+        {graphUpdated(graph.fetchedAt)}
+      </p>
+    </div>
+  );
 }
 function Links({ links }: { links: ProfileModel["links"] }) {
   return links.length ? (
@@ -358,7 +409,7 @@ function SectionContent({
               </SafeLink>
             </p>
           )}
-          <Empty>Contribution graph unavailable.</Empty>
+          <GitHubGraph graph={component.data.graph} />
         </>
       );
     case "contact":

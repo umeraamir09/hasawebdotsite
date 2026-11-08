@@ -1,6 +1,7 @@
 import { isSafeLink } from "@hasaweb/schema";
 import { createElement, type ReactNode } from "react";
 import { z } from "zod";
+import { GRAPH_SOURCE_PATH } from "./graph";
 
 // Same-site page paths only: the portfolio root, /resume or a generated
 // case-study slug. Owner destinations use `href`, which keeps the external-link
@@ -30,6 +31,7 @@ export const frameSchema = z.enum([
   "link",
   "page-link",
   "page-nav",
+  "graph",
   "h1",
   "h2",
   "h3",
@@ -81,6 +83,7 @@ const definitions: Record<FrameName, { tag: string; className?: string }> = {
   link: { tag: "a" },
   "page-link": { tag: "a", className: "pf-page-link" },
   "page-nav": { tag: "nav", className: "pf-page-nav" },
+  graph: { tag: "div", className: "pf-graph" },
   h1: { tag: "h1" },
   h2: { tag: "h2" },
   h3: { tag: "h3" },
@@ -112,6 +115,15 @@ export function PortfolioFrame({
         : {}),
       ...(frame.name === "page-link" ? { href: frame.path ?? "/" } : {}),
       ...(frame.name === "page-nav" ? { "aria-label": "Portfolio" } : {}),
+      // Published placeholder. The visitor's browser asks the graph endpoint.
+      ...(frame.name === "graph"
+        ? {
+            "data-github-graph": "",
+            "data-state": "loading",
+            "data-graph-source": GRAPH_SOURCE_PATH,
+            "aria-live": "polite",
+          }
+        : {}),
     },
     children,
   );

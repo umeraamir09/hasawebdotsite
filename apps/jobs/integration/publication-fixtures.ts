@@ -279,6 +279,7 @@ export function expected(draft: DraftDoc, id: string) {
         ...(purpose === "resume" ? { viewUrl: `${url}/view` } : {}),
       };
     },
+    graph: "live",
   });
   return [
     profileHtml(model.profile),
@@ -306,6 +307,7 @@ export function expectedPages(draft: DraftDoc, id: string) {
         ? { viewUrl: `${image(assetId, "").url}/view` }
         : {}),
     }),
+    graph: "live",
   });
   let ordinal = 1;
   for (const component of draft.components) {

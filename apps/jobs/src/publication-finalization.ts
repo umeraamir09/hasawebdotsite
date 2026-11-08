@@ -306,7 +306,7 @@ export async function finalizePublication(
         const output = await env.SITES_BUCKET.get(key);
         if (!output) throw new Error("Candidate manifest missing");
         const result = await env.DB.prepare(
-          `UPDATE publication_candidate_index SET value=json_set(value,'$.manifest',json(?)) WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE id=? AND lease_token=? AND lease_until>? AND ${candidateActive}) RETURNING candidate_id`,
+          `UPDATE publication_candidate_index SET value=json_set(value,'$.manifest',json(?),'$.graph',json((SELECT json_object('id',json_extract(c.facts,'$.github.id'),'login',json_extract(c.facts,'$.github.login'),'includePrivate',json_extract(g.value,'$.data.includePrivate')) FROM publication_candidate c,json_each(c.source,'$.components') g WHERE c.id=? AND json_extract(g.value,'$.type')='github' LIMIT 1))) WHERE candidate_id=? AND EXISTS(SELECT 1 FROM publication_candidate WHERE id=? AND lease_token=? AND lease_until>? AND ${candidateActive}) RETURNING candidate_id`,
         )
           .bind(
             JSON.stringify({
@@ -314,6 +314,7 @@ export async function finalizePublication(
               bytes: output.size,
               sha256: await digest(output),
             }),
+            row.id,
             row.id,
             row.id,
             row.lease_token,
