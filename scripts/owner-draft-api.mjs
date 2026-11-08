@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+import { PLATFORM_TOKEN, startGitHubFixture } from "./lib/github-fixture.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url)),
@@ -270,7 +271,10 @@ async function start() {
   }
   throw new Error(`Runtime did not start. ${logs}`);
 }
+// A local stand-in for GitHub's public endpoints (no real account or token).
+const github = remote ? null : await startGitHubFixture(8827);
 async function stop() {
+  await github?.close();
   if (!child || child.exitCode !== null || child.signalCode !== null) return;
   const exited = new Promise((r) => child.once("exit", r));
   process.kill(-child.pid, "SIGTERM");
@@ -342,6 +346,9 @@ if (!remote) {
         GITHUB_CLIENT_SECRET: "fixture",
         GOOGLE_CLIENT_ID: "fixture",
         GOOGLE_CLIENT_SECRET: "fixture",
+        // Public graph setup reads this local stand-in, never GitHub.
+        GITHUB_SERVICE_TOKEN: PLATFORM_TOKEN,
+        GITHUB_API_ORIGIN: github.origin,
       },
     }),
   );
@@ -2155,6 +2162,7 @@ try {
       esbuild,
       evidence,
       secrets,
+      github,
     });
   }
   await writeJsonEvidence(
