@@ -164,6 +164,9 @@ export async function checkEditor({
           req.url,
           {
             method: req.method,
+            // Redirects (the GitHub consent callback's 303) belong to the
+            // browser, as in production, not to this proxy's fetch.
+            redirect: "manual",
             headers: {
               "Content-Type": req.headers["content-type"] ?? "application/json",
               ...(req.headers["x-asset-purpose"]
