@@ -161,6 +161,9 @@ async function graphql(
   return record(body.data);
 }
 
+// A week-aligned calendar extends at most six days past either window edge.
+const WEEK_PADDING = 6 * 86_400_000;
+
 /**
  * Validates and rebuilds a GraphQL contribution calendar as an allowlist.
  * A calendar of zero-count days is a valid, successful result.
@@ -175,6 +178,10 @@ export function parseContributionCalendar(
     throw new Classified({ status: "invalid", reason: "payload" });
   const days: Calendar["days"] = [];
   const seen = new Set<string>();
+  const fromDate = range.from.slice(0, 10);
+  const toDate = range.to.slice(0, 10);
+  const windowStart = Date.parse(fromDate);
+  const windowEnd = Date.parse(toDate);
   for (const week of weeks) {
     const entries = record(week).contributionDays;
     if (!Array.isArray(entries) || entries.length < 1 || entries.length > 7)
@@ -185,8 +192,8 @@ export function parseContributionCalendar(
         typeof day.date !== "string" ||
         !/^\d{4}-\d{2}-\d{2}$/.test(day.date) ||
         new Date(day.date).toISOString().slice(0, 10) !== day.date ||
-        day.date < range.from.slice(0, 10) ||
-        day.date > range.to.slice(0, 10) ||
+        Date.parse(day.date) < windowStart - WEEK_PADDING ||
+        Date.parse(day.date) > windowEnd + WEEK_PADDING ||
         seen.has(day.date) ||
         typeof day.contributionCount !== "number" ||
         !Number.isSafeInteger(day.contributionCount) ||
@@ -194,9 +201,14 @@ export function parseContributionCalendar(
       )
         throw new Classified({ status: "invalid", reason: "payload" });
       seen.add(day.date);
+      // GitHub aligns the calendar to whole weeks, so the first and last week
+      // include days outside the requested window. They are not published.
+      if (day.date < fromDate || day.date > toDate) continue;
       days.push({ date: day.date, count: day.contributionCount });
     }
   }
+  if (!days.length)
+    throw new Classified({ status: "invalid", reason: "payload" });
   return {
     days: days.sort((a, b) => a.date.localeCompare(b.date)),
     fetchedAt,

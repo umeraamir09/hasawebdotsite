@@ -138,6 +138,36 @@ describe("public baseline classifier", () => {
       await baseline(reply({ data: {}, errors: [{ type: "INTERNAL" }] })),
     ).toEqual({ status: "retry", reason: "server" });
   });
+  it("accepts week-alignment padding and publishes only the requested window", async () => {
+    const day = (offset: number, from = range.from, count = 1) => ({
+      date: new Date(Date.parse(from.slice(0, 10)) + offset * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+      contributionCount: count,
+    });
+    const to = range.to.slice(0, 10);
+    const after = (offset: number) => ({
+      date: new Date(Date.parse(to) + offset * 86_400_000)
+        .toISOString()
+        .slice(0, 10),
+      contributionCount: 4,
+    });
+    const result = await baseline(
+      reply(
+        calendarBody({
+          contributionCalendar: {
+            weeks: [
+              { contributionDays: [day(-3), day(-1), day(0)] },
+              { contributionDays: [after(-1), after(0), after(3)] },
+            ],
+          },
+        }),
+      ),
+    );
+    if (result.status !== "available") throw new Error(result.status);
+    const dates = result.calendar.days.map((entry) => entry.date);
+    expect(dates).toEqual([day(0).date, after(-1).date, after(0).date]);
+  });
   it("fails closed on credential scope, identity and payload problems", async () => {
     for (const scopes of ["read:user", null])
       expect(await baseline(reply(calendarBody(), { scopes }))).toEqual({

@@ -109,7 +109,15 @@ describe("published GitHub graph endpoint", () => {
     expect(((await response.json()) as Graph).days).toEqual(publicDays);
   });
   it("returns no graph when the active version froze none", async () => {
-    for (const graph of [undefined, null, "not json", { id: "", login: "x" }]) {
+    for (const graph of [
+      undefined,
+      null,
+      "not json",
+      { id: "", login: "x" },
+      { includePrivate: 0 },
+      { id: null, login: null, includePrivate: 0 },
+      { id: "node-1", includePrivate: 0 },
+    ]) {
       const response = await serve({ graph: graph as never });
       expect(response.status).toBe(404);
       expect(await response.text()).toBe("");

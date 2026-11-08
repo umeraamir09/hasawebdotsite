@@ -44,10 +44,10 @@ export async function publishedGraph(
   if (!row?.graph) return null;
   try {
     const value = JSON.parse(row.graph) as Record<string, unknown>;
-    const identity = parseIdentity({
-      id: String(value.id),
-      login: String(value.login),
-    });
+    // A missing identity must never be coerced into the text "undefined".
+    if (typeof value.id !== "string" || typeof value.login !== "string")
+      return null;
+    const identity = parseIdentity({ id: value.id, login: value.login });
     return {
       portfolioId: row.portfolio_id,
       graph: { ...identity, includePrivate: value.includePrivate === 1 },
