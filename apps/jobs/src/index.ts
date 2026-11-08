@@ -3,7 +3,7 @@ import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
 import { type Wake, wakeSchema } from "@hasaweb/db";
-import type { GitHubBindings } from "./github-routes";
+import { type GitHubBindings, sweepGitHubCleanups } from "./github-routes";
 import { ownerRouter } from "./owner-api";
 import type { PublicationCacheEnv } from "./publication-cache";
 import {
@@ -26,7 +26,10 @@ export class OwnerApi extends WorkerEntrypoint<
   }
 }
 
-interface Env extends DispatchEnv, PublicationCacheEnv {
+interface Env
+  extends DispatchEnv,
+    PublicationCacheEnv,
+    Partial<GitHubBindings> {
   APP_ENV: string;
   DB: D1Database;
   SITES_BUCKET: R2Bucket;
@@ -107,6 +110,9 @@ export default {
   async scheduled(_event, env) {
     await sweepPublicationTasks(env);
     await sweepPublicationWithdrawals(env);
+    // Durable grant revocation: pending cleanups retry here until GitHub
+    // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
+    await sweepGitHubCleanups(env).catch(() => []);
     if (env.APP_ENV !== "local") return;
     await env.DB.prepare(
       "INSERT OR REPLACE INTO runtime_probe (key, value) VALUES ('cron', 'complete')",

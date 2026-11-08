@@ -9,6 +9,7 @@ import { RESERVED_SUBDOMAINS } from "../src/reserved-subdomains";
 import * as schema from "../src/schema";
 import { runAddressChecks } from "./addresses";
 import { runGitHubChecks, verifyGitHubRestart } from "./github";
+import { runPrivateActivityChecks } from "./github-private";
 import { runProvisionChecks, verifyProvisionRestart } from "./provision";
 import { runPublicationChecks } from "./publication";
 import { runSetupChecks } from "./setup";
@@ -1000,6 +1001,7 @@ export default {
         },
       );
       await runGitHubChecks(env.DB, check);
+      await runPrivateActivityChecks(env.DB, check);
       await runProvisionChecks(env.DB, check);
       return privateJson({ passed: checks.length, checks });
     } catch (error) {

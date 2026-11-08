@@ -160,14 +160,17 @@ describe("activity credentials and grant deletion", () => {
   });
   it("uses only confirmed 204 deletion to release cleanup", async () => {
     const app = { id: "activity-app", secret: "fixture-client-secret" };
-    for (const status of [204, 401, 403, 404, 422, 429, 500]) {
+    for (const status of [
+      204, 301, 302, 303, 307, 308, 401, 403, 404, 422, 429, 500,
+    ]) {
       const outcome = await deleteActivityGrant(
         async (url, init) => {
           expect(url).toBe(
             "https://api.github.com/applications/activity-app/grant",
           );
           expect(init.method).toBe("DELETE");
-          expect(init.redirect).toBe("error");
+          // Workers reject "error"; a redirect must stay a retry.
+          expect(init.redirect).toBe("manual");
           expect(JSON.parse(String(init.body))).toEqual({
             access_token: "fixture-token",
           });
@@ -211,6 +214,93 @@ describe("activity credentials and grant deletion", () => {
         activityCleanupKind(binding),
       ),
     ).toBe("deleted");
+  });
+  it("treats a redirect as a retry for both credential kinds", async () => {
+    for (const kind of ["grant", "token"] as const)
+      for (const status of [301, 302, 303, 307, 308])
+        expect(
+          await deleteActivityCredential(
+            async () => new Response(null, { status }),
+            { id: "app", secret: "secret" },
+            "token",
+            kind,
+          ),
+        ).toBe("retry");
+  });
+  it("passes a transport that rejects the redirect values Workers reject", async () => {
+    // A model of workerd's check: only "follow" and "manual" are accepted.
+    const workerd = async (_url: string, init: RequestInit) => {
+      if (!["follow", "manual", undefined].includes(init.redirect))
+        throw new TypeError(`Invalid redirect value ${init.redirect}`);
+      return new Response(null, { status: 204 });
+    };
+    expect(
+      await deleteActivityGrant(workerd, { id: "app", secret: "s" }, "token"),
+    ).toBe("deleted");
+  });
+  it("releases a provider-rejected credential only when GitHub's token check also reports it invalid", async () => {
+    const app = { id: "app", secret: "secret" };
+    const calls: string[] = [];
+    const transport =
+      (deleteStatus: number, checkStatus: number | "throw") =>
+      async (url: string, init: RequestInit) => {
+        calls.push(`${init.method} ${new URL(url).pathname}`);
+        if (init.method === "DELETE")
+          return new Response(null, { status: deleteStatus });
+        if (checkStatus === "throw") throw new Error("network");
+        return new Response(null, { status: checkStatus });
+      };
+    const rejected = { providerRejected: true };
+    expect(
+      await deleteActivityCredential(
+        transport(404, 404),
+        app,
+        "t",
+        "grant",
+        rejected,
+      ),
+    ).toBe("gone");
+    expect(calls).toEqual([
+      "DELETE /applications/app/grant",
+      "POST /applications/app/token",
+    ]);
+    expect(
+      await deleteActivityCredential(
+        transport(422, 404),
+        app,
+        "t",
+        "grant",
+        rejected,
+      ),
+    ).toBe("gone");
+    // A valid token, a server failure or a lost check never releases.
+    for (const check of [200, 500, "throw"] as const)
+      expect(
+        await deleteActivityCredential(
+          transport(404, check),
+          app,
+          "t",
+          "grant",
+          rejected,
+        ),
+      ).toBe("retry");
+    // Without an earlier provider 401, a 404 is not proof.
+    calls.length = 0;
+    expect(
+      await deleteActivityCredential(transport(404, 404), app, "t", "grant"),
+    ).toBe("retry");
+    expect(calls).toEqual(["DELETE /applications/app/grant"]);
+    // Other failures do not trigger the check.
+    for (const status of [401, 403, 429, 500, 302])
+      expect(
+        await deleteActivityCredential(
+          transport(status, 404),
+          app,
+          "t",
+          "grant",
+          rejected,
+        ),
+      ).toBe("retry");
   });
   it("keeps ambiguous network failures fenced instead of permitting consent", async () => {
     expect(

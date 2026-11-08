@@ -8,6 +8,15 @@ const service = {
   setup: vi.fn(),
   retry: vi.fn(),
 };
+const consent = {
+  start: vi.fn(),
+  callback: vi.fn(),
+};
+const db = vi.hoisted(() => ({
+  withdraw: vi.fn(),
+  publicOnly: vi.fn(),
+  cleanups: vi.fn(),
+}));
 const owner = vi.hoisted(() => ({ current: true }));
 vi.mock("@hasaweb/auth", () => ({
   authSettings: () => ({ origin: "https://hasaweb.site" }),
@@ -19,6 +28,10 @@ vi.mock("@hasaweb/auth", () => ({
 vi.mock("@hasaweb/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@hasaweb/db")>()),
   ownerGraphSetup: () => service,
+  ownerPrivateActivity: () => consent,
+  withdrawPrivateActivity: db.withdraw,
+  choosePublicOnly: db.publicOnly,
+  runGitHubCleanups: db.cleanups,
 }));
 
 import { createOwnerRouter } from "./owner-api";
@@ -54,9 +67,22 @@ const status = {
   canDetect: false,
 };
 
+// 32 bytes of 7, base64.
+const ACTIVITY = {
+  GITHUB_ACTIVITY_CLIENT_ID: "activity-client",
+  GITHUB_ACTIVITY_CLIENT_SECRET: "activity-secret",
+  GITHUB_ACTIVITY_KEY: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))),
+};
+
 beforeEach(() => {
   owner.current = true;
-  for (const fn of Object.values(service)) fn.mockReset();
+  for (const fn of [
+    ...Object.values(service),
+    ...Object.values(consent),
+    ...Object.values(db),
+  ])
+    fn.mockReset();
+  db.cleanups.mockResolvedValue([]);
 });
 
 describe("owner GitHub graph routes", () => {
@@ -174,5 +200,163 @@ describe("owner GitHub graph routes", () => {
     expect((await call("/setup")).status).toBe(405);
     expect((await call("", { method: "POST" })).status).toBe(405);
     expect(service.setup).not.toHaveBeenCalled();
+  });
+});
+
+describe("private activity consent routes", () => {
+  it("passes only the owner's private preview choice", async () => {
+    service.preview.mockResolvedValue(null);
+    await call("/preview");
+    await call("/preview?private=1");
+    await call("/preview?private=true");
+    expect(service.preview.mock.calls).toEqual([[false], [true], [false]]);
+  });
+  it("needs the separate activity app before starting consent", async () => {
+    const missing = await call("/consent", {
+      method: "POST",
+      body: { returnTo: "editor" },
+    });
+    expect(missing.status).toBe(503);
+    expect(await missing.json()).toEqual({ error: "private_unavailable" });
+    expect(consent.start).not.toHaveBeenCalled();
+  });
+  it("starts consent with a fixed return and closed errors", async () => {
+    consent.start.mockResolvedValueOnce({
+      ok: true,
+      url: "https://github.com/login/oauth/authorize?x",
+    });
+    const ok = await call("/consent", {
+      method: "POST",
+      body: { returnTo: "editor" },
+      env: ACTIVITY,
+    });
+    expect(ok.status).toBe(200);
+    expect(await ok.json()).toEqual({
+      url: "https://github.com/login/oauth/authorize?x",
+    });
+    expect(consent.start).toHaveBeenCalledWith("editor");
+    for (const error of ["no_graph", "already_authorized", "consent_busy"]) {
+      consent.start.mockResolvedValueOnce({ ok: false, error });
+      const response = await call("/consent", {
+        method: "POST",
+        body: { returnTo: "editor" },
+        env: ACTIVITY,
+      });
+      expect(response.status).toBe(409);
+      expect(await response.json()).toEqual({ error });
+    }
+    // Arbitrary return destinations and extra fields are refused.
+    for (const body of [
+      {},
+      { returnTo: "/somewhere" },
+      { returnTo: "https://evil.test" },
+      { returnTo: "editor", url: "x" },
+    ])
+      expect(
+        (await call("/consent", { method: "POST", body, env: ACTIVITY }))
+          .status,
+      ).toBe(422);
+    expect(consent.start).toHaveBeenCalledTimes(4);
+  });
+  it("returns every callback to the fixed editor path with no referrer", async () => {
+    consent.callback.mockResolvedValueOnce({
+      returnTo: "editor",
+      outcome: "connected",
+    });
+    const response = await call("/consent/callback?code=c&state=s", {
+      env: ACTIVITY,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("Location")).toBe("/editor?github=consent");
+    expect(response.headers.get("Referrer-Policy")).toBe("no-referrer");
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(consent.callback).toHaveBeenCalledWith({
+      state: "s",
+      code: "c",
+      error: null,
+    });
+    // A failed consent queued a token revocation, which starts at once.
+    consent.callback.mockResolvedValueOnce({
+      returnTo: "editor",
+      outcome: "wrong_account",
+    });
+    await call("/consent/callback?code=c&state=s", { env: ACTIVITY });
+    expect(db.cleanups).toHaveBeenCalledTimes(1);
+    // A storage failure still returns to the editor and leaks nothing.
+    consent.callback.mockRejectedValueOnce(new Error("secret"));
+    const failed = await call("/consent/callback?code=c&state=s", {
+      env: ACTIVITY,
+    });
+    expect(failed.status).toBe(303);
+    expect(await failed.text()).toBe("");
+    // That failure may have queued an issued token, so revocation starts too.
+    expect(db.cleanups).toHaveBeenCalledTimes(2);
+  });
+  it("keeps the public graph up and reports a broken activity key", async () => {
+    const errors = vi.spyOn(console, "error").mockImplementation(() => {});
+    const broken = { ...ACTIVITY, GITHUB_ACTIVITY_KEY: btoa("short") };
+    service.status.mockResolvedValue(status);
+    service.preview.mockResolvedValue(null);
+    expect((await call("", { env: broken })).status).toBe(200);
+    expect((await call("/preview", { env: broken })).status).toBe(200);
+    // Private consent fails closed.
+    const start = await call("/consent", {
+      method: "POST",
+      body: { returnTo: "editor" },
+      env: broken,
+    });
+    expect(start.status).toBe(503);
+    expect(consent.start).not.toHaveBeenCalled();
+    // The sweep cannot decrypt queued tokens. It says so instead of passing
+    // as an unconfigured app, and the rows stay queued for a repaired key.
+    const { sweepGitHubCleanups } = await import("./github-routes");
+    await expect(
+      sweepGitHubCleanups({ ...env, ...broken } as never),
+    ).rejects.toThrow("Invalid activity key");
+    expect(db.cleanups).not.toHaveBeenCalled();
+    expect(
+      errors.mock.calls.some((args) =>
+        String(args[0]).includes("activity app misconfigured"),
+      ),
+    ).toBe(true);
+    // Unset is still a quiet no-op.
+    await expect(sweepGitHubCleanups(env as never)).resolves.toEqual([]);
+    errors.mockRestore();
+  });
+  it("returns a signed-out callback without touching consent", async () => {
+    owner.current = false;
+    const response = await call("/consent/callback?code=c&state=s", {
+      env: ACTIVITY,
+    });
+    expect(response.status).toBe(303);
+    expect(response.headers.get("Location")).toBe("/editor?github=consent");
+    expect(consent.callback).not.toHaveBeenCalled();
+    // Every other signed-out request is still a plain 401.
+    expect((await call("/withdraw", { method: "POST" })).status).toBe(401);
+    expect((await call("/consent", { method: "POST" })).status).toBe(401);
+  });
+  it("withdraws and chooses public only without any provider configuration", async () => {
+    db.withdraw.mockResolvedValueOnce(true);
+    const withdrawn = await call("/withdraw", {
+      method: "POST",
+      env: { GITHUB_SERVICE_TOKEN: undefined },
+    });
+    expect(withdrawn.status).toBe(200);
+    expect(await withdrawn.json()).toEqual({ ok: true });
+    db.withdraw.mockResolvedValueOnce(false);
+    expect((await call("/withdraw", { method: "POST" })).status).toBe(409);
+    const publicOnly = await call("/public-only", {
+      method: "POST",
+      env: { GITHUB_SERVICE_TOKEN: undefined },
+    });
+    expect(publicOnly.status).toBe(200);
+    expect(db.publicOnly).toHaveBeenCalledTimes(1);
+    for (const path of ["/withdraw", "/public-only"]) {
+      expect(
+        (await call(path, { method: "POST", body: { all: true } })).status,
+      ).toBe(422);
+      expect((await call(path)).status).toBe(405);
+    }
+    expect(db.withdraw).toHaveBeenCalledTimes(2);
   });
 });

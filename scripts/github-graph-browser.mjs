@@ -494,6 +494,10 @@ export async function checkGitHubGraphJourney({
         await page
           .getByRole("button", { name: "Remove section", exact: true })
           .click();
+        // Removal first withdraws private access on the server (Phase 41).
+        await page
+          .getByRole("button", { name: /^Remove(ing\.\.\.| section)$/ })
+          .waitFor({ state: "detached", timeout: 30000 });
         await publish();
         assert.equal((await graphJson()).status, 404);
         assert.doesNotMatch(
@@ -562,6 +566,226 @@ export async function checkGitHubGraphJourney({
       } finally {
         await sql("DELETE FROM account WHERE id='fixture-github-account'");
       }
+    },
+  );
+
+  await run(
+    "GitHub private activity: consent recovery, Publish boundary and withdrawal without Publish",
+    async () => {
+      github.state.failure = null;
+      github.state.consent = { as: null, cancel: false };
+      github.addUser({
+        login: "Private-Owner",
+        counts: { [recent]: 2 },
+        privateCounts: { [recent]: 5, [older]: 3 },
+      });
+      github.addUser({ login: "Other-Account", counts: { [recent]: 1 } });
+      const live = "https://private-graph.hasaweb.site";
+      const liveGraph = async () => {
+        const response = await publicRead(`${live}/_/github.json`);
+        return response.status === 200 ? response.json() : null;
+      };
+      const total = (graph) =>
+        graph?.days.reduce((sum, day) => sum + day.count, 0) ?? null;
+      const grantState = async () =>
+        (
+          await sql(
+            "SELECT state FROM github_grant WHERE github_user_id='node-private-owner'",
+          )
+        )[0]?.state;
+      const settled = async () => {
+        for (let attempt = 0; attempt < 100; attempt++) {
+          const state = await grantState();
+          if (state !== "pending" && state !== "inflight") return state;
+          await getPage().waitForTimeout(100);
+        }
+        throw new Error("grant cleanup did not finish");
+      };
+      let page = await start("private-graph");
+      github.state.callbackOrigin = new URL(page.url()).origin;
+      let controls = await addGraph(page);
+      await fetchFor(controls, "Private-Owner", /Connected\. Fetched/);
+      const privateStatus = () =>
+        controls.locator("[data-github-private-status]");
+      const reopen = async () => {
+        // GitHub returns to /editor?github=consent; the editor reopens the section.
+        await page.waitForURL(/\/editor(\?github=consent)?$/, {
+          timeout: 60000,
+        });
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        controls = page.getByRole("region", {
+          name: "GitHub activity controls",
+          exact: true,
+        });
+        await controls.waitFor({ timeout: 30000 });
+      };
+
+      // Explicit opt-in explains public visibility and blocks Publish until
+      // the matching account is authorized.
+      await controls
+        .getByText(/Visitors will see anonymized contribution counts/)
+        .waitFor();
+      await controls
+        .getByRole("switch", { name: /Include private activity/ })
+        .check();
+      await privateStatus()
+        .getByText(/Authorize the username above/)
+        .waitFor();
+      await expectBlocked();
+
+      // A different GitHub account changes nothing and offers recovery.
+      github.state.consent = { as: "Other-Account", cancel: false };
+      await controls
+        .getByRole("button", { name: "Authorize private activity" })
+        .click();
+      await reopen();
+      await privateStatus()
+        .getByText(/GitHub authorized a different account, so nothing changed/)
+        .waitFor({ timeout: 30000 });
+      assert.equal(new URL(page.url()).search, "");
+      let stored = await connection();
+      assert.equal(stored.login, "Private-Owner");
+      assert.equal(stored.private_enabled, 0);
+      assert.equal(stored.token_enc, null);
+      // Only that token is revoked; the reservation then frees for Retry.
+      assert.equal(await settled(), "idle");
+      assert.ok(
+        github.state.calls.some((call) => call.kind === "delete-token"),
+      );
+      assert.equal(
+        github.state.calls.some((call) => call.kind === "delete-grant"),
+        false,
+      );
+
+      // Cancelled consent keeps the public graph; Public only clears it.
+      github.state.consent = { as: null, cancel: true };
+      await controls.getByRole("button", { name: "Authorize again" }).click();
+      await reopen();
+      await privateStatus()
+        .getByText(/Authorization was cancelled/)
+        .waitFor({ timeout: 30000 });
+      await controls
+        .getByRole("status")
+        .getByText(/Connected\. Fetched/)
+        .waitFor();
+      await controls
+        .getByRole("button", { name: "Use public activity only" })
+        .click();
+      await privateStatus()
+        .getByText(/Off\. Only public contributions are shown/)
+        .waitFor();
+      assert.equal(
+        await controls
+          .getByRole("switch", { name: /Include private activity/ })
+          .isChecked(),
+        false,
+      );
+
+      // Matching consent shows private counts in the owner preview only.
+      github.state.consent = { as: null, cancel: false };
+      await controls
+        .getByRole("switch", { name: /Include private activity/ })
+        .check();
+      await controls
+        .getByRole("button", { name: "Authorize private activity" })
+        .click();
+      await reopen();
+      await privateStatus()
+        .getByText(
+          /Private activity authorized\. Fetched .* 10 contributions in the last year, including private ones/,
+        )
+        .waitFor({ timeout: 30000 });
+      stored = await connection();
+      assert.equal(stored.private_enabled, 1);
+      assert.doesNotMatch(String(stored.token_enc), /gho_fixture/);
+      await displayed();
+      await frame()
+        .locator(
+          `[data-github-graph][data-state="ready"] [title="7 contributions on ${recent}"]`,
+        )
+        .waitFor({ timeout: 30000 });
+      // Nothing is public before Publish.
+      assert.equal(await liveGraph(), null);
+
+      // Publish freezes the private choice: the live graph serves the
+      // authorized calendar, as an allowlist of dates and counts.
+      await publish();
+      const published = await liveGraph();
+      assert.equal(total(published), 10);
+      assert.deepEqual(Object.keys(published).sort(), [
+        "available",
+        "days",
+        "fetchedAt",
+        "profileUrl",
+        "username",
+      ]);
+      assert.deepEqual(Object.keys(published.days[0]).sort(), [
+        "count",
+        "date",
+      ]);
+
+      // Removing private access withdraws it at once, without Publish.
+      await controls
+        .getByRole("button", { name: "Remove private access" })
+        .click();
+      await controls
+        .getByRole("button", { name: "Remove private access now" })
+        .click();
+      // Revocation at GitHub may still be running when the status is read.
+      await privateStatus()
+        .getByText(
+          /Off\. Only public contributions are shown|Earlier private access is still being removed/,
+        )
+        .waitFor({ timeout: 30000 });
+      assert.equal(total(await liveGraph()), 2);
+      assert.equal((await connection()).token_enc, null);
+      assert.equal(await settled(), "idle");
+      assert.ok(
+        github.state.calls.some((call) => call.kind === "delete-grant"),
+      );
+      assert.equal(
+        [...github.tokens.values()].some(
+          (item) => item.login === "private-owner" && item.valid,
+        ),
+        false,
+      );
+
+      // Authorize again, then remove the whole graph: the dialog explains the
+      // withdrawal, private counts leave the live site, sign-in is untouched.
+      await controls
+        .getByRole("switch", { name: /Include private activity/ })
+        .check();
+      await controls
+        .getByRole("button", { name: "Authorize private activity" })
+        .click();
+      await reopen();
+      await privateStatus()
+        .getByText(/Private activity authorized/)
+        .waitFor({ timeout: 30000 });
+      assert.equal(total(await liveGraph()), 10);
+      const sections = page.getByRole("region", {
+        name: "Portfolio sections",
+        exact: true,
+      });
+      await sections
+        .getByRole("button", { name: /^Remove GitHub activity/ })
+        .click();
+      await page
+        .getByRole("dialog")
+        .getByText(
+          /also removes private activity access now, without publishing/,
+        )
+        .waitFor();
+      await page
+        .getByRole("button", { name: "Remove section", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: /^Remove(ing\.\.\.| section)$/ })
+        .waitFor({ state: "detached", timeout: 30000 });
+      assert.equal((await connection()).private_enabled, 0);
+      assert.equal(total(await liveGraph()), 2);
+      assert.equal(await settled(), "idle");
+      page = getPage();
     },
   );
 }

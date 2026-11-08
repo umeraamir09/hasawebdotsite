@@ -76,7 +76,7 @@ it("removes sample markers and component-local raw fields while preserving share
   const records = await storage.list("owner-a", "portfolio-a");
   expect(records[0]?.working?.components).toEqual([]);
 });
-it("keeps identities and raw edits attached during reorder and refuses private GitHub removal", async () => {
+it("keeps identities and raw edits attached during reorder and removes a graph only after withdrawal", async () => {
   const { controller } = await setup();
   const draft = controller.store.getState().working;
   if (!draft) throw new Error("Missing draft");
@@ -116,4 +116,10 @@ it("keeps identities and raw edits attached during reorder and refuses private G
   expect(controller.store.getState().working?.components).toHaveLength(2);
   moveEditorItem(controller, "missing", "projects");
   expect(controller.store.getState().working?.components).toHaveLength(2);
+  expect(
+    removeEditorComponent(controller, "graph", { accessWithdrawn: true }),
+  ).toBe(true);
+  expect(
+    controller.store.getState().working?.components.map((item) => item.id),
+  ).toEqual(["projects"]);
 });

@@ -7,10 +7,10 @@ import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import {
   addEditorComponent,
-  canRemoveEditorComponent,
   moveEditorItem,
   removeEditorComponent,
 } from "../lib/editor/components";
+import { withdrawGraphAccess } from "../lib/editor/github-graph";
 import { OrderedItems } from "./ordered-items";
 
 export function ComponentControls({
@@ -155,10 +155,18 @@ export function ComponentControls({
       {component && (
         <ComponentRemovalDialog
           disabled={inactive}
-          allowed={canRemoveEditorComponent(component)}
+          withdrawal={component.type === "github"}
           onCancel={() => setRemoving(null)}
-          onRemove={() => {
-            if (!removeEditorComponent(controller, component.id)) return;
+          onRemove={async () => {
+            // Private access goes first, at once and without Publish. A
+            // failure keeps the section so nothing claims a removal.
+            if (component.type === "github") await withdrawGraphAccess();
+            if (
+              !removeEditorComponent(controller, component.id, {
+                accessWithdrawn: component.type === "github",
+              })
+            )
+              return;
             if (selection.kind === "component" && selection.id === component.id)
               onSelect({ kind: "profile" });
             setRemoving(null);
@@ -173,18 +181,21 @@ export function ComponentControls({
 export function ComponentRemovalDialog({
   title,
   disabled,
-  allowed,
+  withdrawal = false,
   onCancel,
   onRemove,
 }: {
   title: string;
   disabled: boolean;
-  allowed: boolean;
+  // A GitHub graph also withdraws private activity access.
+  withdrawal?: boolean;
   onCancel(): void;
-  onRemove(): void;
+  onRemove(): void | Promise<void>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const id = useId();
+  const [busy, setBusy] = useState(false);
+  const [failed, setFailed] = useState(false);
   useEffect(() => {
     const previous = document.activeElement;
     const element = dialog.current;
@@ -211,22 +222,37 @@ export function ComponentRemovalDialog({
         public site changes after Publish. Shared links are kept. This does not
         delete uploaded files.
       </p>
-      {!allowed && (
+      {withdrawal && (
         <p>
-          Private GitHub activity requires access withdrawal before removal.
-          These controls will be available with GitHub setup.
+          Removing the graph also removes private activity access now, without
+          publishing: private counts disappear from your live portfolio and
+          access is revoked at GitHub. Your GitHub sign-in stays connected.
+        </p>
+      )}
+      {failed && (
+        <p role="alert">
+          Private access couldn't be removed, so the section was kept. Retry.
         </p>
       )}
       <div className="editor-order-actions">
-        <button type="button" onClick={onCancel}>
+        <button type="button" disabled={busy} onClick={onCancel}>
           Cancel
         </button>
         <button
           type="button"
-          disabled={disabled || !allowed}
-          onClick={onRemove}
+          disabled={disabled || busy}
+          onClick={async () => {
+            setBusy(true);
+            setFailed(false);
+            try {
+              await onRemove();
+            } catch {
+              setFailed(true);
+              setBusy(false);
+            }
+          }}
         >
-          Remove section
+          {busy ? "Removing..." : "Remove section"}
         </button>
       </div>
     </dialog>

@@ -114,13 +114,16 @@ export function githubJobs(db: D1Database) {
           query(
             db,
             `UPDATE github_grant SET state='pending', token_enc=(SELECT token_enc FROM github_connection WHERE ${predicate}),
-            token_binding=(SELECT token_binding FROM github_connection WHERE ${predicate}), retry_at=?, last_error=NULL
+            token_binding=(SELECT token_binding FROM github_connection WHERE ${predicate}), retry_at=?, last_error=NULL,
+            provider_rejected=?
             WHERE state='active' AND EXISTS(SELECT 1 FROM github_connection WHERE ${predicate}
             AND github_connection.app_id=github_grant.app_id AND github_connection.github_user_id=github_grant.github_user_id
             AND github_connection.grant_operation=github_grant.operation_id)`,
             ...params,
             ...params,
             now,
+            // A 401 means GitHub already refused this token (Phase 41 cleanup proof).
+            result.error === "credential" ? 1 : 0,
             ...params,
           ),
           // The first statement changes the grant state, so recheck the ticket, not activeGrant.
@@ -260,7 +263,8 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       query(
         db,
         `UPDATE github_grant SET state='pending',token_enc=(SELECT token_enc FROM github_connection WHERE ${predicate}),
-        token_binding=(SELECT token_binding FROM github_connection WHERE ${predicate}),retry_at=0,last_error=NULL
+        token_binding=(SELECT token_binding FROM github_connection WHERE ${predicate}),retry_at=0,last_error=NULL,
+        provider_rejected=0
         WHERE state='active' AND app_id=? AND github_user_id=? AND operation_id=?
         AND EXISTS(SELECT 1 FROM github_connection WHERE ${predicate})`,
         ...params,
@@ -296,6 +300,26 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
     ]);
     const row = rows[1]?.results[0] as Connection | undefined;
     return row ? connectionView(row) : null;
+  }
+  // Keep the selected-account reservation until only this issued token is revoked.
+  // Grant-wide deletion could revoke a different account's existing connection.
+  async function queueTokenCleanup(
+    ticket: ConsentTicket,
+    envelope: string,
+    binding: string,
+  ) {
+    await query(
+      db,
+      `UPDATE github_grant SET state='pending',token_enc=?,token_binding=?,retry_at=0,last_error=NULL,provider_rejected=0
+      WHERE app_id=? AND github_user_id=? AND operation_id=? AND portfolio_id=? AND state='consent' AND generation=?`,
+      envelope,
+      binding,
+      ticket.appId,
+      ticket.identity.id,
+      ticket.operationId,
+      ticket.portfolioId,
+      ticket.generation,
+    ).run();
   }
   return {
     async getConnection() {
@@ -357,7 +381,8 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
         WHERE portfolio_id=? AND generation=? AND private_enabled=0 AND portfolio_id IN (${owned})
         AND NOT EXISTS(SELECT 1 FROM github_legacy_credential l WHERE l.github_user_id=github_connection.github_user_id)
         ON CONFLICT(app_id,github_user_id) DO UPDATE SET portfolio_id=excluded.portfolio_id,operation_id=excluded.operation_id,
-          generation=excluded.generation,state='consent',token_enc=NULL,token_binding=NULL,attempt_id=NULL,attempts=0,retry_at=0,last_error=NULL
+          generation=excluded.generation,state='consent',token_enc=NULL,token_binding=NULL,attempt_id=NULL,attempts=0,retry_at=0,last_error=NULL,
+          provider_rejected=0
         WHERE github_grant.state='idle' RETURNING github_user_id`,
         appId,
         operationId,
@@ -382,9 +407,11 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       scopes: string,
       verifiedIdentity: GitHubIdentity,
     ) {
+      // These throw before the token is queued; the callback then discards it.
+      // "Invalid activity consent" means the token has already been queued.
       const portfolioId = await requirePortfolio();
       if (ticket.portfolioId !== portfolioId)
-        throw new Error("Invalid activity consent");
+        throw new Error("Activity consent portfolio changed");
       parseIdentity(ticket.identity);
       const accepted =
         scopes === "read:user" &&
@@ -406,17 +433,7 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
         portfolioId,
       ];
       if (!accepted) {
-        // Keep the selected-account reservation until only this issued token is revoked.
-        // Grant-wide deletion could revoke a different account's existing connection.
-        await query(
-          db,
-          `UPDATE github_grant SET state='pending',token_enc=?,token_binding=?,retry_at=0,last_error=NULL
-          WHERE ${matchGrant}`,
-          envelope,
-          binding,
-          ...grantValues,
-          ticket.generation,
-        ).run();
+        await queueTokenCleanup(ticket, envelope, binding);
         throw new Error("Invalid activity consent");
       }
       const rows = await db.batch([
@@ -464,6 +481,31 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       ]);
       const row = rows[1]?.results[0] as Connection | undefined;
       return row ? connectionView(row) : null;
+    },
+    // A token was delivered but could not be enabled. Revoke just that token.
+    // The binding names the selected account for AAD only; its token-only
+    // purpose can never withdraw another grant. The ticket comes from the
+    // consent row this session consumed, so this deliberately needs no live
+    // session: a session that ended after the exchange must still queue it.
+    // Only the reserved grant of this exact operation can match.
+    async discardIssuedToken(
+      ticket: ConsentTicket,
+      key: CryptoKey,
+      token: string,
+    ) {
+      parseIdentity(ticket.identity);
+      const binding = credentialBinding(
+        ticket.portfolioId,
+        ticket.appId,
+        ticket.identity.id,
+        ticket.operationId,
+        "token",
+      );
+      await queueTokenCleanup(
+        ticket,
+        await encryptActivityToken(key, token, binding),
+        binding,
+      );
     },
     // Call only when the OAuth flow proves no token was issued/exchange started.
     async cancelUnissuedConsent(ticket: ConsentTicket) {
@@ -536,15 +578,19 @@ export async function runGitHubGrantCleanup(
     db,
     `UPDATE github_grant SET state='inflight',attempt_id=?,attempts=attempts+1
     WHERE app_id=? AND github_user_id=? AND operation_id=? AND state='pending' AND retry_at<=?
-    RETURNING token_enc,token_binding`,
+    RETURNING token_enc,token_binding,provider_rejected`,
     attemptId,
     ticket.appId,
     ticket.githubUserId,
     ticket.operationId,
     now,
-  ).first<{ token_enc: string; token_binding: string }>();
+  ).first<{
+    token_enc: string;
+    token_binding: string;
+    provider_rejected: number;
+  }>();
   if (!row) return "skipped" as const;
-  let outcome: "deleted" | "retry" | "uncertain";
+  let outcome: "deleted" | "gone" | "retry" | "uncertain";
   try {
     const token = await decryptActivityToken(
       key,
@@ -556,22 +602,21 @@ export async function runGitHubGrantCleanup(
       app,
       token,
       activityCleanupKind(row.token_binding),
+      { providerRejected: row.provider_rejected === 1 },
     );
   } catch {
     outcome = "retry";
   }
+  const released = outcome === "deleted" || outcome === "gone";
   await query(
     db,
-    `UPDATE github_grant SET state=?,token_enc=${outcome === "deleted" ? "NULL" : "token_enc"},
-    token_binding=${outcome === "deleted" ? "NULL" : "token_binding"},retry_at=?,last_error=?
+    `UPDATE github_grant SET state=?,token_enc=${released ? "NULL" : "token_enc"},
+    token_binding=${released ? "NULL" : "token_binding"},retry_at=?,last_error=?,
+    provider_rejected=${released ? "0" : "provider_rejected"}
     WHERE app_id=? AND github_user_id=? AND operation_id=? AND state='inflight' AND attempt_id=?`,
-    outcome === "deleted"
-      ? "idle"
-      : outcome === "retry"
-        ? "pending"
-        : "uncertain",
+    released ? "idle" : outcome === "retry" ? "pending" : "uncertain",
     now + 60_000,
-    outcome === "deleted" ? null : outcome,
+    released ? null : outcome,
     ticket.appId,
     ticket.githubUserId,
     ticket.operationId,

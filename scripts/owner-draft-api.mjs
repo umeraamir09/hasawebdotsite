@@ -8,7 +8,13 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
-import { PLATFORM_TOKEN, startGitHubFixture } from "./lib/github-fixture.mjs";
+import {
+  ACTIVITY_CLIENT_ID,
+  ACTIVITY_CLIENT_SECRET,
+  ACTIVITY_KEY,
+  PLATFORM_TOKEN,
+  startGitHubFixture,
+} from "./lib/github-fixture.mjs";
 import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url)),
@@ -349,6 +355,10 @@ if (!remote) {
         // Public graph setup reads this local stand-in, never GitHub.
         GITHUB_SERVICE_TOKEN: PLATFORM_TOKEN,
         GITHUB_API_ORIGIN: github.origin,
+        // The separate private-activity app, served by the same stand-in.
+        GITHUB_ACTIVITY_CLIENT_ID: ACTIVITY_CLIENT_ID,
+        GITHUB_ACTIVITY_CLIENT_SECRET: ACTIVITY_CLIENT_SECRET,
+        GITHUB_ACTIVITY_KEY: ACTIVITY_KEY,
       },
     }),
   );

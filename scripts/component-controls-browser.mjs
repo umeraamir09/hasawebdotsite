@@ -184,7 +184,7 @@ export async function checkComponentControls({
     },
   );
   await run(
-    "component entry and category ordering save stable identities and private graph removal is gated",
+    "component entry and category ordering save stable identities and graph removal explains withdrawal",
     async () => {
       await boot();
       const page = getPage();
@@ -243,16 +243,25 @@ export async function checkComponentControls({
       await sections()
         .getByRole("button", { name: "Remove GitHub activity", exact: true })
         .click();
+      // Removal explains the immediate private-access withdrawal (Phase 41).
+      await getPage()
+        .getByRole("dialog")
+        .getByText("also removes private activity access now")
+        .waitFor();
       assert.equal(
         await getPage()
           .getByRole("button", { name: "Remove section", exact: true })
           .isDisabled(),
-        true,
+        false,
       );
       await getPage()
         .getByRole("dialog")
         .getByRole("button", { name: "Cancel", exact: true })
         .click();
+      assert.equal(
+        (await stored()).components.some((item) => item.type === "github"),
+        true,
+      );
     },
   );
 }
