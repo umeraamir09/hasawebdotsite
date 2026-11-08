@@ -56,11 +56,18 @@ Phase 20 adds explicit private profile suggestions and provider-photo retrieval.
 
 Onboarding/editor adapters reuse the [shared client and Phase 15 coordinator](../apps/web/lib/draft/README.md). Keep the fixed recovery callback alongside the normal-entry resolver. Send the expected-owner precondition on draft/progress requests and stop on `owner_changed` before loading recovery into another account. Preserve recoverable local input through reauthentication and isolate it by owner/portfolio. Restoring a session returns to the same pending setup or authorized editor flow without duplicate preparation.
 
-## Planned GitHub activity consent
+## GitHub activity consent
 
 Both signup providers can add a graph and authorize private activity during onboarding or in the editor. Public activity uses the separately verified platform credential. Private consent uses a separate activity OAuth app/grant with `read:user`, one-use expiring owner/session-bound state, PKCE, and selected-account identity checks. It neither expands signup scopes nor links GitHub sign-in to a Google owner's account.
 
-Controlled consent returns resume the graph step. Cancelled, failed, or wrong-account consent preserves existing public setup and offers Retry, public-only setup, or later incomplete editor repair. It cannot gate editor entry after required setup. Explicit graph removal withdraws its separate private access with immediate local removal and retryable remote revocation; it leaves sign-in connected. See [architecture section 8.5](architecture.md#85-github-activity-product-9) for production dependencies and stale-refresh protection.
+Phase 41 implements it in the editor ([results](../specs/2026-11-08-private-activity/results.md)). All routes use the generic owner path (uncached active session; exact Origin and JSON for POST; `private, no-store`, noindex, `Vary: Cookie`):
+
+- `POST /api/owner/github/consent` accepts exactly `{"returnTo":"editor"}` and returns `{url}`, GitHub's authorize URL. The browser saves the draft and navigates in the same tab. Closed errors: `no_graph`, `already_authorized`, `consent_busy` (earlier cleanup or another reservation for that GitHub account), `private_unavailable` (no activity app configured).
+- `GET /api/owner/github/consent/callback` is the activity app's registered callback. It completes consent only for the same user and session that started it, within ten minutes, once. Every outcome, including a signed-out visit, answers `303` to `/editor?github=consent` with `Referrer-Policy: no-referrer`; the editor reopens the graph section and reads the persisted outcome from `GET /api/owner/github`.
+- `POST /api/owner/github/public-only` and `POST /api/owner/github/withdraw` accept exactly `{}` and need no provider configuration. Public only clears an unfinished or failed request. Withdraw removes private access at once and queues revocation at GitHub; graph removal calls it before removing the component.
+- `GET /api/owner/github/preview?private=1` returns the authorized calendar to the owner only while the grant is currently valid; without it, the public calendar.
+
+Cancelled, failed, expired or wrong-account consent preserves existing public setup and offers Authorize again or Use public activity only; the draft's private choice keeps publication blocked until repaired, and editor entry is never gated. Explicit graph removal leaves sign-in connected. See [architecture section 8.5](architecture.md#85-github-activity-product-9) for the reservation rules and stale-refresh protection.
 
 ## Local setup
 
@@ -79,6 +86,8 @@ For the future production release, set `APP_ORIGIN=https://hasaweb.site` in both
 
 - `https://hasaweb.site/api/auth/callback/github`
 - `https://hasaweb.site/api/auth/callback/google`
+
+Private activity uses a second, separate GitHub OAuth app. Register its callback as exactly `https://hasaweb.site/api/owner/github/consent/callback` and give the jobs Worker `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET` and `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes, the AES-GCM key for stored activity tokens) as deployment secrets. Without them, private activity reports unavailable and public setup, Public only and withdrawal keep working. Key rotation is not implemented: changing the key makes stored grants undecryptable.
 
 GitHub requests only `user:email`, with default scopes disabled. Google requests its default identity scopes. Private GitHub contribution authorization uses a separate app/grant in later phases. Verified matching provider emails may link accounts, with no trusted-provider bypass. Neither missing nor unverified emails can merge owners. A standalone unverified-email account may sign in without becoming eligible for automatic linking, as established in Phase 05.
 
