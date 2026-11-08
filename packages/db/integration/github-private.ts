@@ -18,6 +18,7 @@ import {
   withdrawPrivateActivity,
 } from "../src/github-private";
 import { ownerGraphSetup } from "../src/github-setup";
+import { runRefreshChecks } from "./github-refresh";
 
 // Phase 41 private consent, recovery and withdrawal against real D1. GitHub is
 // a fake that enforces PKCE, the redirect URI, per-token identity and scope,
@@ -33,19 +34,23 @@ function ok(value: unknown, message: string): asserts value {
   if (!value) throw new Error(message);
 }
 
-const app = { id: "activity-app", secret: "activity-secret" };
+export const app = { id: "activity-app", secret: "activity-secret" };
 const callbackUrl = "https://hasaweb.site/api/owner/github/consent/callback";
-type Account = GitHubIdentity & { public: number; all: number };
+export type Account = GitHubIdentity & { public: number; all: number };
 // The grant coordinator is global per app/account, so each check uses its own.
 const registry = new Map<string, Account>();
-function account(login: string, counts = { public: 2, all: 9 }): Account {
+export function account(
+  login: string,
+  counts = { public: 2, all: 9 },
+): Account {
   const value = { id: `node-${login.toLowerCase()}`, login, ...counts };
   registry.set(login.toLowerCase(), value);
   return value;
 }
 const platform = { id: "node-platform", login: "platform-account" };
 
-function fakeGitHub() {
+export type FakeGitHub = ReturnType<typeof fakeGitHub>;
+export function fakeGitHub() {
   type Code = {
     account: GitHubIdentity;
     challenge: string;
@@ -954,4 +959,19 @@ export async function runPrivateActivityChecks(
       );
     },
   );
+  // Phase 42 refresh checks reuse these owners, the fake and the clock.
+  await runRefreshChecks({
+    db,
+    check,
+    prepared,
+    makeOwner,
+    key,
+    clock: {
+      now: () => clock,
+      advance: (ms: number) => {
+        clock += ms;
+        return clock;
+      },
+    },
+  });
 }

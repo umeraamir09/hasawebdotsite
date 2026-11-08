@@ -3,7 +3,13 @@ import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
 import { type Wake, wakeSchema } from "@hasaweb/db";
-import { type GitHubBindings, sweepGitHubCleanups } from "./github-routes";
+import { parseRefreshMessage, type RefreshMessage } from "@hasaweb/github";
+import {
+  type GitHubBindings,
+  processGitHubRefresh,
+  sweepGitHubCleanups,
+  sweepGitHubRefreshes,
+} from "./github-routes";
 import { ownerRouter } from "./owner-api";
 import type { PublicationCacheEnv } from "./publication-cache";
 import {
@@ -29,15 +35,16 @@ export class OwnerApi extends WorkerEntrypoint<
 interface Env
   extends DispatchEnv,
     PublicationCacheEnv,
-    Partial<GitHubBindings> {
+    Partial<Omit<GitHubBindings, "GITHUB_QUEUE">> {
   APP_ENV: string;
   DB: D1Database;
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   CONTACT_QUEUE: Queue<{ id: string }>;
-  GITHUB_QUEUE: Queue<{ id: string }>;
+  GITHUB_QUEUE: Queue<RefreshMessage>;
   PUBLISH_WORKFLOW: Workflow<{ id: string }>;
   PUBLICATION_QUEUE_NAME?: string;
+  GITHUB_QUEUE_NAME?: string;
 }
 export class RuntimeWorkflow extends WorkflowEntrypoint<Env, { id: string }> {
   async run(event: WorkflowEvent<{ id: string }>, step: WorkflowStep) {
@@ -93,8 +100,36 @@ export default {
       }
       return;
     }
+    let messages = batch.messages;
+    if (batch.queue === (env.GITHUB_QUEUE_NAME ?? "hasaweb-github-local")) {
+      const probes: (typeof messages)[number][] = [];
+      for (const message of messages) {
+        const refresh = parseRefreshMessage(message.body);
+        if (!refresh) {
+          probes.push(message);
+          continue;
+        }
+        // D1 records the request; a failure is retried by the next request
+        // after the window, never by redelivering this message.
+        await processGitHubRefresh(env, refresh).catch((error: unknown) =>
+          console.error(
+            "github refresh failed",
+            error instanceof Error ? error.name : typeof error,
+          ),
+        );
+        message.ack();
+      }
+      if (!probes.length) return;
+      // Outside local development an unknown message can never succeed.
+      // Acknowledge it rather than retry the batch until it is dropped.
+      if (env.APP_ENV !== "local") {
+        for (const message of probes) message.ack();
+        return;
+      }
+      messages = probes;
+    }
     if (env.APP_ENV !== "local") throw new Error("Development queue disabled");
-    for (const message of batch.messages) {
+    for (const message of messages) {
       if (!("id" in message.body)) {
         message.ack();
         continue;
@@ -113,9 +148,16 @@ export default {
     // Durable grant revocation: pending cleanups retry here until GitHub
     // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
     await sweepGitHubCleanups(env).catch(() => []);
+    // Daily private refresh: one bounded batch of due connections per tick.
+    await sweepGitHubRefreshes(env).catch((error: unknown) =>
+      console.error(
+        "github refresh sweep failed",
+        error instanceof Error ? error.name : typeof error,
+      ),
+    );
     if (env.APP_ENV !== "local") return;
     await env.DB.prepare(
       "INSERT OR REPLACE INTO runtime_probe (key, value) VALUES ('cron', 'complete')",
     ).run();
   },
-} satisfies ExportedHandler<Env, { id: string } | Wake>;
+} satisfies ExportedHandler<Env, { id: string } | Wake | RefreshMessage>;

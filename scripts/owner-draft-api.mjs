@@ -332,6 +332,8 @@ if (!remote) {
       queues: {
         producers: [
           { binding: "PUBLICATION_QUEUE", queue: "hasaweb-publication-local" },
+          // Phase 42 GitHub refresh (visits, status reads, daily sweep).
+          { binding: "GITHUB_QUEUE", queue: "hasaweb-github-local" },
         ],
         consumers: [
           {
@@ -339,6 +341,11 @@ if (!remote) {
             max_batch_size: 1,
             max_batch_timeout: 1,
             max_retries: 4,
+          },
+          {
+            queue: "hasaweb-github-local",
+            max_batch_size: 1,
+            max_batch_timeout: 1,
           },
         ],
       },

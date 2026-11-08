@@ -1,12 +1,9 @@
 import {
-  fetchPublicBaseline,
   type GitHubTransport,
   isGitHubLogin,
-  lastYearRange,
   lookupLoginById,
   parseCalendar,
   projectPublishedActivity,
-  publicRefreshResult,
   resolvePublicIdentity,
   sameIdentity,
 } from "@hasaweb/github";
@@ -17,6 +14,7 @@ import {
   type PrivateState,
   releaseUnusedConsent,
 } from "./github-private";
+import { connectionRefreshDue, refreshPublicCalendar } from "./github-refresh";
 import type { SessionIdentity } from "./repositories";
 
 // GitHub graph setup for the signed-in owner. The public part uses only the
@@ -70,6 +68,9 @@ export type GraphEnvironment = {
   platformToken: string;
   now?: () => number;
   activity?: PrivateEnvironment;
+  // Phase 42: a status read past the refresh TTL asks for a queued refresh.
+  // The caller records and sends it outside the response (`waitUntil`).
+  requestRefresh?: (portfolioId: string) => void;
 };
 
 const profileUrl = (login: string) =>
@@ -141,6 +142,13 @@ export function ownerGraphSetup(
       : connection.privateEnabled
         ? { state: "pending" }
         : { state: "off" };
+    // A graph past the TTL refreshes in the background, without Publish. A
+    // selection that never fetched successfully stays with setup and Retry.
+    if (env.requestRefresh) {
+      const state = await jobs.servingState(connection.portfolioId);
+      if (connectionRefreshDue(state, now(), { requireData: true }))
+        env.requestRefresh(connection.portfolioId);
+    }
     return {
       connection: {
         username: connection.identity.login,
@@ -154,25 +162,20 @@ export function ownerGraphSetup(
     };
   }
 
-  async function fetchAndStore(
+  // The same shared refresh the queue consumer runs (Phase 42).
+  const fetchAndStore = (
     connection: NonNullable<Awaited<ReturnType<typeof owner.getConnection>>>,
-  ) {
-    const ticket = {
-      portfolioId: connection.portfolioId,
-      generation: connection.generation,
-      identity: connection.identity,
-    };
-    const at = now();
-    const baseline = await fetchPublicBaseline(
-      env.transport,
-      env.platformToken,
-      connection.identity,
-      lastYearRange(new Date(at)),
-      new Date(at).toISOString(),
+  ) =>
+    refreshPublicCalendar(
+      db,
+      {
+        portfolioId: connection.portfolioId,
+        generation: connection.generation,
+        identity: connection.identity,
+      },
+      env,
+      now(),
     );
-    // A selection that changed while the provider answered discards this result.
-    return jobs.refresh(ticket, publicRefreshResult(baseline), at);
-  }
 
   return {
     status,

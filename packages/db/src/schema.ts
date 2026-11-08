@@ -437,6 +437,36 @@ export const githubConsent = sqliteTable(
     ),
   ],
 );
+// Independent refresh requests (Phase 42). `requested_at` deduplicates visits,
+// editor reads and the daily sweep within the request window and lets a lost
+// message be requested again after it; `started_at` lets one delivery of a
+// request claim the work. Rows hold no GitHub data.
+export const githubRefresh = sqliteTable("github_refresh", {
+  portfolioId: portfolioId().primaryKey(),
+  requestedAt: integer("requested_at").notNull(),
+  startedAt: integer("started_at"),
+});
+// The published account's public calendar while the draft selects another
+// account (Phase 42). It is public data only, never an authorized calendar,
+// and is served only when the active version's frozen graph names this
+// account. It is replaced or removed by refresh once no longer needed.
+export const githubPublishedActivity = sqliteTable(
+  "github_published_activity",
+  {
+    portfolioId: portfolioId().primaryKey(),
+    githubUserId: text("github_user_id").notNull(),
+    login: text("login").notNull(),
+    publicCalendar: text("public_calendar", { mode: "json" }).$type<Calendar>(),
+    publicError: text("public_error"),
+    checkedAt: integer("checked_at"),
+  },
+  (t) => [
+    check(
+      "github_published_activity_json",
+      sql`${t.publicCalendar} is null or json_valid(${t.publicCalendar})`,
+    ),
+  ],
+);
 // Unknown pre-11D envelopes need operator reconciliation before graph rollout.
 export const githubLegacyCredential = sqliteTable("github_legacy_credential", {
   portfolioId: portfolioId().primaryKey(),
@@ -530,6 +560,8 @@ export const schema = {
   githubActivity,
   githubGrant,
   githubConsent,
+  githubRefresh,
+  githubPublishedActivity,
   githubLegacyCredential,
   contactRecipient,
   contactOutbox,

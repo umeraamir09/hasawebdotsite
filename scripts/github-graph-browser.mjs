@@ -443,16 +443,22 @@ export async function checkGitHubGraphJourney({
         });
 
         // Editing the draft to another account never changes the live graph's
-        // configuration: the endpoint withdraws data instead of switching.
+        // configuration. Until the next Publish the live graph keeps the
+        // published account's public counts (Phase 42), never the draft's.
         await fetchFor(controls, "zero-owner", /No public contributions/);
         await flush();
         live = await graphJson();
         assert.equal(live.body.username, "Fixture-Owner");
-        assert.equal(live.body.available, false);
-        assert.deepEqual(live.body.days, []);
+        assert.equal(live.body.available, true);
+        assert.equal(
+          live.body.days.find((item) => item.date === recent).count,
+          4,
+        );
         await tab.reload();
         await tab
-          .locator('[data-github-graph][data-state="unavailable"]')
+          .locator(
+            `[data-github-graph][data-state="ready"] [title="4 contributions on ${recent}"]`,
+          )
           .waitFor({ timeout: 30000 });
         assert.match(await tab.locator("body").innerText(), /Graph owner/);
 
@@ -785,6 +791,183 @@ export async function checkGitHubGraphJourney({
       assert.equal((await connection()).private_enabled, 0);
       assert.equal(total(await liveGraph()), 2);
       assert.equal(await settled(), "idle");
+      page = getPage();
+    },
+  );
+
+  await run(
+    "GitHub refresh: live graphs update without Publish, keep the last good graph on failure, and lose revoked access on the next refresh",
+    async () => {
+      github.state.failure = null;
+      github.state.consent = { as: null, cancel: false };
+      const user = github.addUser({
+        login: "Refresh-Owner",
+        counts: { [recent]: 3 },
+        privateCounts: { [recent]: 4 },
+      });
+      const live = "https://refresh-graph.hasaweb.site";
+      const liveGraph = async () => {
+        const response = await publicRead(`${live}/_/github.json`);
+        return response.status === 200 ? response.json() : null;
+      };
+      const total = (graph) =>
+        graph?.available
+          ? graph.days.reduce((sum, day) => sum + day.count, 0)
+          : null;
+      const portfolio =
+        "(SELECT id FROM portfolio WHERE user_id='draft-alice')";
+      // Past the six-hour TTL, without waiting: age the stored fetch dates.
+      const agedAt = new Date(Date.now() - 7 * 36e5).toISOString();
+      const ageCalendars = () =>
+        sql(
+          `UPDATE github_activity SET public_calendar=json_set(public_calendar,'$.fetchedAt',?),
+          authorized_calendar=CASE WHEN authorized_calendar IS NULL THEN NULL
+            ELSE json_set(authorized_calendar,'$.fetchedAt',?) END
+          WHERE portfolio_id=${portfolio}`,
+          [agedAt, agedAt],
+        );
+      // Past the 15-minute request window, without waiting.
+      const ageRequest = () =>
+        sql(
+          `UPDATE github_refresh SET requested_at=requested_at-16*60000 WHERE portfolio_id=${portfolio}`,
+        );
+      const requests = async () =>
+        (
+          await sql(
+            `SELECT requested_at,started_at FROM github_refresh WHERE portfolio_id=${portfolio}`,
+          )
+        )[0];
+      const until = async (check, message) => {
+        for (let attempt = 0; attempt < 150; attempt++) {
+          const value = await check();
+          if (value) return value;
+          await getPage().waitForTimeout(200);
+        }
+        throw new Error(message);
+      };
+      let page = await start("refresh-graph");
+      github.state.callbackOrigin = new URL(page.url()).origin;
+      let controls = await addGraph(page);
+      await fetchFor(controls, "Refresh-Owner", /Connected\. Fetched/);
+      await publish();
+      assert.equal(total(await liveGraph()), 3);
+
+      // A visit past the TTL gets the last good graph at once and one
+      // background refresh; the live graph then updates without Publish.
+      user.counts[recent] = 5;
+      await ageCalendars();
+      const stale = await liveGraph();
+      assert.equal(total(stale), 3);
+      assert.equal(stale.fetchedAt, agedAt);
+      const fresh = await until(async () => {
+        const graph = await liveGraph();
+        return total(graph) === 5 && graph;
+      }, "the live graph did not refresh");
+      assert.ok(Date.parse(fresh.fetchedAt) > Date.parse(agedAt));
+      const requested = await requests();
+      assert.ok(requested.started_at >= requested.requested_at);
+      // Fresh again: more visits request nothing and call GitHub no more.
+      const calls = github.state.calls.length;
+      await liveGraph();
+      await liveGraph();
+      assert.deepEqual(await requests(), requested);
+      assert.equal(github.state.calls.length, calls);
+
+      // GitHub fails: visitors keep the last good graph and its date, and the
+      // editor reports the failure with Retry.
+      await ageCalendars();
+      await ageRequest();
+      github.state.failure = 502;
+      assert.equal(total(await liveGraph()), 5);
+      await until(
+        async () =>
+          (
+            await sql(
+              `SELECT public_error FROM github_activity WHERE portfolio_id=${portfolio}`,
+            )
+          )[0]?.public_error,
+        "the failed refresh was not recorded",
+      );
+      const kept = await liveGraph();
+      assert.equal(total(kept), 5);
+      assert.equal(kept.fetchedAt, agedAt);
+      const reopen = async () => {
+        await page.waitForURL(/\/editor(\?github=consent)?$/, {
+          timeout: 60000,
+        });
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        controls = page.getByRole("region", {
+          name: "GitHub activity controls",
+          exact: true,
+        });
+        await controls.waitFor({ timeout: 30000 });
+      };
+      // The fixed consent return reopens the GitHub section and reads status.
+      await page.goto(new URL("/editor?github=consent", page.url()).href);
+      await reopen();
+      await controls
+        .getByRole("status")
+        .getByText(/Couldn't refresh GitHub\. Showing the graph from/)
+        .waitFor({ timeout: 30000 });
+      github.state.failure = null;
+      await age();
+      await controls.getByRole("button", { name: "Refresh activity" }).click();
+      await controls
+        .getByRole("status")
+        .getByText(/Connected\. Fetched/)
+        .waitFor({ timeout: 30000 });
+      assert.equal(total(await liveGraph()), 5);
+
+      // Private activity goes live with Publish.
+      await controls
+        .getByRole("switch", { name: /Include private activity/ })
+        .check();
+      await controls
+        .getByRole("button", { name: "Authorize private activity" })
+        .click();
+      await reopen();
+      const privateStatus = () =>
+        controls.locator("[data-github-private-status]");
+      await privateStatus()
+        .getByText(/Private activity authorized/)
+        .waitFor({ timeout: 30000 });
+      await publish();
+      assert.equal(total(await liveGraph()), 9);
+
+      // The owner removes the app on GitHub. The next refresh sees 401 and
+      // withdraws private counts from the live graph without Publish.
+      github.revokeAll("Refresh-Owner");
+      await ageCalendars();
+      await ageRequest();
+      assert.equal(total(await liveGraph()), 9);
+      await until(
+        async () => total(await liveGraph()) === 5,
+        "revoked access stayed live",
+      );
+      assert.equal((await connection()).private_enabled, 0);
+      assert.equal((await connection()).status, "needs_reconnect");
+      await until(
+        async () =>
+          (
+            await sql(
+              "SELECT state FROM github_grant WHERE github_user_id='node-refresh-owner'",
+            )
+          )[0]?.state === "idle",
+        "the refused grant was not released",
+      );
+      await page.goto(new URL("/editor?github=consent", page.url()).href);
+      await reopen();
+      await privateStatus()
+        .getByText(/GitHub no longer allows private access/)
+        .waitFor({ timeout: 30000 });
+
+      // Reconnect: authorizing again restores private counts without Publish.
+      await controls.getByRole("button", { name: "Authorize again" }).click();
+      await reopen();
+      await privateStatus()
+        .getByText(/Private activity authorized/)
+        .waitFor({ timeout: 30000 });
+      assert.equal(total(await liveGraph()), 9);
       page = getPage();
     },
   );

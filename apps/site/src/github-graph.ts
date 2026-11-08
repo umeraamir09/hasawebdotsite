@@ -1,8 +1,16 @@
 import { githubJobs } from "@hasaweb/db/github";
 import {
+  connectionRefreshDue,
+  enqueueGitHubRefresh,
+  publishedFallbackState,
+  type RefreshQueue,
+} from "@hasaweb/db/github-refresh";
+import {
+  calendarDue,
   type PublishedGraph,
   parseIdentity,
   projectPublishedActivity,
+  sameIdentity,
 } from "@hasaweb/github";
 
 // Live GitHub activity for a published portfolio. The graph configuration is
@@ -10,6 +18,11 @@ import {
 // sealed. The draft, the query string and the visitor choose nothing. Counts
 // are never part of a snapshot, so a refresh or a withdrawal changes this
 // response without a Publish.
+//
+// Phase 42: when the draft has selected another account, the published
+// account's retained public calendar is served instead (never private
+// counts). A served calendar past the six-hour TTL requests one background
+// refresh; the visitor gets the last good data immediately.
 
 const headers = () =>
   new Headers({
@@ -61,13 +74,39 @@ export async function serveGitHubGraph(
   request: Request,
   db: D1Database,
   name: string,
+  refresh: {
+    queue?: RefreshQueue;
+    background?: { waitUntil(work: Promise<unknown>): void };
+  } = {},
 ) {
   const active = await publishedGraph(db, name);
   // No graph in the active version: the page has nothing to ask for.
   if (!active) return new Response(null, { status: 404, headers: headers() });
   const state = await githubJobs(db).servingState(active.portfolioId);
   // The allowlisted projection: username, profile link, dates and counts only.
-  const body = projectPublishedActivity(active.graph, state);
+  let body = projectPublishedActivity(active.graph, state);
+  const connectionServes =
+    !!state && sameIdentity(state.identity, active.graph);
+  let due = connectionServes && connectionRefreshDue(state, Date.now());
+  if (!body?.available) {
+    const fallback = await publishedFallbackState(
+      db,
+      active.portfolioId,
+      active.graph,
+    );
+    const retained = projectPublishedActivity(active.graph, fallback);
+    if (retained?.available) body = retained;
+    // Without the connection holding this account, the retained calendar is
+    // the one to keep fresh (the consumer creates it when missing).
+    if (!connectionServes)
+      due = calendarDue(fallback?.activity?.publicCalendar, Date.now());
+  }
+  if (due && refresh.queue && refresh.background) {
+    const queue = refresh.queue;
+    refresh.background.waitUntil(
+      enqueueGitHubRefresh(db, queue, active.portfolioId).catch(() => null),
+    );
+  }
   return new Response(request.method === "HEAD" ? null : JSON.stringify(body), {
     headers: headers(),
   });

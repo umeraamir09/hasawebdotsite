@@ -3,7 +3,6 @@ import {
   authorizedRefreshResult,
   CONSENT_TTL_MS,
   consentStateHash,
-  decryptActivityToken,
   exchangeActivityCode,
   fetchAuthorizedActivity,
   type GitHubTransport,
@@ -22,6 +21,7 @@ import {
   pendingGitHubCleanups,
   runGitHubGrantCleanup,
 } from "./github";
+import { refreshAuthorizedCalendar } from "./github-refresh";
 import type { SessionIdentity } from "./repositories";
 
 // Private GitHub activity for the signed-in owner (Phase 41). It adds the
@@ -591,26 +591,14 @@ export function ownerPrivateActivity(
     async refresh() {
       const connection = await owner.getConnection();
       if (!connection?.privateEnabled) return false;
-      const captured = await jobs.capture(connection.portfolioId, "authorized");
-      if (!captured?.tokenEnc || !captured.tokenBinding) return false;
-      const token = await decryptActivityToken(
-        env.key,
-        captured.tokenEnc,
-        captured.tokenBinding,
-      );
-      const at = new Date(now());
-      const fetched = await fetchAuthorizedActivity(
-        env.transport,
-        token,
-        captured.ticket.identity,
-        lastYearRange(at),
-        at.toISOString(),
-      );
-      return jobs.refresh(
-        captured.ticket,
-        authorizedRefreshResult(fetched, captured.ticket.identity),
+      // The same shared refresh the queue consumer runs (Phase 42).
+      const outcome = await refreshAuthorizedCalendar(
+        db,
+        connection.portfolioId,
+        env,
         now(),
       );
+      return outcome.written;
     },
   };
 }

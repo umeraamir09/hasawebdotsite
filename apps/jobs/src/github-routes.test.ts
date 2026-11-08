@@ -16,6 +16,10 @@ const db = vi.hoisted(() => ({
   withdraw: vi.fn(),
   publicOnly: vi.fn(),
   cleanups: vi.fn(),
+  refresh: vi.fn(),
+  sweep: vi.fn(),
+  enqueue: vi.fn(),
+  setupEnv: vi.fn(),
 }));
 const owner = vi.hoisted(() => ({ current: true }));
 vi.mock("@hasaweb/auth", () => ({
@@ -27,13 +31,20 @@ vi.mock("@hasaweb/auth", () => ({
 }));
 vi.mock("@hasaweb/db", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@hasaweb/db")>()),
-  ownerGraphSetup: () => service,
+  ownerGraphSetup: (_db: unknown, _identity: unknown, env: unknown) => {
+    db.setupEnv(env);
+    return service;
+  },
+  runGitHubRefresh: db.refresh,
+  dueGitHubSweep: db.sweep,
+  enqueueGitHubRefresh: db.enqueue,
   ownerPrivateActivity: () => consent,
   withdrawPrivateActivity: db.withdraw,
   choosePublicOnly: db.publicOnly,
   runGitHubCleanups: db.cleanups,
 }));
 
+import { processGitHubRefresh, sweepGitHubRefreshes } from "./github-routes";
 import { createOwnerRouter } from "./owner-api";
 
 const env = {
@@ -358,5 +369,88 @@ describe("private activity consent routes", () => {
       expect((await call(path)).status).toBe(405);
     }
     expect(db.withdraw).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("independent refresh (Phase 42)", () => {
+  const message = {
+    kind: "github-refresh" as const,
+    portfolioId: "p1",
+    requestedAt: 1_794_000_000_000,
+  };
+  it("lets a due status read request a background refresh only with a queue", async () => {
+    service.status.mockResolvedValue(status);
+    db.enqueue.mockResolvedValue(message);
+    await call("");
+    expect(db.setupEnv.mock.calls[0]?.[0]).not.toHaveProperty("requestRefresh");
+    const queue = { send: vi.fn(), sendBatch: vi.fn() };
+    await call("", { env: { GITHUB_QUEUE: queue } });
+    const env = db.setupEnv.mock.calls[1]?.[0] as {
+      requestRefresh(portfolioId: string): Promise<unknown> | undefined;
+    };
+    await env.requestRefresh("p1");
+    expect(db.enqueue).toHaveBeenCalledWith(expect.anything(), queue, "p1");
+  });
+  it("refreshes with the platform credential and the activity app, and revokes a refused grant", async () => {
+    db.refresh.mockResolvedValueOnce({
+      claimed: true,
+      withdrawn: true,
+      failed: [],
+    });
+    const env = {
+      APP_ENV: "production",
+      DB: {} as D1Database,
+      GITHUB_SERVICE_TOKEN: "platform-token",
+      ...ACTIVITY,
+    };
+    await processGitHubRefresh(env, message, 1);
+    const [, sent, environments] = db.refresh.mock.calls[0] ?? [];
+    expect(sent).toEqual(message);
+    expect(environments.public.platformToken).toBe("platform-token");
+    expect(environments.authorized.key).toBeDefined();
+    // The refused grant is revoked at once; the cron retries the rest.
+    expect(db.cleanups).toHaveBeenCalledTimes(1);
+  });
+  it("still refreshes public activity without a usable activity app", async () => {
+    db.refresh.mockResolvedValue({
+      claimed: true,
+      withdrawn: false,
+      failed: [],
+    });
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const activity of [{}, { ...ACTIVITY, GITHUB_ACTIVITY_KEY: "AAAA" }]) {
+      await processGitHubRefresh(
+        {
+          APP_ENV: "production",
+          DB: {} as D1Database,
+          GITHUB_SERVICE_TOKEN: "platform-token",
+          ...activity,
+        },
+        message,
+      );
+    }
+    expect(db.refresh.mock.calls.map((call) => call[2].authorized)).toEqual([
+      null,
+      null,
+    ]);
+    expect(db.cleanups).not.toHaveBeenCalled();
+    expect(error).toHaveBeenCalledTimes(1);
+    error.mockRestore();
+  });
+  it("sends one bounded batch of due private connections per sweep", async () => {
+    const queue = { send: vi.fn(), sendBatch: vi.fn() };
+    db.sweep.mockResolvedValueOnce([message]).mockResolvedValueOnce([]);
+    const env = {
+      APP_ENV: "production",
+      DB: {} as D1Database,
+      GITHUB_QUEUE: queue as unknown as Queue<typeof message>,
+    };
+    expect(await sweepGitHubRefreshes(env, 5)).toEqual([message]);
+    expect(queue.sendBatch).toHaveBeenCalledWith([{ body: message }]);
+    await sweepGitHubRefreshes(env, 6);
+    expect(queue.sendBatch).toHaveBeenCalledTimes(1);
+    expect(
+      await sweepGitHubRefreshes({ ...env, GITHUB_QUEUE: undefined } as never),
+    ).toEqual([]);
   });
 });

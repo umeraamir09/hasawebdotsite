@@ -52,6 +52,19 @@ const activeGrant = (
 const liveOwner = `EXISTS (SELECT 1 FROM portfolio p JOIN user u ON u.id=p.user_id
   WHERE p.id=github_connection.portfolio_id AND u.deleting_at IS NULL)`;
 
+/**
+ * The frozen graph account of a portfolio's active published version, as a
+ * scalar subquery. `$.graph` is written when the manifest is sealed (Phase 40).
+ */
+export const publishedGraphColumn = (portfolio: string, path: string) =>
+  `(SELECT json_extract(x.value,'${path}') FROM portfolio pp
+    JOIN publish_version v ON v.portfolio_id=pp.id AND v.n=pp.published_version AND v.status='live'
+    JOIN publication_candidate pc ON pc.id=v.candidate_id AND pc.status='ready'
+    JOIN publication_candidate_index x ON x.candidate_id=pc.id
+    WHERE pp.id=${portfolio} AND pp.status='published')`;
+export const publishedGraphAccount = (portfolio: string) =>
+  publishedGraphColumn(portfolio, "$.graph.id");
+
 function connectionView(row: Connection) {
   return {
     portfolioId: row.portfolio_id,
@@ -259,7 +272,28 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       : { id: current.github_user_id, login: current.login };
     const predicate = `portfolio_id=? AND generation=? AND portfolio_id IN (${owned})`;
     const params = [current.portfolio_id, expectedGeneration, ...ownerValues()];
+    // Phase 42: a different account keeps the published account's public
+    // calendar live until the next Publish. Only the public calendar is kept,
+    // and only when the outgoing account is the one the active version names.
+    // It runs first, while the connection still has the outgoing generation.
+    const retain = selected
+      ? [
+          query(
+            db,
+            `INSERT INTO github_published_activity(portfolio_id,github_user_id,login,public_calendar,public_error,checked_at)
+            SELECT c.portfolio_id,c.github_user_id,c.login,a.public_calendar,a.public_error,c.last_checked_at
+            FROM github_connection c JOIN github_activity a ON a.portfolio_id=c.portfolio_id AND a.generation=c.generation
+            WHERE c.portfolio_id=? AND c.generation=? AND c.portfolio_id IN (${owned}) AND c.github_user_id<>?
+              AND a.public_calendar IS NOT NULL AND ${publishedGraphAccount("c.portfolio_id")}=c.github_user_id
+            ON CONFLICT(portfolio_id) DO UPDATE SET github_user_id=excluded.github_user_id,login=excluded.login,
+              public_calendar=excluded.public_calendar,public_error=excluded.public_error,checked_at=excluded.checked_at`,
+            ...params,
+            next.id,
+          ),
+        ]
+      : [];
     const rows = await db.batch([
+      ...retain,
       query(
         db,
         `UPDATE github_grant SET state='pending',token_enc=(SELECT token_enc FROM github_connection WHERE ${predicate}),
@@ -298,7 +332,7 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
         ...ownerValues(),
       ),
     ]);
-    const row = rows[1]?.results[0] as Connection | undefined;
+    const row = rows[retain.length + 1]?.results[0] as Connection | undefined;
     return row ? connectionView(row) : null;
   }
   // Keep the selected-account reservation until only this issued token is revoked.
