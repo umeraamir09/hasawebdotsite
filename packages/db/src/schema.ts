@@ -376,6 +376,11 @@ export const githubGrant = sqliteTable(
     attempts: integer("attempts").notNull().default(0),
     retryAt: integer("retry_at").notNull().default(0),
     lastError: text("last_error"),
+    // GitHub refused this credential with 401 before it was queued. Only
+    // then can a failed delete plus an invalid-token check release cleanup.
+    providerRejected: integer("provider_rejected", { mode: "boolean" })
+      .notNull()
+      .default(false),
   },
   (t) => [
     primaryKey({ columns: [t.appId, t.githubUserId] }),
@@ -386,6 +391,49 @@ export const githubGrant = sqliteTable(
     check(
       "github_grant_cleanup_token",
       sql`(${t.state} not in ('pending','inflight','uncertain')) or (${t.tokenEnc} is not null and ${t.tokenBinding} is not null)`,
+    ),
+  ],
+);
+// One-use private-activity consent attempts (Phase 41). Only a hash of the
+// OAuth state is stored. Rows outlive owner deletion (references become null)
+// so a reserved `github_grant` can still be reconciled from its attempt.
+export const githubConsent = sqliteTable(
+  "github_consent",
+  {
+    stateHash: text("state_hash").primaryKey(),
+    userId: text("user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    sessionId: text("session_id").notNull(),
+    portfolioId: text("portfolio_id").references(() => portfolio.id, {
+      onDelete: "set null",
+    }),
+    appId: text("app_id").notNull(),
+    githubUserId: text("github_user_id").notNull(),
+    login: text("login").notNull(),
+    operationId: text("operation_id").notNull(),
+    generation: integer("generation").notNull(),
+    // The PKCE verifier, kept only while the attempt can still exchange.
+    verifier: text("verifier").notNull(),
+    returnTo: text("return_to", { enum: ["editor"] }).notNull(),
+    state: text("state", {
+      enum: ["issued", "exchanging", "finished", "void"],
+    }).notNull(),
+    outcome: text("outcome"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    exchangeStartedAt: integer("exchange_started_at"),
+  },
+  (t) => [
+    index("github_consent_portfolio").on(t.portfolioId, t.createdAt),
+    check(
+      "github_consent_state",
+      sql`${t.state} in ('issued','exchanging','finished','void')`,
+    ),
+    check("github_consent_return", sql`${t.returnTo} in ('editor')`),
+    check(
+      "github_consent_verifier",
+      sql`(${t.state} in ('issued','exchanging')) = (length(${t.verifier}) = 43)`,
     ),
   ],
 );
@@ -481,6 +529,7 @@ export const schema = {
   githubConnection,
   githubActivity,
   githubGrant,
+  githubConsent,
   githubLegacyCredential,
   contactRecipient,
   contactOutbox,

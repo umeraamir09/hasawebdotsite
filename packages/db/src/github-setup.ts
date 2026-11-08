@@ -11,11 +11,18 @@ import {
   sameIdentity,
 } from "@hasaweb/github";
 import { githubJobs, ownerGithub } from "./github";
+import {
+  ownerPrivateActivity,
+  type PrivateEnvironment,
+  type PrivateState,
+  releaseUnusedConsent,
+} from "./github-private";
 import type { SessionIdentity } from "./repositories";
 
-// Public GitHub graph setup for the signed-in owner. It uses only the separate
-// platform credential and public data. It never reads, stores or reports an
-// owner token or an authorized calendar: Phase 41 adds those beside it.
+// GitHub graph setup for the signed-in owner. The public part uses only the
+// separate platform credential and public data. Private activity (Phase 41,
+// `github-private.ts`) is reported and refreshed here when the activity app
+// is configured, and is never part of the public fetch.
 
 /** Retry and setup share one cooldown so a click cannot hammer the provider. */
 export const GRAPH_RETRY_COOLDOWN_MS = 10_000;
@@ -50,6 +57,10 @@ export type GraphStatus = {
     generation: number;
   };
   public: GraphPublicState;
+  // Private activity for the selected account. `off` without a connection.
+  private: PrivateState;
+  // Whether the separate activity app is configured on this deployment.
+  privateAvailable: boolean;
   // Whether this owner signed in with GitHub, so a username can be suggested.
   canDetect: boolean;
 };
@@ -58,6 +69,7 @@ export type GraphEnvironment = {
   transport: GitHubTransport;
   platformToken: string;
   now?: () => number;
+  activity?: PrivateEnvironment;
 };
 
 const profileUrl = (login: string) =>
@@ -106,12 +118,29 @@ export function ownerGraphSetup(
   const owner = ownerGithub(db, identity);
   const jobs = githubJobs(db);
   const now = () => env.now?.() ?? Date.now();
+  const privateActivity = env.activity
+    ? ownerPrivateActivity(db, identity, env.activity)
+    : null;
 
   async function status(): Promise<GraphStatus> {
     const connection = await owner.getConnection();
     const canDetect = (await owner.signInAccountId()) !== null;
+    const privateAvailable = privateActivity !== null;
     if (!connection)
-      return { connection: null, public: { state: "pending" }, canDetect };
+      return {
+        connection: null,
+        public: { state: "pending" },
+        private: { state: "off" },
+        privateAvailable,
+        canDetect,
+      };
+    // Without the activity app, an existing grant is still reported as data
+    // state only: it can be withdrawn but not created or refreshed.
+    const privateState: PrivateState = privateActivity
+      ? await privateActivity.status()
+      : connection.privateEnabled
+        ? { state: "pending" }
+        : { state: "off" };
     return {
       connection: {
         username: connection.identity.login,
@@ -119,6 +148,8 @@ export function ownerGraphSetup(
         generation: connection.generation,
       },
       public: publicState(connection, await owner.getActivity()),
+      private: privateState,
+      privateAvailable,
       canDetect,
     };
   }
@@ -205,6 +236,9 @@ export function ownerGraphSetup(
         ) {
           connection = { ...connection, identity: resolved.identity };
         } else {
+          // A pending consent belongs to the old account. Selecting another
+          // account withdraws its private access in the same transition.
+          if (connection) await releaseUnusedConsent(db, identity, now());
           const selected = await owner.select(
             resolved.identity,
             connection ? connection.generation : null,
@@ -231,39 +265,26 @@ export function ownerGraphSetup(
       )
         return { ok: false, error: "too_soon" };
       await fetchAndStore(connection);
+      // The stored grant refreshes too. A 401 here withdraws private data.
+      if (connection.privateEnabled && privateActivity)
+        await privateActivity.refresh();
       return { ok: true, status: await status() };
     },
     /**
-     * Owner-authorized draft data for the editor and full-page preview. It
-     * returns the allowlisted public calendar for the selected account only.
-     * Draft choices never reach the public endpoint, and Phase 41 extends this
-     * adapter for consented private activity.
+     * Owner-authorized draft data for the editor and full-page preview, for
+     * the selected account. `includePrivate` is the owner's own draft choice:
+     * the authorized calendar is used only while the grant is currently valid
+     * for this account and generation. Draft choices never reach the public
+     * endpoint, which reads the frozen published configuration instead.
      */
-    async preview() {
+    async preview(includePrivate = false) {
       const connection = await owner.getConnection();
       if (!connection) return null;
-      const activity = await owner.getActivity();
-      const decode = (value: unknown): unknown => {
-        try {
-          return typeof value === "string" ? JSON.parse(value) : null;
-        } catch {
-          return null;
-        }
-      };
+      const state = await jobs.servingState(connection.portfolioId);
+      if (!state) return null;
       return projectPublishedActivity(
-        { ...connection.identity, includePrivate: false },
-        {
-          identity: connection.identity,
-          generation: connection.generation,
-          privateAuthorized: false,
-          activity: activity
-            ? {
-                generation: activity.generation as number,
-                publicCalendar: decode(activity.public_calendar),
-                authorizedCalendar: null,
-              }
-            : null,
-        },
+        { ...connection.identity, includePrivate },
+        state,
       );
     },
   };
