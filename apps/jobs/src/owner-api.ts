@@ -14,7 +14,12 @@ import {
 } from "@hasaweb/db";
 import { Hono } from "hono";
 import { addDraftRoutes } from "./draft-routes";
-import { addGitHubRoutes, type GitHubBindings } from "./github-routes";
+import {
+  addGitHubRoutes,
+  CONSENT_CALLBACK_PATH,
+  consentReturn,
+  type GitHubBindings,
+} from "./github-routes";
 import {
   addPublicationRoutes,
   type PublicationBindings,
@@ -150,7 +155,13 @@ export function createOwnerRouter() {
       c.set("identity", identity);
     } else {
       const owner = await currentOwner(c.env, request.headers);
-      if (!owner) return privateJson(null, 401);
+      // GitHub's consent redirect is a top-level navigation. A signed-out or
+      // expired session returns to the editor, which handles sign-in, and the
+      // unconsumed attempt changes nothing.
+      if (!owner)
+        return c.req.path === CONSENT_CALLBACK_PATH && request.method === "GET"
+          ? consentReturn()
+          : privateJson(null, 401);
       c.set("owner", owner);
       c.set("identity", owner.identity);
     }
