@@ -54,7 +54,7 @@ Not passed or not run:
 
 Defect found outside this phase: Workers reject `fetch(..., { redirect: "error" })`. `deleteActivityCredential` in `packages/github/src/credentials.ts` uses it, so every real grant cleanup would end `uncertain` and block new consent. Phase 40 code uses `manual`. A separate session was started to fix the cleanup path.
 
-Approval: not requested or recorded. The roadmap checkbox is unchanged.
+Approval: the owner approved completion on November 8, 2026 after PR #51 merged to `main` at `9770647`. The roadmap checkbox is checked.
 
 ## Documentation impact
 
@@ -64,4 +64,4 @@ Updated guidance: [architecture](../../docs/architecture.md) (site row, special 
 
 Follow-up (PR 51 review): `parseContributionCalendar` now accepts GitHub's week-alignment padding (up to six days outside the window) and drops those days rather than classifying the payload `invalid`. The manifest seal writes `$.graph` only when `facts.github` has an `id` and `login`, and `publishedGraph` requires both to be strings, so a missing identity returns 404 instead of a graph for the login `undefined`. Regression tests: `public.test.ts` (padding) and `github-graph.test.ts` (missing identity). The seal SQL has no direct test; the persistence and publication suites were not rerun for this follow-up.
 
-Unresolved prerequisites: Phases 41, 42 and 42D; the production `GITHUB_SERVICE_TOKEN` secret; the deployed S-9 cache check; owner approval.
+Unresolved prerequisites: Phases 41, 42 and 42D; the production `GITHUB_SERVICE_TOKEN` secret; the deployed S-9 cache check.
