@@ -69,7 +69,7 @@ Not run or not established:
 
 Remaining integration: Phase 42D (guide step and a `setup` return context), Phase 42 (refresh TTL and daily sweep), Phase 47 (provider settings reuse this cleanup), Phase 49 (account deletion must resolve grants and reservations whose attempt lost its portfolio), and launch configuration of the activity app, its callback and `GITHUB_ACTIVITY_*` secrets.
 
-Approval: not requested or recorded. The roadmap checkbox is unchanged.
+Approval: the owner approved completion on November 8, 2026 after PR #52 merged to `main` at `a196587`. The roadmap checkbox is checked. No separate boundary review is recorded.
 
 ## Documentation impact
 
@@ -77,4 +77,4 @@ Changed assumptions: private consent, its routes and the activity app were plann
 
 Updated guidance: [architecture 8.5](../../docs/architecture.md#85-github-activity-product-9) (Phase 41 paragraph: reservation release rules, callback, dead-token proof, no purge while `no-store`), [authentication](../../docs/authentication.md#github-activity-consent) (implemented routes and production activity-app configuration), [implementation status](../../docs/implementation-status.md) (new row; GitHub, Phase 40 and component-picker rows), [onboarding](../../docs/onboarding.md) (42D reuse and the `setup` return context), [roadmap](../../docs/roadmap.md) (record link and the folded cleanup-transport note; checkbox unchanged), the [GitHub](../../packages/github/README.md), [db](../../packages/db/README.md) and [draft client](../../apps/web/lib/draft/README.md) guides, and `apps/jobs/.dev.vars.example`. Historical specs, including the Phase 40 record's "not built" list, stay as written.
 
-Unresolved prerequisites: owner completion approval; the boundary review; the production activity app and secrets; deployed S-9; Phases 42, 42D, 47 and 49 as listed above.
+Unresolved prerequisites: the boundary review (not recorded); the production activity app and secrets; deployed S-9; Phases 42, 42D, 47 and 49 as listed above.
