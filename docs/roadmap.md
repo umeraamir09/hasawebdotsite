@@ -391,6 +391,7 @@ Add each capability through the shared registry, draft saving, validation, previ
 - Dependencies: 06, 11C–11D, 13–17, 27. Public graph service and editor setup can precede publication integration.
 - Integration before full completion: 23, 25–26 and the shared private preview/serving path for matching published configuration and public/private data separation.
 - Implement the production graph service, safe public fetch, detected/manual username, profile link, status, Retry, and rendering. Both signup providers explicitly add a graph. Provide owner-authorized draft data and public endpoints that use the matching published configuration.
+- [Implementation and verification record](../specs/2026-11-08-github-graph/results.md). Implemented; the full local gate did not finish and CI is the remaining check. Completion approval is not recorded.
 - [ ] Complete when zero contributions succeed, missing/failed initial fetches block publication of that graph but do not break the draft/portfolio, Google owners can use a username without sign-in linking, and tested public responses contain no authorized private calendar. Onboarding reuses this setup.
 
 ### Phase 41. Add private activity, consent recovery, and withdrawal
