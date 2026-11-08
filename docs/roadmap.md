@@ -407,8 +407,8 @@ Add each capability through the shared registry, draft saving, validation, previ
 
 - Dependencies: 40–41 and shared job/runtime/quota checks.
 - Add six-hour refresh-on-visit TTL and daily private sweep with deduplication, bounded work, stuck-job recovery, and connection-generation writes. Reuse the same graph service for editor and onboarding.
-- [Implementation and verification record](../specs/2026-11-08-github-refresh/results.md). The owner treated the shared job/runtime/quota prerequisite as satisfied by the paid-at-launch policy with a recorded estimate, approved the refresh parameters, and added the Phase 40 published-account gap to this phase. Completion approval is pending.
-- [ ] Complete when graphs update without Publish, transient failures preserve last good data/date, Retry/Reconnect works, revocation withdraws data on next refresh/sweep, and stale responses/errors cannot restore removed access or corrupt a new grant.
+- [Implementation and verification record](../specs/2026-11-08-github-refresh/results.md). The owner treated the shared job/runtime/quota prerequisite as satisfied by the paid-at-launch policy with a recorded estimate, approved the refresh parameters, and added the Phase 40 published-account gap to this phase. The owner approved completion on November 8, 2026 after PR #54 merged to `main` at `e2efc4e`. No separate boundary review is recorded.
+- [x] Complete when graphs update without Publish, transient failures preserve last good data/date, Retry/Reconnect works, revocation withdraws data on next refresh/sweep, and stale responses/errors cannot restore removed access or corrupt a new grant.
 
 ## Initial setup and guided content
 

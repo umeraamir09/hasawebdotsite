@@ -81,7 +81,7 @@ Remaining integration:
 - Phase 42D (guide step: the onboarding status read gets the same refresh through `ownerGraphSetup`).
 - Phase 49 (account deletion; both new tables cascade with the portfolio).
 
-Approval: completion approval is pending. The roadmap checkbox is unchanged.
+Approval: the owner approved completion on November 8, 2026 after PR #54 merged to `main` at `e2efc4e`. The roadmap checkbox is checked. No separate boundary review is recorded.
 
 ## Documentation impact
 
@@ -91,6 +91,6 @@ Changed assumptions:
 - A draft username change after Publish used to make the live graph unavailable. Now it keeps the published account's public graph.
 - Refresh queues and scheduling are no longer "remaining Phase 42".
 
-Updated guidance: [architecture 8.5](../../docs/architecture.md#85-github-activity-product-9) (refresh bullets, the Phase 40 paragraph's account-change sentence, a new Phase 42 paragraph, and the "remain Phases 40–42" sentence), [implementation status](../../docs/implementation-status.md) (GitHub, Phase 40 and Phase 41 rows, plus a new row), the [db](../../packages/db/README.md) and [GitHub](../../packages/github/README.md) package guides, and the [roadmap](../../docs/roadmap.md) (record link only; checkbox unchanged). Historical records, including the Phase 40 decision that left this gap to Phase 42, stay as written.
+Updated guidance: [architecture 8.5](../../docs/architecture.md#85-github-activity-product-9) (refresh bullets, the Phase 40 paragraph's account-change sentence, a new Phase 42 paragraph, and the "remain Phases 40–42" sentence), [implementation status](../../docs/implementation-status.md) (GitHub, Phase 40 and Phase 41 rows, plus a new row), the [db](../../packages/db/README.md) and [GitHub](../../packages/github/README.md) package guides, and the [roadmap](../../docs/roadmap.md) (record link and completion checkbox). Historical records, including the Phase 40 decision that left this gap to Phase 42, stay as written.
 
-Unresolved prerequisites: the boundary review, production Queue and cron configuration, paid-provider and GitHub rate verification, deployed S-9, and Phases 42D and 49 as listed above.
+Unresolved prerequisites: the boundary review (not recorded), production Queue and cron configuration, paid-provider and GitHub rate verification, deployed S-9, and Phases 42D and 49 as listed above.
