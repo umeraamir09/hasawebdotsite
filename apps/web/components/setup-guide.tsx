@@ -9,14 +9,22 @@ import {
   type RecoveryCoordinator,
 } from "../lib/draft/recovery-coordinator";
 import { DraftFailure } from "../lib/draft/types";
+import {
+  findOptional,
+  type OptionalType,
+  projectIncomplete,
+  settleOptional,
+} from "../lib/guide/optional";
 import { checkSetup } from "../lib/guide/setup-check";
 import {
   type GuideStep,
   guideSteps,
+  isSkippable,
   nextStep,
   previousStep,
   progressFor,
   type RequiredIssues,
+  remainingTarget,
   requiredIssues,
   requiredSteps,
   resumeStep,
@@ -25,6 +33,7 @@ import {
 } from "../lib/guide/steps";
 import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
+import { GuideProjects, GuideSkills } from "./guide-optional-steps";
 import { ProfileControls } from "./profile-controls";
 import { SocialLinksControl } from "./social-links-control";
 import { useAddressReservation } from "./use-address-reservation";
@@ -281,6 +290,53 @@ function Scope({
     await go(target);
   }
 
+  // Skills and Projects are optional. Continue keeps entered content and
+  // drops only entries nothing was typed into; a project that has content
+  // still needs its title and summary here, while Skip keeps it as is.
+  async function continueOptional(from: OptionalType) {
+    if (navigating) return;
+    const target = nextStep(from);
+    if (!target) return;
+    setNavigating(true);
+    setStepError("");
+    try {
+      if (Object.keys(controller.store.getState().inputs).length > 0) {
+        setStepError(
+          "Some of your input isn't valid yet. Fix the highlighted fields, or skip this step to keep it for later.",
+        );
+        return;
+      }
+      settleOptional(controller, from);
+      if (from === "projects") {
+        const projects = findOptional(
+          controller.store.getState().working,
+          "projects",
+        );
+        if (projects?.data.entries.some(projectIncomplete)) {
+          setStepError(
+            "Each project needs a title and summary. Add them, remove the project, or skip this step to keep it as is.",
+          );
+          return;
+        }
+      }
+      await controller.flushValid();
+    } catch {
+      setStepError(
+        "We couldn't save this step. Your answers are kept. Retry to continue.",
+      );
+      return;
+    } finally {
+      setNavigating(false);
+    }
+    await go(target);
+  }
+
+  async function skip(from: OptionalType, target: GuideStep | null) {
+    if (navigating || !target) return;
+    settleOptional(controller, from);
+    await go(target);
+  }
+
   async function signOut() {
     if (signingOut) return;
     setSigningOut(true);
@@ -368,7 +424,28 @@ function Scope({
           ))}
         </ol>
         {/* Required steps never offer a skip or an editor bypass. */}
-        <div className="guide-nav-skip" />
+        <div className="guide-nav-skip">
+          {!loading && isSkippable(step) && (
+            <>
+              <button
+                type="button"
+                className="ghost-button"
+                disabled={disabled}
+                onClick={() => void skip(step as OptionalType, nextStep(step))}
+              >
+                Skip this step
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                disabled={disabled}
+                onClick={() => void skip(step as OptionalType, remainingTarget)}
+              >
+                Skip remaining steps
+              </button>
+            </>
+          )}
+        </div>
       </nav>
       <main className="guide-content">
         {loading ? (
@@ -435,6 +512,23 @@ function Scope({
                   />
                 )}
               </form>
+            ) : step === "skills" || step === "projects" ? (
+              <form
+                id={formId}
+                className="guide-fields guide-wide"
+                aria-label={step === "skills" ? "Your skills" : "Your projects"}
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void continueOptional(step);
+                }}
+              >
+                {step === "skills" ? (
+                  <GuideSkills controller={controller} disabled={disabled} />
+                ) : (
+                  <GuideProjects controller={controller} disabled={disabled} />
+                )}
+              </form>
             ) : (
               <UnavailableStep />
             )}
@@ -472,7 +566,7 @@ function Scope({
           </div>
         )}
       </main>
-      {!loading && requiredSteps.has(step) && (
+      {!loading && (requiredSteps.has(step) || isSkippable(step)) && (
         <footer className="guide-footer">
           <button
             className="guide-continue"

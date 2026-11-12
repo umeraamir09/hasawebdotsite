@@ -83,3 +83,12 @@ export function resumeStep(
 export function progressFor(step: GuideStep): SetupProgress {
   return { schemaVersion: 1, step };
 }
+
+// Optional screens carry Skip this step and Skip remaining steps. Skipping
+// the remainder always lands on Review, the final step, whatever later
+// optional screens exist. Review itself is activated in Phase 42E.
+export const remainingTarget: GuideStep = "review";
+
+export function isSkippable(step: GuideStep) {
+  return step === "skills" || step === "projects";
+}

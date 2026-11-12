@@ -3,8 +3,10 @@ import {
   canEnter,
   firstIncompleteStep,
   guideSteps,
+  isSkippable,
   nextStep,
   previousStep,
+  remainingTarget,
   requiredIssues,
   resumeStep,
   stepFields,
@@ -79,5 +81,15 @@ describe("guide steps", () => {
   it("names the required fields each screen owns", () => {
     expect(stepFields.profile).toEqual(["name", "bio", "avatar", "banner"]);
     expect(stepFields.links).toEqual(["links"]);
+  });
+});
+
+describe("optional step navigation", () => {
+  it("skips only optional screens and Skip remaining lands on Review", () => {
+    expect(isSkippable("skills")).toBe(true);
+    expect(isSkippable("projects")).toBe(true);
+    expect(isSkippable("links")).toBe(false);
+    expect(remainingTarget).toBe("review");
+    expect(nextStep("skills")).toBe("projects");
   });
 });
