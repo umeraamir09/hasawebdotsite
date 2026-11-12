@@ -735,6 +735,10 @@ export async function checkSetupGuide({
     await waitStep(page, "projects");
     await skip("Skip remaining steps");
     await waitStep(page, "review");
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if ((await portfolio()).step === "review") break;
+      await page.waitForTimeout(200);
+    }
     assert.equal((await portfolio()).step, "review");
     assert.equal((await components("projects"))[0].data.entries.length, 1);
     assert.equal((await components("skills"))[0].data.entries.length, 1);
