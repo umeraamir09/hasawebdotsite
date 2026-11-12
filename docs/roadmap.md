@@ -418,8 +418,8 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 11A–11B, 12–17, 22–22A and the confirmed read-only UI direction. Default styling from 16/11E is sufficient; appearance controls from 35 are not a shell prerequisite.
 - Add the focused responsive step shell, progress/navigation, saved-step resume, and first required Address screen. Use the same exclusive reservation and availability checks as the editor, with no initial skip/editor bypass. Preserve local recovery and revision conflicts.
-- [Implementation and verification record](../specs/2026-11-12-guide-shell/results.md). Implemented behind the isolated `/guide` browser fixture; owner completion approval is not recorded.
-- [ ] Complete when ON-01/02/13/14/19 pass for this increment, concurrent selection produces one reservation and no public URL, and required navigation cannot be forged. Do not activate an incomplete required signup journey yet.
+- [Implementation and verification record](../specs/2026-11-12-guide-shell/results.md). Implemented behind the isolated `/guide` browser fixture; the local `auth` profile passed. The owner approved completion on November 12, 2026 in PR #55, before merge and while its CI browser suites were still running. No separate boundary review is recorded.
+- [x] Complete when ON-01/02/13/14/19 pass for this increment, concurrent selection produces one reservation and no public URL, and required navigation cannot be forged. Do not activate an incomplete required signup journey yet.
 
 ### Phase 42B. Add the combined Profile and required Links screens
 
