@@ -10,6 +10,11 @@ import {
 } from "../lib/draft/recovery-coordinator";
 import { DraftFailure } from "../lib/draft/types";
 import {
+  type GraphSetupStatus,
+  readGraphStatus,
+} from "../lib/editor/github-graph";
+import { findGraph, graphGap, graphGapMessage } from "../lib/guide/github";
+import {
   findOptional,
   type OptionalType,
   projectIncomplete,
@@ -33,6 +38,7 @@ import {
 } from "../lib/guide/steps";
 import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
+import { GuideGitHub } from "./guide-github-step";
 import { GuideProjects, GuideSkills } from "./guide-optional-steps";
 import { ProfileControls } from "./profile-controls";
 import { SocialLinksControl } from "./social-links-control";
@@ -72,8 +78,8 @@ const stepCopy: Record<
   },
   github: {
     label: "GitHub",
-    title: "Add your GitHub activity",
-    intro: "Show your contribution graph on your portfolio.",
+    title: "Your activity, at a glance",
+    intro: "Add a GitHub contribution graph to your portfolio.",
   },
   review: {
     label: "Review",
@@ -167,6 +173,21 @@ function Scope({
   const [signOutError, setSignOutError] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const revision = state.confirmed?.revision;
+  // The GitHub screen: whether Add graph was chosen before any account was
+  // accepted, the panel's latest status, and a failed status read.
+  const [addingGraph, setAddingGraph] = useState(false);
+  const [graphStatus, setGraphStatus] = useState<GraphSetupStatus | null>(null);
+  const [graphUnchecked, setGraphUnchecked] = useState(false);
+
+  // GitHub consent returns to `/auth/entry?github=consent`. The step comes
+  // from saved progress and the outcome from the status route, so the marker
+  // only needs removing.
+  useEffect(() => {
+    const url = new URL(location.href);
+    if (url.searchParams.get("github") !== "consent") return;
+    url.searchParams.delete("github");
+    history.replaceState(history.state, "", url);
+  }, []);
 
   async function refresh() {
     const result = await checkSetup(controller, send);
@@ -225,6 +246,11 @@ function Scope({
     if (shownStep.current === step) return;
     shownStep.current = step;
     setStepError("");
+    // Leaving the GitHub screen forgets an unfinished Add graph choice; the
+    // panel reads a fresh status when it is shown again.
+    setAddingGraph(false);
+    setGraphStatus(null);
+    setGraphUnchecked(false);
     heading.current?.focus();
   }, [step]);
 
@@ -331,9 +357,60 @@ function Scope({
     await go(target);
   }
 
-  async function skip(from: OptionalType, target: GuideStep | null) {
+  // The GitHub screen continues only with a complete graph configuration, or
+  // without a graph. An unfinished one offers Retry, Use public activity only
+  // (in the panel) and Finish later, which keeps it with its publication
+  // blocker. No graph state ever blocks reaching the editor.
+  async function continueGitHub() {
+    if (navigating) return;
+    const target = nextStep("github");
+    if (!target) return;
+    setNavigating(true);
+    setStepError("");
+    try {
+      const graph = findGraph(controller.store.getState().working);
+      if (!graph) {
+        if (addingGraph) {
+          setStepError(graphGapMessage.fetch);
+          return;
+        }
+      } else {
+        let status: GraphSetupStatus;
+        try {
+          status = await readGraphStatus();
+        } catch {
+          setGraphUnchecked(true);
+          setStepError(
+            "We couldn't check your graph. Retry, or finish it later in the editor.",
+          );
+          return;
+        }
+        setGraphUnchecked(false);
+        setGraphStatus(status);
+        const gap = graphGap(status, graph);
+        if (gap) {
+          setStepError(graphGapMessage[gap]);
+          return;
+        }
+      }
+      await controller.flushValid();
+    } catch {
+      setStepError(
+        "We couldn't save this step. Your answers are kept. Retry to continue.",
+      );
+      return;
+    } finally {
+      setNavigating(false);
+    }
+    await go(target);
+  }
+
+  // Skipping keeps entered content, and for GitHub the graph, its connection
+  // and any granted access: skipping never disconnects.
+  async function skip(from: GuideStep, target: GuideStep | null) {
     if (navigating || !target) return;
-    settleOptional(controller, from);
+    if (from === "skills" || from === "projects")
+      settleOptional(controller, from);
     await go(target);
   }
 
@@ -370,6 +447,12 @@ function Scope({
     Boolean(state.validationJournal) ||
     Boolean(state.discardJournal);
   const copy = stepCopy[step];
+  const currentGraph = findGraph(state.working);
+  const graphUnfinished = Boolean(
+    currentGraph &&
+      (graphUnchecked ||
+        (graphStatus && graphGap(graphStatus, currentGraph) !== null)),
+  );
 
   return (
     <div
@@ -431,7 +514,7 @@ function Scope({
                 type="button"
                 className="ghost-button"
                 disabled={disabled}
-                onClick={() => void skip(step as OptionalType, nextStep(step))}
+                onClick={() => void skip(step, nextStep(step))}
               >
                 Skip this step
               </button>
@@ -439,7 +522,7 @@ function Scope({
                 type="button"
                 className="ghost-button"
                 disabled={disabled}
-                onClick={() => void skip(step as OptionalType, remainingTarget)}
+                onClick={() => void skip(step, remainingTarget)}
               >
                 Skip remaining steps
               </button>
@@ -529,6 +612,64 @@ function Scope({
                   <GuideProjects controller={controller} disabled={disabled} />
                 )}
               </form>
+            ) : step === "github" ? (
+              <>
+                {/* The panel's own fields and buttons stay outside the
+                    form, so Enter in the username field never continues. */}
+                <form
+                  id={formId}
+                  aria-label="Your GitHub activity"
+                  noValidate
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void continueGitHub();
+                  }}
+                />
+                <div className="guide-fields guide-wide">
+                  <GuideGitHub
+                    controller={controller}
+                    disabled={disabled}
+                    adding={addingGraph}
+                    onAdding={setAddingGraph}
+                    onStatus={(status) => {
+                      setGraphStatus(status);
+                      if (status) setGraphUnchecked(false);
+                    }}
+                    beforeConsent={async () => {
+                      try {
+                        // Consent returns to this saved step.
+                        controller.changeProgress(progressFor("github"));
+                        await controller.flushValid();
+                        return true;
+                      } catch {
+                        return false;
+                      }
+                    }}
+                  />
+                  {graphUnfinished && (
+                    <div className="guide-note" data-guide-github-unfinished="">
+                      <p>GitHub needs attention</p>
+                      <p>
+                        Your graph stays in your draft as unfinished, and
+                        publishing is blocked until you complete it or remove it
+                        in the editor. The rest of your portfolio isn't
+                        affected.
+                      </p>
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        disabled={disabled}
+                        onClick={() => {
+                          const target = nextStep("github");
+                          if (target) void go(target);
+                        }}
+                      >
+                        Finish later in the editor
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
             ) : (
               <UnavailableStep />
             )}

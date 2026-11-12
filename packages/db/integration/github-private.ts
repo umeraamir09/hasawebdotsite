@@ -376,8 +376,9 @@ export async function runPrivateActivityChecks(
     async function consent(
       as: GitHubIdentity | "cancel" = selected,
       scope?: string,
+      returnTo: "editor" | "setup" = "editor",
     ) {
-      const started = await service.start("editor");
+      const started = await service.start(returnTo);
       ok(started.ok, `consent start ${JSON.stringify(started)}`);
       return {
         url: started.url,
@@ -733,6 +734,153 @@ export async function runPrivateActivityChecks(
       );
       ok(t.github.valid(owner), "fresh grant survives the old cleanup");
       equal((await t.service.status()).state, "ready");
+    },
+  );
+
+  await check(
+    "Guide consent returns to setup for every outcome; removal, failed revocation, reconnect and stale work stay fenced",
+    async () => {
+      const t = await prepared("gh-private-guide");
+      const guide = (as: GitHubIdentity | "cancel" = t.selected) =>
+        t.consent(as, undefined, "setup");
+      const returnTo = async () =>
+        (
+          await db
+            .prepare(
+              "SELECT return_to FROM github_consent WHERE portfolio_id=? ORDER BY created_at DESC, rowid DESC LIMIT 1",
+            )
+            .bind(t.portfolioId)
+            .first<{ return_to: string }>()
+        )?.return_to;
+      // Wrong account and cancel keep the selection and return to setup.
+      const wrong = await guide(t.other);
+      equal(await returnTo(), "setup");
+      equal(await t.service.callback(wrong.params), {
+        returnTo: "setup",
+        outcome: "wrong_account",
+      });
+      equal((await raw(t.portfolioId))?.login, t.selected.login);
+      await t.cleanup();
+      const cancelled = await guide("cancel");
+      equal(await t.service.callback(cancelled.params), {
+        returnTo: "setup",
+        outcome: "cancelled",
+      });
+      // Another session of the same owner (session recovery) cannot consume
+      // the attempt, but still returns to setup; nothing is exchanged.
+      const first = await guide();
+      const recovered = {
+        user: t.identity.user,
+        session: { id: "session-gh-private-guide-2" },
+      };
+      await db
+        .prepare(
+          "INSERT INTO session(id,token,user_id,expires_at,created_at,updated_at) VALUES(?,?,?,4102444800000,1,1)",
+        )
+        .bind(recovered.session.id, "token-guide-2", t.identity.user.id)
+        .run();
+      const exchanges = () =>
+        t.github.calls.filter((call) => call.includes("access_token")).length;
+      const before = exchanges();
+      const env = {
+        transport: t.github.transport,
+        app,
+        key,
+        oauthOrigin: "https://github.com",
+        callbackUrl,
+        now: () => clock,
+      };
+      const other = ownerPrivateActivity(db, recovered, env);
+      equal(await other.callback(first.params), {
+        returnTo: "setup",
+        outcome: "invalid",
+      });
+      equal(exchanges(), before);
+      equal((await raw(t.portfolioId))?.private_enabled, 0);
+      // Expired: released and reported, still to setup.
+      clock += 10 * 60_000 + 1;
+      equal(await t.service.callback(first.params), {
+        returnTo: "setup",
+        outcome: "expired",
+      });
+      // A valid attempt connects once; its replay is invalid, to setup.
+      const valid = await guide();
+      equal(await t.service.callback(valid.params), {
+        returnTo: "setup",
+        outcome: "connected",
+      });
+      equal(await t.service.callback(valid.params), {
+        returnTo: "setup",
+        outcome: "invalid",
+      });
+      // Graph removal withdraws at once although revocation fails.
+      const old = await jobs.capture(t.portfolioId, "authorized");
+      ok(old, "authorized job");
+      t.github.control.deletion = "500";
+      equal(await withdrawPrivateActivity(db, t.identity, clock), true);
+      equal(await t.cleanup(), ["retry"]);
+      equal(await t.service.start("setup"), {
+        ok: false,
+        error: "consent_busy",
+      });
+      // Public activity still works meanwhile.
+      equal((await t.setup.setup(t.selected.login)).ok, true);
+      t.github.control.deletion = "ok";
+      clock += 61_000;
+      const due = (await pendingGitHubCleanups(db, clock)).find(
+        (item) => item.githubUserId === t.selected.id,
+      );
+      ok(due, "cleanup due");
+      equal(await t.cleanup(), ["deleted"]);
+      // Reconnect from the guide; the stale refresh and the old cleanup
+      // cannot restore, overwrite or revoke anything.
+      const again = await guide();
+      equal((await t.service.callback(again.params)).outcome, "connected");
+      equal(
+        await jobs.refresh(old.ticket, {
+          kind: "authorized",
+          calendar: {
+            days: [{ date: "2026-10-16", count: 99 }],
+            fetchedAt: new Date(clock).toISOString(),
+          },
+        }),
+        false,
+      );
+      equal(
+        await jobs.refresh(old.ticket, {
+          kind: "error",
+          source: "authorized",
+          error: "credential",
+        }),
+        false,
+      );
+      equal(
+        await runGitHubGrantCleanup(
+          db,
+          due,
+          key,
+          app,
+          t.github.transport,
+          clock + 120_000,
+        ),
+        "skipped",
+      );
+      ok(t.github.valid(t.selected), "fresh grant survives");
+      const state = await t.service.status();
+      equal(state.state, "ready");
+      equal(
+        total(
+          projectPublishedActivity(
+            {
+              id: t.selected.id,
+              login: t.selected.login,
+              includePrivate: true,
+            },
+            await jobs.servingState(t.portfolioId),
+          ),
+        ),
+        9,
+      );
     },
   );
 

@@ -3,6 +3,7 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import { checkGuideGitHub } from "./guide-github-browser.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
 // mounted by the isolated `/guide` fixture. No production route serves it.
@@ -13,6 +14,7 @@ export async function checkSetupGuide({
   evidence,
   browserOrigin,
   errors,
+  github,
 }) {
   const browser = context.browser();
   const owners = ["draft-alice", "draft-bob"];
@@ -744,5 +746,24 @@ export async function checkSetupGuide({
     assert.equal((await components("skills"))[0].data.entries.length, 1);
     await page.screenshot({ path: join(evidence, "guide-optional.png") });
     await reset();
+  });
+
+  // Phase 42D: the optional GitHub screen.
+  await checkGuideGitHub({
+    guarded,
+    reset,
+    guidePage,
+    provision,
+    open,
+    waitStep,
+    field,
+    addressStatus,
+    proceed,
+    portfolio,
+    suffix,
+    sql,
+    evidence,
+    browserOrigin,
+    github,
   });
 }

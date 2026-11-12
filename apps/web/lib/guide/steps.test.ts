@@ -88,7 +88,10 @@ describe("optional step navigation", () => {
   it("skips only optional screens and Skip remaining lands on Review", () => {
     expect(isSkippable("skills")).toBe(true);
     expect(isSkippable("projects")).toBe(true);
+    expect(isSkippable("github")).toBe(true);
     expect(isSkippable("links")).toBe(false);
+    expect(isSkippable("review")).toBe(false);
+    expect(nextStep("github")).toBe("review");
     expect(remainingTarget).toBe("review");
     expect(nextStep("skills")).toBe("projects");
   });
