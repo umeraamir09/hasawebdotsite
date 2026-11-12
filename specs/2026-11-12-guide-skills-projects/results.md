@@ -17,6 +17,8 @@ Local: `pnpm lint` (existing warnings only), web typecheck and guide unit tests 
 
 Limitations: Chromium only; Review navigation and ON-06/12 integration with GitHub are 42D-42F; the guide is not reachable from production routes.
 
+November 13, 2026: the owner approved Phase 42C completion after PR #57 merged to `main` at `861652f`. No separate boundary review is recorded.
+
 ## Documentation impact
 
-Updated the implementation baseline row, onboarding status, draft client contract and roadmap record link. 42D-42F remain pending; the roadmap box stays unchecked.
+Updated the implementation baseline row, onboarding status, draft client contract and roadmap record link. 42D-42F remain pending. The approval follow-up checks off the roadmap entry and records approval in the implementation baseline.

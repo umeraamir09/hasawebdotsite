@@ -425,15 +425,15 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 19–21, 42A.
 - Adapt shared profile/import/crop controls into one name/bio/avatar/banner screen with both previews. Add required labeled profile links, provider suggestions, explicit acceptance, and public-email disclosure. There is no skip until these required screens pass.
-- [Implementation and verification record](../specs/2026-11-12-guide-profile-links/results.md). Implemented behind the isolated `/guide` fixture; awaiting owner approval.
-- [ ] Complete when ON-03/04/05 and relevant upload/ownership checks pass, ready owned images and at least one valid displayed link are required, and no sample starter or duplicate links are inserted.
+- [Implementation and verification record](../specs/2026-11-12-guide-profile-links/results.md). Implemented behind the isolated `/guide` fixture and merged in PR #56. The owner approved completion on November 13, 2026. No separate boundary review is recorded.
+- [x] Complete when ON-03/04/05 and relevant upload/ownership checks pass, ready owned images and at least one valid displayed link are required, and no sample starter or duplicate links are inserted.
 
 ### Phase 42C. Add optional Skills and Projects adapters
 
 - Dependencies: 27–28, 31, 42B and shared saving/recovery.
 - Reuse the entry controls for ordered skill names and multiple projects with the agreed fields. Add Skip this step and Skip remaining steps after required setup; preserve entered partial content and stable IDs. Keep categories and case studies in the editor.
-- [Implementation and verification record](../specs/2026-11-12-guide-skills-projects/results.md). Implemented behind the isolated `/guide` fixture; awaiting owner approval.
-- [ ] Complete when the available content/persistence portions of ON-06/07/12/13 pass: empty skips create no components, incomplete projects survive with normal publication blockers, and Back/retry does not duplicate entries. Verify a stable remaining-steps navigation intent here. Actual Review navigation and full ON-06/12 integration are completed in 42E–42F, not prerequisites to this increment.
+- [Implementation and verification record](../specs/2026-11-12-guide-skills-projects/results.md). Implemented behind the isolated `/guide` fixture and merged in PR #57. The owner approved completion on November 13, 2026. No separate boundary review is recorded.
+- [x] Complete when the available content/persistence portions of ON-06/07/12/13 pass: empty skips create no components, incomplete projects survive with normal publication blockers, and Back/retry does not duplicate entries. Verify a stable remaining-steps navigation intent here. Actual Review navigation and full ON-06/12 integration are completed in 42E–42F, not prerequisites to this increment.
 
 ### Phase 42D. Integrate optional public/private GitHub onboarding
 
