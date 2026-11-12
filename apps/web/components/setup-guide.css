@@ -1,0 +1,263 @@
+.setup-guide {
+  --guide-accent-text: #365f27;
+  --guide-border-subtle: #dde2d8;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 100svh;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 32px 48px;
+}
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+}
+.guide-header .brand {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 700;
+  gap: 8px;
+  letter-spacing: 0;
+}
+.guide-header .ghost-button {
+  white-space: nowrap;
+}
+.guide-spacer {
+  flex: 1 1 auto;
+}
+.guide-save {
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.guide-save[data-save-status="failed"],
+.guide-save[data-save-status="blocked"] {
+  color: var(--error);
+}
+.guide-nav {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) auto minmax(80px, 1fr);
+  align-items: center;
+  min-height: 44px;
+}
+.guide-nav-skip {
+  justify-self: end;
+}
+.guide-back {
+  min-height: 44px;
+  padding: 12px 16px;
+  margin-left: -16px;
+  gap: 6px;
+}
+.guide-progress {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-progress li {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--guide-border-subtle);
+  transition: background-color 200ms ease;
+}
+.guide-progress li[data-reached="true"] {
+  background: var(--accent);
+}
+/* The current segment keeps a non-colour cue for high-contrast modes. */
+.guide-progress li[aria-current="step"] {
+  outline: 1px solid transparent;
+  height: 6px;
+  margin-top: -1px;
+}
+.guide-content {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.guide-form {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: min(520px, 100%);
+  padding-top: 16px;
+}
+.guide-heading {
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+.guide-heading h1 {
+  font-size: 36px;
+  line-height: 42px;
+  font-weight: 700;
+  letter-spacing: -1.1px;
+  overflow-wrap: anywhere;
+}
+/* The heading receives focus only to announce a new step; it is not a
+   control, so it shows no focus ring. */
+.guide-heading h1:focus {
+  outline: none;
+}
+.guide-intro {
+  color: var(--text-secondary);
+}
+.guide-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.guide-field {
+  display: grid;
+  gap: 8px;
+}
+.guide-field label {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.guide-address-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--border-control);
+  border-radius: 12px;
+  background: var(--bg-raised);
+}
+.guide-address-input:focus-within {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+.guide-address-input:has(input[aria-invalid="true"]) {
+  border-color: var(--error);
+}
+.guide-address-input input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+}
+.guide-address-input input:focus {
+  outline: none;
+}
+.guide-address-input span {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.guide-address-status {
+  min-height: 21px;
+  font-size: 14px;
+  line-height: 21px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.guide-address-status[data-tone="success"] {
+  color: var(--guide-accent-text);
+}
+.guide-address-status[data-tone="error"] {
+  color: var(--error);
+}
+.guide-help {
+  font-size: 14px;
+  line-height: 21px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.guide-note {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--bg-surface);
+  font-size: 14px;
+  line-height: 21px;
+}
+.guide-note p:first-child {
+  font-weight: 500;
+}
+.guide-note p + p {
+  color: var(--text-secondary);
+}
+.guide-error {
+  width: min(520px, 100%);
+  color: var(--error);
+  font-size: 14px;
+  line-height: 20px;
+}
+.guide-alert,
+.guide-recovery {
+  width: min(520px, 100%);
+}
+.guide-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 0;
+  background: var(--bg-page);
+}
+.guide-continue {
+  width: min(520px, 100%);
+  min-height: 48px;
+  padding: 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+}
+.guide-continue:hover:not(:disabled) {
+  background: #aedc5f;
+}
+.guide-continue:disabled {
+  opacity: 0.7;
+}
+@media (max-width: 640px) {
+  .setup-guide {
+    gap: 16px;
+    padding: 20px 24px;
+  }
+  .guide-header {
+    gap: 8px;
+  }
+  .guide-header .ghost-button {
+    padding: 12px;
+    margin-right: -12px;
+  }
+  .guide-form {
+    gap: 28px;
+  }
+  .guide-heading h1 {
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.8px;
+  }
+  .guide-progress li {
+    width: 12px;
+  }
+  .guide-nav {
+    grid-template-columns: minmax(64px, 1fr) auto minmax(64px, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .guide-progress li {
+    transition: none;
+  }
+}

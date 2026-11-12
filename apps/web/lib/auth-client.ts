@@ -80,3 +80,15 @@ export function authErrorMessage(error: string | null) {
     return "Your provider didn't share an email address. Check your provider's email settings, then try again.";
   return "Sign-in didn't finish. Choose a provider to try again.";
 }
+
+// Ends the session and leaves for sign-in. Local draft recovery is kept.
+export async function signOutOwner() {
+  const response = await fetch("/api/auth/sign-out", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!response.ok) throw new Error("Sign-out failed");
+  window.location.replace("/sign-in");
+}

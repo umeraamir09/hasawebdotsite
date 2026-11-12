@@ -19,6 +19,7 @@ import { checkProjectControls } from "./project-controls-browser.mjs";
 import { checkPublicationControls } from "./publication-browser.mjs";
 import { checkPublishJourney } from "./publish-journey-browser.mjs";
 import { checkResumeJourney } from "./resume-browser.mjs";
+import { checkSetupGuide } from "./setup-guide-browser.mjs";
 import { checkSkillsControls } from "./skills-controls-browser.mjs";
 import { checkSocialLinks } from "./social-links-browser.mjs";
 import { checkSocialLinksJourney } from "./social-links-publish-browser.mjs";
@@ -42,6 +43,7 @@ export async function checkEditor({
   await esbuild.build({
     entryPoints: {
       "editor-fixture": join(root, "apps/web/integration/editor-fixture.tsx"),
+      "guide-fixture": join(root, "apps/web/integration/guide-fixture.tsx"),
       "editor-preview-fixture": join(
         root,
         "apps/web/integration/editor-preview-fixture.ts",
@@ -188,7 +190,11 @@ export async function checkEditor({
         await relay(response, res);
         return;
       }
-      if (/^\/editor-(?:preview-)?fixture\.(?:js|css)$/.test(url.pathname)) {
+      if (
+        /^\/(?:editor(?:-preview)?|guide)-fixture\.(?:js|css)$/.test(
+          url.pathname,
+        )
+      ) {
         res.setHeader(
           "Content-Type",
           url.pathname.endsWith(".js") ? "text/javascript" : "text/css",
@@ -227,7 +233,9 @@ export async function checkEditor({
       res.end(
         url.pathname === "/empty"
           ? "<!doctype html><title>Prepare</title>"
-          : shell("editor-fixture"),
+          : shell(
+              url.pathname === "/guide" ? "guide-fixture" : "editor-fixture",
+            ),
       );
     } catch (error) {
       errors.push(String(error));
@@ -1347,6 +1355,7 @@ export async function checkEditor({
       root,
       github,
     };
+    await checkSetupGuide({ ...controls, errors });
     await checkPublicationControls(controls);
     await checkComponentControls(controls);
     await checkCropControls(controls);
@@ -1366,10 +1375,13 @@ export async function checkEditor({
     await checkFaceRevealJourney(controls);
     await checkDraftPreviewJourney(controls);
     assert.deepEqual(errors, []);
-    await page.screenshot({
-      path: join(evidence, "editor-final.png"),
-      fullPage: true,
-    });
+    // A filtered or sharded run may select only groups that never open, or
+    // that close, the editor page (the setup guide groups use their own).
+    if (page && !page.isClosed())
+      await page.screenshot({
+        path: join(evidence, "editor-final.png"),
+        fullPage: true,
+      });
     await writeJsonEvidence(
       pathToFileURL(join(evidence, "editor-results.json")),
       { checks, requests, errors },
