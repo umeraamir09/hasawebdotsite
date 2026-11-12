@@ -20,10 +20,13 @@ import {
   requiredIssues,
   requiredSteps,
   resumeStep,
+  stepFields,
   stepIndex,
 } from "../lib/guide/steps";
 import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
+import { ProfileControls } from "./profile-controls";
+import { SocialLinksControl } from "./social-links-control";
 import { useAddressReservation } from "./use-address-reservation";
 import "./setup-guide.css";
 
@@ -206,6 +209,7 @@ function Scope({
     recoveryState.busy ||
     !state.working ||
     state.error === "owner_changed";
+  const imagePending = Object.values(state.pendingImages).some(Boolean);
 
   const shownStep = useRef(step);
   useEffect(() => {
@@ -235,6 +239,46 @@ function Scope({
     } finally {
       setNavigating(false);
     }
+  }
+
+  // Profile and Links continue only after their values are saved and the
+  // authoritative setup check no longer reports them. Local input that does
+  // not fit the draft, or an unfinished image, stays on the step.
+  async function continueFrom(from: "profile" | "links") {
+    if (navigating) return;
+    const target = nextStep(from);
+    if (!target) return;
+    setNavigating(true);
+    setStepError("");
+    try {
+      if (Object.keys(controller.store.getState().inputs).length > 0) {
+        setStepError(
+          "Some of your input isn't valid yet. Fix the highlighted fields to continue.",
+        );
+        return;
+      }
+      await controller.flushValid();
+      const next = await refresh();
+      const missing = stepFields[from].filter((field) =>
+        next.issues?.includes(field),
+      );
+      if (missing.length > 0) {
+        setStepError(
+          from === "profile"
+            ? `Still needed: ${missing.join(", ")}. Sample content does not count.`
+            : "Add at least one valid link with a label, shown in your profile.",
+        );
+        return;
+      }
+    } catch {
+      setStepError(
+        "We couldn't save and check this step. Your answers are kept. Retry to continue.",
+      );
+      return;
+    } finally {
+      setNavigating(false);
+    }
+    await go(target);
   }
 
   async function signOut() {
@@ -367,6 +411,30 @@ function Scope({
                   if (target) await go(target);
                 }}
               />
+            ) : step === "profile" || step === "links" ? (
+              <form
+                id={formId}
+                className="guide-fields guide-wide"
+                aria-label={step === "profile" ? "Your profile" : "Your links"}
+                noValidate
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void continueFrom(step);
+                }}
+              >
+                {step === "profile" ? (
+                  <ProfileControls
+                    controller={controller}
+                    disabled={disabled}
+                    showLocation={false}
+                  />
+                ) : (
+                  <SocialLinksControl
+                    controller={controller}
+                    disabled={disabled}
+                  />
+                )}
+              </form>
             ) : (
               <UnavailableStep />
             )}
@@ -404,13 +472,13 @@ function Scope({
           </div>
         )}
       </main>
-      {!loading && step === "address" && (
+      {!loading && requiredSteps.has(step) && (
         <footer className="guide-footer">
           <button
             className="guide-continue"
             type="submit"
             form={formId}
-            disabled={disabled}
+            disabled={disabled || imagePending}
           >
             {navigating ? "Saving..." : "Continue"}
           </button>

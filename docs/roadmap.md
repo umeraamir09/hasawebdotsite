@@ -425,6 +425,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 19–21, 42A.
 - Adapt shared profile/import/crop controls into one name/bio/avatar/banner screen with both previews. Add required labeled profile links, provider suggestions, explicit acceptance, and public-email disclosure. There is no skip until these required screens pass.
+- [Implementation and verification record](../specs/2026-11-12-guide-profile-links/results.md). Implemented behind the isolated `/guide` fixture; awaiting owner approval.
 - [ ] Complete when ON-03/04/05 and relevant upload/ownership checks pass, ready owned images and at least one valid displayed link are required, and no sample starter or duplicate links are inserted.
 
 ### Phase 42C. Add optional Skills and Projects adapters

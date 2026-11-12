@@ -26,6 +26,12 @@ const stepForField: Record<SetupField, GuideStep> = {
   links: "links",
 };
 
+// Required fields each screen owns.
+export const stepFields: Record<"profile" | "links", readonly SetupField[]> = {
+  profile: ["name", "bio", "avatar", "banner"],
+  links: ["links"],
+};
+
 export function stepIndex(step: GuideStep) {
   return guideSteps.indexOf(step);
 }

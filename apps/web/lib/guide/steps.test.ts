@@ -7,6 +7,7 @@ import {
   previousStep,
   requiredIssues,
   resumeStep,
+  stepFields,
 } from "./steps";
 
 describe("guide steps", () => {
@@ -73,5 +74,10 @@ describe("guide steps", () => {
     expect(
       requiredIssues({ kind: "ready", portfolioId: "p", revision: 2 }),
     ).toEqual([]);
+  });
+
+  it("names the required fields each screen owns", () => {
+    expect(stepFields.profile).toEqual(["name", "bio", "avatar", "banner"]);
+    expect(stepFields.links).toEqual(["links"]);
   });
 });
