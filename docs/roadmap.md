@@ -432,6 +432,7 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 27–28, 31, 42B and shared saving/recovery.
 - Reuse the entry controls for ordered skill names and multiple projects with the agreed fields. Add Skip this step and Skip remaining steps after required setup; preserve entered partial content and stable IDs. Keep categories and case studies in the editor.
+- [Implementation and verification record](../specs/2026-11-12-guide-skills-projects/results.md). Implemented behind the isolated `/guide` fixture; awaiting owner approval.
 - [ ] Complete when the available content/persistence portions of ON-06/07/12/13 pass: empty skips create no components, incomplete projects survive with normal publication blockers, and Back/retry does not duplicate entries. Verify a stable remaining-steps navigation intent here. Actual Review navigation and full ON-06/12 integration are completed in 42E–42F, not prerequisites to this increment.
 
 ### Phase 42D. Integrate optional public/private GitHub onboarding

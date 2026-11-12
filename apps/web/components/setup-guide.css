@@ -45,7 +45,23 @@
   min-height: 44px;
 }
 .guide-nav-skip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
   justify-self: end;
+}
+.guide-entries {
+  display: grid;
+  gap: 16px;
+}
+.guide-entry {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border, #e3e3e3);
+  border-radius: 12px;
 }
 .guide-back {
   min-height: 44px;

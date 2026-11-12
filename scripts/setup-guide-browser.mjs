@@ -660,6 +660,89 @@ export async function checkSetupGuide({
     await proceed(page);
     await waitStep(page, "skills");
     assert.equal((await stored()).links.length, 1);
+
+    // Optional Skills and Projects: untouched steps create no component.
+    const components = async (type) => {
+      await page.locator('[data-save-status="saved"]').waitFor();
+      return (await stored()).components.filter((item) => item.type === type);
+    };
+    const skip = (name) =>
+      page.getByRole("button", { name, exact: true }).click();
+    assert.equal(
+      await page.getByRole("button", { name: "Skip this step" }).count(),
+      1,
+    );
+    await proceed(page);
+    await waitStep(page, "projects");
+    assert.equal((await components("skills")).length, 0);
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "skills");
+
+    // A blank extra skill is dropped; the entered one keeps its id.
+    const addSkill = page.getByRole("button", { name: "Add skill" });
+    await addSkill.click();
+    await page.getByLabel("Skill name").fill("TypeScript");
+    await addSkill.click();
+    await proceed(page);
+    await waitStep(page, "projects");
+    const [skills] = await components("skills");
+    assert.equal(skills.data.entries.length, 1);
+    assert.equal(skills.data.entries[0].name, "TypeScript");
+    assert.equal(skills.data.categories.length, 0);
+    const skillId = skills.data.entries[0].id;
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "skills");
+    await proceed(page);
+    await waitStep(page, "projects");
+    const again = await components("skills");
+    assert.equal(again.length, 1);
+    assert.equal(again[0].data.entries.length, 1);
+    assert.equal(again[0].data.entries[0].id, skillId);
+
+    // Projects: an untouched project is dropped and creates no component.
+    await page.getByRole("button", { name: "Add project" }).click();
+    await skip("Skip this step");
+    await waitStep(page, "github");
+    assert.equal((await components("projects")).length, 0);
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "projects");
+
+    // A partial project blocks Continue but survives Skip, once, with its id.
+    await page.getByRole("button", { name: "Add project" }).click();
+    await page.getByLabel("Project title").fill("Half done");
+    await proceed(page);
+    await alert.filter({ hasText: "Each project needs a title" }).waitFor();
+    assert.equal((await portfolio()).step, "projects");
+    await skip("Skip this step");
+    await waitStep(page, "github");
+    const [kept] = await components("projects");
+    assert.equal(kept.data.entries.length, 1);
+    assert.equal(kept.data.entries[0].title, "Half done");
+    assert.equal(kept.data.entries[0].summary, "");
+    const projectId = kept.data.entries[0].id;
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "projects");
+    await page.getByLabel("Summary", { exact: true }).fill("Now complete.");
+    await proceed(page);
+    await waitStep(page, "github");
+    const [done] = await components("projects");
+    assert.equal(done.data.entries.length, 1);
+    assert.equal(done.data.entries[0].id, projectId);
+    assert.equal(done.data.entries[0].summary, "Now complete.");
+
+    // Skip remaining steps targets Review and keeps what was entered.
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "projects");
+    await skip("Skip remaining steps");
+    await waitStep(page, "review");
+    for (let attempt = 0; attempt < 50; attempt++) {
+      if ((await portfolio()).step === "review") break;
+      await page.waitForTimeout(200);
+    }
+    assert.equal((await portfolio()).step, "review");
+    assert.equal((await components("projects"))[0].data.entries.length, 1);
+    assert.equal((await components("skills"))[0].data.entries.length, 1);
+    await page.screenshot({ path: join(evidence, "guide-optional.png") });
     await reset();
   });
 }
