@@ -268,7 +268,7 @@ Asset IDs are never reused, so published image URLs are immutable and replaced i
 
 ### 8.0 Initial setup and first editor entry
 
-The agreed sequence and content mappings are in [onboarding.md](onboarding.md#screen-sequence-and-content-mapping). Private provisioning, storage and save routes exist through Phase 13. Phase 22A implements fixed `/auth/entry` resolution and authoritative handoff services. Setup screens and complete guide/editor activation remain in 42A–42F.
+The agreed sequence and content mappings are in [onboarding.md](onboarding.md#screen-sequence-and-content-mapping). Private provisioning, storage and save routes exist through Phase 13. Phase 22A implements fixed `/auth/entry` resolution and authoritative handoff services. Phase 42A adds the guide shell and Address screen behind a test fixture. The remaining setup screens and complete guide/editor activation remain in 42B–42F.
 
 1. Resolve the authenticated owner through the existing uncached session/deletion checks. Idempotently provision the single empty private draft with the configured template/default appearance and explicit setup metadata. Do not infer completion from `portfolio !== null` or automatically copy provider identity into public content.
 2. Use a fixed internal post-auth entry resolver for both OAuth callbacks and signed-in `/sign-in` visits. Owners without the permanent editor-entry milestone resume onboarding; owners with it enter the editor. Preserve the exact callback allowlist and approved-origin checks rather than accepting arbitrary redirect URLs. Phase 22A uses `/auth/entry` and the persisted entry service. It retains the account shell until the complete guide and editor activate in Phase 42E.

@@ -1,0 +1,543 @@
+"use client";
+
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useStore } from "zustand";
+import { signOutOwner } from "../lib/auth-client";
+import { createDraftController } from "../lib/draft/controller";
+import {
+  createRecoveryCoordinator,
+  type RecoveryCoordinator,
+} from "../lib/draft/recovery-coordinator";
+import { DraftFailure } from "../lib/draft/types";
+import { checkSetup } from "../lib/guide/setup-check";
+import {
+  type GuideStep,
+  guideSteps,
+  nextStep,
+  previousStep,
+  progressFor,
+  type RequiredIssues,
+  requiredIssues,
+  requiredSteps,
+  resumeStep,
+  stepIndex,
+} from "../lib/guide/steps";
+import { Brand } from "./brand";
+import { DraftRecovery } from "./draft-recovery";
+import { useAddressReservation } from "./use-address-reservation";
+import "./setup-guide.css";
+
+type Owner = { ownerId: string; portfolioId: string };
+
+const stepCopy: Record<
+  GuideStep,
+  { label: string; title: string; intro: string }
+> = {
+  address: {
+    label: "Address",
+    title: "Choose your address",
+    intro: "A place on the web for your work.",
+  },
+  profile: {
+    label: "Profile",
+    title: "Introduce yourself",
+    intro: "Your name, a short bio, a photo and a banner.",
+  },
+  links: {
+    label: "Links",
+    title: "Where can people find you?",
+    intro: "Add at least one link to show on your profile.",
+  },
+  skills: {
+    label: "Skills",
+    title: "What do you work with?",
+    intro: "Add the skills you want to share.",
+  },
+  projects: {
+    label: "Projects",
+    title: "Show your work",
+    intro: "Add the projects you want people to see.",
+  },
+  github: {
+    label: "GitHub",
+    title: "Add your GitHub activity",
+    intro: "Show your contribution graph on your portfolio.",
+  },
+  review: {
+    label: "Review",
+    title: "Review your portfolio",
+    intro: "Check your private draft before opening the editor.",
+  },
+};
+
+const formId = "setup-guide-step";
+
+// The first-portfolio guide. Phase 42A supplies the shell, progress, resume
+// and the required Address screen; later phases add the remaining screens.
+// It is mounted only by the isolated browser fixture until Phase 42E
+// activates the complete required journey.
+export function SetupGuide(props: {
+  owner: Owner;
+  send?: typeof fetch;
+  onSignOut?: () => Promise<void>;
+  onReady?(recovery: RecoveryCoordinator): void;
+}) {
+  return <Session key={JSON.stringify(props.owner)} {...props} />;
+}
+
+function Session({
+  owner,
+  send,
+  onSignOut,
+  onReady,
+}: Parameters<typeof SetupGuide>[0]) {
+  const readyCallback = useRef(onReady);
+  readyCallback.current = onReady;
+  const [scope] = useState(owner);
+  const [recovery, setRecovery] = useState<RecoveryCoordinator | null>(null);
+  useEffect(() => {
+    let active = true;
+    const options = { ...scope, context: "setup" as const };
+    const controller = createDraftController(options);
+    const coordinator = createRecoveryCoordinator({ ...options, controller });
+    setRecovery(coordinator);
+    void controller
+      .initialize()
+      .catch(() => {})
+      .finally(() => {
+        if (active) readyCallback.current?.(coordinator);
+      });
+    return () => {
+      active = false;
+      coordinator.dispose();
+    };
+  }, [scope]);
+  if (!recovery)
+    return (
+      <main className="setup-guide">
+        <p role="status">Opening your setup...</p>
+      </main>
+    );
+  return <Workspace recovery={recovery} send={send} onSignOut={onSignOut} />;
+}
+
+function Workspace(props: {
+  recovery: RecoveryCoordinator;
+  send?: typeof fetch | undefined;
+  onSignOut?: (() => Promise<void>) | undefined;
+}) {
+  const recoveryState = useStore(props.recovery.store);
+  // Coordinator replacements change the scope; reset all step state with it.
+  return <Scope key={recoveryState.controller.scopeKey} {...props} />;
+}
+
+function Scope({
+  recovery,
+  send = fetch,
+  onSignOut = signOutOwner,
+}: {
+  recovery: RecoveryCoordinator;
+  send?: typeof fetch | undefined;
+  onSignOut?: (() => Promise<void>) | undefined;
+}) {
+  const recoveryState = useStore(recovery.store);
+  const controller = recoveryState.controller;
+  const state = useStore(controller.store);
+  const [checked, setChecked] = useState<{
+    revision: number;
+    issues: RequiredIssues;
+  } | null>(null);
+  const [checkError, setCheckError] = useState(false);
+  const [checkAttempt, setCheckAttempt] = useState(0);
+  const [navigating, setNavigating] = useState(false);
+  const [stepError, setStepError] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const revision = state.confirmed?.revision;
+
+  async function refresh() {
+    const result = await checkSetup(controller, send);
+    const next = { revision: result.revision, issues: requiredIssues(result) };
+    setChecked(next);
+    setCheckError(false);
+    return next;
+  }
+  // Recheck authoritative required facts for every confirmed revision. The
+  // previous result stays in use until the new one arrives.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `checkAttempt` explicitly retries.
+  useEffect(() => {
+    if (revision === undefined) return;
+    let active = true;
+    const abort = new AbortController();
+    checkSetup(controller, send, abort.signal)
+      .then((result) => {
+        if (!active) return;
+        setChecked({
+          revision: result.revision,
+          issues: requiredIssues(result),
+        });
+        setCheckError(false);
+      })
+      .catch((error: unknown) => {
+        // A newer revision is already being read; that read rechecks.
+        if (
+          active &&
+          !(error instanceof DraftFailure && error.code === "revision_conflict")
+        )
+          setCheckError(true);
+      });
+    return () => {
+      active = false;
+      abort.abort();
+    };
+  }, [controller, send, revision, checkAttempt]);
+
+  const saved = state.progress?.step ?? state.confirmed?.progress?.step;
+  const step = resumeStep(saved, checked?.issues ?? null);
+  const index = stepIndex(step);
+  const back = previousStep(step);
+  const required = requiredSteps.has(step);
+  const loading = !state.working || (!checked && !checkError);
+  const disabled =
+    navigating ||
+    state.suspended ||
+    Boolean(recoveryState.review) ||
+    recoveryState.busy ||
+    !state.working ||
+    state.error === "owner_changed";
+
+  const shownStep = useRef(step);
+  useEffect(() => {
+    if (shownStep.current === step) return;
+    shownStep.current = step;
+    setStepError("");
+    heading.current?.focus();
+  }, [step]);
+
+  // Progress is navigation only: it is saved after the step's own content
+  // has been confirmed, and the shell still clamps it to the server facts.
+  async function go(target: GuideStep) {
+    setNavigating(true);
+    setStepError("");
+    try {
+      controller.changeProgress(progressFor(target));
+      await controller.flushValid();
+      // The control that started navigation may have been removed with its
+      // step; move focus to the new heading once rendering has settled.
+      requestAnimationFrame(() => heading.current?.focus());
+      return true;
+    } catch {
+      setStepError(
+        "We couldn't save your place. Your answers are kept. Retry to continue.",
+      );
+      return false;
+    } finally {
+      setNavigating(false);
+    }
+  }
+
+  async function signOut() {
+    if (signingOut) return;
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      await onSignOut();
+    } catch {
+      setSigningOut(false);
+      setSignOutError(
+        "We couldn't sign you out. Check your connection and retry sign-out.",
+      );
+    }
+  }
+
+  const saveLabel = {
+    loading: "Loading...",
+    saving: "Saving",
+    saved: "Saved",
+    unsaved: "Unsaved input",
+    failed: "Couldn't save",
+    blocked: "Couldn't save",
+  }[state.status];
+  const needsAttention =
+    ["failed", "blocked"].includes(state.status) ||
+    state.recoveries.length > 0 ||
+    Boolean(recoveryState.review) ||
+    Boolean(recoveryState.error) ||
+    !state.localRecoveryAvailable ||
+    Boolean(state.pending) ||
+    Boolean(state.batch) ||
+    Boolean(state.validationJournal) ||
+    Boolean(state.discardJournal);
+  const copy = stepCopy[step];
+
+  return (
+    <div
+      className="setup-guide"
+      data-guide-step={loading ? "loading" : step}
+      data-editor-scope={controller.scopeKey}
+    >
+      <header className="guide-header">
+        <Brand />
+        <span className="guide-spacer" />
+        <span className="guide-save" data-save-status={state.status}>
+          {saveLabel}
+        </span>
+        <button
+          type="button"
+          className="ghost-button"
+          onClick={() => void signOut()}
+          disabled={signingOut}
+        >
+          {signingOut ? "Signing out..." : "Sign out"}
+        </button>
+      </header>
+      <nav className="guide-nav" aria-label="Setup steps">
+        <div className="guide-nav-back">
+          {back && !loading && (
+            <button
+              type="button"
+              className="ghost-button guide-back"
+              disabled={disabled}
+              onClick={() => void go(back)}
+            >
+              <span aria-hidden="true">‹</span> Back
+            </button>
+          )}
+        </div>
+        <ol className="guide-progress" aria-label="Setup progress">
+          {guideSteps.map((item, position) => (
+            <li
+              key={item}
+              data-reached={position <= index ? "true" : "false"}
+              aria-current={position === index && !loading ? "step" : undefined}
+            >
+              <span className="sr-only">
+                {stepCopy[item].label}
+                {position < index
+                  ? ", visited"
+                  : position === index
+                    ? ", current step"
+                    : ""}
+              </span>
+            </li>
+          ))}
+        </ol>
+        {/* Required steps never offer a skip or an editor bypass. */}
+        <div className="guide-nav-skip" />
+      </nav>
+      <main className="guide-content">
+        {loading ? (
+          checkError ? null : (
+            <p role="status">Opening your setup...</p>
+          )
+        ) : (
+          <div className="guide-form">
+            <div className="guide-heading">
+              <p className="caption">
+                {String(index + 1).padStart(2, "0")} /{" "}
+                {String(guideSteps.length).padStart(2, "0")}
+                {required ? "" : " · Optional"}
+              </p>
+              <h1 ref={heading} tabIndex={-1}>
+                {copy.title}
+              </h1>
+              <p className="guide-intro">{copy.intro}</p>
+            </div>
+            {step === "address" ? (
+              <AddressStep
+                controller={controller}
+                disabled={disabled}
+                onReserved={async () => {
+                  try {
+                    const next = await refresh();
+                    if (next.issues?.includes("address")) {
+                      setStepError(
+                        "We couldn't confirm your reservation. Retry to continue.",
+                      );
+                      return;
+                    }
+                  } catch {
+                    setStepError(
+                      "We couldn't confirm your reservation. Retry to continue.",
+                    );
+                    return;
+                  }
+                  const target = nextStep("address");
+                  if (target) await go(target);
+                }}
+              />
+            ) : (
+              <UnavailableStep />
+            )}
+          </div>
+        )}
+        {checkError && (
+          <div className="auth-error guide-alert" role="alert">
+            <p>We couldn't check your setup.</p>
+            <p>Your answers are kept. Check your connection and retry.</p>
+            <button
+              type="button"
+              className="ghost-button"
+              onClick={() => {
+                setCheckError(false);
+                setCheckAttempt((value) => value + 1);
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
+        {stepError && (
+          <p className="guide-error" role="alert">
+            {stepError}
+          </p>
+        )}
+        {signOutError && (
+          <p className="guide-error" role="alert">
+            {signOutError}
+          </p>
+        )}
+        {needsAttention && (
+          <div className="guide-recovery">
+            <DraftRecovery recovery={recovery} />
+          </div>
+        )}
+      </main>
+      {!loading && step === "address" && (
+        <footer className="guide-footer">
+          <button
+            className="guide-continue"
+            type="submit"
+            form={formId}
+            disabled={disabled}
+          >
+            {navigating ? "Saving..." : "Continue"}
+          </button>
+        </footer>
+      )}
+    </div>
+  );
+}
+
+function AddressStep({
+  controller,
+  disabled,
+  onReserved,
+}: {
+  controller: ReturnType<typeof createDraftController>;
+  disabled: boolean;
+  onReserved(): Promise<void>;
+}) {
+  const id = useId();
+  const input = useRef<HTMLInputElement>(null);
+  const [working, setWorking] = useState(false);
+  const address = useAddressReservation(controller, {
+    action: "Continue",
+    idle: "Continue to reserve this address. Your site stays private.",
+  });
+  const { value, valid, busy, registry } = address;
+  const status = address.status;
+  async function submit() {
+    if (working || busy || disabled) return;
+    if (!valid) {
+      input.current?.focus();
+      return;
+    }
+    setWorking(true);
+    try {
+      // A confirmed hold on this exact name needs no new reservation.
+      if (!address.held) {
+        const available = await address.check();
+        if (available !== "available" && available !== "held") {
+          input.current?.focus();
+          return;
+        }
+        if (!(await address.reserve())) {
+          input.current?.focus();
+          return;
+        }
+      }
+      await onReserved();
+    } finally {
+      setWorking(false);
+    }
+  }
+  return (
+    <form
+      id={formId}
+      className="guide-fields"
+      aria-label="Portfolio address"
+      data-publication-field="address"
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submit();
+      }}
+    >
+      <div className="guide-field">
+        <label htmlFor={id}>Your address</label>
+        <div className="guide-address-input">
+          <input
+            ref={input}
+            id={id}
+            name="address"
+            value={value}
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-describedby={`${id}-status ${id}-help`}
+            aria-invalid={address.tone === "error"}
+            disabled={disabled || busy || working}
+            onChange={(event) => address.change(event.target.value)}
+            // Disabling the field during Continue blurs it; that submit
+            // already runs its own availability check.
+            onBlur={() => {
+              if (!working) void address.check();
+            }}
+          />
+          <span aria-hidden="true">.hasaweb.site</span>
+        </div>
+      </div>
+      <p
+        id={`${id}-status`}
+        className="guide-address-status"
+        data-tone={address.tone}
+        role="status"
+        aria-live="polite"
+      >
+        {address.tone === "success" && <span aria-hidden="true">✓ </span>}
+        {busy ? "Reserving your address..." : status}
+      </p>
+      <p id={`${id}-help`} className="guide-help">
+        3–30 lowercase letters, numbers or hyphens. No hyphen at either end.
+      </p>
+      {registry && registry.name !== value && (
+        <p className="guide-help">
+          Current reservation: {registry.name}.hasaweb.site
+        </p>
+      )}
+      <div className="guide-note">
+        <p>Reserved when you continue</p>
+        <p>
+          Continuing holds this address for your portfolio. Nothing is public
+          until you publish, and the address becomes permanent on your first
+          publication. You can change it until then.
+        </p>
+      </div>
+    </form>
+  );
+}
+
+function UnavailableStep(): ReactNode {
+  return (
+    <div className="guide-note" role="note">
+      <p>This step isn't available yet</p>
+      <p>
+        Your saved answers and your place are kept. Use Back to review earlier
+        steps.
+      </p>
+    </div>
+  );
+}

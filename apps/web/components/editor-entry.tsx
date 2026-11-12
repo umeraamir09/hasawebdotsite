@@ -2,7 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { type Owner, resolveAccountEntry } from "../lib/auth-client";
+import {
+  type Owner,
+  resolveAccountEntry,
+  signOutOwner,
+} from "../lib/auth-client";
 import { Brand } from "./brand";
 
 export function EditorEntry({ entry = false }: { entry?: boolean }) {
@@ -63,15 +67,8 @@ export function EditorEntry({ entry = false }: { entry?: boolean }) {
     setSigningOut(true);
     setError(null);
     try {
-      const response = await fetch("/api/auth/sign-out", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-        signal: AbortSignal.timeout(15000),
-      });
-      if (!response.ok) throw new Error("Sign-out failed");
+      await signOutOwner();
       setOwner(null);
-      window.location.replace("/sign-in");
     } catch {
       setSigningOut(false);
       setError(

@@ -1,6 +1,6 @@
 # Initial setup and guided portfolio creation
 
-Status: agreed behavior specification, confirmed October 16, 2026 with the address reservation amended October 21, 2026; implementation baseline reviewed October 18. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. Phase 22A implements authoritative required checks, controlled account resolution and permanent handoff services. The guided UI remains pending. This document alone does not mark a roadmap phase complete.
+Status: agreed behavior specification, confirmed October 16, 2026 with the address reservation amended October 21, 2026; implementation baseline reviewed October 18. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13. Phase 22A implements authoritative required checks, controlled account resolution and permanent handoff services. Phase 42A adds the guide shell, progress, saved-step resume and the required Address screen, exercised only through an isolated browser fixture; the remaining screens and route activation remain pending (42B–42E). This document alone does not mark a roadmap phase complete.
 
 The interview changed the original optional-onboarding proposal. New owners must complete Address, Profile, and Links before their first editor entry. Skills, Projects, and GitHub are optional. There is no initial Skip onboarding action or route directly into the editor before required setup passes.
 
