@@ -192,7 +192,7 @@ export async function checkSocialLinksJourney({
         .getByLabel("Destination URL", { exact: true })
         .fill("https://example.com/updated");
       await flush();
-      let links = await storedLinks();
+      const links = await storedLinks();
       assert.equal(links.length, 2);
       assert.equal(links[0].value, "https://example.com/updated");
       // Draft changes stay private until Publish.

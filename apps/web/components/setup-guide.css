@@ -90,6 +90,13 @@
   width: min(520px, 100%);
   padding-top: 16px;
 }
+/* Profile and Links host the shared editor controls, which need more room. */
+.guide-form:has(.guide-wide) {
+  width: min(720px, 100%);
+}
+.guide-wide {
+  text-align: left;
+}
 .guide-heading {
   display: grid;
   gap: 12px;

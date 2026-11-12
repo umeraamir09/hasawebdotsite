@@ -562,4 +562,104 @@ export async function checkSetupGuide({
       await reset();
     },
   );
+
+  // Phase 42B: the combined Profile screen and the required Links screen.
+  await guarded("setup guide profile images and required links", async () => {
+    await reset();
+    const page = await guidePage();
+    await provision(page, "alice");
+    await open(page);
+    await field(page).fill(`profile-${suffix()}`);
+    await field(page).press("Tab");
+    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await proceed(page);
+    await waitStep(page, "profile");
+    const stored = async () =>
+      JSON.parse(
+        (
+          await sql("SELECT draft FROM portfolio WHERE user_id='draft-alice'")
+        )[0].draft,
+      );
+    const alert = page.getByRole("alert");
+
+    // Missing required values keep the owner on Profile with an error.
+    await proceed(page);
+    await alert.filter({ hasText: "Still needed:" }).waitFor();
+    assert.equal((await portfolio()).step, "profile");
+    assert.equal(await page.getByRole("button", { name: /skip/i }).count(), 0);
+
+    const png = Buffer.from(
+      await page.evaluate(async () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = 900;
+        canvas.height = 600;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#2448e8";
+        ctx.fillRect(0, 0, 900, 600);
+        const blob = await new Promise((resolve) =>
+          canvas.toBlob(resolve, "image/png"),
+        );
+        return Array.from(new Uint8Array(await blob.arrayBuffer()));
+      }),
+    );
+    await page.getByLabel("Name", { exact: true }).fill("Guide Owner");
+    await page.getByLabel("Bio", { exact: true }).fill("I build things.");
+    for (const purpose of ["avatar", "banner"]) {
+      await page
+        .getByLabel(new RegExp(`^(Upload|Replace) ${purpose}$`), {
+          exact: true,
+        })
+        .setInputFiles({ name: "a.png", mimeType: "image/png", buffer: png });
+      await page.getByRole("dialog", { name: `Adjust ${purpose}` }).waitFor();
+      await page
+        .getByRole("button", { name: "Apply crop", exact: true })
+        .click();
+      await page
+        .getByRole("region", {
+          name: `${purpose === "avatar" ? "Avatar" : "Banner"} image`,
+          exact: true,
+        })
+        .getByText("Upload complete. Your draft image is ready.")
+        .waitFor();
+    }
+    await page.screenshot({ path: join(evidence, "guide-profile-filled.png") });
+    await proceed(page);
+    await waitStep(page, "links");
+    const profile = (await stored()).profile;
+    assert.equal(profile.name, "Guide Owner");
+    assert.ok(profile.avatar?.assetId && profile.banner?.assetId);
+    assert.equal(profile.avatar.accepted, true);
+
+    // Links need one valid labeled link shown in the profile.
+    await proceed(page);
+    await alert.filter({ hasText: "Add at least one valid link" }).waitFor();
+    assert.equal((await portfolio()).step, "links");
+    await page.getByRole("button", { name: "Add link", exact: true }).click();
+    await page.getByLabel("Link label").fill("My site");
+    await page.getByLabel("Destination URL").fill("nope");
+    await proceed(page);
+    await page
+      .getByRole("alert")
+      .filter({ hasText: /isn't valid|Add at least one valid/ })
+      .waitFor();
+    assert.equal((await portfolio()).step, "links");
+    await page.getByLabel("Destination URL").fill("https://example.com");
+    await page.screenshot({ path: join(evidence, "guide-links.png") });
+    await proceed(page);
+    await waitStep(page, "skills");
+    const draft = await stored();
+    assert.equal(draft.links.length, 1);
+    assert.equal(draft.links[0].value, "https://example.com");
+    assert.equal(
+      draft.components.some((item) => item.type === "social-links"),
+      false,
+    );
+    // Back and Continue again never duplicate the link.
+    await page.getByRole("button", { name: "Back" }).click();
+    await waitStep(page, "links");
+    await proceed(page);
+    await waitStep(page, "skills");
+    assert.equal((await stored()).links.length, 1);
+    await reset();
+  });
 }
