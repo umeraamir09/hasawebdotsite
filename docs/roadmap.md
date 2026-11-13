@@ -439,8 +439,8 @@ Onboarding adapters reuse approved shared capabilities rather than duplicating t
 
 - Dependencies: 22A, 40–42, 42B–42C.
 - Adapt the shared graph service for both signup providers and return private consent to the preserved step. Offer explicit Add graph, Retry/public-only/later repair, and confirmed removal/withdrawal. No separate onboarding OAuth app, fetch implementation, or sign-in linking behavior.
-- [Implementation and verification record](../specs/2026-11-13-guide-github/results.md). Implemented behind the isolated `/guide` fixture, with a `setup` consent return context (migration 0017); awaiting owner approval.
-- [ ] Complete when ON-08 through ON-11 pass in the guide, cancellation/mismatch/session expiry preserves input, zero/failure/private states are honest, and no optional graph failure becomes a mandatory editor gate.
+- [Implementation and verification record](../specs/2026-11-13-guide-github/results.md). Implemented behind the isolated `/guide` fixture, with a `setup` consent return context (migration 0017). The owner approved completion on November 13, 2026 in PR #58. No separate boundary review is recorded.
+- [x] Complete when ON-08 through ON-11 pass in the guide, cancellation/mismatch/session expiry preserves input, zero/failure/private states are honest, and no optional graph failure becomes a mandatory editor gate.
 
 ### Phase 42E. Add Review, first editor handoff, and route activation
 

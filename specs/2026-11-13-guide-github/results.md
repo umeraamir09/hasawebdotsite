@@ -51,12 +51,12 @@ Not established: no live GitHub, real consent screen or deployed callback; Chrom
 
 Remaining integration (42E–42F): production routing of `/auth/entry` to the guide; preserving `?github=consent` when `/auth/entry` redirects an owner who already entered the editor (today it lands on `/editor` without reopening the section); Review placement of the graph. `addEditorComponent` appends, so a section first created after Back from GitHub would follow the graph rather than keep the Skills/Projects/GitHub order of ON-12.
 
-Approval: implemented and awaiting owner approval. The roadmap checkbox is unchecked.
+Approval: November 13, 2026: the owner approved Phase 42D completion in PR #58 and asked for the roadmap checkoff, before CI had finished. No separate boundary review is recorded.
 
 ## Documentation impact
 
 Changed assumptions: consent could return only to the editor (`github_consent.return_to in ('editor')`, `{"returnTo":"editor"}` only); the guide's GitHub step was a placeholder; Phase 42B and 42C awaited approval.
 
-Updated guidance: [authentication](../../docs/authentication.md#github-activity-consent) (route body, callback destinations, signed-out behavior), [architecture 8.5](../../docs/architecture.md#85-github-activity-product-9) (Phase 41 paragraph note), [onboarding](../../docs/onboarding.md) (status line and GitHub row), [implementation status](../../docs/implementation-status.md) (guide row and the three GitHub rows), the [roadmap](../../docs/roadmap.md) 42D record link (checkbox unchanged), the [db package guide](../../packages/db/README.md) (migration 0017) and the [draft client contract](../../apps/web/lib/draft/README.md) (GitHub screen). The 42B/42C approval records and checkoffs are in `34dc036`. Historical Phase 40/41 records stay as written.
+Updated guidance: [authentication](../../docs/authentication.md#github-activity-consent) (route body, callback destinations, signed-out behavior), [architecture 8.5](../../docs/architecture.md#85-github-activity-product-9) (Phase 41 paragraph note), [onboarding](../../docs/onboarding.md) (status line and GitHub row), [implementation status](../../docs/implementation-status.md) (guide row and the three GitHub rows), the [roadmap](../../docs/roadmap.md) 42D record link (checked off after owner approval), the [db package guide](../../packages/db/README.md) (migration 0017) and the [draft client contract](../../apps/web/lib/draft/README.md) (GitHub screen). The 42B/42C approval records and checkoffs are in `34dc036`. Historical Phase 40/41 records stay as written.
 
-Unresolved prerequisites: the boundary review decision; Phase 42E routing and Review; the production activity app, callback registration and secrets; deployed S-9.
+Unresolved prerequisites: no boundary review is recorded; Phase 42E routing and Review; the production activity app, callback registration and secrets; deployed S-9.
