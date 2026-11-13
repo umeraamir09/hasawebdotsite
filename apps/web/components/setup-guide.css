@@ -252,6 +252,108 @@
 .guide-continue:disabled {
   opacity: 0.7;
 }
+/* Phase 42D: the editor's GitHub panel inside the guide (Figma 326:503). The
+   editor stylesheet is not loaded here, so the panel is styled in scope. */
+.guide-github {
+  display: grid;
+  gap: 16px;
+}
+.guide-github > .ghost-button,
+.guide-github button:not(.ghost-button),
+[data-guide-github-unfinished] .ghost-button {
+  justify-self: stretch;
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 999px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 20px;
+}
+.guide-github .github-controls {
+  display: grid;
+  gap: 12px;
+}
+.guide-github .github-controls h2 {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 500;
+}
+.guide-github .editor-muted {
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 21px;
+}
+.guide-github .editor-field {
+  display: grid;
+  gap: 8px;
+}
+.guide-github .editor-field label {
+  font-size: 14px;
+  font-weight: 500;
+}
+.guide-github .editor-field input {
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--text-secondary);
+  border-radius: 12px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font: inherit;
+}
+.guide-github .editor-field input:focus {
+  outline: 2px solid var(--guide-accent-text);
+  outline-offset: 2px;
+}
+.guide-github .editor-input-note {
+  color: var(--error);
+  font-size: 14px;
+  line-height: 20px;
+}
+.guide-github a {
+  color: var(--guide-accent-text);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.guide-github .github-private {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+.guide-github .github-private legend {
+  float: left;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+.guide-github .github-private > * {
+  clear: both;
+}
+.guide-github .appearance-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 14px;
+}
+.guide-github .appearance-choice input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--guide-accent-text);
+}
+.guide-github fieldset fieldset {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
 @media (max-width: 640px) {
   .setup-guide {
     gap: 16px;

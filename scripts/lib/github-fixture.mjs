@@ -19,13 +19,20 @@ export async function startGitHubFixture(port) {
   const codes = new Map();
   const tokens = new Map();
   // `consent.as` approves as that login (default: the suggested `login`);
-  // `consent.cancel` answers access_denied. `callbackOrigin` stands in for
-  // the browser origin in front of the app (the harness proxies it).
+  // `consent.cancel` answers access_denied; `consent.hold` keeps the browser
+  // on a GitHub page and stores the callback URL in `held`, so a check can
+  // deliver it later, twice, or from another session. `callbackOrigin` stands
+  // in for the browser origin in front of the app (the harness proxies it).
+  // `revokeFailure` answers grant/token deletion with that status, and
+  // `activityFailure` only the calendar read (the account still resolves).
   const state = {
     failure: null,
+    activityFailure: null,
     calls: [],
-    consent: { as: null, cancel: false },
+    consent: { as: null, cancel: false, hold: false },
+    held: null,
     callbackOrigin: null,
+    revokeFailure: null,
   };
   function addUser({
     login,
@@ -122,6 +129,12 @@ export async function startGitHubFixture(port) {
             state: query.state,
           }).toString();
         }
+        if (state.consent.hold) {
+          state.held = destination.toString();
+          response.writeHead(200, { "Content-Type": "text/html" });
+          response.end("<!doctype html><title>GitHub</title><p>Authorize</p>");
+          return;
+        }
         response.writeHead(302, { Location: destination.toString() });
         response.end();
         return;
@@ -171,6 +184,7 @@ export async function startGitHubFixture(port) {
         if (request.method === "POST")
           return send(grant?.valid ? 200 : 404, {});
         if (request.method !== "DELETE") return send(404, {});
+        if (state.revokeFailure) return send(state.revokeFailure, {});
         if (!grant?.valid) return send(404, {});
         if (application[2] === "token") grant.valid = false;
         else
@@ -234,6 +248,8 @@ export async function startGitHubFixture(port) {
         state.calls.push({ kind, login, authorized });
         if (!authorized) return send(401, { message: "Bad credentials" });
         if (state.failure) return send(state.failure, {});
+        if (state.activityFailure && kind === "activity")
+          return send(state.activityFailure, {});
         const user = users.get(login.toLowerCase());
         if (!user)
           return send(200, {

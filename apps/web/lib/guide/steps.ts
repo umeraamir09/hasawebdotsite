@@ -90,5 +90,5 @@ export function progressFor(step: GuideStep): SetupProgress {
 export const remainingTarget: GuideStep = "review";
 
 export function isSkippable(step: GuideStep) {
-  return step === "skills" || step === "projects";
+  return step === "skills" || step === "projects" || step === "github";
 }

@@ -146,20 +146,23 @@ export const retryGraph = async (send?: typeof fetch) => {
   bumpGraphRevision();
   return status;
 };
+/** Where GitHub's callback returns: the editor or the setup guide. */
+export type ConsentReturn = "editor" | "setup";
+
 /**
  * Starts private-activity consent and returns GitHub's authorize URL. The
- * caller saves the draft first and then navigates in the same tab. The server
- * fixes the return to the editor; the browser cannot choose it.
+ * caller saves the draft first and then navigates in the same tab. The
+ * browser names only a fixed context; the server stores it with the attempt
+ * and maps it to a fixed path.
  */
-export async function startPrivateConsent(send?: typeof fetch) {
+export async function startPrivateConsent(
+  send?: typeof fetch,
+  returnTo: ConsentReturn = "editor",
+) {
   const body = z
     .strictObject({ url: z.string().url() })
     .parse(
-      await call(
-        "/consent",
-        { method: "POST", body: { returnTo: "editor" } },
-        send,
-      ),
+      await call("/consent", { method: "POST", body: { returnTo } }, send),
     );
   return body.url;
 }

@@ -14,8 +14,10 @@ Requirements: the [Phase 42B roadmap entry](../../docs/roadmap.md#phase-42b-add-
 
 Local: `pnpm lint`, web typecheck and guide unit tests pass. `pnpm test:editor -- --browser-filter="setup guide"` passes four groups: the three 42A groups unchanged (axe now covers the real Profile screen at desktop and 390 px) and the new "setup guide profile images and required links" group (empty Continue refused, real avatar/banner crop uploads stored with accepted avatar, invalid link blocks, valid labeled link advances, Back and Continue leave one link and no social component). `pnpm verify --profile=auth` stopped at its unit stage on two `verification.test.mjs` tests inside other worktrees under `.claude/worktrees` (phase-40/41 copies; 4835 other tests passed). Run directly, `test:auth:browser` and `test:autosave` passed. `test:draft-api` and the full `test:editor` suite exited non-zero in one run; they were not diagnosed or rerun locally because the owner chose to leave full verification to CI. Treat both as unverified until CI passes.
 
-Limitations: Chromium only; provider and account-email suggestions are covered by existing editor groups, not re-run inside the guide; the guide is not reachable from production routes. Owner approval is not yet requested or recorded.
+Limitations: Chromium only; provider and account-email suggestions are covered by existing editor groups, not re-run inside the guide; the guide is not reachable from production routes.
+
+November 13, 2026: the owner approved Phase 42B completion after PR #56 merged to `main` at `c6cc2cf`. No separate boundary review is recorded.
 
 ## Documentation impact
 
-Updated the implementation baseline row, onboarding status, draft client contract and roadmap record link. 42C-42E remain pending; the roadmap box stays unchecked.
+Updated the implementation baseline row, onboarding status, draft client contract and roadmap record link. 42C-42E remain pending. The approval follow-up checks off the roadmap entry and records approval in the implementation baseline.

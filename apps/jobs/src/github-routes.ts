@@ -1,5 +1,6 @@
 import { authSettings } from "@hasaweb/auth";
 import {
+  type ConsentReturn,
   choosePublicOnly,
   dueGitHubSweep,
   enqueueGitHubRefresh,
@@ -36,13 +37,19 @@ export type GitHubBindings = {
 
 /** The activity app's registered callback, relative to APP_ORIGIN. */
 export const CONSENT_CALLBACK_PATH = "/api/owner/github/consent/callback";
-const RETURN_PATHS = { editor: "/editor?github=consent" } as const;
+// Fixed destinations. The setup guide is reached through the controlled
+// account entry, which resolves an owner who has not entered the editor to the
+// guide and its saved step (Phase 42E activates that resolution).
+const RETURN_PATHS = {
+  editor: "/editor?github=consent",
+  setup: "/auth/entry?github=consent",
+} as const satisfies Record<ConsentReturn, string>;
 
 /**
  * The controlled return after a consent callback. The URL carries no outcome:
- * the editor reads the persisted private state from the status route.
+ * the editor or guide reads the persisted private state from the status route.
  */
-export function consentReturn(returnTo: keyof typeof RETURN_PATHS = "editor") {
+export function consentReturn(returnTo: ConsentReturn = "editor") {
   return new Response(null, {
     status: 303,
     headers: {
@@ -184,7 +191,9 @@ export async function sweepGitHubRefreshes(
 }
 
 const setupSchema = z.strictObject({ username: z.string().min(1).max(64) });
-const consentSchema = z.strictObject({ returnTo: z.literal("editor") });
+const consentSchema = z.strictObject({
+  returnTo: z.enum(["editor", "setup"]),
+});
 const emptySchema = z.strictObject({});
 const failureStatus = {
   invalid_username: 422,
@@ -349,7 +358,7 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
   // GitHub's redirect. Signed-out visits never reach here: the owner router
   // answers them with the same controlled return before authentication.
   app.get(CONSENT_CALLBACK_PATH, async (c) => {
-    let returnTo: "editor" = "editor";
+    let returnTo: ConsentReturn = "editor";
     try {
       const activity = await activityEnvironment(
         c.env,

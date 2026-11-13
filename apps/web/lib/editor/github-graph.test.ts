@@ -45,7 +45,7 @@ describe("GitHub graph browser client", () => {
       ),
     ).rejects.toThrow();
   });
-  it("starts consent with the fixed editor return only", async () => {
+  it("starts consent with a fixed editor or setup return only", async () => {
     const send = reply({ url: "https://github.com/login/oauth/authorize?x=1" });
     expect(await startPrivateConsent(send)).toBe(
       "https://github.com/login/oauth/authorize?x=1",
@@ -55,6 +55,14 @@ describe("GitHub graph browser client", () => {
     expect(path).toBe("/api/owner/github/consent");
     expect(init.method).toBe("POST");
     expect(JSON.parse(String(init.body))).toEqual({ returnTo: "editor" });
+    // The setup guide names its own fixed context, never a path.
+    const guide = reply({
+      url: "https://github.com/login/oauth/authorize?x=2",
+    });
+    await startPrivateConsent(guide, "setup");
+    const [, guideInit] = (guide as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(guideInit.body))).toEqual({ returnTo: "setup" });
     await expect(
       startPrivateConsent(reply({ error: "consent_busy" }, 409)),
     ).rejects.toEqual(new GraphSetupError("consent_busy"));

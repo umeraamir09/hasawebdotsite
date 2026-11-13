@@ -415,7 +415,8 @@ export const githubConsent = sqliteTable(
     generation: integer("generation").notNull(),
     // The PKCE verifier, kept only while the attempt can still exchange.
     verifier: text("verifier").notNull(),
-    returnTo: text("return_to", { enum: ["editor"] }).notNull(),
+    // Where the callback returns: the editor, or the setup guide (Phase 42D).
+    returnTo: text("return_to", { enum: ["editor", "setup"] }).notNull(),
     state: text("state", {
       enum: ["issued", "exchanging", "finished", "void"],
     }).notNull(),
@@ -430,7 +431,7 @@ export const githubConsent = sqliteTable(
       "github_consent_state",
       sql`${t.state} in ('issued','exchanging','finished','void')`,
     ),
-    check("github_consent_return", sql`${t.returnTo} in ('editor')`),
+    check("github_consent_return", sql`${t.returnTo} in ('editor','setup')`),
     check(
       "github_consent_verifier",
       sql`(${t.state} in ('issued','exchanging')) = (length(${t.verifier}) = 43)`,

@@ -246,6 +246,21 @@ describe("private activity consent routes", () => {
       url: "https://github.com/login/oauth/authorize?x",
     });
     expect(consent.start).toHaveBeenCalledWith("editor");
+    // The setup guide (Phase 42D) names its own fixed context.
+    consent.start.mockResolvedValueOnce({
+      ok: true,
+      url: "https://github.com/login/oauth/authorize?y",
+    });
+    expect(
+      (
+        await call("/consent", {
+          method: "POST",
+          body: { returnTo: "setup" },
+          env: ACTIVITY,
+        })
+      ).status,
+    ).toBe(200);
+    expect(consent.start).toHaveBeenLastCalledWith("setup");
     for (const error of ["no_graph", "already_authorized", "consent_busy"]) {
       consent.start.mockResolvedValueOnce({ ok: false, error });
       const response = await call("/consent", {
@@ -262,12 +277,14 @@ describe("private activity consent routes", () => {
       { returnTo: "/somewhere" },
       { returnTo: "https://evil.test" },
       { returnTo: "editor", url: "x" },
+      { returnTo: "/auth/entry?github=consent" },
+      { returnTo: "Setup" },
     ])
       expect(
         (await call("/consent", { method: "POST", body, env: ACTIVITY }))
           .status,
       ).toBe(422);
-    expect(consent.start).toHaveBeenCalledTimes(4);
+    expect(consent.start).toHaveBeenCalledTimes(5);
   });
   it("returns every callback to the fixed editor path with no referrer", async () => {
     consent.callback.mockResolvedValueOnce({
@@ -293,6 +310,18 @@ describe("private activity consent routes", () => {
     });
     await call("/consent/callback?code=c&state=s", { env: ACTIVITY });
     expect(db.cleanups).toHaveBeenCalledTimes(1);
+    // A guide attempt returns to the fixed account entry, which resolves the
+    // saved setup step. The URL still carries no outcome.
+    for (const outcome of ["connected", "cancelled", "invalid"]) {
+      consent.callback.mockResolvedValueOnce({ returnTo: "setup", outcome });
+      const guide = await call("/consent/callback?code=c&state=s", {
+        env: ACTIVITY,
+      });
+      expect(guide.status).toBe(303);
+      expect(guide.headers.get("Location")).toBe("/auth/entry?github=consent");
+      expect(guide.headers.get("Referrer-Policy")).toBe("no-referrer");
+    }
+    expect(db.cleanups).toHaveBeenCalledTimes(2);
     // A storage failure still returns to the editor and leaks nothing.
     consent.callback.mockRejectedValueOnce(new Error("secret"));
     const failed = await call("/consent/callback?code=c&state=s", {
@@ -301,7 +330,7 @@ describe("private activity consent routes", () => {
     expect(failed.status).toBe(303);
     expect(await failed.text()).toBe("");
     // That failure may have queued an issued token, so revocation starts too.
-    expect(db.cleanups).toHaveBeenCalledTimes(2);
+    expect(db.cleanups).toHaveBeenCalledTimes(3);
   });
   it("keeps the public graph up and reports a broken activity key", async () => {
     const errors = vi.spyOn(console, "error").mockImplementation(() => {});

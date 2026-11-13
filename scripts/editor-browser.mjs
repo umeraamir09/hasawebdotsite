@@ -234,7 +234,12 @@ export async function checkEditor({
         url.pathname === "/empty"
           ? "<!doctype html><title>Prepare</title>"
           : shell(
-              url.pathname === "/guide" ? "guide-fixture" : "editor-fixture",
+              // The fixed setup consent return (`/auth/entry?github=consent`)
+              // stands in for the account entry that Phase 42E points at the
+              // guide; production `/auth/entry` is unchanged.
+              ["/guide", "/auth/entry"].includes(url.pathname)
+                ? "guide-fixture"
+                : "editor-fixture",
             ),
       );
     } catch (error) {

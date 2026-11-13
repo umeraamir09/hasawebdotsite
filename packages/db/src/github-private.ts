@@ -52,7 +52,10 @@ export type PrivateEnvironment = {
   callbackUrl: string;
   now?: () => number;
 };
-export type ConsentReturn = "editor";
+// Where the browser lands after GitHub: the editor, or the setup guide's
+// GitHub step (Phase 42D). It is stored with the attempt, never read from the
+// callback URL.
+export type ConsentReturn = "editor" | "setup";
 
 /** Past GitHub's ten-minute code lifetime and the ten-second exchange timeout. */
 export const CONSENT_EXCHANGE_DEADLINE_MS = 15 * 60_000;
@@ -451,9 +454,9 @@ export function ownerPrivateActivity(
       code: string | null;
       error: string | null;
     }): Promise<{ returnTo: ConsentReturn; outcome: ConsentOutcome }> {
-      const fallback = {
-        returnTo: "editor" as const,
-        outcome: "invalid" as const,
+      const fallback: { returnTo: ConsentReturn; outcome: ConsentOutcome } = {
+        returnTo: "editor",
+        outcome: "invalid",
       };
       if (!isConsentValue(params.state)) return fallback;
       const hash = await consentStateHash(params.state);
