@@ -28,5 +28,5 @@ Preconditions: built web/jobs Workers, Chrome available, no other suite using po
 ## Gotchas
 
 - Provider HTTP/consent is replaced at the existing external boundary. This is not proof of real GitHub/Google configuration, production TLS/cookies or callback delivery. Do not send a live login request with dummy credentials.
-- Direct `/editor` navigation sends incomplete owners to `/auth/entry`. Completed owners reach `/editor`, including after required content removal. Both routes retain account shells until Phase 42E. New production accounts cannot prove the future complete setup-to-editor journey yet.
+- Direct `/editor` navigation sends incomplete owners to `/auth/entry`. Completed owners reach `/editor`, including after required content removal. With the committed (closed) Phase 42E gate both routes render account shells; the gated guide/editor journey is exercised by the editor harness groups "setup guide Review, ..." (`scripts/guide-review-browser.mjs`). New production accounts cannot prove the complete setup-to-editor journey until the gate opens.
 - Account identity is not automatically public profile content. A signed-in welcome name is not proof that the portfolio profile was populated.
