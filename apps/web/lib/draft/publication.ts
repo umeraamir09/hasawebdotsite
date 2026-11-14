@@ -74,59 +74,16 @@ export async function withPublication<T>(
       JSON.stringify(record.working) !== JSON.stringify(record.base.draft)
     )
       throw new DraftFailure("recovery_required");
-    const issues = new Map<string, PublicationIssue>();
-    let assetOffset = 0,
-      more = false;
-    while (true) {
-      const response = await send("/api/owner/publication/check", {
-        method: "POST",
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Expected-Owner-Id": record.ownerId,
-        },
-        body: JSON.stringify({
-          portfolioId: record.portfolioId,
-          revision: flushed.revision,
-          assetOffset,
-        }),
-        signal: AbortSignal.timeout(30000),
-      });
-      if (!response.ok) {
-        const body: unknown = await response.json().catch(() => null);
-        if (response.status === 401) throw new DraftFailure("unauthorized");
-        if (
-          body &&
-          typeof body === "object" &&
-          "error" in body &&
-          (body.error === "owner_changed" ||
-            body.error === "revision_conflict" ||
-            body.error === "save_rejected")
-        )
-          throw new DraftFailure(body.error);
-        throw new DraftFailure("storage_unavailable");
-      }
-      const result = publicationResultSchema.parse(await response.json());
-      if (result.portfolioId !== record.portfolioId)
-        throw new DraftFailure("owner_changed");
-      if (result.revision !== flushed.revision)
-        throw new DraftFailure("revision_conflict");
-      for (const issue of result.issues) {
-        if (issues.size < 100) issues.set(JSON.stringify(issue), issue);
-        else more = true;
-      }
-      more ||= result.hasMoreIssues;
-      if (result.nextAssetOffset === null) break;
-      if (result.nextAssetOffset <= assetOffset)
-        throw new DraftFailure("storage_unavailable");
-      assetOffset = result.nextAssetOffset;
-    }
+    const { issues, hasMoreIssues } = await readPublicationIssues(
+      { ownerId: record.ownerId, portfolioId: record.portfolioId },
+      flushed.revision,
+      send,
+    );
     requireFinishedImages();
     return await complete({
       revision: flushed.revision,
-      issues: [...issues.values()],
-      hasMoreIssues: more,
+      issues,
+      hasMoreIssues,
       draft: controller.store.getState().working,
     });
   } catch (error) {
@@ -143,4 +100,66 @@ export async function withPublication<T>(
   } finally {
     controller.releaseReviewPause();
   }
+}
+
+// The owner's publication blockers for one confirmed revision. This is a
+// read: it saves nothing, pauses nothing and prepares no candidate. Setup
+// Review uses it on its own; Publish reaches it through `withPublication`.
+export async function readPublicationIssues(
+  identity: { ownerId: string; portfolioId: string },
+  revision: number,
+  send: typeof fetch = fetch,
+  signal?: AbortSignal,
+) {
+  const issues = new Map<string, PublicationIssue>();
+  let assetOffset = 0,
+    more = false;
+  while (true) {
+    const response = await send("/api/owner/publication/check", {
+      method: "POST",
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Expected-Owner-Id": identity.ownerId,
+      },
+      body: JSON.stringify({
+        portfolioId: identity.portfolioId,
+        revision,
+        assetOffset,
+      }),
+      signal: signal
+        ? AbortSignal.any([signal, AbortSignal.timeout(30000)])
+        : AbortSignal.timeout(30000),
+    });
+    if (!response.ok) {
+      const body: unknown = await response.json().catch(() => null);
+      if (response.status === 401) throw new DraftFailure("unauthorized");
+      if (
+        body &&
+        typeof body === "object" &&
+        "error" in body &&
+        (body.error === "owner_changed" ||
+          body.error === "revision_conflict" ||
+          body.error === "save_rejected")
+      )
+        throw new DraftFailure(body.error);
+      throw new DraftFailure("storage_unavailable");
+    }
+    const result = publicationResultSchema.parse(await response.json());
+    if (result.portfolioId !== identity.portfolioId)
+      throw new DraftFailure("owner_changed");
+    if (result.revision !== revision)
+      throw new DraftFailure("revision_conflict");
+    for (const issue of result.issues) {
+      if (issues.size < 100) issues.set(JSON.stringify(issue), issue);
+      else more = true;
+    }
+    more ||= result.hasMoreIssues;
+    if (result.nextAssetOffset === null) break;
+    if (result.nextAssetOffset <= assetOffset)
+      throw new DraftFailure("storage_unavailable");
+    assetOffset = result.nextAssetOffset;
+  }
+  return { issues: [...issues.values()], hasMoreIssues: more };
 }

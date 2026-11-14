@@ -15,6 +15,15 @@
   color: #596053;
   font-size: 13px;
 }
+.editor-sign-out {
+  white-space: nowrap;
+}
+.editor-sign-out-error {
+  margin: 0;
+  padding: 12px 32px;
+  color: #a1281b;
+  font-size: 13px;
+}
 .editor-workspace {
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
@@ -44,7 +53,8 @@
 }
 .owner-editor button:focus-visible,
 .owner-editor input:focus-visible,
-.owner-editor textarea:focus-visible {
+.owner-editor textarea:focus-visible,
+.owner-editor .editor-preview-stage:focus-visible {
   outline: 3px solid #596f34;
   outline-offset: 3px;
 }

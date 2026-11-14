@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { signOutOwner } from "../lib/auth-client";
 import { createDraftController } from "../lib/draft/controller";
@@ -40,6 +40,7 @@ import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
 import { GuideGitHub } from "./guide-github-step";
 import { GuideProjects, GuideSkills } from "./guide-optional-steps";
+import { GuideReview, type HandoffResult } from "./guide-review-step";
 import { ProfileControls } from "./profile-controls";
 import { SocialLinksControl } from "./social-links-control";
 import { useAddressReservation } from "./use-address-reservation";
@@ -83,22 +84,31 @@ const stepCopy: Record<
   },
   review: {
     label: "Review",
-    title: "Review your portfolio",
-    intro: "Check your private draft before opening the editor.",
+    title: "Take a look around",
+    intro: "Review your portfolio before opening the editor.",
   },
 };
 
 const formId = "setup-guide-step";
 
-// The first-portfolio guide. Phase 42A supplies the shell, progress, resume
-// and the required Address screen; later phases add the remaining screens.
-// It is mounted only by the isolated browser fixture until Phase 42E
-// activates the complete required journey.
+// The editor's iframe preview document (registered by the web Worker).
+const defaultPreviewDocument = "/editor/preview";
+
+// After the permanent handoff the same tab opens the editor, whose fresh
+// content-scope controller offers any preserved setup input for review.
+const openEditor = () => window.location.replace("/editor");
+
+// The first-portfolio guide: Address, Profile, Links, optional Skills,
+// Projects and GitHub, then Review and the permanent editor handoff. The
+// account entry (`OwnerEntry`) mounts it for owners who have not entered the
+// editor, behind the Phase 42E activation gate.
 export function SetupGuide(props: {
   owner: Owner;
   send?: typeof fetch;
+  previewDocument?: string;
   onSignOut?: () => Promise<void>;
   onReady?(recovery: RecoveryCoordinator): void;
+  onEntered?(result: HandoffResult | null): void;
 }) {
   return <Session key={JSON.stringify(props.owner)} {...props} />;
 }
@@ -106,8 +116,10 @@ export function SetupGuide(props: {
 function Session({
   owner,
   send,
+  previewDocument,
   onSignOut,
   onReady,
+  onEntered,
 }: Parameters<typeof SetupGuide>[0]) {
   const readyCallback = useRef(onReady);
   readyCallback.current = onReady;
@@ -136,14 +148,26 @@ function Session({
         <p role="status">Opening your setup...</p>
       </main>
     );
-  return <Workspace recovery={recovery} send={send} onSignOut={onSignOut} />;
+  return (
+    <Workspace
+      recovery={recovery}
+      send={send}
+      previewDocument={previewDocument}
+      onSignOut={onSignOut}
+      onEntered={onEntered}
+    />
+  );
 }
 
-function Workspace(props: {
+type ScopeProps = {
   recovery: RecoveryCoordinator;
   send?: typeof fetch | undefined;
+  previewDocument?: string | undefined;
   onSignOut?: (() => Promise<void>) | undefined;
-}) {
+  onEntered?: ((result: HandoffResult | null) => void) | undefined;
+};
+
+function Workspace(props: ScopeProps) {
   const recoveryState = useStore(props.recovery.store);
   // Coordinator replacements change the scope; reset all step state with it.
   return <Scope key={recoveryState.controller.scopeKey} {...props} />;
@@ -152,12 +176,10 @@ function Workspace(props: {
 function Scope({
   recovery,
   send = fetch,
+  previewDocument = defaultPreviewDocument,
   onSignOut = signOutOwner,
-}: {
-  recovery: RecoveryCoordinator;
-  send?: typeof fetch | undefined;
-  onSignOut?: (() => Promise<void>) | undefined;
-}) {
+  onEntered = openEditor,
+}: ScopeProps) {
   const recoveryState = useStore(recovery.store);
   const controller = recoveryState.controller;
   const state = useStore(controller.store);
@@ -171,6 +193,9 @@ function Scope({
   const [stepError, setStepError] = useState("");
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
+  // A handoff refused for missing required content; it stays visible on the
+  // step the shell returns to until the owner moves on.
+  const [handoffNotice, setHandoffNotice] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const revision = state.confirmed?.revision;
   // The GitHub screen: whether Add graph was chosen before any account was
@@ -240,6 +265,12 @@ function Scope({
     !state.working ||
     state.error === "owner_changed";
   const imagePending = Object.values(state.pendingImages).some(Boolean);
+  // Another tab (or an earlier Open editor) already made the permanent
+  // handoff. This tab cannot save setup changes or replay its progress; it
+  // only offers the editor, which reviews any preserved input there.
+  const closed =
+    state.confirmed?.firstEditorEnteredAt != null ||
+    state.error === "setup_closed";
 
   const shownStep = useRef(step);
   useEffect(() => {
@@ -259,6 +290,7 @@ function Scope({
   async function go(target: GuideStep) {
     setNavigating(true);
     setStepError("");
+    setHandoffNotice("");
     try {
       controller.changeProgress(progressFor(target));
       await controller.flushValid();
@@ -477,7 +509,7 @@ function Scope({
       </header>
       <nav className="guide-nav" aria-label="Setup steps">
         <div className="guide-nav-back">
-          {back && !loading && (
+          {back && !loading && !closed && (
             <button
               type="button"
               className="ghost-button guide-back"
@@ -508,7 +540,7 @@ function Scope({
         </ol>
         {/* Required steps never offer a skip or an editor bypass. */}
         <div className="guide-nav-skip">
-          {!loading && isSkippable(step) && (
+          {!loading && !closed && isSkippable(step) && (
             <>
               <button
                 type="button"
@@ -531,7 +563,27 @@ function Scope({
         </div>
       </nav>
       <main className="guide-content">
-        {loading ? (
+        {closed ? (
+          <div className="guide-form" data-guide-closed="">
+            <div className="guide-heading">
+              <h1 ref={heading} tabIndex={-1}>
+                Your portfolio is in the editor
+              </h1>
+              <p className="guide-intro">
+                Setup is complete, so this page can't change your draft. Any
+                unsaved input from this tab stays available for recovery in the
+                editor.
+              </p>
+            </div>
+            <button
+              type="button"
+              className="guide-continue"
+              onClick={() => onEntered(null)}
+            >
+              Open editor
+            </button>
+          </div>
+        ) : loading ? (
           checkError ? null : (
             <p role="status">Opening your setup...</p>
           )
@@ -671,7 +723,23 @@ function Scope({
                 </div>
               </>
             ) : (
-              <UnavailableStep />
+              <GuideReview
+                recovery={recovery}
+                controller={controller}
+                disabled={disabled}
+                send={send}
+                previewDocument={previewDocument}
+                onEntered={onEntered}
+                onRequired={(entered) => {
+                  if (entered.result.kind !== "required") return;
+                  const issues = entered.result.issues;
+                  // The shell returns to the first step the server reports.
+                  setChecked({ revision: entered.result.revision, issues });
+                  setHandoffNotice(
+                    `Required content is missing: ${issues.join(", ")}. Complete it to open the editor.`,
+                  );
+                }}
+              />
             )}
           </div>
         )}
@@ -691,6 +759,11 @@ function Scope({
             </button>
           </div>
         )}
+        {handoffNotice && !closed && (
+          <p className="guide-error" role="alert">
+            {handoffNotice}
+          </p>
+        )}
         {stepError && (
           <p className="guide-error" role="alert">
             {stepError}
@@ -707,18 +780,20 @@ function Scope({
           </div>
         )}
       </main>
-      {!loading && (requiredSteps.has(step) || isSkippable(step)) && (
-        <footer className="guide-footer">
-          <button
-            className="guide-continue"
-            type="submit"
-            form={formId}
-            disabled={disabled || imagePending}
-          >
-            {navigating ? "Saving..." : "Continue"}
-          </button>
-        </footer>
-      )}
+      {!loading &&
+        !closed &&
+        (requiredSteps.has(step) || isSkippable(step)) && (
+          <footer className="guide-footer">
+            <button
+              className="guide-continue"
+              type="submit"
+              form={formId}
+              disabled={disabled || imagePending}
+            >
+              {navigating ? "Saving..." : "Continue"}
+            </button>
+          </footer>
+        )}
     </div>
   );
 }
@@ -830,17 +905,5 @@ function AddressStep({
         </p>
       </div>
     </form>
-  );
-}
-
-function UnavailableStep(): ReactNode {
-  return (
-    <div className="guide-note" role="note">
-      <p>This step isn't available yet</p>
-      <p>
-        Your saved answers and your place are kept. Use Back to review earlier
-        steps.
-      </p>
-    </div>
   );
 }

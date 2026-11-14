@@ -44,6 +44,10 @@ export async function checkEditor({
     entryPoints: {
       "editor-fixture": join(root, "apps/web/integration/editor-fixture.tsx"),
       "guide-fixture": join(root, "apps/web/integration/guide-fixture.tsx"),
+      "owner-entry-fixture": join(
+        root,
+        "apps/web/integration/owner-entry-fixture.tsx",
+      ),
       "editor-preview-fixture": join(
         root,
         "apps/web/integration/editor-preview-fixture.ts",
@@ -145,15 +149,18 @@ export async function checkEditor({
         );
         return;
       }
-      if (/^\/preview-assets\/app\.(?:js|css)$/.test(url.pathname)) {
+      if (/^\/preview-assets\/(?:app|editor)\.(?:js|css)$/.test(url.pathname)) {
         const extension = url.pathname.slice(-2) === "js" ? "js" : "css";
         res.setHeader(
           "Content-Type",
           extension === "js" ? "text/javascript" : "text/css",
         );
-        res.end(
-          await readFile(join(directory, `full-preview-entry.${extension}`)),
-        );
+        // `editor.*` is the iframe child that the production `/editor/preview`
+        // shell loads; the harness builds the same entry.
+        const bundle = url.pathname.includes("/editor.")
+          ? "editor-preview-fixture"
+          : "full-preview-entry";
+        res.end(await readFile(join(directory, `${bundle}.${extension}`)));
         return;
       }
       if (
@@ -191,7 +198,7 @@ export async function checkEditor({
         return;
       }
       if (
-        /^\/(?:editor(?:-preview)?|guide)-fixture\.(?:js|css)$/.test(
+        /^\/(?:editor(?:-preview)?|guide|owner-entry)-fixture\.(?:js|css)$/.test(
           url.pathname,
         )
       ) {
@@ -234,12 +241,14 @@ export async function checkEditor({
         url.pathname === "/empty"
           ? "<!doctype html><title>Prepare</title>"
           : shell(
-              // The fixed setup consent return (`/auth/entry?github=consent`)
-              // stands in for the account entry that Phase 42E points at the
-              // guide; production `/auth/entry` is unchanged.
-              ["/guide", "/auth/entry"].includes(url.pathname)
-                ? "guide-fixture"
-                : "editor-fixture",
+              // `/auth/entry` and `/editor` mount the production `OwnerEntry`
+              // resolver that the gated pages render (Phase 42E). `/guide`
+              // keeps the direct guide fixture of 42A–42D.
+              ["/auth/entry", "/editor"].includes(url.pathname)
+                ? "owner-entry-fixture"
+                : url.pathname === "/guide"
+                  ? "guide-fixture"
+                  : "editor-fixture",
             ),
       );
     } catch (error) {
@@ -304,7 +313,11 @@ export async function checkEditor({
   const frame = () =>
     page
       .frames()
-      .find((candidate) => candidate.url().includes("/private/editor-preview"));
+      .find(
+        (candidate) =>
+          candidate.url().includes("/private/editor-preview") ||
+          new URL(candidate.url()).pathname === "/editor/preview",
+      );
   async function readyFrame(timeout = 15000) {
     const deadline = Date.now() + timeout;
     for (;;) {
@@ -503,7 +516,7 @@ export async function checkEditor({
       },
     );
     await run(
-      "authorized preview document and inactive production route",
+      "authorized preview document and gated production route",
       async () => {
         const anonymous = await context.request.get(
           `${browserOrigin}/private/editor-preview`,
@@ -526,11 +539,30 @@ export async function checkEditor({
           await response.text(),
           /recipient-1|avatar-1|includePrivate|umer@example/,
         );
-        assert.equal(
-          (
-            await context.request.get(`${browserOrigin}/editor/preview`)
-          ).status(),
-          404,
+        // The production Worker route (gate open in this harness) applies
+        // the same owner check, headers and permitted frame parent.
+        const signedOut = await context.request.get(
+          `${browserOrigin}/editor/preview`,
+          { headers: { Cookie: "fixture-session=none" } },
+        );
+        assert.equal(signedOut.status(), 401);
+        assert.match(signedOut.headers()["cache-control"], /private.*no-store/);
+        const shell = await context.request.get(
+          `${browserOrigin}/editor/preview`,
+        );
+        assert.equal(shell.status(), 200);
+        assert.match(shell.headers()["cache-control"], /private.*no-store/);
+        assert.equal(shell.headers()["x-robots-tag"], "noindex");
+        assert.equal(shell.headers()["x-frame-options"], "SAMEORIGIN");
+        assert.match(
+          shell.headers()["content-security-policy"],
+          /frame-ancestors 'self'/,
+        );
+        const body = await shell.text();
+        assert.match(body, /\/preview-assets\/editor\.js/);
+        assert.doesNotMatch(
+          body,
+          /recipient-1|avatar-1|includePrivate|umer@example/,
         );
       },
     );

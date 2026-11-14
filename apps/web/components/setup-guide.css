@@ -386,3 +386,126 @@
     transition: none;
   }
 }
+
+/* Review: the shared iframe preview at the actual 1120/390-pixel child
+   widths. The editor stylesheet isn't in the guide bundle, so the preview
+   toolbar is styled here. */
+.guide-form:has(.guide-review) {
+  width: min(1180px, 100%);
+}
+.guide-review {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.guide-review-address {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--text-secondary);
+}
+.guide-review .editor-preview {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.guide-review .editor-preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  line-height: 18px;
+}
+.guide-review .editor-width-controls {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.guide-review .editor-width-controls button {
+  min-width: 112px;
+  min-height: 44px;
+  padding: 10px 20px;
+  font: inherit;
+  font-size: 14px;
+  color: inherit;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.guide-review .editor-width-controls button[aria-pressed="true"] {
+  background: #fcfdf9;
+  border-color: #7a856e;
+}
+.guide-review .editor-width-controls button:focus-visible,
+.guide-review .editor-full-preview-link:focus-visible,
+.guide-review .editor-preview-stage:focus-visible {
+  outline: 3px solid #596f34;
+  outline-offset: 3px;
+}
+.guide-review .editor-full-preview-link {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+.guide-review .editor-preview-stage {
+  overflow: auto;
+  min-width: 0;
+}
+.guide-review .editor-preview-frame {
+  box-sizing: content-box;
+  display: block;
+  height: min(640px, 70vh);
+  min-height: 480px;
+  margin: 0 auto;
+  background: #fcfdf9;
+  border: 1px solid #dce1d6;
+  border-radius: 16px;
+}
+.guide-review .editor-preview-desktop {
+  width: 1120px;
+}
+.guide-review .editor-preview-mobile {
+  width: 390px;
+}
+.guide-review-status {
+  display: grid;
+  gap: 12px;
+  width: min(680px, 100%);
+  margin: 0 auto;
+}
+.guide-review .guide-review-status h2 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 26px;
+}
+.guide-review .guide-review-status p {
+  margin: 0;
+}
+.guide-review-issues {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.guide-review-actions {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+}
+.guide-review-failure {
+  width: min(520px, 100%);
+}
+.guide-review-failure p:first-child {
+  color: var(--error);
+}
+@media (max-width: 640px) {
+  .guide-review .editor-preview-frame {
+    min-height: 420px;
+  }
+}

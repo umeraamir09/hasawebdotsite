@@ -26,14 +26,17 @@ export function EditorPreview({
   owner,
   draft,
   documentUrl,
-  selection,
+  selection = null,
   onSelect,
+  label = "Private live preview",
 }: {
   owner: PreviewIdentity;
   draft: DraftDoc;
   documentUrl: string;
-  selection: PreviewSelection;
-  onSelect(selection: PreviewSelection): void;
+  // Setup Review shows the draft without selecting or editing sections.
+  selection?: PreviewSelection | null;
+  onSelect?(selection: PreviewSelection): void;
+  label?: string;
 }) {
   const [channel] = useState(() => crypto.randomUUID());
   const [width, setWidth] = useState<"desktop" | "mobile">("desktop");
@@ -72,10 +75,10 @@ export function EditorPreview({
       origin: location.origin,
       onState: (next) => {
         setState(next);
-        if (next.kind === "displayed")
+        if (next.kind === "displayed" && currentSelection.current)
           connection.current?.select(currentSelection.current);
       },
-      onSelect: (value) => select.current(value),
+      onSelect: (value) => select.current?.(value),
     });
     connection.current = bridge;
     bridge.request(async (signal) => {
@@ -110,10 +113,10 @@ export function EditorPreview({
     });
   }, [draft, ownerId, images, graph]);
   useEffect(() => {
-    connection.current?.select(selection);
+    if (selection) connection.current?.select(selection);
   }, [selection]);
   return (
-    <section className="editor-preview" aria-label="Private live preview">
+    <section className="editor-preview" aria-label={label}>
       <div className="editor-preview-toolbar">
         <fieldset className="editor-width-controls" aria-label="Preview width">
           <button
@@ -154,7 +157,14 @@ export function EditorPreview({
               : "Updating preview..."}
         </span>
       </div>
-      <div className="editor-preview-stage">
+      {/* The stage scrolls a child wider or taller than the space, so it is
+          keyboard reachable for scrolling. */}
+      <section
+        className="editor-preview-stage"
+        aria-label="Preview area"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: a scrollable region must be focusable for keyboard scrolling.
+        tabIndex={0}
+      >
         <iframe
           ref={frame}
           title="Your private portfolio preview"
@@ -162,7 +172,7 @@ export function EditorPreview({
           className={`editor-preview-frame editor-preview-${width}`}
           sandbox="allow-scripts allow-same-origin"
         />
-      </div>
+      </section>
     </section>
   );
 }
