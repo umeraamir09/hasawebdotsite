@@ -7,7 +7,6 @@ import type { DraftController } from "../lib/draft/controller";
 import { readPublicationIssues } from "../lib/draft/publication";
 import { publicationIssueLabel } from "../lib/draft/publication-labels";
 import type { RecoveryCoordinator } from "../lib/draft/recovery-coordinator";
-import { DraftFailure } from "../lib/draft/types";
 import { EditorPreview } from "./editor-preview";
 
 export type HandoffResult = Awaited<ReturnType<RecoveryCoordinator["handoff"]>>;
@@ -76,13 +75,11 @@ export function GuideReview({
             more: result.hasMoreIssues,
           });
       })
-      .catch((error: unknown) => {
-        // A newer revision is being saved; its own read follows.
-        if (
-          active &&
-          !(error instanceof DraftFailure && error.code === "revision_conflict")
-        )
-          setStatuses({ kind: "failed" });
+      .catch(() => {
+        // A newer saved revision re-runs this effect and replaces this state.
+        // Any other failure, including a revision conflict while local input
+        // blocks `confirmed` from advancing, must offer Retry check.
+        if (active) setStatuses({ kind: "failed" });
       });
     return () => {
       active = false;
