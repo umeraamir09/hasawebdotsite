@@ -501,8 +501,11 @@ export async function checkGitHubGraphJourney({
           .getByRole("button", { name: "Remove section", exact: true })
           .click();
         // Removal first withdraws private access on the server (Phase 41).
+        // The dialog unmounts only after the withdrawal and the removal; its
+        // disabled "Removing..." button can stop matching a role query while
+        // the request is still in flight.
         await page
-          .getByRole("button", { name: /^Remove(ing\.\.\.| section)$/ })
+          .locator("dialog.component-removal")
           .waitFor({ state: "detached", timeout: 30000 });
         await publish();
         assert.equal((await graphJson()).status, 404);
@@ -785,8 +788,10 @@ export async function checkGitHubGraphJourney({
       await page
         .getByRole("button", { name: "Remove section", exact: true })
         .click();
+      // Wait for the dialog itself: it unmounts only after the withdrawal
+      // committed and the section was removed.
       await page
-        .getByRole("button", { name: /^Remove(ing\.\.\.| section)$/ })
+        .locator("dialog.component-removal")
         .waitFor({ state: "detached", timeout: 30000 });
       assert.equal((await connection()).private_enabled, 0);
       assert.equal(total(await liveGraph()), 2);
