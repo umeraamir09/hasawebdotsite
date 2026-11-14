@@ -4,9 +4,11 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { checkGuideGitHub } from "./guide-github-browser.mjs";
+import { checkGuideReview } from "./guide-review-browser.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
-// mounted by the isolated `/guide` fixture. No production route serves it.
+// mounted by the direct `/guide` fixture. Phase 42E's groups (Review, handoff
+// and the activated account entry) use `/auth/entry` and `/editor`.
 export async function checkSetupGuide({
   context,
   sql,
@@ -765,5 +767,23 @@ export async function checkSetupGuide({
     evidence,
     browserOrigin,
     github,
+  });
+
+  // Phase 42E: Review, handoff and the activated account entry.
+  await checkGuideReview({
+    context,
+    guarded,
+    reset,
+    guidePage,
+    provision,
+    waitStep,
+    field,
+    addressStatus,
+    proceed,
+    portfolio,
+    suffix,
+    sql,
+    evidence,
+    browserOrigin,
   });
 }

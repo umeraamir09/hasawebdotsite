@@ -1,6 +1,10 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { createDraftController, type DraftController } from "./controller";
-import { checkPublication, preparePublication } from "./publication";
+import {
+  checkPublication,
+  preparePublication,
+  readPublicationIssues,
+} from "./publication";
 import { fixtureTransport, memoryStorage } from "./test-fixtures";
 
 const controllers: DraftController[] = [];
@@ -282,4 +286,65 @@ it("never reports success when a commit acknowledgement is lost", async () => {
     "ready",
   ]);
   expect(controller.store.getState().suspended).toBe(false);
+});
+it("reads publication issues for Review without saving or pausing", async () => {
+  const controller = await setup();
+  const before = controller.store.getState().confirmed?.revision ?? 0;
+  const send = vi.fn<typeof fetch>(async (_input, init) => {
+    const command = JSON.parse(String(init?.body));
+    expect(new Headers(init?.headers).get("X-Expected-Owner-Id")).toBe(
+      "owner-a",
+    );
+    return Response.json({
+      portfolioId: "portfolio-a",
+      revision: command.revision,
+      issues:
+        command.assetOffset === 0
+          ? [
+              {
+                code: "required",
+                path: ["components", 0, "data", "entries", 0, "summary"],
+              },
+            ]
+          : [
+              {
+                code: "asset",
+                path: ["components", 0, "data", "entries", 0, "image"],
+              },
+            ],
+      hasMoreIssues: false,
+      nextAssetOffset: command.assetOffset === 0 ? 8 : null,
+    });
+  });
+  const result = await readPublicationIssues(controller.identity, before, send);
+  expect(result.issues.map((issue) => issue.code)).toEqual([
+    "required",
+    "asset",
+  ]);
+  expect(controller.store.getState().suspended).toBe(false);
+  expect(controller.store.getState().confirmed?.revision).toBe(before);
+  const moved = vi.fn<typeof fetch>(async () =>
+    Response.json({
+      portfolioId: "portfolio-a",
+      revision: before + 1,
+      issues: [],
+      hasMoreIssues: false,
+      nextAssetOffset: null,
+    }),
+  );
+  await expect(
+    readPublicationIssues(controller.identity, before, moved),
+  ).rejects.toMatchObject({ code: "revision_conflict" });
+  const other = vi.fn<typeof fetch>(async () =>
+    Response.json({
+      portfolioId: "portfolio-b",
+      revision: before,
+      issues: [],
+      hasMoreIssues: false,
+      nextAssetOffset: null,
+    }),
+  );
+  await expect(
+    readPublicationIssues(controller.identity, before, other),
+  ).rejects.toMatchObject({ code: "owner_changed" });
 });

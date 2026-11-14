@@ -168,6 +168,26 @@ export async function checkAuthUi({
     const signedOut = await fetch(`http://127.0.0.1:${port}/api/owner`);
     assert.equal(signedOut.status, 401);
     assert.equal(signedOut.headers.get("cache-control"), "private, no-store");
+    // Phase 42E: the account pages resolve the activation gate per request.
+    // With the committed (closed) gate they keep the welcome shell, are never
+    // stored and ask not to be indexed; the editor preview document is not
+    // registered.
+    for (const path of ["/auth/entry", "/editor"]) {
+      const shell = await fetch(`http://127.0.0.1:${port}${path}`);
+      assert.equal(shell.status, 200, path);
+      assert.match(shell.headers.get("cache-control") ?? "", /no-store/, path);
+      const html = await shell.text();
+      assert.match(
+        html,
+        /<meta name="robots" content="noindex, nofollow"/,
+        path,
+      );
+      assert.doesNotMatch(html, /Take a look around|setup-guide/, path);
+    }
+    assert.equal(
+      (await fetch(`http://127.0.0.1:${port}/editor/preview`)).status,
+      404,
+    );
     const bindingOrigin = `http://127.0.0.1:${port}`;
     const signature = createHmac(
       "sha256",

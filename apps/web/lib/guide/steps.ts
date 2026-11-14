@@ -86,7 +86,7 @@ export function progressFor(step: GuideStep): SetupProgress {
 
 // Optional screens carry Skip this step and Skip remaining steps. Skipping
 // the remainder always lands on Review, the final step, whatever later
-// optional screens exist. Review itself is activated in Phase 42E.
+// optional screens exist.
 export const remainingTarget: GuideStep = "review";
 
 export function isSkippable(step: GuideStep) {

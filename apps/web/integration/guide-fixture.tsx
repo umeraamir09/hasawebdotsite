@@ -1,6 +1,7 @@
 // Browser test bundle only. This file has no production route or import.
-// It mounts the Phase 42A setup guide for an authenticated owner who has not
-// entered the editor; production activation remains Phase 42E.
+// It mounts the setup guide directly for an authenticated owner who has not
+// entered the editor (the 42A–42D groups). The activated account entry is
+// `owner-entry-fixture.tsx`.
 
 import { createRoot } from "react-dom/client";
 import { SetupGuide } from "../components/setup-guide";

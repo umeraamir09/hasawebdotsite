@@ -39,7 +39,7 @@ export type GitHubBindings = {
 export const CONSENT_CALLBACK_PATH = "/api/owner/github/consent/callback";
 // Fixed destinations. The setup guide is reached through the controlled
 // account entry, which resolves an owner who has not entered the editor to the
-// guide and its saved step (Phase 42E activates that resolution).
+// guide and its saved step, or to the editor once the owner has entered it.
 const RETURN_PATHS = {
   editor: "/editor?github=consent",
   setup: "/auth/entry?github=consent",

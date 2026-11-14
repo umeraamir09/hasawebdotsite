@@ -1,6 +1,8 @@
 interface CloudflareEnv {
   APP_ENV: string;
   APP_ORIGIN?: string;
+  // Phase 42E owner-entry activation gate; see lib/owner-entry-gate.ts.
+  OWNER_ENTRY_ACTIVATION?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
   GOOGLE_CLIENT_ID?: string;

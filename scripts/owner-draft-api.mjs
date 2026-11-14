@@ -397,6 +397,9 @@ if (!remote) {
         RUNTIME_ORIGIN: origin,
         RUNTIME_ENABLED: "true",
         APP_ENV: "test",
+        // Phase 42E: the editor harness exercises the activated owner entry
+        // and its `/editor/preview` route. Committed configs leave it closed.
+        OWNER_ENTRY_ACTIVATION: "active",
         GITHUB_CLIENT_ID: "fixture",
         GITHUB_CLIENT_SECRET: "fixture",
         GOOGLE_CLIENT_ID: "fixture",

@@ -1,11 +1,9 @@
 import type { ComponentOf, DraftDoc } from "@hasaweb/schema";
 import type { DraftController } from "../draft/controller";
-import {
-  addEditorComponent,
-  removeEditorComponent,
-} from "../editor/components";
+import { removeEditorComponent } from "../editor/components";
 import { addProject, removeProject } from "../editor/projects";
 import { addSkill, removeSkill } from "../editor/skills";
+import { addGuideComponent } from "./order";
 
 export type OptionalType = "skills" | "projects";
 
@@ -50,7 +48,7 @@ export function addFirstEntry(
   type: OptionalType,
 ): string | null {
   const existing = findOptional(controller.store.getState().working, type);
-  const componentId = existing?.id ?? addEditorComponent(controller, type);
+  const componentId = existing?.id ?? addGuideComponent(controller, type);
   if (!componentId) return null;
   const id =
     type === "skills"

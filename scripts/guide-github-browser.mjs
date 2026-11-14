@@ -664,10 +664,22 @@ export async function checkGuideGitHub({
         return { status: response.status, body: await response.json() };
       });
       assert.deepEqual(busy, { status: 409, body: { error: "consent_busy" } });
-      // Public activity only still completes the step.
+      // Public activity only still completes the step. The click resolves
+      // on event dispatch, before `choosePublicOnly()`'s request and the
+      // draft update settle, so wait for the switch to actually uncheck
+      // (same tick as the draft write) before Continue rereads it. The
+      // grant's own cleanup stays pending regardless, tested below.
       await panel(page)
         .getByRole("button", { name: "Use public activity only" })
         .click();
+      await page.waitForFunction(
+        () =>
+          document
+            .querySelector('[role="switch"]')
+            ?.getAttribute("aria-checked") === "false",
+        undefined,
+        { timeout: 10000 },
+      );
       await proceed(page);
       await waitStep(page, "review");
       await back(page);

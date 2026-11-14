@@ -1,7 +1,8 @@
 // Builds the static files that the full-page preview shell loads from the web
 // Worker's asset binding: the platform fonts and cat art under their hashed
-// manifest paths (the generated stylesheet links them by those paths) and the
-// preview client bundle. The outputs are git-ignored build products.
+// manifest paths (the generated stylesheet links them by those paths), the
+// full-page preview client bundle and the editor's iframe child bundle. The
+// outputs are git-ignored build products.
 import { copyFile, mkdir, readFile, rm } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { basename, join } from "node:path";
@@ -35,7 +36,11 @@ export async function buildPreviewAssets() {
     );
   }
   await esbuild.build({
-    entryPoints: { app: join(web, "lib/editor/full-preview-entry.ts") },
+    entryPoints: {
+      app: join(web, "lib/editor/full-preview-entry.ts"),
+      // The editor and setup Review iframe child (`/editor/preview`).
+      editor: join(web, "lib/editor/preview-child-entry.ts"),
+    },
     bundle: true,
     platform: "browser",
     format: "esm",

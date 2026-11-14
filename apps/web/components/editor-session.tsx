@@ -31,6 +31,8 @@ export function EditorSession(props: {
   owner: PreviewIdentity;
   previewDocument: string;
   onReady?(recovery: RecoveryCoordinator): void;
+  // The activated `/editor` route supplies sign-out; fixtures omit it.
+  onSignOut?: () => Promise<void>;
 }) {
   return <Session key={JSON.stringify(props.owner)} {...props} />;
 }
@@ -38,6 +40,7 @@ function Session({
   owner,
   previewDocument,
   onReady,
+  onSignOut,
 }: Parameters<typeof EditorSession>[0]) {
   const readyCallback = useRef(onReady);
   readyCallback.current = onReady;
@@ -67,37 +70,21 @@ function Session({
       recovery={recovery}
       owner={scope}
       previewDocument={previewDocument}
+      onSignOut={onSignOut}
     />
   );
 }
-function Workspace({
-  recovery,
-  owner,
-  previewDocument,
-}: {
+type ScopeProps = {
   recovery: RecoveryCoordinator;
   owner: PreviewIdentity;
   previewDocument: string;
-}) {
-  const recoveryState = useStore(recovery.store);
-  return (
-    <Scope
-      key={recoveryState.controller.scopeKey}
-      recovery={recovery}
-      owner={owner}
-      previewDocument={previewDocument}
-    />
-  );
+  onSignOut?: (() => Promise<void>) | undefined;
+};
+function Workspace(props: ScopeProps) {
+  const recoveryState = useStore(props.recovery.store);
+  return <Scope key={recoveryState.controller.scopeKey} {...props} />;
 }
-function Scope({
-  recovery,
-  owner,
-  previewDocument,
-}: {
-  recovery: RecoveryCoordinator;
-  owner: PreviewIdentity;
-  previewDocument: string;
-}) {
+function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
   const recoveryState = useStore(recovery.store);
   const controller = recoveryState.controller;
   const state = useStore(controller.store);
@@ -112,6 +99,21 @@ function Scope({
     target: FieldPath;
   } | null>(null);
   const [publicationKey, setPublicationKey] = useState("");
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
+  async function signOut() {
+    if (!onSignOut || signingOut) return;
+    setSigningOut(true);
+    setSignOutError("");
+    try {
+      await onSignOut();
+    } catch {
+      setSigningOut(false);
+      setSignOutError(
+        "We couldn't sign you out. Check your connection and retry sign-out.",
+      );
+    }
+  }
   const draft = state.working;
   const active: PreviewSelection =
     selection.kind === "component" &&
@@ -164,7 +166,22 @@ function Scope({
         <Brand />
         <span>Your editor</span>
         <span className="editor-private">Private draft</span>
+        {onSignOut && (
+          <button
+            type="button"
+            className="editor-sign-out"
+            onClick={() => void signOut()}
+            disabled={signingOut}
+          >
+            {signingOut ? "Signing out..." : "Sign out"}
+          </button>
+        )}
       </header>
+      {signOutError && (
+        <p className="editor-sign-out-error" role="alert">
+          {signOutError}
+        </p>
+      )}
       <nav className="editor-mobile-view" aria-label="Editor view">
         <button
           type="button"

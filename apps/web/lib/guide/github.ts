@@ -1,10 +1,10 @@
 import type { ComponentOf, DraftDoc } from "@hasaweb/schema";
 import type { DraftController } from "../draft/controller";
-import { addEditorComponent } from "../editor/components";
 import {
   type GraphSetupStatus,
   setGitHubUsername,
 } from "../editor/github-graph";
+import { addGuideComponent } from "./order";
 
 // The optional GitHub screen (Phase 42D). It reuses the editor's graph
 // service and panel; this module only decides what the guide may do with
@@ -29,7 +29,7 @@ export function acceptGraph(
   username: string,
 ): boolean {
   const existing = findGraph(controller.store.getState().working);
-  const id = existing?.id ?? addEditorComponent(controller, "github");
+  const id = existing?.id ?? addGuideComponent(controller, "github");
   return id ? setGitHubUsername(controller, id, username) : false;
 }
 
