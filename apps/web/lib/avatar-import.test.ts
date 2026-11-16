@@ -1,12 +1,10 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import manifest from "./avatar-import-manifest.json";
 
 const root = new URL("../../../", import.meta.url);
-const require = createRequire(new URL("apps/web/package.json", root));
-const sharp: typeof import("sharp") = require("sharp");
 const digest = (bytes: Uint8Array) =>
   createHash("sha256").update(bytes).digest("hex");
 
