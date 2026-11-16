@@ -45,6 +45,8 @@ pnpm e2e --project=editor -g "resume download"   # one journey, against the last
 
 End-to-end suites live in [`e2e/`](e2e/README.md) and run on Playwright Test against the built Workers in workerd. They need Chromium at `/opt/google/chrome/chrome` (or set `AUTH_SPIKE_CHROMIUM`). Each worker gets its own runtime on free ports, so separate worktrees can run suites at the same time.
 
+A pre-commit hook (installed by `pnpm install`) runs Biome on staged files.
+
 CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip CI.
 
 ## Workspace

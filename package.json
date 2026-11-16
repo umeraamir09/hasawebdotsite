@@ -6,6 +6,7 @@
     "node": ">=22.22.1 <23"
   },
   "scripts": {
+    "prepare": "git config core.hooksPath .githooks || true",
     "dev": "pnpm build && pnpm dev:runtime",
     "dev:runtime": "wrangler dev -c apps/web/wrangler.jsonc -c apps/site/wrangler.jsonc -c apps/jobs/wrangler.jsonc --persist-to .wrangler/state --port 8787 --ip 127.0.0.1",
     "dev:web": "pnpm --filter @hasaweb/web dev",
