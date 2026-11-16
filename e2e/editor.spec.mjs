@@ -26,6 +26,12 @@ import { expect, step, test } from "./support/fixtures.mjs";
 const journeys = {
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
+  "setup guide journeys": (editor) =>
+    checkSetupGuide({
+      ...editor.controls,
+      errors: editor.errors,
+      part: "journeys",
+    }),
   "core editor": (editor) => editor.core(),
   "project controls": (editor) => checkProjectControls(editor.controls),
   "skills controls": (editor) => checkSkillsControls(editor.controls),

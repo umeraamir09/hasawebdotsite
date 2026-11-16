@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { checkGuideGitHub } from "./guide-github.mjs";
+import { checkGuideJourney } from "./guide-journey.mjs";
 import { checkGuideReview } from "./guide-review.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
@@ -17,6 +18,7 @@ export async function checkSetupGuide({
   browserOrigin,
   errors,
   github,
+  part,
 }) {
   const browser = context.browser();
   const owners = ["draft-alice", "draft-bob"];
@@ -36,51 +38,57 @@ export async function checkSetupGuide({
   const opened = [];
   // The editor harness's failure hook captures its own page; capture every
   // open guide page here so a failed group shows the guide state too.
+  // `part: "journeys"` runs only the Phase 42F groups, any other value only the
+  // earlier ones, so the two halves run as separate tests.
+  let journeys = false;
   const guarded = (name, work) =>
-    run(name, async () => {
-      try {
-        await work();
-      } catch (error) {
-        let index = 0;
-        for (const page of opened) {
-          if (page.isClosed()) continue;
-          index++;
-          await page
-            .screenshot({
-              path: join(evidence, `guide-failure-${index}.png`),
-              fullPage: true,
-            })
-            .catch(() => {});
-          const text = await page
-            .evaluate(() => {
-              const recovery = window.guideFixture?.recovery?.store.getState();
-              const draft = recovery?.controller.store.getState();
-              return JSON.stringify({
-                text: document.body.innerText.slice(0, 600),
-                recoveryBusy: recovery?.busy,
-                recoveryError: recovery?.error,
-                status: draft?.status,
-                error: draft?.error,
-                suspended: draft?.suspended,
-                batch: draft?.batch && {
-                  mode: draft.batch.mode,
-                  sent: draft.batch.sent?.action,
-                },
-                progress: draft?.progress,
-                confirmed: draft?.confirmed && {
-                  revision: draft.confirmed.revision,
-                  progress: draft.confirmed.progress,
-                  name: draft.confirmed.draft.requestedSubdomain,
-                },
-                inputs: draft && Object.keys(draft.inputs),
-              });
-            })
-            .catch(() => "");
-          console.error(`guide page ${index}:\n${text}`);
-        }
-        throw error;
-      }
-    });
+    (part === "journeys") !== journeys
+      ? undefined
+      : run(name, async () => {
+          try {
+            await work();
+          } catch (error) {
+            let index = 0;
+            for (const page of opened) {
+              if (page.isClosed()) continue;
+              index++;
+              await page
+                .screenshot({
+                  path: join(evidence, `guide-failure-${index}.png`),
+                  fullPage: true,
+                })
+                .catch(() => {});
+              const text = await page
+                .evaluate(() => {
+                  const recovery =
+                    window.guideFixture?.recovery?.store.getState();
+                  const draft = recovery?.controller.store.getState();
+                  return JSON.stringify({
+                    text: document.body.innerText.slice(0, 600),
+                    recoveryBusy: recovery?.busy,
+                    recoveryError: recovery?.error,
+                    status: draft?.status,
+                    error: draft?.error,
+                    suspended: draft?.suspended,
+                    batch: draft?.batch && {
+                      mode: draft.batch.mode,
+                      sent: draft.batch.sent?.action,
+                    },
+                    progress: draft?.progress,
+                    confirmed: draft?.confirmed && {
+                      revision: draft.confirmed.revision,
+                      progress: draft.confirmed.progress,
+                      name: draft.confirmed.draft.requestedSubdomain,
+                    },
+                    inputs: draft && Object.keys(draft.inputs),
+                  });
+                })
+                .catch(() => "");
+              console.error(`guide page ${index}:\n${text}`);
+            }
+            throw error;
+          }
+        });
 
   // A fresh signup: one provisioned private portfolio, setup not finished,
   // no held address and no browser recovery records.
@@ -785,5 +793,26 @@ export async function checkSetupGuide({
     sql,
     evidence,
     browserOrigin,
+  });
+
+  // Phase 42F: callback continuation and the complete new-user journeys.
+  journeys = true;
+  await checkGuideJourney({
+    context,
+    guarded,
+    reset,
+    guidePage,
+    provision,
+    open,
+    waitStep,
+    field,
+    addressStatus,
+    proceed,
+    portfolio,
+    suffix,
+    sql,
+    evidence,
+    browserOrigin,
+    github,
   });
 }

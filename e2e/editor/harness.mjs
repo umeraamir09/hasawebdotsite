@@ -28,6 +28,10 @@ export async function createEditorHarness({
     entryPoints: {
       "editor-fixture": join(root, "apps/web/integration/editor-fixture.tsx"),
       "guide-fixture": join(root, "apps/web/integration/guide-fixture.tsx"),
+      "auth-recovery-page-fixture": join(
+        root,
+        "apps/web/integration/auth-recovery-page-fixture.tsx",
+      ),
       "owner-entry-fixture": join(
         root,
         "apps/web/integration/owner-entry-fixture.tsx",
@@ -148,6 +152,55 @@ export async function createEditorHarness({
         res.end(await readFile(join(directory, `${bundle}.${extension}`)));
         return;
       }
+      // The provider hop of the recovery callback. Only the sign-in start and
+      // the provider's return are fixtures; the callback page, the recovery
+      // records and every owner API request stay the product's.
+      // `fixture-session` models the account the provider signs in (`as`), a
+      // cancellation or a failure.
+      if (
+        url.pathname === "/api/auth/sign-in/social" &&
+        req.method === "POST"
+      ) {
+        const body = [];
+        for await (const chunk of req) body.push(chunk);
+        const { provider, callbackURL, errorCallbackURL } = JSON.parse(
+          Buffer.concat(body).toString(),
+        );
+        const target = new URL(
+          "/o/authorize",
+          provider === "github"
+            ? "https://github.com"
+            : "https://accounts.google.com",
+        );
+        target.search = new URLSearchParams({
+          provider,
+          cb: callbackURL,
+          err: errorCallbackURL,
+        }).toString();
+        res.setHeader("Content-Type", "application/json");
+        res.end(JSON.stringify({ url: target.href }));
+        return;
+      }
+      if (url.pathname === "/__provider/return") {
+        const as = url.searchParams.get("as") ?? "alice";
+        const failed = ["cancel", "fail"].includes(as);
+        if (!failed)
+          res.setHeader(
+            "Set-Cookie",
+            `fixture-session=${as}; Path=/; HttpOnly`,
+          );
+        const next = new URL(
+          url.searchParams.get(failed ? "err" : "cb") ?? "/",
+        );
+        if (failed)
+          next.searchParams.set(
+            "error",
+            as === "cancel" ? "access_denied" : "server_error",
+          );
+        res.writeHead(302, { Location: next.href });
+        res.end();
+        return;
+      }
       if (
         url.pathname.startsWith("/api/") ||
         url.pathname === "/editor/preview"
@@ -183,7 +236,7 @@ export async function createEditorHarness({
         return;
       }
       if (
-        /^\/(?:editor(?:-preview)?|guide|owner-entry)-fixture\.(?:js|css)$/.test(
+        /^\/(?:editor(?:-preview)?|guide|owner-entry|auth-recovery-page)-fixture\.(?:js|css)$/.test(
           url.pathname,
         )
       ) {
@@ -231,9 +284,11 @@ export async function createEditorHarness({
               // keeps the direct guide fixture of 42A–42D.
               ["/auth/entry", "/editor"].includes(url.pathname)
                 ? "owner-entry-fixture"
-                : url.pathname === "/guide"
-                  ? "guide-fixture"
-                  : "editor-fixture",
+                : url.pathname.startsWith("/auth/recovery")
+                  ? "auth-recovery-page-fixture"
+                  : url.pathname === "/guide"
+                    ? "guide-fixture"
+                    : "editor-fixture",
             ),
       );
     } catch (error) {
