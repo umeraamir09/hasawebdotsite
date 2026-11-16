@@ -1,10 +1,8 @@
 # Acceptance criteria
 
-Infrastructure decision, October 27, 2026: the [paid-at-launch policy](deployment-policy.md) replaces Free-only feasibility as a local start gate. Run local feature/recovery checks during implementation; final paid-provider performance, capacity and real deployment checks are required before public launch. The product remains free and its functional/privacy/withdrawal criteria are unchanged.
-
 This document defines how to verify each MVP feature in [product.md](product.md). Section numbers match the product's feature map. Each numbered criterion is a pass/fail requirement, not a claim that the current implementation passes it.
 
-The [initial setup specification](onboarding.md) was confirmed October 16, 2026. Its required first-user setup and optional content steps replace the previous sample-starter journey. Prerequisite storage, provisioning and draft APIs are implemented through Phase 13, with Phase 14 shared autosave/recovery controls verified through an isolated fixture. Full editor/onboarding integration remains pending. The ON checks in section 2 still require the guided UI and integrated journey; passing prerequisite fixtures does not pass a whole ON check. See [current status](implementation-status.md).
+The [initial setup specification](onboarding.md) defines the required first-user setup. ON checks in section 2 need the real guide and integrated journey; a passing component fixture does not pass a whole ON check.
 
 Verify owner behavior with a new account and a returning account. Verify public behavior as a signed-out visitor and, for access boundaries, as another signed-in owner. Use known test content and compare the saved draft and published output against it. Exercise failures with controlled authentication, network, upload, save, and delivery failures. Record the observed result for each criterion.
 
@@ -260,18 +258,18 @@ Source: [Desired outcomes](product.md#desired-outcomes), [User journey](product.
 3. Audit the component picker, editor, account settings, and public visitor flows against the deferred-feature list. There are no additional portfolios/templates, education, billing/subscriptions/checkout/paid restrictions, custom domains, custom decoration uploads, stickers, arbitrary positioning, custom CSS, per-component fonts, or individual palette editing.
 4. There are no automatic GitHub project imports, repository statistics, proficiency ratings, automatic skill extraction, structured resume editing, builder inbox, contact attachments, automatic replies, AI content generation, collaboration, visitor accounts, multilingual editing, version history, visitor analytics, or cookie-based tracking. Explicitly authorized private contribution activity remains included.
 5. Gather owner and visitor feedback about confidence, readability, and understanding of skills and individual contributions. Report the observations separately from functional pass/fail results. The product specifies no acceptance threshold for these qualitative outcomes yet.
-6. Run ON-01 through ON-19 and the complete journey with all selected optional content complete, all optional content skipped, and partial projects/private graph setup retained. Required setup cannot be skipped, every path keeps one private draft, and all collected content can be edited after handoff. No feature or roadmap phase is considered implemented by approval of these planning documents.
+6. Run ON-01 through ON-19 and the complete journey with all selected optional content complete, all optional content skipped, and partial projects/private graph setup retained. Required setup cannot be skipped, every path keeps one private draft, and all collected content can be edited after handoff.
 
 ## Verification prerequisites
 
-The catalog was approved in Phase 11E. Provider/deployment evidence remains a prerequisite. The numeric verification settings are already confirmed in architecture section 13; use those values rather than reopening them.
+Provider and deployment evidence is still needed for launch. The numeric settings are confirmed in [architecture](architecture.md#10-testing); use them rather than reopening them.
 
 | Choice | Required test input or evidence |
 | --- | --- |
-| Theme, font, and decoration catalog | Use the six theme IDs and twelve palettes, three curated fonts, Ginger cat and Hands assets/geometry/playback policy, and draft defaults approved in Phase 11E from the [catalog](appearance-catalog.md). Test every supported choice, reduced motion and independent pause/play in the later production integration. |
+| Theme, font, and decoration catalog | Use the six theme IDs and twelve palettes, three curated fonts, Ginger cat and Hands assets/geometry/playback policy, and draft defaults from the [catalog](appearance-catalog.md). Test every supported choice, reduced motion and independent pause/play. |
 | Provider configuration | Test accounts for GitHub and Google, verified/shared/missing/unverified email cases, and private-contribution authorization. |
 | GitHub refresh and revocation handling | Use the confirmed six-hour on-visit TTL and daily private-activity sweep. Verify external revocation on the next refresh/sweep and explicit withdrawal immediately, without Publish. |
-| Delivery retries and submission limits | Use architecture section 13's confirmed thresholds, UTC budgets and five-attempt, 24-hour retry schedule. Test boundaries, exhaustion and longer provider retry delays within that deadline. |
+| Delivery retries and submission limits | Use the confirmed thresholds in [architecture](architecture.md#contact-form-phases-4345), UTC budgets and five-attempt, 24-hour retry schedule. Test boundaries, exhaustion and longer provider retry delays within that deadline. |
 | Upload limit units | Use 5 MiB = 5,242,880 bytes and 10 MiB = 10,485,760 bytes. Test each limit and limit + 1. |
 | Contrast verification | Use the confirmed WCAG 2.2 AA standard: 4.5:1 for normal text and 3:1 for large text and required control indicators. Verify declared pairs with unit checks and rendered interfaces with axe. |
 | Browser and viewport coverage | Use the last two stable versions of Chrome, Firefox, Safari and Edge, plus iOS Safari and Android Chrome, at 360, 768 and 1280 px. Use automated browser/viewport checks and provider fixtures. Real-device and assistive-technology checks are excluded from the confirmed MVP verification scope. |

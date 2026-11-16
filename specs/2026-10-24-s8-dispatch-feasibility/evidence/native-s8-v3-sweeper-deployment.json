@@ -1,9 +1,0 @@
-{
-  "recordedAt": "2026-10-27T06:11:41.375Z",
-  "revision": "5b796accfac88bf40b2875e606b79c52192a3e16",
-  "worker": "hasaweb-s8-d3c356-control",
-  "version": "cce2c323-1632-4503-bb0a-3f29e442a8a3",
-  "startupMs": 76,
-  "mode": "Native control only; MEASURE_QUOTAS=false. Existing secrets persist. Queue worker remains the separately measured quota deployment.",
-  "fullSource": "hasaweb-s8-d3c356-full-source"
-}

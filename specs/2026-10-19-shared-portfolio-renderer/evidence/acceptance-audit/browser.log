@@ -1,2 +1,0 @@
-$ node scripts/portfolio-renderer-browser.mjs
-Passed 22 renderer browser groups. Evidence at /home/umer/hasawebdotsite/.wrangler/phase16-acceptance-audit/browser

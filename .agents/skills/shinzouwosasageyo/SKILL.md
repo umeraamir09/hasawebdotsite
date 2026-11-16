@@ -1,39 +1,22 @@
 ---
 name: shinzouwosasageyo
-description: "Advance to the next roadmap phase of this project"
-argument-hint: "user will provide the phase number"
+description: "Implement a hasaweb.site roadmap phase end to end: branch, build, test, PR, and check it off"
+argument-hint: "phase number, e.g. 43 or 42F"
 disable-model-invocation: true
 ---
 
 # Shinzou wo sasageyo (Dedicate your heart)
 
-## What This Skill Does
+Implement the requested roadmap phase following [AGENTS.md](../../../AGENTS.md).
 
-Checks prerequisites and advances the project to the next roadmap phase based on the provided phase number.
+1. Read the phase in [docs/roadmap.md](../../../docs/roadmap.md). If a dependency is not checked off on `main`, stop and say which one.
+2. Read only what the phase touches: the linked acceptance criteria, the relevant [architecture](../../../docs/architecture.md) sections and package READMEs, and any [open follow-ups](../../../docs/roadmap.md#open-follow-ups) it should absorb.
+3. Create a worktree and a `<type>/<short-description>` branch from `main`.
+4. Implement the phase with tests: Vitest for logic, a Playwright step in `e2e/` for behavior that crosses Workers or the browser.
+5. Update any doc whose contract you changed. Keep docs current-only.
+6. Run `pnpm verify` and fix what fails.
+7. If the completion criteria pass, check the phase box in the roadmap with a one-line note. If something is left, say so in the note or add an open follow-up instead.
+8. Commit in focused Conventional Commits, push, and open a PR whose description says what changed, how it was verified and what is left.
+9. Report the branch, PR link, verification results and anything left open.
 
-## When to Use
-
-- When user wants to implement the next phase
-
-## Procedure
-
-1. Check the phase's Dependency Chain, Prerequisites, other related blocking issues like bugs, owner approvals and others in this repository workflow
-2. Gather or inspect the required context.
-3. Create a fresh git worktree and branch with an appropriate name.
-4. Implement the phase's requirements and commit the changes.
-5. Verify that the implementation meets the phase's requirements, acceptance criteria and passes all tests. 
-5. Report the outcome and any follow-up actions. Include what was implemented, what was tested, and any issues encountered.
-
-## Guidelines
-
-- Do not commit or push changes until owner approval.
-- Validate unknown values once at the boundary that owns them. Pass typed values inward instead of repeating `typeof value === "object"` and property-existence checks.
-- Do not defensively revalidate values already guaranteed by a schema, constructor, or internal type.
-- Do not extract single-use helpers preemptively. Inline the logic at the call site unless the helper is reused, hides a genuinely complex boundary, or has a clear independent name that improves the caller.
-- Avoid `try`/`catch` where possible
-
-## Resources
-
-Reference bundled resources with relative paths, for example:
-
-- [Roadmap.md](../../../docs/roadmap.md)
+Ask the owner only for real product decisions (scope, new user-visible behavior the docs don't cover, money or external accounts). Merging the PR is the approval.

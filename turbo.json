@@ -1,25 +1,5 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalPassThroughEnv": [
-    "AUTH_SPIKE_CHROMIUM",
-    "OWNER_RUNTIME_SAMPLES",
-    "OWNER_RUNTIME_WARMUPS",
-    "OWNER_RUNTIME_CASES",
-    "OWNER_RUNTIME_EVIDENCE",
-    "BOUNDED_SAVE_EVIDENCE",
-    "DRAFT_API_EVIDENCE",
-    "GITHUB_PLATFORM_EVIDENCE",
-    "RENDERER_EVIDENCE",
-    "AUTH_EVIDENCE",
-    "RUNTIME_EVIDENCE",
-    "XDG_CACHE_HOME",
-    "S8_EVIDENCE",
-    "S8_BATCH",
-    "S8_CASES",
-    "S8_MAX_ASSETS",
-    "S8_PROFILE",
-    "BROWSER_GROUP_LIMIT_MS"
-  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],

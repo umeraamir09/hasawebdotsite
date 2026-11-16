@@ -1,0 +1,3 @@
+#!/bin/sh
+# Lint and format-check staged files (about a second). Skip with --no-verify.
+exec pnpm exec biome check --staged --no-errors-on-unmatched

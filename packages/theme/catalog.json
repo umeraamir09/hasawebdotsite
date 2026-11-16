@@ -7,7 +7,7 @@
     "phase": "11E",
     "scope": ["themes", "fonts", "decorations", "defaults", "playback-policy"],
     "generatorExceptionAccepted": true,
-    "evidence": "specs/2026-10-17-appearance-catalog/results.md#owner-approval"
+    "evidence": "docs/appearance-catalog.md"
   },
   "template": {
     "id": "portfolio-v1",

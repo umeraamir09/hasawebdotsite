@@ -61,23 +61,22 @@ export async function openEditorPreview(root: HTMLElement) {
         !root.isConnected
       )
         return;
-      if (!owner?.portfolio) {
-        fail("Sign in to open your private preview.");
-        return;
-      }
-      const current = {
-        ownerId: owner.user.id,
-        portfolioId: owner.portfolio.id,
-      };
+      // Once a preview has shown one owner, any other signed-in account is a
+      // session change, including one without a portfolio.
       if (
         identity &&
-        (current.ownerId !== identity.ownerId ||
-          current.portfolioId !== identity.portfolioId)
+        owner &&
+        (owner.user.id !== identity.ownerId ||
+          owner.portfolio?.id !== identity.portfolioId)
       ) {
         fail("Your session changed. Reopen the editor to preview.");
         return;
       }
-      identity = current;
+      if (!owner?.portfolio) {
+        fail("Sign in to open your private preview.");
+        return;
+      }
+      identity = { ownerId: owner.user.id, portfolioId: owner.portfolio.id };
       if (!mount || stopMount) return;
       const preview = mountPreview(
         root,

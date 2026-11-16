@@ -79,6 +79,17 @@ export async function openFullPreview(
     try {
       const owner = await readOwner(request.signal);
       if (closed || request.signal.aborted) return;
+      // Once a preview has shown one owner, any other signed-in account is a
+      // session change, including one without a portfolio.
+      if (
+        identity &&
+        owner &&
+        (owner.user.id !== identity.ownerId ||
+          owner.portfolio?.id !== identity.portfolioId)
+      ) {
+        stop("Your session changed. Reopen the preview from the editor.");
+        return;
+      }
       if (!owner?.portfolio) {
         stop("Sign in to open your private preview.");
         return;
@@ -87,14 +98,6 @@ export async function openFullPreview(
         ownerId: owner.user.id,
         portfolioId: owner.portfolio.id,
       };
-      if (
-        identity &&
-        (identity.ownerId !== current.ownerId ||
-          identity.portfolioId !== current.portfolioId)
-      ) {
-        stop("Your session changed. Reopen the preview from the editor.");
-        return;
-      }
       identity = current;
       const saved = await createDraftTransport(
         current.ownerId,
