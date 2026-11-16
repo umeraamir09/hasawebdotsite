@@ -13,6 +13,7 @@ export const projects = [
   "editor",
   "autosave",
   "api",
+  "uploads",
   "auth",
   "renderer",
   "publication",
@@ -46,7 +47,10 @@ const shared = [
 ];
 
 const areas = [
-  [/^apps\/web\//, ["editor", "autosave", "api", "auth", "renderer"]],
+  [
+    /^apps\/web\//,
+    ["editor", "autosave", "api", "uploads", "auth", "renderer"],
+  ],
   [/^apps\/jobs\//, ["editor", "autosave", "api", "auth", "publication"]],
   [/^apps\/site\//, ["publication", "runtime", "editor"]],
   [/^packages\/auth\//, ["auth", "api"]],
@@ -58,14 +62,16 @@ const areas = [
   [/^packages\/email\//, ["api"]],
   [/^e2e\/editor\//, ["editor"]],
   [/^e2e\/autosave\//, ["autosave"]],
-  [/^e2e\/(draft-api|persistence|uploads)\//, ["api"]],
+  [/^e2e\/(draft-api|persistence)\//, ["api"]],
+  [/^e2e\/uploads\//, ["uploads"]],
   [/^e2e\/auth\//, ["auth"]],
   [/^e2e\/renderer\//, ["renderer"]],
   [/^e2e\/publication\//, ["publication"]],
   [/^e2e\/runtime\//, ["runtime"]],
   [/^e2e\/editor\.spec\.mjs$/, ["editor"]],
   [/^e2e\/autosave\.spec\.mjs$/, ["autosave"]],
-  [/^e2e\/(draft-api|persistence|uploads)\.spec\.mjs$/, ["api"]],
+  [/^e2e\/(draft-api|persistence)\.spec\.mjs$/, ["api"]],
+  [/^e2e\/uploads\.spec\.mjs$/, ["uploads"]],
   [/^e2e\/(auth|renderer|publication|runtime)\.spec\.mjs$/, null],
   [/^scripts\/(seed\.mjs|fixtures\/)/, ["runtime", "api"]],
 ];

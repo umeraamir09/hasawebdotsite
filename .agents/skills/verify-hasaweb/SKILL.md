@@ -14,7 +14,7 @@ pnpm verify          # check + build + e2e projects affected by the diff against
 pnpm verify --all    # everything
 ```
 
-`pnpm verify --dry-run` prints which projects it would run. Projects (see `e2e/README.md`): `editor`, `autosave`, `api`, `auth`, `renderer`, `publication`, `runtime`.
+`pnpm verify --dry-run` prints which projects it would run. Projects (see `e2e/README.md`): `editor`, `autosave`, `api`, `uploads`, `auth`, `renderer`, `publication`, `runtime`.
 
 ## Debug one journey
 

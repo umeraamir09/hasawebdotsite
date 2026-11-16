@@ -15,7 +15,8 @@ export default defineConfig({
   // Each worker runs its own workerd runtime and Chromium, which needs about
   // four cores to stay reliable. Override with E2E_WORKERS.
   workers: Number(
-    process.env.E2E_WORKERS ?? Math.max(1, Math.floor(availableParallelism() / 4)),
+    process.env.E2E_WORKERS ??
+      Math.max(1, Math.floor(availableParallelism() / 4)),
   ),
   // A pass on retry is reported as flaky, so flakes stay visible.
   retries: 1,
@@ -26,7 +27,8 @@ export default defineConfig({
   projects: [
     { name: "editor", testMatch: "editor.spec.mjs" },
     { name: "autosave", testMatch: "autosave.spec.mjs" },
-    { name: "api", testMatch: /\/(draft-api|persistence|uploads)\.spec\.mjs$/ },
+    { name: "api", testMatch: /\/(draft-api|persistence)\.spec\.mjs$/ },
+    { name: "uploads", testMatch: "uploads.spec.mjs" },
     { name: "auth", testMatch: "auth.spec.mjs" },
     { name: "renderer", testMatch: "renderer.spec.mjs" },
     { name: "publication", testMatch: "publication.spec.mjs" },

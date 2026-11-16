@@ -75,14 +75,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: editor 1/2
-            args: --project=editor --shard=1/2
-          - name: editor 2/2
-            args: --project=editor --shard=2/2
+          - name: editor 1/3
+            args: --project=editor --shard=1/3
+          - name: editor 2/3
+            args: --project=editor --shard=2/3
+          - name: editor 3/3
+            args: --project=editor --shard=3/3
           - name: autosave and api
             args: --project=autosave --project=api
-          - name: auth, renderer, publication, runtime
-            args: --project=auth --project=renderer --project=publication --project=runtime
+          - name: uploads and auth
+            args: --project=uploads --project=auth
+          - name: renderer and runtime
+            args: --project=renderer --project=runtime
+          - name: publication
+            args: --project=publication
     name: e2e (${{ matrix.name }})
     env:
       # Hosted runners have two cores: one runtime and browser at a time.

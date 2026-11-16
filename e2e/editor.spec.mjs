@@ -22,28 +22,29 @@ import { expect, step, test } from "./support/fixtures.mjs";
 // Each journey boots its own editor state, so journeys run in any order and
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
+// Order balances CI's three editor shards (7/7/6 tests, about 2.3 min each).
 const journeys = {
-  "core editor": (editor) => editor.core(),
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
-  "publication controls": (editor) => checkPublicationControls(editor.controls),
-  "component controls": (editor) => checkComponentControls(editor.controls),
-  "crop controls": (editor) => checkCropControls(editor.controls),
-  "profile controls": (editor) => checkProfileControls(editor.controls),
-  "social links": (editor) => checkSocialLinks(editor.controls),
+  "core editor": (editor) => editor.core(),
   "project controls": (editor) => checkProjectControls(editor.controls),
   "skills controls": (editor) => checkSkillsControls(editor.controls),
   "text controls": (editor) => checkTextControls(editor.controls),
   "work experience": (editor) => checkWorkExperienceControls(editor.controls),
+  "component controls": (editor) => checkComponentControls(editor.controls),
+  "GitHub graph": (editor) => checkGitHubGraphJourney(editor.controls),
+  "profile controls": (editor) => checkProfileControls(editor.controls),
+  "draft preview": (editor) => checkDraftPreviewJourney(editor.controls),
+  "social links": (editor) => checkSocialLinks(editor.controls),
+  "crop controls": (editor) => checkCropControls(editor.controls),
+  "avatar extras": (editor) => checkAvatarExtrasJourney(editor.controls),
+  "social links publish": (editor) => checkSocialLinksJourney(editor.controls),
+  "publication controls": (editor) => checkPublicationControls(editor.controls),
   "publish journey": (editor) => checkPublishJourney(editor.controls),
   "case studies": (editor) => checkCaseStudyJourney(editor.controls),
   "resume download": (editor) => checkResumeJourney(editor.controls),
-  "GitHub graph": (editor) => checkGitHubGraphJourney(editor.controls),
-  "social links publish": (editor) => checkSocialLinksJourney(editor.controls),
   appearance: (editor) => checkAppearanceJourney(editor.controls),
-  "avatar extras": (editor) => checkAvatarExtrasJourney(editor.controls),
   "face reveal": (editor) => checkFaceRevealJourney(editor.controls),
-  "draft preview": (editor) => checkDraftPreviewJourney(editor.controls),
 };
 
 for (const [title, journey] of Object.entries(journeys))
