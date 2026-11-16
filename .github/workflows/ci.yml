@@ -81,14 +81,14 @@ jobs:
             args: --project=editor --shard=2/3
           - name: editor 3/3
             args: --project=editor --shard=3/3
-          - name: autosave and api
-            args: --project=autosave --project=api
+          - name: autosave
+            args: --project=autosave
           - name: uploads and auth
             args: --project=uploads --project=auth
           - name: renderer and runtime
             args: --project=renderer --project=runtime
-          - name: publication
-            args: --project=publication
+          - name: publication and api
+            args: --project=publication --project=api
     name: e2e (${{ matrix.name }})
     env:
       # Hosted runners have two cores: one runtime and browser at a time.
