@@ -54,7 +54,7 @@ The feature map below defines the agreed MVP capabilities and recovery behavior.
 
 ## MVP features map
 
-This map describes the agreed first release. An owner is the signed-in person building a portfolio. A visitor is anyone viewing a published portfolio. Each account has one portfolio, one template, and one public subdomain. The release is free to portfolio owners and has no product billing or subscriptions. Operator hosting uses Workers Paid only at launch under the [October 27 deployment policy](deployment-policy.md); local implementation requires no upgrade.
+This map describes the agreed first release. An owner is the signed-in person building a portfolio. A visitor is anyone viewing a published portfolio. Each account has one portfolio, one template, and one public subdomain. The release is free to portfolio owners and has no product billing or subscriptions. Operator hosting moves to Workers Paid at launch ([architecture](architecture.md#2-platform-budget-and-release-gates)); local development needs no upgrade.
 
 The portfolio has a fixed profile section at the top and optional components below it. Project case studies and the resume have additional public pages. Owners edit a private draft; visitors see the last successfully published version. Content, appearance, uploads, component order, project pages, and resume changes become public through an explicit Publish action.
 
