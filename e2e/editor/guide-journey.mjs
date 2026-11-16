@@ -1,0 +1,1045 @@
+import assert from "node:assert/strict";
+import { join } from "node:path";
+
+// Phase 42F: the Phase 15 callback continuation and the complete new-user
+// journey through the production guide, Review, handoff, editor and Publish.
+// Only the provider hop is a fixture here: the harness answers the sign-in
+// start with a provider URL, and the provider's return sets the fixture
+// session (an account, a cancellation or a failure). The `/auth/recovery`
+// page, the recovery records, the guide, the editor and every owner API
+// request are the product's.
+export async function checkGuideJourney({
+  context,
+  guarded,
+  reset,
+  guidePage,
+  provision,
+  open,
+  waitStep,
+  field,
+  addressStatus,
+  proceed,
+  portfolio,
+  suffix,
+  sql,
+  evidence,
+  browserOrigin,
+  github,
+}) {
+  const stored = async (user = "draft-alice") =>
+    JSON.parse(
+      (await sql("SELECT draft FROM portfolio WHERE user_id=?", [user]))[0]
+        .draft,
+    );
+  const until = async (check, message) => {
+    for (let attempt = 0; attempt < 100; attempt++) {
+      if (await check()) return;
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+    assert.fail(message);
+  };
+  const cookie = (value) =>
+    context.addCookies([
+      { name: "fixture-session", value, url: browserOrigin },
+    ]);
+  const png = (page, color) =>
+    page.evaluate(async (color) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 900;
+      canvas.height = 600;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = color;
+      ctx.fillRect(0, 0, 900, 600);
+      const blob = await new Promise((resolve) =>
+        canvas.toBlob(resolve, "image/png"),
+      );
+      return Array.from(new Uint8Array(await blob.arrayBuffer()));
+    }, color);
+  const claims = (user = "draft-alice") =>
+    sql(
+      "SELECT c.name,c.state FROM subdomain_claim c JOIN portfolio p ON p.id=c.portfolio_id WHERE p.user_id=? ORDER BY c.name",
+      [user],
+    );
+  const recentDay = new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10);
+  const click = (page, name) =>
+    page.getByRole("button", { name, exact: true }).click();
+
+  // The provider hop: which account the provider signs in, per sign-in.
+  const provider = { as: "alice", visits: [] };
+  async function routeProviders() {
+    for (const pattern of [
+      "https://github.com/**",
+      "https://accounts.google.com/**",
+    ])
+      await context.route(pattern, (route) => {
+        const url = new URL(route.request().url());
+        provider.visits.push(url.hostname);
+        const query = new URLSearchParams({
+          cb: url.searchParams.get("cb"),
+          err: url.searchParams.get("err"),
+          as: provider.as,
+        });
+        return route.fulfill({
+          status: 302,
+          headers: { Location: `${browserOrigin}/__provider/return?${query}` },
+        });
+      });
+  }
+  async function unrouteProviders() {
+    for (const pattern of [
+      "https://github.com/**",
+      "https://accounts.google.com/**",
+    ])
+      await context.unroute(pattern);
+  }
+  const continuation = (page) =>
+    page.evaluate(() => sessionStorage.getItem("hasaweb-draft-auth-v1"));
+  const signInButton = (page, name) =>
+    page
+      .getByRole("region", { name: "Sign in to recover" })
+      .getByRole("button", { name: `Sign in with ${name}`, exact: true });
+  const recoveryReady = (page) =>
+    page.getByRole("button", { name: "Continue preserved edits" });
+
+  // Address and the Profile name, so that the next field is a real edit.
+  async function toProfile(page, name) {
+    await open(page);
+    await field(page).fill(name);
+    await field(page).press("Tab");
+    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await proceed(page);
+    await waitStep(page, "profile");
+    await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+  }
+
+  for (const [signup, label] of [
+    ["github", "GitHub"],
+    ["google", "Google"],
+  ])
+    await guarded(
+      `setup guide expired session recovers through the ${label} callback and resumes the saved step`,
+      async () => {
+        await reset();
+        await routeProviders();
+        try {
+          const page = await guidePage();
+          await provision(page, "alice");
+          const name = `recover-${suffix()}`;
+          await toProfile(page, name);
+
+          // The session ends while the owner types a valid name.
+          await cookie("expired");
+          await page.getByLabel("Name", { exact: true }).fill(`Via ${label}`);
+          await signInButton(page, label).waitFor({ timeout: 30000 });
+          assert.equal((await stored()).profile?.name ?? "", "");
+          provider.as = "alice";
+          await signInButton(page, label).click();
+
+          // The fixed callback offers the preserved input; nothing is saved
+          // until the owner explicitly continues it.
+          await page.waitForURL(`${browserOrigin}/auth/recovery`, {
+            timeout: 30000,
+          });
+          await recoveryReady(page).waitFor({ timeout: 30000 });
+          assert.equal((await stored()).profile?.name ?? "", "");
+          const saved = JSON.parse(await continuation(page));
+          assert.deepEqual(Object.keys(saved).sort(), [
+            "context",
+            "flow",
+            "ownerId",
+            "portfolioId",
+            "recordId",
+            "version",
+          ]);
+          assert.equal(saved.context, "setup");
+          assert.equal(saved.ownerId, "draft-alice");
+          assert.deepEqual(provider.visits, [
+            signup === "github" ? "github.com" : "accounts.google.com",
+          ]);
+          await page.screenshot({
+            path: join(evidence, `guide-recovery-${signup}.png`),
+            fullPage: true,
+          });
+
+          // A callback reload keeps the offer and saves nothing.
+          await page.reload();
+          await recoveryReady(page).waitFor({ timeout: 30000 });
+          assert.equal((await stored()).profile?.name ?? "", "");
+          await recoveryReady(page).click();
+          await until(
+            async () => (await stored()).profile?.name === `Via ${label}`,
+            "continued preserved edits were not saved",
+          );
+
+          // The account link resumes the saved step with the saved value and
+          // the single held address.
+          await page.getByRole("link", { name: "Open your account" }).click();
+          await page.waitForURL(`${browserOrigin}/auth/entry`);
+          await page.waitForFunction(() => window.guideFixture?.ready);
+          await waitStep(page, "profile");
+          assert.equal(
+            await page.getByLabel("Name", { exact: true }).inputValue(),
+            `Via ${label}`,
+          );
+          assert.equal((await portfolio()).requested, name);
+          assert.equal(
+            (
+              await sql(
+                "SELECT count(*) n FROM subdomain_claim c JOIN portfolio p ON p.id=c.portfolio_id WHERE p.user_id='draft-alice' AND c.state='held'",
+              )
+            )[0].n,
+            1,
+          );
+          // The continuation names the durable replacement record, never
+          // content, and the guide shows its saved state.
+          assert.equal(
+            JSON.parse(await continuation(page)).ownerId,
+            "draft-alice",
+          );
+          await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+          provider.visits.length = 0;
+        } finally {
+          await unrouteProviders();
+          await cookie("alice");
+        }
+      },
+    );
+
+  await guarded(
+    "setup guide recovery: wrong account, cancelled and failed sign-in keep the preserved input",
+    async () => {
+      await reset();
+      await routeProviders();
+      const other = await context.browser().newContext();
+      try {
+        const bob = await guidePage(other);
+        await provision(bob, "bob");
+        const page = await guidePage();
+        await provision(page, "alice");
+        await toProfile(page, `wrong-${suffix()}`);
+        await cookie("expired");
+        await page.getByLabel("Name", { exact: true }).fill("Kept name");
+        await signInButton(page, "GitHub").waitFor({ timeout: 30000 });
+
+        // Cancelled and failed provider returns keep the tab continuation
+        // and offer sign-in again, never a saved or recovered state.
+        provider.as = "cancel";
+        await signInButton(page, "GitHub").click();
+        await page.waitForURL(`${browserOrigin}/auth/recovery/error**`, {
+          timeout: 30000,
+        });
+        await page
+          .getByRole("alert")
+          .filter({ hasText: "cancelled" })
+          .waitFor();
+        const interrupted = await continuation(page);
+        assert.ok(interrupted);
+        provider.as = "fail";
+        await page.getByRole("button", { name: "Sign in with GitHub" }).click();
+        await page
+          .getByRole("alert")
+          .filter({ hasText: "Sign-in didn't finish" })
+          .waitFor({ timeout: 30000 });
+        assert.equal(await continuation(page), interrupted);
+        assert.equal((await stored()).profile?.name ?? "", "");
+
+        // Another account signs in: a clear mismatch, original untouched.
+        provider.as = "bob";
+        const before = interrupted;
+        await page.getByRole("button", { name: "Sign in with GitHub" }).click();
+        await page
+          .getByText(/different account or portfolio/)
+          .waitFor({ timeout: 30000 });
+        assert.equal(await continuation(page), before);
+        assert.equal((await stored()).profile?.name ?? "", "");
+        assert.equal((await stored("draft-bob")).profile?.name ?? "", "");
+        assert.equal(
+          await page
+            .getByRole("button", { name: "Continue preserved edits" })
+            .count(),
+          0,
+        );
+        await page.reload();
+        await page
+          .getByText(/different account or portfolio/)
+          .waitFor({ timeout: 30000 });
+
+        // The original account then recovers the input.
+        provider.as = "alice";
+        await page.getByRole("button", { name: "Sign in with GitHub" }).click();
+        await recoveryReady(page).waitFor({ timeout: 30000 });
+        await recoveryReady(page).click();
+        await until(
+          async () => (await stored()).profile?.name === "Kept name",
+          "the original account did not recover its input",
+        );
+        assert.equal((await stored("draft-bob")).profile?.name ?? "", "");
+      } finally {
+        await other.close();
+        await unrouteProviders();
+        await cookie("alice");
+      }
+    },
+  );
+
+  // ---- The complete journeys -------------------------------------------
+
+  const reviewFrame = async (page) => {
+    await page.waitForFunction(
+      () =>
+        document.querySelector("[data-preview-state]")?.dataset.previewState ===
+        "displayed",
+      undefined,
+      { timeout: 45000 },
+    );
+    const frame = page.frames().find((candidate) => {
+      try {
+        return new URL(candidate.url()).pathname === "/editor/preview";
+      } catch {
+        return false;
+      }
+    });
+    assert.ok(frame, "the production /editor/preview document is mounted");
+    return frame;
+  };
+  const sectionTypes = (frame) =>
+    frame.evaluate(() =>
+      [...document.querySelectorAll("[data-component-id]")].map(
+        (element) => element.closest("[data-component]")?.dataset.component,
+      ),
+    );
+  const pngFile = async (page, color) => ({
+    name: "a.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(await png(page, color)),
+  });
+  async function upload(page, purpose, file) {
+    await page
+      .getByLabel(new RegExp(`^(Upload|Replace) ${purpose}$`), { exact: true })
+      .setInputFiles(file);
+    await page.getByRole("dialog", { name: `Adjust ${purpose}` }).waitFor();
+    await click(page, "Apply crop");
+    await page
+      .getByRole("region", {
+        name: `${purpose === "avatar" ? "Avatar" : "Banner"} image`,
+        exact: true,
+      })
+      .getByText("Upload complete. Your draft image is ready.")
+      .waitFor();
+  }
+  async function enterAddress(page, name) {
+    await waitStep(page, "address");
+    await field(page).fill(name);
+    await field(page).press("Tab");
+    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await proceed(page);
+    await waitStep(page, "profile");
+  }
+  // A signed-up owner whose provider account carries a name and a photo.
+  async function signedUp(signup) {
+    await reset();
+    const page = await guidePage();
+    await provision(page, "alice");
+    await sql("DELETE FROM account WHERE id='journey-account'");
+    await sql(
+      "INSERT INTO account(id,account_id,provider_id,user_id,created_at,updated_at) VALUES('journey-account',?,?,'draft-alice',?,?)",
+      [
+        signup === "github" ? "7399" : "google-7342",
+        signup,
+        Date.now(),
+        Date.now(),
+      ],
+    );
+    await sql("UPDATE user SET name=?,image=? WHERE id='draft-alice'", [
+      `${signup === "github" ? "GitHub" : "Google"} Owner`,
+      signup === "github"
+        ? "https://avatars.githubusercontent.com/fixture/valid"
+        : "https://lh3.googleusercontent.com/fixture/valid",
+    ]);
+    await page.goto(`${browserOrigin}/auth/entry`);
+    await page.waitForFunction(() => window.guideFixture?.ready);
+    return page;
+  }
+  const published = async (name) => {
+    const response = await context.request.get(
+      `${browserOrigin}/_public?target=${encodeURIComponent(`https://${name}.hasaweb.site/`)}`,
+    );
+    assert.equal(response.status(), 200);
+    return response.text();
+  };
+  async function publish(page) {
+    const checklist = page.getByRole("region", {
+      name: "Publication checklist",
+    });
+    await checklist
+      .getByRole("button", { name: "Publish", exact: true })
+      .click();
+    await checklist
+      .getByText("Publication complete.", { exact: true })
+      .waitFor({ timeout: 100000 });
+  }
+  const text = (html) =>
+    html
+      .replace(/<script[\s\S]*?<\/script>/g, " ")
+      .replace(/<style[\s\S]*?<\/style>/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ");
+
+  await guarded(
+    "new-user journey, GitHub signup, everything completed: saved values equal Review, editor and published output",
+    async () => {
+      const page = await signedUp("github");
+      const name = `journey-${suffix()}`;
+      await enterAddress(page, name);
+
+      // A change to a reserved name fails and keeps the previous hold; an
+      // available replacement swaps it atomically.
+      await sql(
+        "INSERT OR IGNORE INTO reserved_subdomain(name) VALUES('journey-taken')",
+      );
+      await click(page, "Back");
+      await waitStep(page, "address");
+      await field(page).fill("journey-taken");
+      await page.keyboard.press("Enter");
+      await addressStatus(page)
+        .filter({ hasText: /reserved|unavailable/i })
+        .waitFor({ timeout: 30000 });
+      assert.deepEqual(await claims(), [{ name, state: "held" }]);
+      const replacement = `journey-${suffix()}`;
+      await field(page).fill(replacement);
+      await page.keyboard.press("Enter");
+      await waitStep(page, "profile");
+      assert.deepEqual(await claims(), [{ name: replacement, state: "held" }]);
+
+      // Profile: the provider name and photo are used only on request; a
+      // failed photo import keeps the form and a retry reaches the crop.
+      await page.getByLabel("Name", { exact: true }).waitFor();
+      assert.equal(
+        await page.getByLabel("Name", { exact: true }).inputValue(),
+        "",
+      );
+      await click(page, "Check my account suggestions");
+      assert.equal(
+        await page.getByLabel("Name", { exact: true }).inputValue(),
+        "",
+      );
+      await click(page, "Use this name");
+      assert.equal(
+        await page.getByLabel("Name", { exact: true }).inputValue(),
+        "GitHub Owner",
+      );
+      await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
+        "https://avatars.githubusercontent.com/fixture/missing",
+      ]);
+      await click(page, "Use my account photo");
+      await page
+        .getByRole("region", { name: "Avatar image", exact: true })
+        .getByRole("alert")
+        .waitFor({ timeout: 30000 });
+      assert.equal((await stored()).profile?.avatar, undefined);
+      await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
+        "https://avatars.githubusercontent.com/fixture/valid",
+      ]);
+      await click(page, "Use my account photo");
+      await page.getByRole("dialog", { name: "Adjust avatar" }).waitFor();
+      await click(page, "Apply crop");
+      await page
+        .getByRole("region", { name: "Avatar image", exact: true })
+        .getByText("Upload complete. Your draft image is ready.")
+        .waitFor();
+      await page
+        .getByLabel("Bio", { exact: true })
+        .fill("I build careful things.");
+      await upload(page, "banner", await pngFile(page, "#2448e8"));
+      await proceed(page);
+
+      // Links: one website link; no account email is added by itself.
+      await waitStep(page, "links");
+      await click(page, "Add link");
+      await page.getByLabel("Link label").fill("My site");
+      await page.getByLabel("Destination URL").fill("https://example.com/me");
+      await proceed(page);
+      await waitStep(page, "skills");
+      assert.equal(
+        JSON.stringify(await stored()).includes("alice@draft"),
+        false,
+      );
+
+      // Skills and Projects, entered in order.
+      for (const [index, skill] of ["TypeScript", "Rust"].entries()) {
+        await click(page, "Add skill");
+        await page.getByLabel("Skill name").nth(index).fill(skill);
+      }
+      await proceed(page);
+      await waitStep(page, "projects");
+      for (const [index, project] of [
+        ["Alpha", "The first project."],
+        ["Beta", "The second project."],
+      ].entries()) {
+        await click(page, "Add project");
+        await page.getByLabel("Project title").nth(index).fill(project[0]);
+        await page
+          .getByLabel("Summary", { exact: true })
+          .nth(index)
+          .fill(project[1]);
+      }
+      await page
+        .getByLabel("Code URL (optional)")
+        .first()
+        .fill("https://example.com/alpha");
+      await proceed(page);
+
+      // GitHub: explicit Add graph with the detected username, public only.
+      github.addUser({
+        login: "Journey-Hub",
+        databaseId: 7399,
+        counts: { [recentDay]: 2 },
+      });
+      await waitStep(page, "github");
+      await click(page, "Add graph");
+      await page.getByRole("button", { name: "Use @Journey-Hub" }).click();
+      await page.getByRole("button", { name: "Fetch activity" }).click();
+      await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
+      await proceed(page);
+      await waitStep(page, "review");
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+
+      // Review shows the saved draft in screen order with no issues.
+      const saved = await stored();
+      assert.deepEqual(
+        saved.components.map((item) => item.type),
+        ["skills", "projects", "github"],
+      );
+      let frame = await reviewFrame(page);
+      for (const value of [
+        "GitHub Owner",
+        "My site",
+        "TypeScript",
+        "Rust",
+        "Alpha",
+        "Beta",
+      ])
+        await frame.getByText(value, { exact: true }).first().waitFor();
+      assert.deepEqual(await sectionTypes(frame), [
+        "skills",
+        "projects",
+        "github",
+      ]);
+      await page
+        .locator('[data-review-status="checked"]')
+        .waitFor({ timeout: 30000 });
+      assert.equal(await page.locator("[data-review-issue]").count(), 0);
+      assert.equal(await page.locator("[data-review-local-input]").count(), 0);
+      await page.screenshot({
+        path: join(evidence, "journey-github-review.png"),
+        fullPage: true,
+      });
+
+      // Open editor: the editor holds exactly the saved draft and shows it.
+      await click(page, "Open editor");
+      await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
+      await page.waitForFunction(() => window.editorFixture?.ready);
+      assert.deepEqual(await stored(), saved);
+      assert.deepEqual(
+        await page.evaluate(
+          () =>
+            window.editorFixture.recovery.store
+              .getState()
+              .controller.store.getState().working,
+        ),
+        saved,
+      );
+      frame = await reviewFrame(page);
+      for (const value of [
+        "GitHub Owner",
+        "My site",
+        "TypeScript",
+        "Rust",
+        "Alpha",
+        "Beta",
+      ])
+        await frame.getByText(value, { exact: true }).first().waitFor();
+      assert.deepEqual(await sectionTypes(frame), [
+        "skills",
+        "projects",
+        "github",
+      ]);
+      assert.equal((await portfolio()).entered > 0, true);
+      assert.equal((await portfolio()).subdomain, null);
+
+      // Publish: the published page carries the same saved values.
+      await publish(page);
+      const html = await published(replacement);
+      const visible = text(html);
+      for (const value of [
+        "GitHub Owner",
+        "I build careful things.",
+        "My site",
+        "TypeScript",
+        "Rust",
+        "Alpha",
+        "The first project.",
+        "Beta",
+        "The second project.",
+      ])
+        assert.ok(visible.includes(value), `published page lacks ${value}`);
+      assert.match(html, /href="https:\/\/example\.com\/me"/);
+      assert.match(html, /href="https:\/\/example\.com\/alpha"/);
+      const order = [...html.matchAll(/data-component="([a-z-]+)"/g)].map(
+        (m) => m[1],
+      );
+      assert.deepEqual(
+        order.filter((type) => ["skills", "projects", "github"].includes(type)),
+        ["skills", "projects", "github"],
+      );
+      assert.equal(html.includes("alice@draft"), false);
+      assert.deepEqual(await claims(), [
+        { name: replacement, state: "claimed" },
+      ]);
+      assert.deepEqual(await stored(), saved);
+    },
+  );
+
+  // Address, Profile (name suggestion plus two uploaded images) and a website
+  // link, ending on Skills.
+  async function required(page, name, link = "https://example.com/me") {
+    await enterAddress(page, name);
+    await page.getByLabel("Name", { exact: true }).fill("Journey Owner");
+    await page.getByLabel("Bio", { exact: true }).fill("A short bio.");
+    await upload(page, "avatar", await pngFile(page, "#3a7d2c"));
+    await upload(page, "banner", await pngFile(page, "#2448e8"));
+    await proceed(page);
+    await waitStep(page, "links");
+    await click(page, "Add link");
+    await page.getByLabel("Link label").fill("My site");
+    await page.getByLabel("Destination URL").fill(link);
+    await proceed(page);
+    await waitStep(page, "skills");
+  }
+  const issuesFor = (page) =>
+    page.evaluate(async () => {
+      const { ownerId, portfolioId } = window.editorFixture.scope;
+      const state = window.editorFixture.recovery.store
+        .getState()
+        .controller.store.getState();
+      const response = await fetch("/api/owner/publication/check", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Expected-Owner-Id": ownerId,
+        },
+        body: JSON.stringify({
+          portfolioId,
+          revision: state.confirmed.revision,
+        }),
+      });
+      return (await response.json()).issues;
+    });
+
+  await guarded(
+    "new-user journey, Google signup, every optional step skipped: only the profile and the accepted email link",
+    async () => {
+      const page = await signedUp("google");
+      const name = `skipped-${suffix()}`;
+      await enterAddress(page, name);
+      await click(page, "Check my account suggestions");
+      await click(page, "Use this name");
+      await click(page, "Use my account photo");
+      await page.getByRole("dialog", { name: "Adjust avatar" }).waitFor();
+      await click(page, "Apply crop");
+      await page
+        .getByRole("region", { name: "Avatar image", exact: true })
+        .getByText("Upload complete. Your draft image is ready.")
+        .waitFor();
+      await page.getByLabel("Bio", { exact: true }).fill("Skipping the rest.");
+      await upload(page, "banner", await pngFile(page, "#2448e8"));
+      await proceed(page);
+      await waitStep(page, "links");
+
+      // The account email is public only after a deliberate acceptance.
+      await click(page, "Suggest account email");
+      await page.getByText(/public profile link/).waitFor();
+      assert.equal(
+        JSON.stringify(await stored()).includes("alice@draft"),
+        false,
+      );
+      await click(page, "Dismiss suggestion");
+      assert.equal(
+        JSON.stringify(await stored()).includes("alice@draft"),
+        false,
+      );
+      await click(page, "Suggest account email");
+      await click(page, "Use email as public link");
+      await proceed(page);
+      await waitStep(page, "skills");
+
+      await click(page, "Skip remaining steps");
+      await waitStep(page, "review");
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+      const saved = await stored();
+      assert.deepEqual(saved.components, []);
+      assert.equal(saved.links.length, 1);
+      assert.equal(saved.links[0].value, "alice@draft.example.test");
+      assert.equal(saved.profile.name, "Google Owner");
+      // No graph, and no GitHub sign-in link, was inferred.
+      assert.equal(
+        (
+          await sql(
+            "SELECT count(*) n FROM github_connection WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+          )
+        )[0].n,
+        0,
+      );
+      let frame = await reviewFrame(page);
+      await frame.getByText("Google Owner", { exact: true }).first().waitFor();
+      assert.deepEqual(await sectionTypes(frame), []);
+      await page
+        .locator('[data-review-status="checked"]')
+        .waitFor({ timeout: 30000 });
+      assert.equal(await page.locator("[data-review-issue]").count(), 0);
+
+      await click(page, "Open editor");
+      await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
+      await page.waitForFunction(() => window.editorFixture?.ready);
+      assert.deepEqual(await stored(), saved);
+      frame = await reviewFrame(page);
+      await frame.getByText("Google Owner", { exact: true }).first().waitFor();
+      assert.deepEqual(await sectionTypes(frame), []);
+      await publish(page);
+      const html = await published(name);
+      assert.ok(text(html).includes("Google Owner"));
+      assert.ok(text(html).includes("Skipping the rest."));
+      assert.match(html, /href="mailto:alice@draft\.example\.test"/);
+      assert.deepEqual(
+        [...html.matchAll(/data-component="([a-z-]+)"/g)]
+          .map((match) => match[1])
+          .filter((type) => ["skills", "projects", "github"].includes(type)),
+        [],
+      );
+    },
+  );
+
+  await guarded(
+    "new-user journey with a partial project and an unfinished private graph: honest statuses, Publish blocked until repaired in the editor",
+    async () => {
+      github.addUser({
+        login: "Journey-Private",
+        counts: { [recentDay]: 2 },
+        privateCounts: { [recentDay]: 4 },
+      });
+      github.state.callbackOrigin = browserOrigin;
+      github.state.failure = null;
+      github.state.activityFailure = null;
+      github.state.revokeFailure = null;
+      github.state.consent = { as: null, cancel: false, hold: false };
+      const page = await signedUp("google");
+      await required(page, `partial-${suffix()}`);
+      await click(page, "Skip this step");
+      await waitStep(page, "projects");
+      await click(page, "Add project");
+      await page.getByLabel("Project title").fill("Half done");
+      await click(page, "Skip this step");
+      await waitStep(page, "github");
+      await click(page, "Add graph");
+      const panel = page.getByRole("region", {
+        name: "GitHub activity controls",
+        exact: true,
+      });
+      await panel.getByLabel("GitHub username").fill("Journey-Private");
+      await panel.getByRole("button", { name: "Fetch activity" }).click();
+      await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
+      await panel
+        .getByRole("switch", { name: /Include private activity/ })
+        .check();
+      await click(page, "Finish later in the editor");
+      await waitStep(page, "review");
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+
+      // Review reports both unfinished pieces and claims no readiness.
+      await page
+        .locator('[data-review-status="checked"]')
+        .waitFor({ timeout: 30000 });
+      const status = page.locator("[data-review-status]");
+      await status
+        .locator("[data-review-issue]")
+        .filter({ hasText: /projects summary/i })
+        .waitFor();
+      assert.ok((await status.locator("[data-review-issue]").count()) >= 2);
+      assert.equal(
+        await page.getByText(/ready to publish|publish-ready/i).count(),
+        0,
+      );
+      const saved = await stored();
+      assert.deepEqual(
+        saved.components.map((item) => item.type),
+        ["projects", "github"],
+      );
+      assert.equal(saved.components[1].data.includePrivate, true);
+
+      await click(page, "Open editor");
+      await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
+      await page.waitForFunction(() => window.editorFixture?.ready);
+      await page.waitForFunction(
+        () =>
+          !window.editorFixture.recovery.store
+            .getState()
+            .controller.store.getState().batch,
+      );
+      // Onboarding is not rerun; Publish is blocked on the saved issues.
+      const before = await issuesFor(page);
+      assert.ok(before.length >= 2, JSON.stringify(before));
+      const checklist = page.getByRole("region", {
+        name: "Publication checklist",
+      });
+      await checklist
+        .getByRole("button", { name: "Publish", exact: true })
+        .click();
+      assert.equal(
+        (
+          await sql(
+            "SELECT count(*) n FROM publication_operation WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+          )
+        )[0].n,
+        0,
+      );
+      await page.screenshot({
+        path: join(evidence, "journey-partial-blocked.png"),
+        fullPage: true,
+      });
+
+      // Repair in the editor: complete the project, use public activity only.
+      await page.getByRole("button", { name: "Projects", exact: true }).click();
+      await page
+        .getByLabel("Summary", { exact: true })
+        .fill("Finished in the editor.");
+      await page
+        .getByRole("button", { name: "GitHub activity", exact: true })
+        .click();
+      await page
+        .getByRole("region", { name: "GitHub activity controls", exact: true })
+        .getByRole("button", { name: "Use public activity only" })
+        .click();
+      await until(async () => {
+        const draft = await stored();
+        return (
+          draft.components[0].data.entries[0].summary ===
+            "Finished in the editor." &&
+          draft.components[1].data.includePrivate === false
+        );
+      }, "the editor repairs were not saved");
+      await page.waitForFunction(
+        () =>
+          !window.editorFixture.recovery.store
+            .getState()
+            .controller.store.getState().batch,
+      );
+      assert.deepEqual(await issuesFor(page), []);
+      assert.equal((await portfolio()).step, "review");
+    },
+  );
+
+  await guarded(
+    "editor after handoff: expired session during preserved setup input recovers through the callback without applying or losing it",
+    async () => {
+      const page = await signedUp("google");
+      await routeProviders();
+      try {
+        await required(page, `editor-${suffix()}`);
+        await click(page, "Add skill");
+        await page.getByLabel("Skill name").fill("TypeScript");
+        await proceed(page);
+        await waitStep(page, "projects");
+        await click(page, "Add project");
+        await page.getByLabel("Project title").fill("Half done");
+        await page.getByLabel("Code URL (optional)").fill("htt");
+        await click(page, "Skip remaining steps");
+        await waitStep(page, "review");
+        await until(
+          async () => (await portfolio()).step === "review",
+          "Review was not saved",
+        );
+        await click(page, "Open editor");
+        await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        const saved = await stored();
+        const preserved = page.getByRole("region", { name: "Preserved input" });
+        await preserved.waitFor({ timeout: 30000 });
+
+        // The session ends before the owner reviews the preserved input.
+        await cookie("expired");
+        await preserved
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        await signInButton(page, "Google").waitFor({ timeout: 30000 });
+        provider.as = "alice";
+        await signInButton(page, "Google").click();
+        await page.waitForURL(`${browserOrigin}/auth/recovery`, {
+          timeout: 30000,
+        });
+        await page.screenshot({
+          path: join(evidence, "journey-editor-callback.png"),
+          fullPage: true,
+        });
+        // Nothing is applied by signing in; the saved draft is unchanged and
+        // the preserved input stays offered on the callback.
+        assert.deepEqual(await stored(), saved);
+        assert.equal(
+          JSON.parse(await continuation(page)).ownerId,
+          "draft-alice",
+        );
+        await page.getByRole("link", { name: "Open your account" }).waitFor({
+          timeout: 30000,
+        });
+        await page.reload();
+        await page.getByRole("link", { name: "Open your account" }).waitFor({
+          timeout: 30000,
+        });
+        assert.deepEqual(await stored(), saved);
+
+        // The editor opens with the same preserved input and the entered
+        // milestone; onboarding is not reopened.
+        await page.getByRole("link", { name: "Open your account" }).click();
+        await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        await page
+          .getByRole("region", { name: "Preserved input" })
+          .waitFor({ timeout: 30000 });
+        assert.deepEqual(await stored(), saved);
+        assert.equal((await portfolio()).entered > 0, true);
+
+        // Selected review still applies only what the owner selects.
+        await page
+          .getByRole("region", { name: "Preserved input" })
+          .getByRole("button", {
+            name: "Keep my edits for review",
+            exact: true,
+          })
+          .click();
+        const review = page.getByRole("region", {
+          name: "Review your preserved edits",
+        });
+        await review.getByText("Unfinished input, kept separately").click();
+        await review.getByText(/codeUrl.*htt/).waitFor();
+        await page.waitForFunction(
+          () => !window.editorFixture.recovery.store.getState().busy,
+        );
+        await review
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await page.waitForFunction(
+          () =>
+            !window.editorFixture.recovery.store.getState().review &&
+            !window.editorFixture.recovery.store.getState().busy,
+        );
+        assert.deepEqual(await stored(), saved);
+      } finally {
+        await unrouteProviders();
+        await cookie("alice");
+      }
+    },
+  );
+
+  await guarded(
+    "setup guide changed base: expiry during selected review keeps the selection through sign-in and saves against the newer draft",
+    async () => {
+      await reset();
+      await routeProviders();
+      try {
+        const first = await guidePage();
+        await provision(first, "alice");
+        const address = `base-${suffix()}`;
+        await open(first);
+        await enterAddress(first, address);
+        await first.getByLabel("Name", { exact: true }).fill("Journey Owner");
+        await first.getByLabel("Bio", { exact: true }).fill("A short bio.");
+        await upload(first, "avatar", await pngFile(first, "#3a7d2c"));
+        await upload(first, "banner", await pngFile(first, "#2448e8"));
+        await proceed(first);
+        await waitStep(first, "links");
+        await click(first, "Add link");
+        await first.getByLabel("Link label").fill("Original");
+        await first.getByLabel("Destination URL").fill("https://example.com/a");
+        await first.locator('.guide-save[data-save-status="saved"]').waitFor();
+        const linkLabel = async () => (await stored()).links[0]?.label;
+        await until(
+          async () => (await linkLabel()) === "Original",
+          "link not saved",
+        );
+        const stale = await guidePage();
+        await open(stale, "links");
+        await stale.getByLabel("Link label").waitFor();
+
+        // Unfinished input in the stale tab blocks its base refresh, so its
+        // valid label edit meets the changed base.
+        await stale.getByLabel("Destination URL").fill("htt");
+        await first.getByLabel("Link label").fill("Newer label");
+        await until(
+          async () => (await linkLabel()) === "Newer label",
+          "newer label not saved",
+        );
+        await stale.getByLabel("Link label").fill("Stale label");
+        const resolve = stale.getByRole("region", {
+          name: "Resolve saved version",
+        });
+        await resolve.waitFor({ timeout: 30000 });
+        await resolve
+          .getByRole("button", { name: "Keep my edits for review" })
+          .click();
+        const review = stale.getByRole("region", {
+          name: "Review your preserved edits",
+        });
+        await review.waitFor();
+        await stale.waitForFunction(
+          () => !window.guideFixture.recovery.store.getState().busy,
+        );
+        await review.getByRole("checkbox").first().click();
+        await review
+          .locator("input[type=checkbox]:checked")
+          .first()
+          .waitFor({ timeout: 30000 });
+
+        // The session ends while the selection is open.
+        await cookie("expired");
+        await stale
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await signInButton(stale, "GitHub").waitFor({ timeout: 30000 });
+        assert.equal(await linkLabel(), "Newer label");
+        provider.as = "alice";
+        await signInButton(stale, "GitHub").click();
+        await stale.waitForURL(`${browserOrigin}/auth/recovery`, {
+          timeout: 30000,
+        });
+        await stale.getByRole("button", { name: "Reopen review" }).waitFor({
+          timeout: 30000,
+        });
+        await stale.screenshot({
+          path: join(evidence, "journey-review-callback.png"),
+          fullPage: true,
+        });
+        assert.equal(await linkLabel(), "Newer label");
+        await stale.getByRole("button", { name: "Reopen review" }).click();
+        await stale
+          .locator("input[type=checkbox]:checked")
+          .first()
+          .waitFor({ timeout: 30000 });
+        await stale
+          .getByRole("button", { name: "Apply selected changes" })
+          .click();
+        await until(
+          async () => (await linkLabel()) === "Stale label",
+          "the reviewed selection was not saved",
+        );
+        // The reservation is untouched by the review.
+        assert.deepEqual(await claims(), [{ name: address, state: "held" }]);
+      } finally {
+        await unrouteProviders();
+        await cookie("alice");
+      }
+    },
+  );
+}

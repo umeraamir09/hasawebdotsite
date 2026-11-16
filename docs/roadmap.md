@@ -21,23 +21,17 @@ Every phase below is merged to `main`. Their records are in the `archive/specs-2
 | Content and pages | 27 component picker and ordering · 28 project cards · 29 rich text sections · 30 case studies · 31 skills and categories · 32 work experience · 33 social links component · 34 resume download and `/resume` |
 | Appearance and preview | 35 preset appearance · 36 custom color generator · 37 decorations and Face Reveal setup · 38 Face Reveal interaction and withdrawal · 39 full-page draft preview |
 | GitHub | 40 public graph setup · 41 private activity, consent and withdrawal · 42 independent refresh |
-| Initial setup guide | 42A guide shell and Address · 42B Profile and Links · 42C Skills and Projects · 42D GitHub onboarding · 42E Review, handoff and gated activation |
+| Initial setup guide | 42A guide shell and Address · 42B Profile and Links · 42C Skills and Projects · 42D GitHub onboarding · 42E Review, handoff and gated activation · 42F recovery and new-user journey verification |
 
 ## Open follow-ups
 
 Known work left by completed phases. Fold each into the phase that touches it, or do it on its own.
 
 - **Custom color delivery (36).** The generator exists; editor controls, immediate preview and CSP-safe token delivery do not, and the renderer ignores `customColor`. Needed before 53.
-- **Owner-entry activation (42E).** `OWNER_ENTRY_ACTIVATION` stays closed until contact delivery (43–45) replaces the contact placeholder and 42F passes. Opening it is part of 52.
+- **Owner-entry activation (42E).** `OWNER_ENTRY_ACTIVATION` stays closed until contact delivery (43–45) replaces the contact placeholder. Opening it is part of 52.
 - **Boundary reviews** the owner asked for and that have not run: authorization/privacy for 20 and 23, withdrawal for 38, access and headers for 39. Do them before 52.
 
 ## Remaining phases
-
-### Phase 42F. Verify onboarding recovery and the full new-user journey
-
-- Dependencies: 42E and the publication/GitHub paths through 42.
-- Run ON-01 through ON-19 through the real guide and editor: both signup providers; completed, skipped and partial optional content; two tabs and devices; another owner; invalid local input; failures; crop/import retry; consent return and removal; address collisions and replacements; permanent handoff. Cover recovery-callback continuation: wrong account, cancelled/failed consent, clean or not-yet-loaded checkpoints, reload, changed-base discard journals and post-handoff selected recovery. Compare saved values across Review, editor and published output.
-- [ ] Complete when these automated browser, viewport and provider-fixture checks pass. Phase 53 still runs the full cross-feature review; Phase 54 the target-user timing.
 
 ### Phase 43. Add email adapters and recipient verification
 
@@ -84,7 +78,7 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 ### Phase 50. Complete discovery and the example portfolio
 
-- Dependencies: 16–17, 35. Integrate before completion: 25, 38–39, 42F, 45–46 and every capability the page presents.
+- Dependencies: 16–17, 35. Integrate before completion: 25, 38–39, 45–46 and every capability the page presents.
 - Entry page with examples, the free one-portfolio offer, an explanation of public subdomains, and Start building. Explain required setup and optional steps (no direct editor bypass) and that choosing an address reserves it without creating a public site. Publish the internal example through the real pipeline.
 - [ ] Complete when visitors can inspect the example and appearance options, understand the offer and required setup, sign in, and reach the full first-user flow.
 
@@ -110,7 +104,7 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 ### Phase 54. Validate the journey and release the MVP
 
-- Dependencies: 11E, 50, 52–53, 42F.
+- Dependencies: 11E, 50, 52–53.
 - Target users with ready content run discovery through required setup (with reservation), skipped optional steps, Review, editor, first Publish and a later republish. Gather feedback on optional/partial paths; fix and repeat affected checks.
 - [ ] Complete when the under-15-minute profile-only publish target and the full acceptance review pass, and production smoke checks pass through real hosts and consent returns after the paid upgrade.
 
