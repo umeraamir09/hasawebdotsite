@@ -1,9 +1,0 @@
-{
-  "date": "2026-10-25",
-  "account": "b6f9a87e6702c76c45a8d61744826e0f",
-  "ownerConfirmation": "Workers Free",
-  "source": "Owner reply to the plan question in this chat",
-  "providerUsageModel": "standard",
-  "queueRetentionSeconds": 86400,
-  "limitation": "Saved credential cannot read subscription billing metadata. This is owner confirmation, not a successful subscription API response."
-}

@@ -70,13 +70,7 @@ describe("approved appearance catalog", () => {
 
   it("preserves the reference-derived Figma palettes without token drift", () => {
     const snapshot = JSON.parse(
-      readFileSync(
-        new URL(
-          "../../../specs/2026-10-17-appearance-catalog/figma-palettes.json",
-          import.meta.url,
-        ),
-        "utf8",
-      ),
+      readFileSync(new URL("./figma-palettes.json", import.meta.url), "utf8"),
     ) as {
       themes: {
         id: string;
