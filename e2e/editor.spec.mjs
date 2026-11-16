@@ -23,12 +23,10 @@ import { expect, step, test } from "./support/fixtures.mjs";
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
 // Order balances CI's three editor shards (7/7/6 tests, about 2.3 min each).
-// Core editor runs first in its worker, as it did before the migration; see
-// the flaky bfcache identity group when it follows the setup guide.
 const journeys = {
-  "core editor": (editor) => editor.core(),
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
+  "core editor": (editor) => editor.core(),
   "project controls": (editor) => checkProjectControls(editor.controls),
   "skills controls": (editor) => checkSkillsControls(editor.controls),
   "text controls": (editor) => checkTextControls(editor.controls),

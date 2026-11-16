@@ -328,6 +328,10 @@ export async function createEditorHarness({
         const draft = recovery?.controller.store.getState();
         return {
           preview: status && { ...status.dataset },
+          previewNotice: document
+            .querySelector("iframe")
+            ?.contentDocument?.getElementById("preview-root")
+            ?.textContent.slice(0, 300),
           recoveryBusy: recovery?.busy,
           recoveryError: recovery?.error,
           suspended: draft?.suspended,
@@ -1301,33 +1305,73 @@ export async function createEditorHarness({
         );
       },
     );
+    // The other owner's state is set here, not inherited from earlier
+    // journeys (the setup guide deletes bob's portfolio). A signed-in owner
+    // with or without a portfolio must both read as a session change.
+    async function otherOwner(withPortfolio) {
+      if (withPortfolio) {
+        const response = await authority(
+          "/api/owner/portfolio",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          },
+          "bob",
+        );
+        assert.equal(response.status, 200);
+        return "bob";
+      }
+      const owner = await (await authority("/api/owner", {}, "fresh")).json();
+      assert.equal(owner.portfolio, null, "fresh owner has no portfolio");
+      return "fresh";
+    }
+    // Waits until the preview child replaces its content with a notice, then
+    // returns it, so a wrong notice fails here instead of waiting forever.
+    async function childNotice() {
+      const child = frame();
+      await child.waitForFunction(
+        () => {
+          const root = document.getElementById("preview-root");
+          return root && !root.querySelector("main") && root.textContent.trim();
+        },
+        undefined,
+        { timeout: 15000 },
+      );
+      return (await child.locator("#preview-root").textContent()).trim();
+    }
     await run(
       "a cached child rechecks identity before restoring its mount",
       async () => {
-        await boot();
-        await frame().evaluate(() =>
-          window.dispatchEvent(
-            new PageTransitionEvent("pagehide", { persisted: true }),
-          ),
-        );
-        assert.equal(await frame().locator("h1").count(), 0);
-        await context.addCookies([
-          { name: "fixture-session", value: "bob", url: browserOrigin },
-        ]);
-        await frame().evaluate(() =>
-          window.dispatchEvent(
-            new PageTransitionEvent("pageshow", { persisted: true }),
-          ),
-        );
-        await frame().waitForFunction(() =>
-          document.body.textContent.includes("session changed"),
-        );
-        assert.equal(await frame().locator("h1").count(), 0);
+        for (const withPortfolio of [true, false]) {
+          const session = await otherOwner(withPortfolio);
+          await boot();
+          await frame().evaluate(() =>
+            window.dispatchEvent(
+              new PageTransitionEvent("pagehide", { persisted: true }),
+            ),
+          );
+          assert.equal(await frame().locator("h1").count(), 0);
+          await context.addCookies([
+            { name: "fixture-session", value: session, url: browserOrigin },
+          ]);
+          await frame().evaluate(() =>
+            window.dispatchEvent(
+              new PageTransitionEvent("pageshow", { persisted: true }),
+            ),
+          );
+          assert.equal(
+            await childNotice(),
+            "Your session changed. Reopen the editor to preview.",
+          );
+          assert.equal(await frame().locator("h1").count(), 0);
+        }
       },
     );
     await run(
       "changed owner cannot receive the previous owner model or private configuration",
       async () => {
+        const session = await otherOwner(true);
         await boot();
         const html = await frame().content();
         assert.doesNotMatch(
@@ -1335,11 +1379,12 @@ export async function createEditorHarness({
           /recipient-1|avatar-1|banner-1|resume-pdf|includePrivate|sharing-image/,
         );
         await context.addCookies([
-          { name: "fixture-session", value: "bob", url: browserOrigin },
+          { name: "fixture-session", value: session, url: browserOrigin },
         ]);
         await frame().evaluate(() => window.dispatchEvent(new Event("focus")));
-        await frame().waitForFunction(() =>
-          document.body.textContent.includes("session changed"),
+        assert.equal(
+          await childNotice(),
+          "Your session changed. Reopen the editor to preview.",
         );
         assert.equal(await frame().locator("h1").count(), 0);
         await page.waitForFunction(
