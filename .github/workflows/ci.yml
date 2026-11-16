@@ -1,8 +1,10 @@
 name: CI
 on:
   pull_request:
+    paths-ignore: ["**/*.md", "docs/**", ".agents/**"]
   push:
     branches: [main]
+    paths-ignore: ["**/*.md", "docs/**", ".agents/**"]
 permissions:
   contents: read
 concurrency:
@@ -11,8 +13,9 @@ concurrency:
   group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 env:
-  NEXT_TELEMETRY_DISABLED: '1'
-  WRANGLER_SEND_METRICS: 'false'
+  NEXT_TELEMETRY_DISABLED: "1"
+  WRANGLER_SEND_METRICS: "false"
+  TURBO_TELEMETRY_DISABLED: "1"
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,6 +28,11 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-check-${{ github.sha }}
+          restore-keys: turbo-check-
       - run: pnpm check
 
   build:
@@ -38,8 +46,16 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Turbo replays unchanged package builds; Next reuses its compiler cache.
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .turbo/cache
+            apps/web/.next/cache
+          key: turbo-build-${{ github.sha }}
+          restore-keys: turbo-build-
       - run: pnpm build
-      # Suites run the built workers. Share them instead of rebuilding per job.
+      # E2E jobs run these built Workers instead of rebuilding.
       - uses: actions/upload-artifact@v4
         with:
           name: builds
@@ -51,36 +67,26 @@ jobs:
             apps/site/dist
             apps/jobs/dist
 
-  suite:
+  e2e:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: editor 1/3
-            run: pnpm test:editor --browser-shard=1/3
-          - name: editor 2/3
-            run: pnpm test:editor --browser-shard=2/3
-          - name: editor 3/3
-            run: pnpm test:editor --browser-shard=3/3
-          - name: autosave
-            run: pnpm test:autosave
-          - name: uploads
-            run: pnpm test:uploads
-          - name: draft api and persistence
-            run: |
-              pnpm test:draft-api
-              pnpm test:persistence
-          - name: renderer, auth and runtime
-            run: |
-              pnpm test:renderer
-              pnpm test:auth:browser
-              pnpm test:runtime
-              pnpm test:runtime:smoke
-              pnpm spike:routing
-    name: suite (${{ matrix.name }})
+          - name: editor 1/2
+            args: --project=editor --shard=1/2
+          - name: editor 2/2
+            args: --project=editor --shard=2/2
+          - name: autosave and api
+            args: --project=autosave --project=api
+          - name: auth, renderer, publication, runtime
+            args: --project=auth --project=renderer --project=publication --project=runtime
+    name: e2e (${{ matrix.name }})
+    env:
+      # Hosted runners have two cores: one runtime and browser at a time.
+      E2E_WORKERS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -93,29 +99,14 @@ jobs:
         with:
           name: builds
           path: apps
-      - run: ${{ matrix.run }}
-        shell: bash -eo pipefail {0}
-      # Harnesses write unique evidence directories under .wrangler/evidence,
-      # including per-group failure screenshots, DOM and editor state.
+      - run: pnpm exec playwright test ${{ matrix.args }}
+      # Failure screenshots, DOM, JSON reports and the HTML report.
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failure-evidence-${{ strategy.job-index }}
+          name: e2e-report-${{ strategy.job-index }}
           retention-days: 7
-          include-hidden-files: true
           if-no-files-found: ignore
-          path: .wrangler/evidence
-
-  # Required status check. It passes only when every job above passed.
-  foundation:
-    if: always()
-    needs: [check, build, suite]
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Require all CI jobs
-        env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' > /dev/null
+          path: |
+            test-results
+            playwright-report
