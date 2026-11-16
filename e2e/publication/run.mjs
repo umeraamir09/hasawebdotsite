@@ -7,11 +7,11 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { buildPublicationPlatform } from "./build-publication-platform.mjs";
-import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
-import { s8Profiler } from "./lib/s8-profiler.mjs";
+import { buildPublicationPlatform } from "../../scripts/build-publication-platform.mjs";
+import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
+import { freePort } from "../support/ports.mjs";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const require = createRequire(import.meta.url),
   wrangler = join(
     dirname(require.resolve("wrangler/package.json")),
@@ -39,10 +39,10 @@ const runtimeKey = remoteState?.runtimeKey ?? randomBytes(32).toString("hex"),
   secret = remoteState?.secret ?? randomBytes(32).toString("hex"),
   token = randomBytes(24).toString("hex");
 const cookie = `__Host-hasaweb.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", secret).update(token).digest("base64")}`)}`;
-const origin = remoteState?.origin ?? "http://127.0.0.1:8857";
+const port = await freePort();
+const origin = remoteState?.origin ?? `http://127.0.0.1:${port}`;
 let child,
-  logs = "",
-  profiler;
+  logs = "";
 const checks = [],
   runs = [],
   sweeps = [],
@@ -240,9 +240,9 @@ try {
         "--ip",
         "127.0.0.1",
         "--port",
-        "8857",
+        String(port),
         "--inspector-port",
-        process.env.S8_PROFILE ? "9237" : "0",
+        "0",
       ],
       {
         cwd: root,
@@ -278,8 +278,6 @@ try {
       await delay(500);
     }
   }
-  if (process.env.S8_PROFILE && !remote)
-    profiler = await s8Profiler(9237, evidence);
   const now = Date.now();
   await sql("DELETE FROM publication_transfer");
   await sql("DELETE FROM publication_candidate");
@@ -371,7 +369,6 @@ try {
       await sql("SELECT draft_rev FROM portfolio WHERE id='s8-portfolio'")
     ).results[0].draft_rev;
     const startedAt = new Date().toISOString();
-    await profiler?.start();
     const created = await api("/create", { revision }),
       id = created.value.id;
     const run = {
@@ -418,7 +415,6 @@ try {
       if (status === "ready") break;
       if (n === 19999) throw new Error("Dispatcher failed to terminate");
     }
-    await profiler?.stop(`${kind}-${runs.length}`);
     const output = await request(`/output?id=${id}`),
       html = await output.text(),
       want = expected(draft, id);
@@ -1719,7 +1715,6 @@ try {
   await writeFile(join(evidence, "failure.txt"), String(error.stack));
   throw error;
 } finally {
-  profiler?.close();
   child?.kill("SIGTERM");
   await writeFile(join(evidence, "runtime.log"), logs);
   await writeFile(

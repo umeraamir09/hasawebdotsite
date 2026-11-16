@@ -4,10 +4,10 @@ import {
   DEFAULT_APPEARANCE,
   PortfolioAvatar,
   projectPortfolio,
-} from "../../packages/components/src/index";
-import * as policy from "../../packages/render/src/index";
-import { renderFixtureDocument } from "../../packages/render/src/offline";
-import { fixtureDraft, fixtureNames } from "./portfolio-renderer-data";
+} from "../../../packages/components/src/index";
+import * as policy from "../../../packages/render/src/index";
+import { renderFixtureDocument } from "../../../packages/render/src/offline";
+import { fixtureDraft, fixtureNames } from "./data";
 
 export function createFixtures(
   origin: string,

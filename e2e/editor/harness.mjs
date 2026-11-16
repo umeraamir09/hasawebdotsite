@@ -4,30 +4,14 @@ import { createServer } from "node:http";
 import { extname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
-import { checkAppearanceJourney } from "./appearance-browser.mjs";
-import { checkAvatarExtrasJourney } from "./avatar-extras-browser.mjs";
-import { checkCaseStudyJourney } from "./case-study-browser.mjs";
-import { checkComponentControls } from "./component-controls-browser.mjs";
-import { checkCropControls } from "./crop-controls-browser.mjs";
-import { checkDraftPreviewJourney } from "./draft-preview-browser.mjs";
-import { checkFaceRevealJourney } from "./face-reveal-browser.mjs";
-import { checkGitHubGraphJourney } from "./github-graph-browser.mjs";
-import { createGroupRunner } from "./lib/browser-groups.mjs";
-import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
-import { checkProfileControls } from "./profile-controls-browser.mjs";
-import { checkProjectControls } from "./project-controls-browser.mjs";
-import { checkPublicationControls } from "./publication-browser.mjs";
-import { checkPublishJourney } from "./publish-journey-browser.mjs";
-import { checkResumeJourney } from "./resume-browser.mjs";
-import { checkSetupGuide } from "./setup-guide-browser.mjs";
-import { checkSkillsControls } from "./skills-controls-browser.mjs";
-import { checkSocialLinks } from "./social-links-browser.mjs";
-import { checkSocialLinksJourney } from "./social-links-publish-browser.mjs";
+import { createGroupRunner } from "../support/groups.mjs";
+import { freePort } from "../support/ports.mjs";
 
-import { checkTextControls } from "./text-controls-browser.mjs";
-import { checkWorkExperienceControls } from "./work-experience-browser.mjs";
-
-export async function checkEditor({
+// Serves the editor, guide and owner-entry fixtures through a local proxy in
+// front of the owner runtime and opens one Chromium context. `core()` runs the
+// editor's own groups; journeys in this folder receive `controls`.
+export async function createEditorHarness({
+  workDirectory,
   root,
   origin,
   cookie,
@@ -38,7 +22,7 @@ export async function checkEditor({
   secrets,
   github,
 }) {
-  const directory = join(root, ".wrangler/editor-browser");
+  const directory = join(workDirectory, "editor-bundle");
   await mkdir(directory, { recursive: true });
   await esbuild.build({
     entryPoints: {
@@ -76,7 +60,8 @@ export async function checkEditor({
   });
   const { serveEditorPreview } = (await import(pathToFileURL(adapterFile)))
     .default;
-  const browserOrigin = "http://127.0.0.1:8826";
+  const browserPort = await freePort();
+  const browserOrigin = `http://127.0.0.1:${browserPort}`;
   const requests = [],
     errors = [],
     checks = [];
@@ -257,7 +242,9 @@ export async function checkEditor({
       res.end("Unavailable");
     }
   });
-  await new Promise((resolve) => server.listen(8826, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(browserPort, "127.0.0.1", resolve),
+  );
   const browser = await chromium.launch({
     executablePath:
       process.env.AUTH_SPIKE_CHROMIUM ?? "/opt/google/chrome/chrome",
@@ -327,7 +314,7 @@ export async function checkEditor({
       await page.waitForTimeout(50);
     }
   }
-  const run = createGroupRunner({
+  const runnerOptions = {
     label: "editor",
     evidence,
     checks,
@@ -354,7 +341,11 @@ export async function checkEditor({
           })),
         };
       }),
-  });
+  };
+  let run = createGroupRunner(runnerOptions);
+  const useStep = (step) => {
+    run = createGroupRunner({ ...runnerOptions, step });
+  };
   async function seed(kind = "ordinary") {
     return page.evaluate(async (kind) => {
       const f = window.editorFixture,
@@ -414,7 +405,7 @@ export async function checkEditor({
       transaction.oncomplete = () => db.close();
     });
   }
-  try {
+  async function core() {
     await run(
       "address local typing, explicit reservation, reload, keyboard and mobile",
       async () => {
@@ -1377,65 +1368,30 @@ export async function checkEditor({
         );
       },
     );
-    const controls = {
-      getPage: () => page,
-      context,
-      boot,
-      displayed,
-      frame,
-      sql,
-      run,
-      evidence,
-      browserOrigin,
-      authority,
-      cookie,
-      root,
-      github,
-    };
-    await checkSetupGuide({ ...controls, errors });
-    await checkPublicationControls(controls);
-    await checkComponentControls(controls);
-    await checkCropControls(controls);
-    await checkProfileControls(controls);
-    await checkSocialLinks(controls);
-    await checkProjectControls(controls);
-    await checkSkillsControls(controls);
-    await checkTextControls(controls);
-    await checkWorkExperienceControls(controls);
-    await checkPublishJourney(controls);
-    await checkCaseStudyJourney(controls);
-    await checkResumeJourney(controls);
-    await checkGitHubGraphJourney(controls);
-    await checkSocialLinksJourney(controls);
-    await checkAppearanceJourney(controls);
-    await checkAvatarExtrasJourney(controls);
-    await checkFaceRevealJourney(controls);
-    await checkDraftPreviewJourney(controls);
-    assert.deepEqual(errors, []);
-    // A filtered or sharded run may select only groups that never open, or
-    // that close, the editor page (the setup guide groups use their own).
-    if (page && !page.isClosed())
-      await page.screenshot({
-        path: join(evidence, "editor-final.png"),
-        fullPage: true,
-      });
-    await writeJsonEvidence(
-      pathToFileURL(join(evidence, "editor-results.json")),
-      { checks, requests, errors },
-    );
-    console.log(`Passed ${checks.length} editor browser groups`);
-  } catch (error) {
-    await writeJsonEvidence(
-      pathToFileURL(join(evidence, "editor-failure.json")),
-      { checks, requests, errors, failure: String(error) },
-    );
-    if (page && !page.isClosed())
-      await page
-        .screenshot({ path: join(evidence, "editor-failure.png") })
-        .catch(() => {});
-    throw error;
-  } finally {
-    await browser.close();
-    await new Promise((resolve) => server.close(resolve));
   }
+  const controls = {
+    getPage: () => page,
+    context,
+    boot,
+    displayed,
+    frame,
+    sql,
+    run: (name, work) => run(name, work),
+    evidence,
+    browserOrigin,
+    authority,
+    cookie,
+    root,
+    github,
+  };
+  return {
+    controls,
+    errors,
+    core,
+    useStep,
+    async close() {
+      await browser.close();
+      await new Promise((resolve) => server.close(resolve));
+    },
+  };
 }

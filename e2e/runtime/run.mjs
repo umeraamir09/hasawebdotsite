@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { spawn, spawnSync } from "node:child_process";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { freePort } from "../support/ports.mjs";
 
-process.chdir(fileURLToPath(new URL("..", import.meta.url)));
-const port = 8799;
+process.chdir(fileURLToPath(new URL("../../", import.meta.url)));
+const port = await freePort();
 const base = `http://127.0.0.1:${port}`;
 const seed = spawnSync("pnpm", ["local:seed"], { stdio: "inherit" });
 assert.equal(seed.status, 0, "local seed must succeed");

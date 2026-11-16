@@ -16,3 +16,6 @@ coverage/
 # Full-page preview build products
 /apps/web/public/portfolio-platform/
 /apps/web/public/preview-assets/
+# Playwright output
+/test-results/
+/playwright-report/

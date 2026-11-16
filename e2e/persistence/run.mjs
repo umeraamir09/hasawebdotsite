@@ -5,8 +5,9 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { freePort } from "../support/ports.mjs";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const require = createRequire(import.meta.url);
 const wrangler = join(
   dirname(require.resolve("wrangler/package.json")),
@@ -16,7 +17,7 @@ const output = join(root, ".wrangler/persistence-integration");
 const state = join(output, "state");
 const config = join(output, "wrangler.json");
 const legacyMigrations = join(output, "legacy-migrations");
-const port = 8810;
+const port = await freePort();
 const base = `http://127.0.0.1:${port}`;
 let runtime;
 let logs = "";

@@ -4,10 +4,12 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
+import { freePort } from "../support/ports.mjs";
 
 // Real Chromium cookie enforcement, with intercepted HTTPS responses. No DNS,
 // provider credentials, or deployed endpoints participate in this check.
 export async function checkBrowserCookies(cookies) {
+  const debuggingPort = await freePort();
   const profile = await mkdtemp(join(tmpdir(), "hasaweb-auth-browser-"));
   const browser = spawn(
     process.env.AUTH_SPIKE_CHROMIUM ?? "/opt/google/chrome/chrome",
@@ -17,7 +19,7 @@ export async function checkBrowserCookies(cookies) {
       "--disable-gpu",
       "--disable-background-networking",
       "--no-first-run",
-      "--remote-debugging-port=9245",
+      `--remote-debugging-port=${debuggingPort}`,
       `--user-data-dir=${profile}`,
       "about:blank",
     ],
@@ -41,7 +43,7 @@ export async function checkBrowserCookies(cookies) {
       if (browser.exitCode !== null) throw new Error(stderr);
       try {
         const targets = await (
-          await fetch("http://127.0.0.1:9245/json")
+          await fetch(`http://127.0.0.1:${debuggingPort}/json`)
         ).json();
         target = targets.find((entry) => entry.type === "page");
         if (target) break;

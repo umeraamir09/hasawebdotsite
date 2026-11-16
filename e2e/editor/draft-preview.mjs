@@ -6,7 +6,7 @@ import {
   checkTrace,
   comparable,
   exercise,
-} from "./face-reveal-renderer-browser.mjs";
+} from "../support/face-reveal-renderer.mjs";
 
 // Phase 39: the full-page draft preview. A real owner publishes a portfolio
 // with a case study and a resume, then opens /preview, /preview/projects/{slug}

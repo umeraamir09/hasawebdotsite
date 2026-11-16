@@ -4,7 +4,7 @@ import {
   type DraftDoc,
   draftSchema,
   richText,
-} from "../../packages/schema/src/index";
+} from "../../../packages/schema/src/index";
 
 export const fixtureNames = [
   "complete",

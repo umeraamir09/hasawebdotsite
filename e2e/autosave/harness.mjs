@@ -4,13 +4,14 @@ import { mkdir, readFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { join } from "node:path";
 import { chromium } from "playwright";
-import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+import { freePort } from "../support/ports.mjs";
+import { writeJsonEvidence } from "../support/write-json-evidence.mjs";
 
-const browserFilter = process.argv
-  .find((argument) => argument.startsWith("--browser-filter="))
-  ?.slice("--browser-filter=".length);
+const browserFilter = process.env.GROUP_FILTER;
 
 export async function checkAutosave({
+  workDirectory,
+  step = (_name, body) => body(),
   root,
   origin,
   cookie,
@@ -21,7 +22,9 @@ export async function checkAutosave({
   secrets,
   tokens,
 }) {
-  const directory = join(root, ".wrangler/autosave-browser");
+  const browserPort = await freePort();
+  const browserOrigin = `http://127.0.0.1:${browserPort}`;
+  const directory = join(workDirectory, "autosave-bundle");
   await mkdir(directory, { recursive: true });
   await esbuild.build({
     entryPoints: [join(root, "apps/web/integration/autosave-fixture.tsx")],
@@ -43,7 +46,7 @@ export async function checkAutosave({
     errors = [];
   const server = createServer(async (req, res) => {
     try {
-      const path = new URL(req.url, "http://127.0.0.1:8825").pathname;
+      const path = new URL(req.url, browserOrigin).pathname;
       if (
         path === "/fixture.js" ||
         path === "/fixture.css" ||
@@ -115,7 +118,9 @@ export async function checkAutosave({
       res.end('{"error":"storage_unavailable"}');
     }
   });
-  await new Promise((resolve) => server.listen(8825, "127.0.0.1", resolve));
+  await new Promise((resolve) =>
+    server.listen(browserPort, "127.0.0.1", resolve),
+  );
   const browser = await chromium.launch({
     executablePath:
       process.env.AUTH_SPIKE_CHROMIUM ?? "/opt/google/chrome/chrome",
@@ -125,7 +130,6 @@ export async function checkAutosave({
   const context = await browser.newContext();
   let page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
-  const browserOrigin = "http://127.0.0.1:8825";
   async function boot(target = page, suffix = "") {
     await target.goto(`${browserOrigin}/${suffix}`);
     await target.waitForFunction(() => window.fixture?.ready);
@@ -133,7 +137,7 @@ export async function checkAutosave({
   async function run(name, work) {
     if (browserFilter && !new RegExp(browserFilter).test(name)) return;
     const start = requests.length;
-    await work();
+    await step(name, work);
     checks.push({
       name,
       passed: true,

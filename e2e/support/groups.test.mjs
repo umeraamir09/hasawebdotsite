@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, expect, it } from "vitest";
-import { browserSelection, createGroupRunner } from "./lib/browser-groups.mjs";
+import { createGroupRunner, groupFilter } from "./groups.mjs";
 
 const names = Array.from({ length: 11 }, (_, i) => `group ${i}`);
 const temporary = [];
@@ -11,26 +11,29 @@ afterEach(async () => {
     await rm(path, { recursive: true, force: true });
 });
 
-it("shards partition every selected group exactly once", () => {
-  const seen = [];
-  for (let k = 1; k <= 3; k++) {
-    const selection = browserSelection([`--browser-shard=${k}/3`]);
-    seen.push(...names.filter((name) => selection.includes(name)));
-  }
-  expect(seen.sort()).toEqual([...names].sort());
-  const filtered = browserSelection([
-    "--browser-filter=group 1",
-    "--browser-shard=2/2",
-  ]);
-  // "group 1" and "group 10" match; the second shard takes the second match.
-  expect(names.filter((name) => filtered.includes(name))).toEqual(["group 10"]);
+it("filters groups by regular expression", () => {
+  const included = groupFilter("group 1");
+  // "group 1" and "group 10" match.
+  expect(names.filter(included)).toEqual(["group 1", "group 10"]);
+  expect(names.filter(groupFilter(undefined))).toEqual(names);
 });
 
-it("rejects malformed shards", () => {
-  for (const shard of ["0/2", "3/2", "1", "a/b"])
-    expect(() => browserSelection([`--browser-shard=${shard}`])).toThrow(
-      /--browser-shard/,
-    );
+it("reports each group as a named step", async () => {
+  const steps = [];
+  const run = createGroupRunner({
+    label: "fixture",
+    evidence: tmpdir(),
+    checks: [],
+    getPage: () => null,
+    filter: "^b$",
+    step: async (name, body) => {
+      steps.push(name);
+      return body();
+    },
+  });
+  await run("a", async () => {});
+  await run("b", async () => {});
+  expect(steps).toEqual(["b"]);
 });
 
 it("fails a stuck group by name and records its evidence", async () => {
@@ -45,7 +48,7 @@ it("fails a stuck group by name and records its evidence", async () => {
     errors,
     getPage: () => null,
     limitMs: 50,
-    argv: [],
+    filter: undefined,
   });
   await run("passes", async () => {});
   expect(checks).toEqual([

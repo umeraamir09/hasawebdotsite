@@ -8,7 +8,7 @@ import {
   paintedFrames,
   resolvedMode,
   rgb,
-} from "./lib/first-paint.mjs";
+} from "../support/first-paint.mjs";
 
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const PDF = Buffer.from(

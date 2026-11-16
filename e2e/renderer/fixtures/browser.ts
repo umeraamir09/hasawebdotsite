@@ -1,7 +1,7 @@
 import {
   attachPreviewBridge,
   mountPreview,
-} from "../../packages/components/src/browser";
+} from "../../../packages/components/src/browser";
 
 const root = document.getElementById("preview-root");
 if (!root) throw new Error("Preview root is missing");

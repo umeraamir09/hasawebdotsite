@@ -1,36 +1,14 @@
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-// Selects, times and diagnoses named browser check groups.
-//
-// --browser-filter=<regexp> runs matching groups. --browser-shard=<k>/<n>
-// runs every n-th selected group starting at k, so CI can split one suite
-// across runners. Each group has a time limit: a stuck wait fails with the
-// group's name and diagnostics instead of running until the job times out.
-export function browserSelection(argv = process.argv) {
-  const value = (flag) =>
-    argv
-      .find((argument) => argument.startsWith(`${flag}=`))
-      ?.slice(flag.length + 1);
-  const filter = value("--browser-filter");
-  const shard = value("--browser-shard");
-  let index = 0;
-  let total = 1;
-  if (shard) {
-    const match = /^(\d+)\/(\d+)$/.exec(shard);
-    if (!match || +match[1] < 1 || +match[1] > +match[2])
-      throw new Error(`--browser-shard must be k/n with 1 <= k <= n: ${shard}`);
-    index = +match[1] - 1;
-    total = +match[2];
-  }
-  let position = 0;
-  return {
-    shard: shard ?? null,
-    includes(name) {
-      if (filter && !new RegExp(filter).test(name)) return false;
-      return position++ % total === index;
-    },
-  };
+// Runs named check groups inside one Playwright test. Each group is a
+// `test.step` (when `step` is given), so reports and traces show it by name.
+// GROUP_FILTER=<regexp> runs only matching groups, for debugging one group
+// without editing code. Each group has a time limit: a stuck wait fails with
+// the group's name and diagnostics instead of running until the test times out.
+export function groupFilter(filter = process.env.GROUP_FILTER) {
+  const pattern = filter ? new RegExp(filter) : null;
+  return (name) => !pattern || pattern.test(name);
 }
 
 export function createGroupRunner({
@@ -41,12 +19,16 @@ export function createGroupRunner({
   errors = [],
   diagnose,
   limitMs = Number(process.env.BROWSER_GROUP_LIMIT_MS ?? 120_000),
-  argv = process.argv,
+  step = (_name, body) => body(),
+  filter = process.env.GROUP_FILTER,
 }) {
-  const selection = browserSelection(argv);
+  const included = groupFilter(filter);
   let failures = 0;
   return async function run(name, work) {
-    if (!selection.includes(name)) return;
+    if (!included(name)) return;
+    return step(name, () => runGroup(name, work));
+  };
+  async function runGroup(name, work) {
     const started = performance.now();
     const seconds = () => ((performance.now() - started) / 1000).toFixed(1);
     const knownErrors = errors.length;
@@ -110,5 +92,5 @@ export function createGroupRunner({
     clearTimeout(timer);
     checks.push({ name, passed: true, seconds: Number(seconds()) });
     console.log(`PASS ${label}: ${name} (${seconds()}s)`);
-  };
+  }
 }

@@ -7,9 +7,10 @@ import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
-import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
+import { freePort } from "../support/ports.mjs";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const require = createRequire(import.meta.url);
 const wrangler = join(
   dirname(require.resolve("wrangler/package.json")),
@@ -18,7 +19,8 @@ const wrangler = join(
 const directory = join(root, ".wrangler/private-uploads");
 const config = join(directory, "worker.json");
 const state = join(directory, "state");
-const origin = "http://127.0.0.1:8834";
+const port = await freePort();
+const origin = `http://127.0.0.1:${port}`;
 const secret = randomBytes(32).toString("hex");
 const runtimeKey = randomBytes(32).toString("hex");
 const tokens = Object.fromEntries(
@@ -244,7 +246,7 @@ try {
       "--persist-to",
       state,
       "--port",
-      "8834",
+      String(port),
       "--ip",
       "127.0.0.1",
     ],

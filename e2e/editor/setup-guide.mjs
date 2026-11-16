@@ -3,8 +3,8 @@ import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { checkGuideGitHub } from "./guide-github-browser.mjs";
-import { checkGuideReview } from "./guide-review-browser.mjs";
+import { checkGuideGitHub } from "./guide-github.mjs";
+import { checkGuideReview } from "./guide-review.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
 // mounted by the direct `/guide` fixture. Phase 42E's groups (Review, handoff

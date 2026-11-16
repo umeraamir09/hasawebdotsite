@@ -3,19 +3,16 @@ import { join } from "node:path";
 import {
   assertPublishedProjects,
   preparePublishedProjects,
-} from "./project-controls-browser.mjs";
+} from "./project-controls.mjs";
 import {
   assertPublishedSkills,
   preparePublishedSkills,
-} from "./skills-controls-browser.mjs";
-import {
-  assertPublishedText,
-  preparePublishedText,
-} from "./text-controls-browser.mjs";
+} from "./skills-controls.mjs";
+import { assertPublishedText, preparePublishedText } from "./text-controls.mjs";
 import {
   assertPublishedWork,
   preparePublishedWork,
-} from "./work-experience-browser.mjs";
+} from "./work-experience.mjs";
 
 export async function checkPublishJourney({
   getPage,

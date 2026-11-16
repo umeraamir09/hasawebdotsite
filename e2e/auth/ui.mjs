@@ -7,7 +7,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 
-import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
+import { freePort } from "../support/ports.mjs";
 
 // Render the built app in Chromium. Only provider HTTP and consent are fixtures.
 // Browser requests to the auth API execute the product handler in workerd/D1.
@@ -29,7 +30,9 @@ export async function checkAuthUi({
     define: { "process.env.NODE_ENV": '"production"' },
   });
   const helperCode = helper.outputFiles[0].text;
-  const port = 8812;
+  const port = await freePort();
+  const inspectorPort = await freePort();
+  const debuggingPort = await freePort();
   const uiState = join(root, ".wrangler/auth-ui/state");
   await rm(uiState, { recursive: true, force: true });
   const migrate = spawnSync(
@@ -111,7 +114,7 @@ export async function checkAuthUi({
       "--port",
       String(port),
       "--inspector-port",
-      "9248",
+      String(inspectorPort),
       "--ip",
       "127.0.0.1",
       "--var",
@@ -264,7 +267,7 @@ export async function checkAuthUi({
         "--disable-gpu",
         "--disable-background-networking",
         "--no-first-run",
-        "--remote-debugging-port=9246",
+        `--remote-debugging-port=${debuggingPort}`,
         `--user-data-dir=${profile}`,
         "about:blank",
       ],
@@ -279,7 +282,7 @@ export async function checkAuthUi({
       if (browserError) throw browserError;
       try {
         target = (
-          await (await fetch("http://127.0.0.1:9246/json")).json()
+          await (await fetch(`http://127.0.0.1:${debuggingPort}/json`)).json()
         ).find((item) => item.type === "page");
         if (target) break;
       } catch {}

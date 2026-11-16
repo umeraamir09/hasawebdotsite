@@ -6,7 +6,7 @@ import {
   comparable,
   exercise,
   snapshot,
-} from "./face-reveal-renderer-browser.mjs";
+} from "../support/face-reveal-renderer.mjs";
 
 // Phase 38: Face Reveal and visitor playback from the editor preview to a
 // real published page, then withdrawal of the second photo. Disabling Face

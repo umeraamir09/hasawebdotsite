@@ -6,13 +6,14 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { checkBrowserCookies } from "./auth-cookie-browser.mjs";
-import { checkAuthUi } from "./auth-ui-browser.mjs";
-import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
-import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
-import { checkPortfolioProvisioning } from "./portfolio-provisioning-checks.mjs";
+import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
+import { freePort } from "../support/ports.mjs";
+import { writeJsonEvidence } from "../support/write-json-evidence.mjs";
+import { checkBrowserCookies } from "./cookie.mjs";
+import { checkPortfolioProvisioning } from "./provisioning.mjs";
+import { checkAuthUi } from "./ui.mjs";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const require = createRequire(import.meta.url);
 const wrangler = join(
   dirname(require.resolve("wrangler/package.json")),
@@ -28,7 +29,7 @@ const evidenceDirectory = await createEvidenceDirectory(
 );
 const state = join(output, "state");
 const configPath = join(output, "wrangler.json");
-const port = 8811;
+const port = await freePort();
 const origin = "https://hasaweb.site";
 const evidence = [];
 const cookieNames = new Set();

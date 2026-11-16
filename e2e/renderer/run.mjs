@@ -6,17 +6,17 @@ import { createRequire } from "node:module";
 import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { chromium } from "playwright";
-import { checkFaceRevealParity } from "./face-reveal-renderer-browser.mjs";
-import { createEvidenceDirectory } from "./lib/evidence-directory.mjs";
+import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
+import { checkFaceRevealParity } from "../support/face-reveal-renderer.mjs";
 import {
   FIRST_PAINT_SAMPLER,
   paintedFrames,
   resolvedMode,
   rgb,
-} from "./lib/first-paint.mjs";
-import { writeJsonEvidence } from "./lib/write-json-evidence.mjs";
+} from "../support/first-paint.mjs";
+import { writeJsonEvidence } from "../support/write-json-evidence.mjs";
 
-const root = fileURLToPath(new URL("../", import.meta.url));
+const root = fileURLToPath(new URL("../../", import.meta.url));
 const require = createRequire(import.meta.url);
 const esbuild = createRequire(require.resolve("wrangler"))("esbuild");
 const output = join(root, ".wrangler/portfolio-renderer");
@@ -77,22 +77,18 @@ const siteBytes = await bundle(
 );
 const scriptUrl = resource(siteBytes, "js", "text/javascript; charset=utf-8");
 const previewScript = resource(
-  await bundle(
-    "scripts/fixtures/portfolio-renderer-browser.ts",
-    "browser",
-    "esm",
-  ),
+  await bundle("e2e/renderer/fixtures/browser.ts", "browser", "esm"),
   "js",
   "text/javascript; charset=utf-8",
 );
 const hostScript = resource(
-  await bundle("scripts/fixtures/portfolio-renderer-host.ts", "browser", "esm"),
+  await bundle("e2e/renderer/fixtures/host.ts", "browser", "esm"),
   "js",
   "text/javascript; charset=utf-8",
 );
 const serverModule = join(output, "fixture-server.cjs");
 await esbuild.build({
-  entryPoints: [join(root, "scripts/fixtures/portfolio-renderer-server.ts")],
+  entryPoints: [join(root, "e2e/renderer/fixtures/server.ts")],
   bundle: true,
   platform: "node",
   format: "cjs",

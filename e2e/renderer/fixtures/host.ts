@@ -1,5 +1,5 @@
-import { connectPreviewBridge } from "../../packages/components/src/browser";
-import { parsePortfolioModel } from "../../packages/components/src/model";
+import { connectPreviewBridge } from "../../../packages/components/src/browser";
+import { parsePortfolioModel } from "../../../packages/components/src/model";
 
 const frame = document.querySelector("iframe");
 if (!frame) throw new Error("Preview iframe is missing");
