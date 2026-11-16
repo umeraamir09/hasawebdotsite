@@ -28,7 +28,7 @@ The fixed `profile` contains name, bio, optional location, optional avatar/banne
 
 `links` is the single ordered list of social/contact entries. Each has an ID, label, kind, value, `showInProfile` and `showInSocialComponent`. Email values are plain addresses. Other values are HTTP(S) URLs. The social-links component has no duplicate entry collection. Its order follows `links`.
 
-URLs are limited to 2,048 UTF-8 bytes and email addresses to 254 UTF-8 bytes, explicitly approved October 16, 2026. These rules also apply to rich-text destinations and component URLs. Existing longer values must be corrected explicitly, never silently truncated. Free text and the complete draft retain the 1 MiB ceiling. [The bounded-save protocol](../../specs/2026-10-16-free-owner-saves/protocol.md) explains how server validation preserves large text without loading a complete document in one Worker request.
+URLs are limited to 2,048 UTF-8 bytes and email addresses to 254 UTF-8 bytes, explicitly approved October 16, 2026. These rules also apply to rich-text destinations and component URLs. Existing longer values must be corrected explicitly, never silently truncated. Free text and the complete draft retain the 1 MiB ceiling. The bounded-save protocol explains how server validation preserves large text without loading a complete document in one Worker request.
 
 `components` is the ordered list below the fixed profile. IDs remain stable across reordering. The registry generates the discriminated union used by the draft validator.
 
@@ -79,7 +79,7 @@ Version 1 is the first production contract. Its envelope migration changes only 
 
 ## Production API validation boundary
 
-The full reader/serializer examples above are browser/offline helpers, not a Free hot-API recipe. Phase 13 streams consistent validated reads from D1, projecting the known version 1 envelope upgrade without whole-document Worker parsing. Unvalidated supported content uses bounded staged validation; unsupported content remains available through owner recovery. Schema version alone does not prove the current validation generation. Future schema/refinement changes must update the incremental validator, generation policy and equivalence fixtures together. See the [production protocol](../../specs/2026-10-17-revision-aware-drafts/protocol.md).
+The full reader/serializer examples above are browser/offline helpers, not a Free hot-API recipe. Phase 13 streams consistent validated reads from D1, projecting the known version 1 envelope upgrade without whole-document Worker parsing. Unvalidated supported content uses bounded staged validation; unsupported content remains available through owner recovery. Schema version alone does not prove the current validation generation. Future schema/refinement changes must update the incremental validator, generation policy and equivalence fixtures together.
 
 ## Browser save integration
 
@@ -93,7 +93,7 @@ Generic `requestedSubdomain` changes remain non-reserving candidates. Once a reg
 
 ## Setup entry service messages
 
-`setupCommandSchema` accepts exactly the portfolio ID and confirmed revision. `setupResultSchema` distinguishes missing required fields, a ready check and permanent editor entry. `accountEntryResponseSchema` validates the private owner summary and its setup-progress or editor-milestone variant. No command accepts a client completion flag. These messages do not change stored draft validation or public content. See the [service contract](../../docs/authentication.md#setup-aware-entry-and-handoff-services).
+`setupCommandSchema` accepts exactly the portfolio ID and confirmed revision. `setupResultSchema` distinguishes missing required fields, a ready check and permanent editor entry. `accountEntryResponseSchema` validates the private owner summary and its setup-progress or editor-milestone variant. No command accepts a client completion flag. These messages do not change stored draft validation or public content.
 
 ## Publication checks
 

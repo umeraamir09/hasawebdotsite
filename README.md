@@ -1,12 +1,12 @@
 # hasaweb.site
 
-Launch targets Workers Paid, currently $5/month minimum. Develop locally without upgrading; upgrade only during launch preparation before public activation. See the [owner-approved deployment policy](docs/deployment-policy.md) for current budget and release gates. The product remains free to owners.
+A free, component-based portfolio builder: owners fill a guided setup and an editor, then publish to `username.hasaweb.site`. Next.js on OpenNext plus three Cloudflare Workers, D1, R2 and Better Auth.
 
-Use the [roadmap](docs/roadmap.md) for owner-approved phase status, [implementation status](docs/implementation-status.md) for current code and constraints, and the [agent workflow](docs/agent-workflow.md) for parallel work, concise phase records and local checks. Shared saving/recovery, renderer and editor adapters are implemented. The local publication operation and editor handoff fixture support Publish and republish. Full editor activation and guided setup remain pending.
+Start with [AGENTS.md](AGENTS.md) for how work is done here, and [docs/roadmap.md](docs/roadmap.md) for what is left.
 
 ## Setup
 
-Use Node.js 22.22.1 and pnpm 12.11.2. The package manager and direct dependencies have exact versions, and `pnpm-lock.yaml` pins transitive dependencies. Next.js is pinned to 16.3.8 because 16.4.0 fails the OpenNext workerd smoke test. See the [compatibility decision](specs/2026-10-14-local-runtime/requirements.md).
+Node.js 22.22.1 and pnpm 12.11.2. Direct dependencies use exact versions and the lockfile pins the rest. Next.js is pinned to 16.3.8 because 16.4.0 fails the OpenNext workerd smoke test.
 
 ```sh
 corepack enable
@@ -16,58 +16,53 @@ pnpm local:seed
 pnpm dev
 ```
 
-Open http://127.0.0.1:8787. `pnpm dev` builds the web Worker and starts web, site, and jobs together in workerd. Web is the public local entrypoint. Auxiliary Workers are available over service bindings. `pnpm dev:runtime` restarts an existing build without rebuilding. Worker source changes reload automatically; Next.js changes require rebuilding. `pnpm dev:web` provides Next.js hot reload on port 3000 for web-only work. Use the combined runtime to verify cross-Worker, Queue, and Workflow behavior.
+Open http://127.0.0.1:8787. `pnpm dev` builds and starts web, site and jobs together in workerd; web is the entry point and the others are reached over service bindings. `pnpm dev:runtime` restarts without rebuilding (Worker source reloads; Next.js changes need a rebuild). `pnpm dev:web` gives Next.js hot reload on port 3000 but cannot reach the jobs owner API.
 
-Stop with Ctrl+C. D1 and R2 resources persist under `.wrangler/state/`. Delete that ignored directory only when you want to reset development data, then seed again. The seed applies the tracked local database migrations and adds runtime fixtures plus two development accounts with private empty drafts. It creates no usable sessions or provider credentials. Existing drafts survive repeat seeding.
+Local D1/R2 state lives in `.wrangler/state/`. Delete it to reset, then seed again. The seed applies migrations and adds runtime fixtures and two development accounts with empty private drafts (no sessions or credentials).
+
+If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package=pnpm@12.11.2 -- pnpm <command>`.
+
+### Local setup
+
+1. Copy `apps/web/.dev.vars.example` to `apps/web/.dev.vars` and `apps/jobs/.dev.vars.example` to `apps/jobs/.dev.vars`. Both Workers need the same `APP_ORIGIN`, `BETTER_AUTH_SECRET` (32+ characters) and development OAuth credentials, because the jobs owner API verifies sessions independently.
+2. Set `APP_ORIGIN` to the exact browser origin without a trailing slash: `http://127.0.0.1:8787` for `pnpm dev`, `http://127.0.0.1:3000` for `pnpm dev:web`. Never a LAN address, portfolio host or path.
+3. Register development OAuth apps with callbacks `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`.
+4. To use the real guide and editor, add `OWNER_ENTRY_ACTIVATION=active` to `apps/web/.dev.vars`. Without it `/auth/entry` and `/editor` show the welcome shell.
+
+### Production configuration (Phase 52)
+
+The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs.
 
 ## Checks
 
 ```sh
-pnpm verify --profile=full
-pnpm verify --profile=renderer --dry-run
+pnpm check            # Biome, typecheck, Vitest (~1 min)
+pnpm verify           # check, then build and the e2e projects your diff affects
+pnpm verify --all     # check, build and every e2e project
+pnpm verify --dry-run # show what verify would run
+pnpm e2e --project=editor -g "resume download"   # one journey, against the last build
 ```
 
-Named profiles run the applicable local checks under a shared worktree lock and retain routine output in ignored run directories. See the [profile table](docs/agent-workflow.md#choose-local-checks) for affected application builds, high-risk review and evidence policy. `pnpm check`, `pnpm build` and individual test commands remain available during development. CI retains all foundation correctness suites; `pnpm test:runtime:smoke` runs runtime assertions without benchmark profiling. `pnpm spike:runtime` remains the explicit measurement command. See [database boundaries](packages/db/README.md).
+End-to-end suites live in [`e2e/`](e2e/README.md) and run on Playwright Test against the built Workers in workerd. They need Chromium at `/opt/google/chrome/chrome` (or set `AUTH_SPIKE_CHROMIUM`). Each worker gets its own runtime on free ports, so separate worktrees can run suites at the same time.
 
-The project-local [verification skill](.agents/skills/verify-hasaweb/SKILL.md) and [feature map](.agents/skills/verify-hasaweb/features/README.md) describe user journeys, selectors and current fixture boundaries. The skill lives in `.agents/skills` for Codex and other compatible tools; `.cursor/skills/verify-hasaweb` links to the same files. Run `./.agents/skills/verify-hasaweb/scripts/verify.mjs` for a built-app signed-out entry proof with isolated storage, browser evidence and automatic cleanup under the shared verification lock.
+CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip CI.
 
 ## Workspace
 
-- `apps/web` holds Next.js App Router and OpenNext.
-- `apps/site` is the thin public serving Worker.
-- `apps/jobs` hosts the named Hono `OwnerApi` entry for initialization and bounded draft/progress APIs. Its Workflow, Queue and scheduled handlers are local probes.
-- `packages/schema` and `db` implement versioned drafts, setup/progress, persistence, provisioning, bounded saves and legacy validation. `auth` implements shared Better Auth/session checks. `github` implements calendar/credential contracts and `theme` exports the approved catalog. `email` supplies tested provider adapters/templates. These packages still need their scheduled product integrations.
-- `packages/components` provides shared markup-only portfolio components, display-only projection, browser preview, Leaf/DM Sans styles and a vanilla interaction script. `packages/render` provides bounded fragment serialization, document/security policy and a separate offline snapshot fixture helper. See the [renderer contract](packages/render/README.md) and [Phase 16 evidence](specs/2026-10-19-shared-portfolio-renderer/results.md). The Phase 17 editor adapter reuses these components through an authenticated handoff fixture. Local immutable publication and manifest-authorized serving are implemented; production activation and provider checks remain pending.
-- `packages/config` supplies shared strict TypeScript settings and runtime utilities.
-
-Web has a minimal entry page, GitHub/Google sign-in, an authenticated welcome shell that provisions the private portfolio, and an avatar reference review. Shared autosave/status/conflict-review controls and `/auth/recovery` are integrated into a reusable editor with private live preview. Phase 22A adds fixed `/auth/entry`, persisted setup resolution and authoritative handoff services. Phases 42A–42E add the complete onboarding guide, Review and first editor handoff and mount the guide and editor at `/auth/entry` and `/editor`, behind the web Worker variable `OWNER_ENTRY_ACTIVATION`; committed configuration leaves it closed, so the routes keep the account shell until the Phase 39/45 integration passes. UI implementation must read the Figma reference described in [docs/ui-direction.md](docs/ui-direction.md).
-
-## Local and production separation
-
-The committed `wrangler.jsonc` files name only local resources. All commands here use local simulation or dry runs. `APP_ENV=local` and loopback hostname checks restrict development probe routes. The private draft bucket is bound only to web.
-
-Do not deploy these local configurations. Production resource IDs, routes, secrets, and deployment approval are configured in Phase 52 with separate production config files. No production config is supplied until real resources exist. Runtime probe tables, fixtures, handlers, and the probe handlers for the contact/GitHub Queues and publish Workflow are development scaffolding, not publishing or delivery implementations.
-
-Put local authentication secrets in ignored `apps/web/.dev.vars` and `apps/jobs/.dev.vars`, starting from their `.dev.vars.example` files. Both Workers must use the same `APP_ORIGIN`, Better Auth signing secret, and development OAuth credentials. The named jobs owner API verifies the original session cookie independently. Never commit credentials.
-
-The configuration follows [OpenNext setup](https://opennext.js.org/cloudflare/get-started) and [Cloudflare multi-Worker development](https://developers.cloudflare.com/workers/local-development/multi-workers/).
-
-If your WSL `pnpm` command resolves to a Windows executable, run commands through the Linux package runner, for example `npm exec --yes --package=pnpm@12.11.2 -- pnpm dev`.
-
-## Publish rendering spike
-
-Run `pnpm spike:render` to benchmark synthetic near-limit portfolio, case-study, and resume pages with production React in local workerd. It writes timing samples and CPU profiles under `.wrangler/render-spike/` without deploying. See the [S-1 findings and revised approach](specs/2026-10-15-publish-render/results.md) before implementing publication.
-
-Run `pnpm spike:email` for the isolated S-7 provider and atomic D1 budget fixtures. See the [email delivery results](specs/2026-10-15-email-delivery/results.md) and [live setup](specs/2026-10-15-email-delivery/live-setup.md). `pnpm spike:email:live` reads domain/delivery status; `--send` is reserved for the three explicitly authorized tests and requires the ignored local env file.
-
-Run `pnpm test:owner-runtime` after building to verify the thin owner API through the web Worker adapter and named jobs binding. See the [Phase 11A measurement protocol](specs/2026-10-16-owner-api-runtime/protocol.md) for the isolated deployed CPU experiment and cleanup.
-
-After building, run `DRAFT_API_EVIDENCE=.wrangler/draft-api-review pnpm test:draft-api` to verify production draft/progress routes through the real Worker binding, including revisions, staged recovery, milestone protection and bounded legacy validation. Local runs now default to unique ignored evidence directories. Use an explicit new phase-specific directory only when retaining selected proof. See the [Phase 13 API protocol](specs/2026-10-17-revision-aware-drafts/protocol.md). The [shared client](apps/web/lib/draft/README.md) implements Phase 14 autosave/recovery and Phase 15 selected conflict review without activating editor or onboarding routes. Recovery reauthentication uses fixed `/auth/recovery` and `/auth/recovery/error` destinations, preserving the normal `/auth/entry` callback. Every draft/progress request requires `X-Expected-Owner-Id`, checked against the authenticated identity. Run `DRAFT_API_EVIDENCE=.wrangler/autosave-review pnpm test:autosave` for the isolated Playwright browser/API suite, including IndexedDB recovery, dropped replies, account isolation and accessibility. It uses installed Chrome, overridable with `AUTH_SPIKE_CHROMIUM`, and never exposes fixture routes in product builds.
-
-## Editor and live preview checks
-
-Run `pnpm verify --profile=editor` for checks, web/jobs builds and the real owner-API editor fixture. `pnpm test:editor` runs only that browser suite after the applications have been built. It also covers Phase 23 saved-draft checks/corrections and Phase 26 profile-only Publish, reload recovery, Retry, exact-URL Open/Copy, republish and removed-file withdrawal through real local D1/R2 and Queue bindings. It covers immediate valid edits, raw stable-path input, both preview widths, selected recovery, private iframe transport, explicit Address confirmation, shared crop/upload controls, social/contact links, and explicit provider name/photo acceptance. See [Phase 20 results](specs/2026-10-23-required-profile/results.md), [Phase 17 results](specs/2026-10-20-editor-live-preview/results.md), [Phase 19 results](specs/2026-10-22-upload-crop-controls/results.md), [Phase 21 results](specs/2026-10-22-social-contact-identity/results.md), [Phase 22 results](specs/2026-10-21-address-reservations/results.md), and the [draft client contract](apps/web/lib/draft/README.md#editor-integration). These fixtures do not activate the complete guide or production editor, or certify deployed withdrawal and paid-provider capacity. External provider image HTTP is controlled fixture data; authentication, crop/upload and persistence are real.
-
-## Private upload checks
-
-Run `pnpm verify --profile=uploads` for checks, builds and the real D1/R2 upload suite. The [private asset protocol](apps/web/lib/assets/README.md) describes binary `PUT /api/assets`, owner-only reads, framing headers and lifecycle failures. The editor profile additionally drives crop controls and private image display. [Phase 18 results](specs/2026-10-21-private-uploads/results.md) retain the original transport evidence. Jobs source transfer and deployed CPU requirements remain separate.
+| Path | Contents |
+| --- | --- |
+| `apps/web` | Next.js app, auth, editor, guide, previews; pre-OpenNext handlers in `worker.ts` |
+| `apps/site` | Thin public serving Worker |
+| `apps/jobs` | Hono owner API, publication dispatcher, Queue consumers, cron |
+| `apps/*/integration` | Fixture Worker entries used only by e2e suites |
+| `packages/schema` | Versioned draft schema and validation |
+| `packages/db` | Drizzle migrations and owner-scoped repositories |
+| `packages/auth` | Better Auth configuration and session checks |
+| `packages/components` | Markup-only portfolio components, display projection, preview bridge, `site.js` |
+| `packages/render` | Bounded fragment rendering and document/security policy |
+| `packages/theme` | Appearance catalog and palette generator |
+| `packages/github` | GitHub calendars, OAuth, refresh |
+| `packages/email` | Email provider adapters and templates |
+| `packages/config` | Shared TypeScript config and runtime helpers |
+| `e2e` | Playwright Test suites and fixtures |
+| `scripts` | `verify`, seed and build helpers |

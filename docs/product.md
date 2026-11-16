@@ -1,12 +1,12 @@
-# hasawebsite
+# hasaweb.site
 
-hasawebsite is a component-based portfolio builder for developers. Users add their profile and work to a ready-made layout, personalize its appearance, and publish at an address such as `username.hasaweb.site` without writing code or configuring hosting.
+hasaweb.site is a component-based portfolio builder for developers. Users add their profile and work to a ready-made layout, personalize its appearance, and publish at an address such as `username.hasaweb.site` without writing code or configuring hosting.
 
 This document defines the target audience, the problem the product addresses, and the complete MVP scope. It describes how owners build and maintain their portfolios and what visitors can do on the published sites.
 
 See [UI direction](ui-direction.md) for the project's Figma visual reference, agent access through Figma MCP, and the read-only rule during development.
 
-The [initial setup specification](onboarding.md), confirmed October 16, 2026 with the address reservation amended October 21, 2026, defines mandatory Address, Profile, and Links steps followed by optional Skills, Projects, and GitHub steps. The interview replaced the original optional-onboarding idea and the earlier sample-starter plan. This document describes target behavior, not the current authentication-only implementation.
+The [initial setup specification](onboarding.md) defines mandatory Address, Profile, and Links steps followed by optional Skills, Projects, and GitHub steps. This document describes target behavior; the [roadmap](roadmap.md) tracks what is built.
 
 ## Target audience
 
@@ -114,7 +114,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 - Owners can test the reveal in preview. Toggle settings, images, and crops save as draft changes and become public only after Publish. The editor explains that the second photo becomes publicly accessible when Face Reveal is published, even before a visitor reveals it. Disabling the add-on and republishing excludes the second photo from public assets while retaining it in the private draft.
 
 - Owners add, edit, remove, and order social or contact links. Each link has an understandable label and a valid destination or email address.
-- Each URL supports up to 2,048 UTF-8 bytes; each email address supports up to 254 UTF-8 bytes. The owner approved these limits on October 16, 2026. Free-text content retains the overall 1 MiB draft limit.
+- Each URL supports up to 2,048 UTF-8 bytes; each email address supports up to 254 UTF-8 bytes. Free-text content retains the overall 1 MiB draft limit.
 - Owners choose which links appear in the profile and which also appear in the separate social links component. They do not need to re-enter the same link to display it in both places.
 - Visitors can follow social links or open their email application through an email contact link. Displaying an email link makes that address public; contact-form recipient addresses stay private unless separately displayed.
 
@@ -197,7 +197,7 @@ Animated decorations autoplay unless the visitor requests reduced motion. A sepa
 
 ### 13. Upload handling
 
-- Image uploads accept JPEG, PNG and WebP files up to 5 MiB each, exactly 5,242,880 bytes. Resume uploads accept PDFs up to 10 MiB, exactly 10,485,760 bytes. These are the confirmed architecture section 13 limits.
+- Image uploads accept JPEG, PNG and WebP files up to 5 MiB each, exactly 5,242,880 bytes. Resume uploads accept PDFs up to 10 MiB, exactly 10,485,760 bytes.
 - Avatar and banner controls support uploading, replacing, cropping, and removing images. Project cards and case studies support image uploads, replacement, and removal.
 - The combined onboarding profile screen and editor share crop dialogs with repositioning, zoom, Reset, Apply crop, and Cancel. Imported provider photos use the same controls. Save only the finished cropped image; Reset uses the current local selection, and recovering excluded areas after returning requires selecting the original file again. Required profile setup waits for ready uploads and accepted crops.
 - Owners see upload progress, completion, and errors for unsupported formats, oversized files, interrupted transfers, or failed uploads. Failed uploads offer a retry path and do not replace the previous successful asset.
@@ -267,4 +267,4 @@ Animated decorations autoplay unless the visitor requests reduced motion. A sepa
 - AI content generation, collaboration, visitor accounts, multilingual editing, version history, and visitor analytics or cookie-based tracking.
 - Repeat onboarding, an editor bypass before required initial setup, goal/persona surveys, automatic content discovery, and retained original image sources for later uncropping. Additional onboarding steps for capabilities designated editor-only in [onboarding.md](onboarding.md) are outside the initial onboarding scope; those capabilities remain required in the full MVP editor.
 
-The feature scope is agreed; the six-theme/two-decoration catalog, fonts, defaults and playback policy were approved in Phase 11E, including the documented generator exception. Implementation also needs the recorded provider configuration, operational refresh and retry intervals, and submission limits. These choices must support the behavior above without introducing additional MVP capabilities.
+The feature scope is agreed. The [appearance catalog](appearance-catalog.md) lists the approved themes, fonts and decorations, and [architecture.md](architecture.md) records provider configuration, refresh and retry intervals, and submission limits.

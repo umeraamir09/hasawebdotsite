@@ -1,59 +1,68 @@
-# Repository guidelines
+# Working in this repo
 
-## Start here
+hasaweb.site is a free portfolio builder: Next.js on OpenNext plus three Cloudflare Workers (`apps/web`, `apps/site`, `apps/jobs`), D1, R2 and Better Auth. One developer builds it with AI agents. The goal right now is shipping v1.
 
-Read [implementation status](docs/implementation-status.md), the relevant [roadmap entry](docs/roadmap.md), and the acceptance criteria and current contracts for the affected subsystem. Use the subsystem links in the baseline. Read historical experiments only when their measured constraints matter to the change. Product requirements control scope; current production contracts supersede older experiments.
+## Where things are
 
-Follow [the agent workflow](docs/agent-workflow.md) for phase records, parallel work and verification. Historical spec plans describe their original work; they do not require future design panels, delegation, evidence ledgers or repeated review loops. Explicitly invoked skills and higher-priority instructions still apply.
+| Need | Read |
+| --- | --- |
+| What to build next | [docs/roadmap.md](docs/roadmap.md) |
+| Required behavior | [docs/product.md](docs/product.md), [docs/acceptance-criteria.md](docs/acceptance-criteria.md) |
+| Contracts to keep | [docs/architecture.md](docs/architecture.md), [docs/protocols/draft-api.md](docs/protocols/draft-api.md), the README in the package you touch |
+| Setup guide behavior | [docs/onboarding.md](docs/onboarding.md) |
+| Themes, fonts, decorations | [docs/appearance-catalog.md](docs/appearance-catalog.md) |
+| Visual design | [docs/ui-direction.md](docs/ui-direction.md) |
+| Commands | [README.md](README.md) |
 
-## Parallel work and approval
+Read the roadmap entry and the sections relevant to your change. You do not need to read everything. Old phase records are in the `archive/specs-2026-11` git tag; look there only if you need a historical measurement.
 
-Support two modes. Separate owner-led chats remain the default. When the owner requests parallel implementation in one chat, such as "Implement phases 17 and 18 in parallel", that chat coordinates delegated phase work through subagents. The lead checks independence, supplies each worker's scope and worktree path, handles shared contracts, integrates sequentially and reports to the owner. This authorizes delegation for the named work, not creating separate sidebar chats or approving completion. See [the mode instructions](docs/agent-workflow.md#parallel-implementation-and-integration).
+## Workflow
 
-Default to two implementation workers, whether owner-led chats or coordinator-led subagents, each in a separate worktree and branch. Inspect `git worktree list` first. Record each task's phase, prerequisites and write boundaries in its phase record. Give overlapping code/contracts one implementation owner; integrate branches sequentially and reconcile shared guidance in that integration. Run heavy verification through `pnpm verify` so worktrees share the local resource lock.
+1. Pick a roadmap phase (or task) whose dependencies are checked off on `main`.
+2. Branch from `main` as `<type>/<short-description>` (see below). Use a worktree if other work is in flight.
+3. Implement it with tests. Run `pnpm check` while iterating, and the e2e tests for what you changed (`pnpm verify` picks them from your diff) before opening the PR.
+4. Open a PR. Its description is the record: what changed, how it was verified, and anything left open.
+5. When the phase's completion criteria pass, check its roadmap box in the same PR with a one-line note. **A merged PR is the owner's approval**; no separate approval step or commit.
 
-Start work only after the owner approves its prerequisites and their code is integrated into the shared base. A separately approved reusable milestone can unblock a consumer while its parent phase remains unchecked. Request such approval only when it unblocks actual work. Ask for full phase checkoff after implementation and local verification; check the roadmap only after explicit owner approval. Record approvals already given without requesting them again.
+You may use subagents, parallel worktrees and reviews whenever they help. Keep each PR focused enough to review.
 
-## Required documentation impact check
+Ask the owner only for real product decisions: scope changes, new user-visible behavior not covered by the docs, or spending money or using external accounts.
 
-Assess which assumptions the change affects. Search affected current guidance and downstream references once, and update misleading instructions in the same change. Inspect historical specs when current guidance links to an affected contract. Repeat the search only if later changes invalidate it. Check changed links and the final diff before completion.
+## Docs
 
-Record the changed assumption, updated guidance and unresolved prerequisites in the phase record's Documentation impact section. If no documentation changes are needed, one sentence explaining why is enough. Do not inventory unrelated documents or produce search receipts. Preserve historical failures, measurements, migrations and owner approvals. Add a dated supersession note only where an old instruction can still be mistaken for current guidance.
+Docs describe the current system only. When a change alters a contract, update the doc that states it in the same PR, and delete text it makes wrong. Do not add dated history, approval notes or "superseded" paragraphs; git history keeps those. Do not create per-phase record files.
 
-## Verification and evidence
+## Verification
 
-Use targeted checks during development and the applicable local verification profile before completion review. Build affected applications; shared contracts, dependencies, runtime/toolchain changes or uncertain impact require the full gate. Tooling-only and test-only changes need their own checks. Unknown impact defaults to full verification. CI supplements the local gate.
+| Command | Runs | When |
+| --- | --- | --- |
+| `pnpm check` | Biome, typecheck, Vitest (~1 min) | Constantly |
+| `pnpm verify` | `check`, then build and the e2e projects affected by your diff against `main` | Before a PR that changes app code |
+| `pnpm verify --all` | `check`, build, every e2e project | Rarely; CI already does this in parallel |
+| `pnpm e2e --project=<name> -g "<test>"` | One e2e project or test against the last build | Debugging |
 
-High-risk changes require a separate review focused on the changed boundary: authentication, authorization, privacy, data loss/recovery, migrations, publication/withdrawal or runtime budgets. Ordinary changes need a normal diff review. Do not automatically start review chats or delegate without authorization.
+E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). A full local run takes a while on a small machine; CI runs every project in parallel on each PR that touches code (about five minutes), so it is fine to push and let CI cover the rest. Fix anything CI reports, including tests marked flaky.
 
-Keep one concise `results.md` per phase, linking existing requirements. Update that record for small follow-up fixes. Keep routine logs/screenshots in ignored run directories. Commit selected reproduction proof for consequential failures, regressions, benchmarks or provider decisions. Existing historical evidence stays intact. A passing fixture does not prove production feasibility, and an approved fallback decision does not prove its implementation works.
+Run the matching e2e project, plus a careful self-review of the diff, for any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion. These boundaries are where bugs cost real users.
 
-## Figma UI reference
+Write tests for user-visible behavior, privacy and data safety. Prefer a Vitest unit test when the logic can be tested without the runtime; add e2e coverage for flows that cross Workers or the browser.
 
-Use the [Figma UI direction file](https://www.figma.com/design/rjvDSCHPajF3Lpe8qNxX5U/hasaweb.site---Direction-A---SIDE-B?node-id=8-38&t=Yu7NSm3nQFBs7sQL-1) as the visual reference during development. See [docs/ui-direction.md](docs/ui-direction.md) for Figma MCP access details. Use the connected Figma MCP to read the design when implementing UI.
+## Code
 
-The Figma file is read-only during development. Do not create, edit, or delete anything in it unless the user specifically asks for changes to the file. If a change is necessary and the user has not requested it, explain the proposed change and why it is needed, then ask for permission before making it. Access through Figma MCP does not authorize changes.
+- Validate unknown input once at the boundary that owns it, then pass typed values inward. Don't re-check values a schema, constructor or type already guarantees.
+- Don't extract single-use helpers unless they hide a genuinely complex boundary or have a name that makes the caller clearer.
+- Avoid `try`/`catch` unless you handle the error meaningfully.
+- Keep hot owner routes bounded: no whole-draft parsing or serialization in request handlers (see [architecture](docs/architecture.md#1-shape-of-the-system)).
+- `apps/web` uses a Next.js version with breaking changes; see `apps/web/AGENTS.md`.
 
-## Git branch names
+## Figma
 
-Use `<type>/<short-description>` for new work branches.
+Use the Figma file in [docs/ui-direction.md](docs/ui-direction.md) through the Figma MCP when building UI. The file is read-only: never create, edit or delete anything in it unless the user asks. If a change seems necessary, explain it and ask first.
 
-- Choose a type from `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `build`, or `ci`.
-- Write the description in lowercase kebab-case. Keep it short and specific.
-- If the work has an issue number, put it before the description, such as `fix/42-mobile-menu`.
-- Examples: `feat/face-reveal`, `docs/git-conventions`, `chore/update-dependencies`.
-- Leave existing shared branch names unchanged.
+## Git
 
-## Git commit messages
+Branches: `<type>/<short-description>`, lowercase kebab-case, issue number first if there is one (`fix/42-mobile-menu`). Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`.
 
-Use Conventional Commits: `<type>(<optional-scope>): <description>`.
+Commits: Conventional Commits, `<type>(<optional-scope>): <description>`, imperative and lowercase, no trailing period, about 72 characters. Same types plus `revert`. One logical change per commit; explain why in the body when it isn't obvious. Mark breaking changes with `!` and a `BREAKING CHANGE:` footer.
 
-- Use the same types listed above. Use `revert` when reverting a commit.
-- Add a lowercase scope when it clarifies the affected area, such as `spec`, `architecture`, or `ui`. Omit the parentheses when there is no scope.
-- Write the description in the imperative, starting with a lowercase verb, such as `add`, `fix`, or `remove`. Do not end it with a period.
-- Aim to keep the subject within 72 characters.
-- Keep each commit focused on one logical change. Use an optional body to explain why the change was needed and any relevant tradeoffs.
-- Mark breaking changes with `!` before the colon and explain them in a `BREAKING CHANGE:` footer.
-- Examples: `feat(ui): add face reveal`, `fix(ui): prevent mobile menu overflow`, `docs: add git naming conventions`.
-
-Apply these conventions to new branches and commits. Do not rewrite existing history solely to rename commits.
+Never push to `main`. Don't rewrite existing history to rename commits.
