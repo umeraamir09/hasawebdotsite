@@ -43,7 +43,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 - Dependencies: 07, 10–11, 13. Integrate before completion: 17, 23 (recipient settings, publication blockers, public-data omission).
 - Console development provider, Resend adapter, shared email budgets, and recipient setup from the verified account email or a newly verified address.
-- [ ] Complete when missing, changed or unverified recipients block form publication, public HTML and data never contain the recipient, and verification/owner notices stay within their reserved allowance.
+- [x] Complete when missing, changed or unverified recipients block form publication, public HTML and data never contain the recipient, and verification/owner notices stay within their reserved allowance.
+  - Recipient routes, the editor's contact form panel, `/settings/contact/verify`, migration `0018` budgets and the Vitest-tested Resend/console adapters. Live Resend delivery and the `mail.hasaweb.site` domain are verified in 52.
 
 ### Phase 44. Accept contact submissions safely
 

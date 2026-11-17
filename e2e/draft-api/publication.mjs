@@ -6,6 +6,7 @@ export async function checkPublicationApi({
   origin,
   cookie,
   secrets,
+  email,
 }) {
   const options = { owner: "fresh", method: "POST" };
   const meta = () => request("/api/owner/progress", {}, { owner: "fresh" });
@@ -191,17 +192,35 @@ export async function checkPublicationApi({
     portfolioId,
   ]);
   assert.ok((await issues()).some((issue) => issue.code === "github"));
-  draft.components = [
-    {
-      id: "contact",
-      type: "contact",
-      version: 1,
-      data: { recipientId: portfolioId },
-    },
-  ];
-  await sql(
-    "INSERT INTO contact_recipient(portfolio_id,email,verified_at) VALUES(?,'private@example.com',?)",
-    [portfolioId, Date.now()],
+  // Phase 43: the recipient comes from the owner routes, not the draft. The
+  // account's verified email needs no link; any other address does, and
+  // changing the address blocks the form until it is confirmed again.
+  draft.components = [{ id: "contact", type: "contact", version: 1, data: {} }];
+  const recipient = (path = "", body = {}, extra = {}) =>
+    request(`/api/owner/contact/recipient${path}`, body, {
+      owner: "fresh",
+      method: "POST",
+      ...extra,
+    });
+  assert.ok((await issues()).some((issue) => issue.code === "recipient"));
+  assert.deepEqual((await recipient("/account")).recipient, {
+    email: "fresh@draft.example.test",
+    state: "verified",
+  });
+  assert.deepEqual(await issues(), []);
+  const changed = "changed-recipient@example.test";
+  assert.equal(
+    (await recipient("", { email: changed })).recipient.state,
+    "pending",
+  );
+  assert.ok((await issues()).some((issue) => issue.code === "recipient"));
+  const link = email
+    .to(changed)
+    .at(-1)
+    .text.match(/#token=([\w-]+)/)[1];
+  assert.equal(
+    (await recipient("/verify", { token: link })).recipient.state,
+    "verified",
   );
   assert.deepEqual(await issues(), []);
   await sql(

@@ -4,6 +4,7 @@ import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
 import { type Wake, wakeSchema } from "@hasaweb/db";
 import { parseRefreshMessage, type RefreshMessage } from "@hasaweb/github";
+import type { ContactBindings } from "./contact-routes";
 import {
   type GitHubBindings,
   processGitHubRefresh,
@@ -25,7 +26,10 @@ import {
 
 // Only a named service binding can reach this API. The default HTTP entry has no owner routes.
 export class OwnerApi extends WorkerEntrypoint<
-  AuthEnvironment & PublicationBindings & Partial<GitHubBindings>
+  AuthEnvironment &
+    PublicationBindings &
+    Partial<GitHubBindings> &
+    ContactBindings
 > {
   fetch(request: Request) {
     return ownerRouter.fetch(request, this.env, this.ctx);

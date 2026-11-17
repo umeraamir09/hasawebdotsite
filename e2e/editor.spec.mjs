@@ -2,6 +2,7 @@ import { checkAppearanceJourney } from "./editor/appearance.mjs";
 import { checkAvatarExtrasJourney } from "./editor/avatar-extras.mjs";
 import { checkCaseStudyJourney } from "./editor/case-study.mjs";
 import { checkComponentControls } from "./editor/component-controls.mjs";
+import { checkContactRecipientJourney } from "./editor/contact-recipient.mjs";
 import { checkCropControls } from "./editor/crop-controls.mjs";
 import { checkDraftPreviewJourney } from "./editor/draft-preview.mjs";
 import { checkFaceRevealJourney } from "./editor/face-reveal.mjs";
@@ -22,7 +23,7 @@ import { expect, step, test } from "./support/fixtures.mjs";
 // Each journey boots its own editor state, so journeys run in any order and
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
-// Order balances CI's three editor shards (7/7/6 tests, about 2.3 min each).
+// Order balances CI's three editor shards (7/7/7 tests, about 2.3 min each).
 const journeys = {
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
@@ -45,6 +46,8 @@ const journeys = {
   "resume download": (editor) => checkResumeJourney(editor.controls),
   appearance: (editor) => checkAppearanceJourney(editor.controls),
   "face reveal": (editor) => checkFaceRevealJourney(editor.controls),
+  "contact recipient": (editor) =>
+    checkContactRecipientJourney(editor.controls),
 };
 
 for (const [title, journey] of Object.entries(journeys))

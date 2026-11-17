@@ -42,15 +42,32 @@ function retryAfter(value: string | null, now: number): number | null {
   return Number.isFinite(date) ? Math.max(0, date - now) : null;
 }
 
+export type ResendOptions = {
+  apiKey: string;
+  from: string;
+  transport?: Transport;
+  timeoutMs?: number;
+  now?: () => number;
+  // Local and test fixtures only. Production always uses Resend's API.
+  endpoint?: string;
+};
+export const RESEND_ENDPOINT = "https://api.resend.com/emails";
+
 export class ResendProvider implements EmailProvider {
-  constructor(
-    private readonly apiKey: string,
-    private readonly from: string,
-    private readonly transport: Transport = fetch,
-    private readonly timeoutMs = 10_000,
-    private readonly now: () => number = Date.now,
-  ) {
-    if (!apiKey || !validAddress(from) || timeoutMs <= 0)
+  private readonly apiKey: string;
+  private readonly from: string;
+  private readonly transport: Transport;
+  private readonly timeoutMs: number;
+  private readonly now: () => number;
+  private readonly endpoint: string;
+  constructor(options: ResendOptions) {
+    this.apiKey = options.apiKey;
+    this.from = options.from;
+    this.transport = options.transport ?? ((input, init) => fetch(input, init));
+    this.timeoutMs = options.timeoutMs ?? 10_000;
+    this.now = options.now ?? Date.now;
+    this.endpoint = options.endpoint ?? RESEND_ENDPOINT;
+    if (!this.apiKey || !validAddress(this.from) || this.timeoutMs <= 0)
       throw new Error("Invalid Resend configuration");
   }
 
@@ -59,9 +76,11 @@ export class ResendProvider implements EmailProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
-      const response = await this.transport("https://api.resend.com/emails", {
+      const response = await this.transport(this.endpoint, {
         method: "POST",
-        redirect: "error",
+        // Workers fetch rejects "error". A redirect is never followed and,
+        // as a non-2xx status, is classified as a rejection below.
+        redirect: "manual",
         signal: controller.signal,
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
@@ -141,6 +160,7 @@ export class ResendProvider implements EmailProvider {
 }
 
 // The development caller chooses the local sink. Never use this in production.
+// It accepts only after the sink returns, so a throwing sink is a failed send.
 export class ConsoleProvider implements EmailProvider {
   constructor(private readonly write: (email: Email) => void) {}
   async send(email: Email, key: string): Promise<SendResult> {
@@ -150,11 +170,23 @@ export class ConsoleProvider implements EmailProvider {
   }
 }
 
-export function verificationEmail(to: string, verificationUrl: string): Email {
+/** The owner page that confirms a recipient. The token travels in the fragment. */
+export const VERIFY_PATH = "/settings/contact/verify";
+export function verificationUrl(appOrigin: string, token: string): string {
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(token))
+    throw new Error("Invalid verification token");
+  return `${new URL(appOrigin).origin}${VERIFY_PATH}#token=${token}`;
+}
+export function verificationEmail(
+  to: string,
+  verificationUrl: string,
+  appOrigin: string,
+): Email {
   const url = new URL(verificationUrl);
   if (
-    url.origin !== "https://hasaweb.site" ||
-    url.pathname !== "/settings/contact/verify" ||
+    url.origin !== new URL(appOrigin).origin ||
+    url.pathname !== VERIFY_PATH ||
+    url.search ||
     /[\r\n]/.test(verificationUrl)
   )
     throw new Error("Invalid verification URL");
@@ -184,4 +216,38 @@ export function failureNotice(to: string): Email {
     subject: "A portfolio message could not be delivered",
     text: "A message accepted by your hasaweb.site contact form could not be delivered. Open your portfolio settings to review delivery status. The visitor's message is no longer retained.",
   };
+}
+
+export type EmailEnvironment = {
+  APP_ENV: string;
+  RESEND_API_KEY?: string;
+  // The fixed sender on the verified sending domain, e.g. hello@mail.hasaweb.site.
+  EMAIL_FROM?: string;
+  // Local and test fixtures only: a stand-in for Resend's API.
+  RESEND_API_ORIGIN?: string;
+};
+const development = (env: EmailEnvironment) =>
+  env.APP_ENV === "local" || env.APP_ENV === "test";
+
+/**
+ * The deployment's email adapter: Resend when it is configured, the console
+ * sink in local development, otherwise null (sending is unavailable). A
+ * fixture origin is honoured only in local and test environments.
+ */
+export function emailProvider(
+  env: EmailEnvironment,
+  write: (email: Email) => void = (email) =>
+    console.log(
+      `[email:${email.kind}] to=${email.to} subject=${email.subject}\n${email.text}`,
+    ),
+): EmailProvider | null {
+  if (env.RESEND_API_KEY && env.EMAIL_FROM)
+    return new ResendProvider({
+      apiKey: env.RESEND_API_KEY,
+      from: env.EMAIL_FROM,
+      ...(development(env) && env.RESEND_API_ORIGIN
+        ? { endpoint: `${new URL(env.RESEND_API_ORIGIN).origin}/emails` }
+        : {}),
+    });
+  return development(env) ? new ConsoleProvider(write) : null;
 }

@@ -12,6 +12,7 @@
     "@hasaweb/components": "workspace:*",
     "@hasaweb/config": "workspace:*",
     "@hasaweb/db": "workspace:*",
+    "@hasaweb/email": "workspace:*",
     "@hasaweb/github": "workspace:*",
     "@hasaweb/render": "workspace:*",
     "@hasaweb/schema": "workspace:*",

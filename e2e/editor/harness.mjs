@@ -21,6 +21,7 @@ export async function createEditorHarness({
   evidence,
   secrets,
   github,
+  email,
 }) {
   const directory = join(workDirectory, "editor-bundle");
   await mkdir(directory, { recursive: true });
@@ -1428,6 +1429,7 @@ export async function createEditorHarness({
     cookie,
     root,
     github,
+    email,
   };
   return {
     controls,

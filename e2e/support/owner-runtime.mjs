@@ -8,6 +8,11 @@ import { dirname, join } from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import {
+  EMAIL_FROM,
+  RESEND_FIXTURE_KEY,
+  startEmailFixture,
+} from "./email-fixture.mjs";
+import {
   ACTIVITY_CLIENT_ID,
   ACTIVITY_CLIENT_SECRET,
   ACTIVITY_KEY,
@@ -256,6 +261,8 @@ export async function startOwnerRuntime({ directory, evidence }) {
   }
   // A local stand-in for GitHub's public endpoints (no real account or token).
   const github = await startGitHubFixture(await freePort());
+  // A local stand-in for Resend (Phase 43 recipient confirmation).
+  const email = await startEmailFixture(await freePort());
   async function stop() {
     if (!child || child.exitCode !== null || child.signalCode !== null) return;
     const exited = new Promise((r) => child.once("exit", r));
@@ -341,6 +348,10 @@ export async function startOwnerRuntime({ directory, evidence }) {
         GITHUB_ACTIVITY_CLIENT_ID: ACTIVITY_CLIENT_ID,
         GITHUB_ACTIVITY_CLIENT_SECRET: ACTIVITY_CLIENT_SECRET,
         GITHUB_ACTIVITY_KEY: ACTIVITY_KEY,
+        // The real Resend adapter, sending to the local stand-in.
+        RESEND_API_KEY: RESEND_FIXTURE_KEY,
+        EMAIL_FROM,
+        RESEND_API_ORIGIN: email.origin,
       },
     }),
   );
@@ -576,6 +587,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
     secrets,
     tokens,
     github,
+    email,
     esbuild,
     fixture,
     progress,
@@ -600,6 +612,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
     async close() {
       await stop();
       await github.close();
+      await email.close();
     },
     logs: () => logs,
   };

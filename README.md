@@ -28,10 +28,11 @@ If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package
 2. Set `APP_ORIGIN` to the exact browser origin without a trailing slash: `http://127.0.0.1:8787` for `pnpm dev`, `http://127.0.0.1:3000` for `pnpm dev:web`. Never a LAN address, portfolio host or path.
 3. Register development OAuth apps with callbacks `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`.
 4. To use the real guide and editor, add `OWNER_ENTRY_ACTIVATION=active` to `apps/web/.dev.vars`. Without it `/auth/entry` and `/editor` show the welcome shell.
+5. Email (contact recipient confirmation) prints to the jobs console unless `RESEND_API_KEY` and `EMAIL_FROM` are set in `apps/jobs/.dev.vars`.
 
 ### Production configuration (Phase 52)
 
-The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs.
+The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs. Email needs jobs secret `RESEND_API_KEY` and variable `EMAIL_FROM` on the verified `mail.hasaweb.site` domain; without them recipient confirmation reports email unavailable.
 
 ## Checks
 

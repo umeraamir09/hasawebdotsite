@@ -94,7 +94,9 @@ Exact versions live in the manifests and lockfile. Dependency upgrades need thei
 | Publication tables | Candidates, tasks, pages, version index, retained-version references, admission slots, publish versions and receipts (migrations `0007`–`0014`). See [`packages/db`](../packages/db/README.md#immutable-candidate-delivery). |
 | `owner_save_attempt`, `owner_save_piece` | One expiring private staged attempt per owner and its ordered string pieces. |
 | GitHub (`github_connection`, `github_activity`, `github_grant`, `github_legacy_credential`, `github_refresh`, `github_published_activity`, consent attempts) | Generation-checked, encrypted, coordinated per app/account. See [GitHub](#github-activity). |
-| `contact_recipient`, `contact_outbox`, `counter` | Phases 43–45: verified recipient, transactional outbox, fixed-window limits and email budgets. |
+| `contact_recipient` | One private recipient per portfolio: address, `verified_at`, and a pending link's SHA-256 token hash and expiry. Never in drafts, publication facts or output. |
+| `email_reservation`, `email_dispatch` | Shared email budgets (migration `0018`): one row per accepted email and per provider attempt, no addresses or content. Triggers enforce the allowances in [Contact form](#contact-form-phases-4345). |
+| `contact_outbox`, `counter` | Phases 44–45: transactional outbox and fixed-window submission limits. |
 | `operator_email_audit` | Phase 51: operator lookups recorded without the email, kept 90 days or until account deletion. |
 
 ### Draft document
@@ -201,7 +203,20 @@ Contracts in [`packages/github`](../packages/github/README.md) and [`packages/db
 
 ### Contact form (Phases 43–45)
 
-Visitor posts to `/_/contact` with a Turnstile token. `site` validates fields, applies limits (five per visitor/IP per site per hour; ten accepted per site per UTC day), checks the recipient is verified, then atomically reserves the site and global allowances and inserts a `contact_outbox` row before returning 202. Delivery goes through `EmailProvider` with an idempotency key and the visitor as Reply-To: immediately, then at 5 min, 30 min, 4 h and 24 h, at most five attempts, permanent errors fail at once. Final failure deletes the payload and notifies the owner. Global contact budget 90/day, ten reserved for verification and owner notices; a dispatch-day guard keeps cross-midnight retries inside the provider cap. Test messages use the same path, two per site per day. Preview forms never send. The recipient address never appears in public HTML or data.
+**Email adapters** (`packages/email`). `EmailProvider.send(email, idempotencyKey)` returns accepted, retry, quota or rejected, never provider text. `emailProvider(env)` picks `ResendProvider` when `RESEND_API_KEY` and `EMAIL_FROM` (the fixed sender on `mail.hasaweb.site`) are set, otherwise the console sink in `local`/`test` and no provider (sending unavailable) elsewhere. `RESEND_API_ORIGIN` points the Resend adapter at a stand-in, honoured only in `local`/`test`. Emails are plain text, one recipient, no header injection.
+
+**Recipient** (Phase 43). The contact form needs the portfolio's recipient to be verified; the draft carries no address (`data.recipientId` is legacy and stripped from publication). Owner routes in jobs, all requiring `X-Expected-Owner-Id` because they return the owner's own address:
+
+- `GET /api/owner/contact/recipient` returns `{recipient: null | {email, state: verified|pending|unverified}, accountEmail}`. `accountEmail` is the account email only when the provider verified it.
+- `POST /api/owner/contact/recipient/account` with `{}` makes that account email the recipient, verified at once, with no email.
+- `POST /api/owner/contact/recipient` with `{email}` (≤254 bytes) sets another address, clears verification and sends a link `{APP_ORIGIN}/settings/contact/verify#token=…` valid for 24 hours. The token is 32 random bytes; only its hash is stored. Re-requesting the verified address, or the verified account email, sends nothing.
+- `POST /api/owner/contact/recipient/verify` with `{token}` confirms the pending address of the signed-in owner only. The page reads the token from the fragment and confirms on an explicit click, so link scanners cannot confirm by opening it.
+
+Errors are closed codes and include the current status: `invalid_email` 422, `account_email_unverified` 409, `limited` 429, `unavailable` 503, `delivery_failed` 502, `invalid_token` 409, `expired_token` 410. Changing the address takes effect immediately, not on Publish, and blocks form publication until confirmed; publication tickets include `verified_at`, so a change during publishing invalidates it. Recipient settings live in the editor's contact form panel.
+
+**Budgets** (UTC days, enforced by D1 triggers so concurrent requests cannot exceed them). Acceptance: 90 contact messages in total, ten per portfolio, two of them tests; ten owner notices in total (verification and final-failure notices share them), three verifications per portfolio. A notice over the allowance is deferred, never sent. Provider attempts: 100 a day (90 contact, 10 notice) and 3,000 a month, charged per attempt on the dispatch day, so cross-midnight retries stay inside the provider cap. Every send reserves acceptance, then the attempt, then calls the provider. Replayed IDs are not charged twice.
+
+**Submissions** (Phases 44–45). Visitor posts to `/_/contact` with a Turnstile token. `site` validates fields, applies limits (five per visitor/IP per site per hour), checks the recipient is verified, then atomically reserves the contact allowance and inserts a `contact_outbox` row before returning 202. Delivery goes through `EmailProvider` with an idempotency key and the visitor as Reply-To: immediately, then at 5 min, 30 min, 4 h and 24 h, at most five attempts, permanent errors fail at once. Final failure deletes the payload and notifies the owner. Test messages use the same path. Preview forms never send. The recipient address never appears in public HTML or data.
 
 ### Unpublish, delete, suspend (Phases 48, 49, 51)
 
@@ -230,7 +245,7 @@ Visitor posts to `/_/contact` with a Turnstile token. `site` validates fields, a
 | Origins | Apex-only host-only auth cookies; portfolio pages run only our code and receive no auth cookies. Submit `hasaweb.site` to the Public Suffix List after launch. |
 | CSRF | Better Auth origin checks, SameSite=Lax, exact `Origin` plus JSON content type on every mutation. |
 | Authorization | Repository functions take the session user. Drafts, previews and private assets return 404 to anyone else. |
-| Secrets | `BETTER_AUTH_SECRET`, OAuth credentials, `GITHUB_SERVICE_TOKEN`, `GITHUB_ACTIVITY_*`, `RESEND_API_KEY`, `TURNSTILE_SECRET`, cache-purge token. Never in the repo. |
+| Secrets | `BETTER_AUTH_SECRET`, OAuth credentials, `GITHUB_SERVICE_TOKEN`, `GITHUB_ACTIVITY_*`, `RESEND_API_KEY` (with the `EMAIL_FROM` variable), `TURNSTILE_SECRET`, cache-purge token. Never in the repo. |
 | Tokens | GitHub tokens AES-GCM encrypted; deleted and revoked on withdrawal or deletion. Activity key rotation is not implemented. |
 | Contact data | Payload kept only until delivered or finally failed. |
 | Dev probes | `isLocalProbe` (`packages/config`) allows fixture routes only on loopback in local/test environments. Integration fixtures are built from `apps/*/integration`, never imported by production code. |
