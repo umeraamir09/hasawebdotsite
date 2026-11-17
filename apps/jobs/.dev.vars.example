@@ -14,3 +14,7 @@ GITHUB_SERVICE_TOKEN=replace-with-the-platform-public-read-token
 GITHUB_ACTIVITY_CLIENT_ID=replace-with-local-activity-oauth-client-id
 GITHUB_ACTIVITY_CLIENT_SECRET=replace-with-local-activity-oauth-client-secret
 GITHUB_ACTIVITY_KEY=replace-with-base64-of-32-random-bytes
+# Optional: send real email through Resend. Without both, local development
+# prints emails (including recipient confirmation links) to the jobs console.
+# RESEND_API_KEY=replace-with-a-resend-api-key
+# EMAIL_FROM=hello@your-verified-sending-domain.example

@@ -183,7 +183,9 @@ const rules = [
     "recipient",
     cp("'recipientId'"),
     "c,p",
-    `c.type!='contact' OR EXISTS(SELECT 1 FROM contact_recipient r WHERE r.portfolio_id=p.id AND r.verified_at IS NOT NULL AND ${field("c.value", "data.recipientId")}=r.portfolio_id)`,
+    // The portfolio's one recipient must be verified now. Changing its address
+    // clears verification, so a changed recipient blocks until confirmed.
+    `c.type!='contact' OR EXISTS(SELECT 1 FROM contact_recipient r WHERE r.portfolio_id=p.id AND r.verified_at IS NOT NULL)`,
   ),
 ];
 // Scan each related collection once, emitting only failing rules. Building a

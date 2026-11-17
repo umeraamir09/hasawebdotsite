@@ -13,6 +13,7 @@ import {
   SaveError,
 } from "@hasaweb/db";
 import { Hono } from "hono";
+import { addContactRoutes, type ContactBindings } from "./contact-routes";
 import { addDraftRoutes } from "./draft-routes";
 import {
   addGitHubRoutes,
@@ -64,7 +65,8 @@ async function initializationBody(request: Request): Promise<400 | 413 | null> {
 export type OwnerBindings = {
   Bindings: AuthEnvironment &
     Partial<PublicationBindings> &
-    Partial<GitHubBindings>;
+    Partial<GitHubBindings> &
+    ContactBindings;
   Variables: { owner: Owner; identity: Owner["identity"] };
 };
 
@@ -214,6 +216,7 @@ export function createOwnerRouter() {
   addDraftRoutes(app);
   addPublicationRoutes(app);
   addGitHubRoutes(app);
+  addContactRoutes(app);
   return app;
 }
 

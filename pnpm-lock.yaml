@@ -208,6 +208,9 @@ importers:
       '@hasaweb/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@hasaweb/email':
+        specifier: workspace:*
+        version: link:../../packages/email
       '@hasaweb/github':
         specifier: workspace:*
         version: link:../../packages/github
@@ -408,6 +411,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@hasaweb/email':
+        specifier: workspace:*
+        version: link:../email
       '@hasaweb/github':
         specifier: workspace:*
         version: link:../github

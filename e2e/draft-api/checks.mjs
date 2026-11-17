@@ -21,6 +21,7 @@ export async function checkDraftApi(runtime, check) {
     validateUntilStop,
     start,
     stop,
+    email,
   } = runtime;
   await check(
     "strict bounded request parsing and unsafe path rejection",
@@ -1168,7 +1169,18 @@ export async function checkDraftApi(runtime, check) {
         secrets,
       });
       const { checkPublicationApi } = await import("./publication.mjs");
-      await checkPublicationApi({ request, sql, origin, cookie, secrets });
+      await checkPublicationApi({
+        request,
+        sql,
+        origin,
+        cookie,
+        secrets,
+        email,
+      });
     },
   );
+  await check("contact recipient verification and email budgets", async () => {
+    const { checkContactRecipient } = await import("./contact-recipient.mjs");
+    await checkContactRecipient({ request, sql, email });
+  });
 }

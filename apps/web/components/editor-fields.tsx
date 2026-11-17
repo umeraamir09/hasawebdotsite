@@ -1,10 +1,10 @@
 "use client";
 
 import type { PreviewSelection } from "@hasaweb/components/browser";
-import { componentRegistry } from "@hasaweb/schema";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { AvatarExtrasControls } from "./avatar-extras-controls";
+import { ContactControls } from "./contact-controls";
 import { GitHubControls } from "./github-controls";
 import { ProfileControls } from "./profile-controls";
 import { ProjectControls } from "./project-controls";
@@ -66,6 +66,14 @@ export function EditorFields({
         disabled={disabled}
       />
     );
+  if (component.type === "contact")
+    return (
+      <ContactControls
+        key={controller.scopeKey}
+        controller={controller}
+        disabled={disabled}
+      />
+    );
   if (component.type === "text")
     return (
       <TextControls
@@ -90,16 +98,7 @@ export function EditorFields({
         disabled={disabled}
       />
     );
-  const definition = componentRegistry[component.type];
-  return (
-    <section aria-label={`${definition.picker.title} controls`}>
-      <h2>{definition.picker.title}</h2>
-      <p>{definition.picker.description}</p>
-      <ul>
-        {definition.picker.requirements.map((requirement) => (
-          <li key={requirement}>{requirement}</li>
-        ))}
-      </ul>
-    </section>
-  );
+  // Every registry type has a panel above; the type check proves it.
+  component satisfies never;
+  return null;
 }

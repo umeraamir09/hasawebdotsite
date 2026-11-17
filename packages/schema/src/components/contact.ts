@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { idSchema } from "../primitives";
 
-// Private recipient and verification records live outside the draft document.
+// The recipient lives outside the draft (`contact_recipient`, Phase 43).
+// `recipientId` is a legacy field: readiness ignores it and publication strips it.
 export const contactSchema = z.strictObject({
   recipientId: idSchema.optional(),
 });

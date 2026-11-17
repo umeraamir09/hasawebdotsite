@@ -529,6 +529,51 @@ export const counter = sqliteTable(
     check("counter_count", sql`${t.count} >= 0`),
   ],
 );
+// Shared email budgets (Phase 43). A reservation is one accepted email:
+// contact messages and test messages (Phases 44–45) or owner notices
+// (verification, final-failure). A dispatch is one provider attempt. Triggers
+// in migration 0018 enforce the daily and monthly allowances atomically, so
+// concurrent requests cannot exceed them. Rows hold no addresses or content.
+export const emailReservation = sqliteTable(
+  "email_reservation",
+  {
+    id: text("id").primaryKey(),
+    // Not a foreign key: spent allowance survives portfolio deletion.
+    portfolioId: text("portfolio_id").notNull(),
+    kind: text("kind", {
+      enum: ["contact", "verification", "failure-notice"],
+    }).notNull(),
+    isTest: integer("is_test", { mode: "boolean" }).notNull().default(false),
+    day: text("day").notNull(),
+  },
+  (t) => [
+    index("email_reservation_day_idx").on(t.day, t.kind, t.portfolioId),
+    check(
+      "email_reservation_kind",
+      sql`${t.kind} in ('contact','verification','failure-notice')`,
+    ),
+    check(
+      "email_reservation_test",
+      sql`${t.isTest} in (0,1) and (${t.kind} = 'contact' or ${t.isTest} = 0)`,
+    ),
+  ],
+);
+export const emailDispatch = sqliteTable(
+  "email_dispatch",
+  {
+    attempt: text("attempt").primaryKey(),
+    reservation: text("reservation")
+      .notNull()
+      .references(() => emailReservation.id),
+    notice: integer("notice", { mode: "boolean" }).notNull(),
+    day: text("day").notNull(),
+    month: text("month").notNull(),
+  },
+  (t) => [
+    index("email_dispatch_day_idx").on(t.day, t.notice),
+    index("email_dispatch_month_idx").on(t.month),
+  ],
+);
 export const operatorEmailAudit = sqliteTable(
   "operator_email_audit",
   {
@@ -567,6 +612,8 @@ export const schema = {
   contactRecipient,
   contactOutbox,
   counter,
+  emailReservation,
+  emailDispatch,
   operatorEmailAudit,
 };
 
