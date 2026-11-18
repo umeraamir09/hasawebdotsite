@@ -144,10 +144,20 @@ export default {
       new URL(request.url).pathname === "/__fixture/public" &&
       request.method === "POST"
     ) {
-      const body = await request.json<{ url: string; method?: string }>();
-      // The visitor path, including Phase 42 refresh-on-visit.
+      const body = await request.json<{
+        url: string;
+        method?: string;
+        headers?: Record<string, string>;
+        body?: string;
+      }>();
+      // The visitor path, including Phase 42 refresh-on-visit and Phase 44
+      // contact posts (with the visitor's headers and raw body).
       return servePublic(
-        new Request(body.url, { method: body.method ?? "GET" }),
+        new Request(body.url, {
+          method: body.method ?? "GET",
+          headers: body.headers ?? {},
+          ...(body.body !== undefined ? { body: body.body } : {}),
+        }),
         env,
         ctx,
       );

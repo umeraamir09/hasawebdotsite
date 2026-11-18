@@ -128,7 +128,8 @@ const schemas = {
   contact: z.strictObject({
     ...identity,
     type: z.literal("contact"),
-    data: z.strictObject({ available: z.literal(false) }),
+    // `live` posts to the portfolio's `/_/contact`. `preview` never sends.
+    data: z.strictObject({ mode: z.enum(["live", "preview"]) }),
   }),
   resume: z.strictObject({
     ...identity,
@@ -178,6 +179,8 @@ export type ProjectionOptions = {
   // Absent: no graph data. `live`: the published placeholder. Otherwise the
   // owner-authorized fetch for one username, shown only when it matches.
   graph?: "live" | GraphPreview | null | undefined;
+  // `live` only in published output. Absent renders the preview-only form.
+  contact?: "live" | undefined;
 };
 export type GraphPreview = {
   username: string;
@@ -372,9 +375,13 @@ const adapters = {
       data: { username: component.data.username, graph },
     };
   },
-  *contact(component) {
+  *contact(component, _draft, options) {
     yield;
-    return { id: component.id, type: "contact", data: { available: false } };
+    return {
+      id: component.id,
+      type: "contact",
+      data: { mode: options.contact === "live" ? "live" : "preview" },
+    };
   },
   *resume(component, _draft, options) {
     yield;
@@ -430,7 +437,7 @@ function* projectSteps(
         components.push(yield* adapters.github(component, draft, options));
         break;
       case "contact":
-        components.push(yield* adapters.contact(component));
+        components.push(yield* adapters.contact(component, draft, options));
         break;
       case "resume":
         components.push(yield* adapters.resume(component, draft, options));

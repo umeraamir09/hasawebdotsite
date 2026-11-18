@@ -39,6 +39,7 @@ export {
   projectPreviewPage,
 } from "./model";
 export {
+  ContactForm,
   Portfolio,
   PortfolioCaseStudy,
   PortfolioLayout,

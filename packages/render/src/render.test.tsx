@@ -10,6 +10,7 @@ import {
   PortfolioAvatar,
   PortfolioCaseStudy,
   PortfolioProfile,
+  PortfolioSection,
   projectPortfolio,
   THEME_IDS,
 } from "@hasaweb/components";
@@ -191,9 +192,64 @@ describe("display projection", () => {
     );
     for (const component of source.components)
       expect(html).toContain(`data-component="${component.type}"`);
-    expect(html).toContain("Contact form unavailable");
-    expect(html).not.toContain("<form");
+    // The preview form has no source, so the platform script never sends.
+    expect(html).toContain("data-contact-form");
+    expect(html).not.toContain("data-contact-source");
     expect(html).not.toContain("download=");
+  });
+  it("publishes the same contact form markup through both renderer paths", () => {
+    const source = draft();
+    source.components = [createComponent("contact", "c")];
+    const model = projectPortfolio(source, { ...options, contact: "live" });
+    expect(model.components[0]).toEqual({
+      id: "c",
+      type: "contact",
+      data: { mode: "live" },
+    });
+    const [component] = model.components;
+    if (!component) throw new Error("Missing contact section");
+    const section = renderToStaticMarkup(
+      <PortfolioSection component={component} />,
+    );
+    const fragment = renderFragment({ kind: "contact-form", id: "c" });
+    expect(fragment.status).toBe("ready");
+    if (fragment.status !== "ready") return;
+    expect(section).toContain(fragment.html);
+    expect(fragment.html).toContain('data-contact-source="/_/contact"');
+    for (const name of ["name", "email", "message"])
+      expect(fragment.html).toContain(`name="${name}"`);
+    // Disabled until the platform script attaches; no native submission.
+    expect(fragment.html).toMatch(/<button[^>]*type="submit"[^>]*disabled/);
+    expect(fragment.html).not.toContain("action=");
+    expect(fragment.html).not.toMatch(/@|recipient/i);
+    expect(renderFragment({ kind: "contact-form", id: "<x>" }).status).toBe(
+      "invalid",
+    );
+  });
+  it("allows Turnstile only on documents that publish a contact form", () => {
+    const plain = portfolioHeaders("public", { connectSelf: true });
+    const form = portfolioHeaders("public", {
+      connectSelf: true,
+      turnstile: true,
+    });
+    const resume = portfolioHeaders("public", {
+      objectOrigins: ["https://assets.hasaweb.site"],
+      turnstile: true,
+    });
+    expect(plain.get("Content-Security-Policy")).not.toContain(
+      "challenges.cloudflare.com",
+    );
+    expect(plain.get("Content-Security-Policy")).not.toContain("frame-src");
+    expect(form.get("Content-Security-Policy")).toMatch(
+      /script-src 'self'\s+https:\/\/challenges\.cloudflare\.com;/,
+    );
+    expect(form.get("Content-Security-Policy")).toContain(
+      "frame-src https://challenges.cloudflare.com;",
+    );
+    expect(form.get("Content-Security-Policy")).toContain("form-action 'none'");
+    expect(resume.get("Content-Security-Policy")).toContain(
+      "frame-src https://assets.hasaweb.site https://challenges.cloudflare.com;",
+    );
   });
 });
 describe("safe output and bounded serialization", () => {

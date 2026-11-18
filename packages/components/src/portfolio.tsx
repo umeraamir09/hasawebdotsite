@@ -8,6 +8,7 @@ import {
 import type { ReactNode } from "react";
 import { AssetImage } from "./asset";
 import { PortfolioAvatar } from "./avatar";
+import { CONTACT_SOURCE_PATH } from "./contact";
 import { PortfolioFrame } from "./frames";
 import { contributionLabel, graphLayout, graphUpdated } from "./graph";
 import type {
@@ -85,6 +86,87 @@ function GitHubGraph({
         {graphUpdated(graph.fetchedAt)}
       </p>
     </div>
+  );
+}
+// The visitor contact form. Published output carries the same-origin source;
+// preview markup has none, so the platform script never sends from it. The
+// submit button stays disabled until that script has attached. Fields and
+// messages follow `contact.ts`.
+export function ContactForm({
+  id,
+  mode,
+}: {
+  id: string;
+  mode: "live" | "preview";
+}) {
+  const field = (name: string) => `pf-contact-${id}-${name}`;
+  const described = (name: string) => `${field(name)}-error`;
+  return (
+    <form
+      className="pf-contact"
+      data-contact-form=""
+      data-state="idle"
+      noValidate
+      {...(mode === "live"
+        ? { "data-contact-source": CONTACT_SOURCE_PATH }
+        : {})}
+    >
+      <div className="pf-field">
+        <label htmlFor={field("name")}>Name</label>
+        <input
+          id={field("name")}
+          name="name"
+          type="text"
+          autoComplete="name"
+          maxLength={100}
+          required
+          aria-describedby={described("name")}
+        />
+        <p
+          className="pf-field-error"
+          id={described("name")}
+          data-field-error="name"
+        />
+      </div>
+      <div className="pf-field">
+        <label htmlFor={field("email")}>Email</label>
+        <input
+          id={field("email")}
+          name="email"
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          required
+          aria-describedby={described("email")}
+        />
+        <p
+          className="pf-field-error"
+          id={described("email")}
+          data-field-error="email"
+        />
+      </div>
+      <div className="pf-field">
+        <label htmlFor={field("message")}>Message</label>
+        <textarea
+          id={field("message")}
+          name="message"
+          rows={6}
+          maxLength={5000}
+          required
+          aria-describedby={described("message")}
+        />
+        <p
+          className="pf-field-error"
+          id={described("message")}
+          data-field-error="message"
+        />
+      </div>
+      <div className="pf-contact-check" data-contact-check="" />
+      <p className="pf-contact-status" data-contact-status="" role="status" />
+      <button className="pf-button" type="submit" disabled>
+        Send message
+      </button>
+    </form>
   );
 }
 function Links({ links }: { links: ProfileModel["links"] }) {
@@ -416,7 +498,7 @@ function SectionContent({
       return (
         <>
           <h2>Contact</h2>
-          <Empty>Contact form unavailable.</Empty>
+          <ContactForm id={component.id} mode={component.data.mode} />
         </>
       );
     case "resume":

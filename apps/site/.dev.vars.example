@@ -1,0 +1,4 @@
+# Turnstile for published contact forms. This is Cloudflare's always-pass
+# test secret, matching the test site key in wrangler.jsonc. Never use it in
+# production.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA

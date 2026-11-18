@@ -22,6 +22,7 @@ export async function checkDraftApi(runtime, check) {
     start,
     stop,
     email,
+    turnstile,
   } = runtime;
   await check(
     "strict bounded request parsing and unsafe path rejection",
@@ -1183,4 +1184,13 @@ export async function checkDraftApi(runtime, check) {
     const { checkContactRecipient } = await import("./contact-recipient.mjs");
     await checkContactRecipient({ request, sql, email });
   });
+  await check(
+    "contact submissions are accepted only into the outbox",
+    async () => {
+      const { checkContactSubmission } = await import(
+        "./contact-submission.mjs"
+      );
+      await checkContactSubmission({ origin, secrets, sql, turnstile });
+    },
+  );
 }

@@ -2,6 +2,7 @@ import { checkAppearanceJourney } from "./editor/appearance.mjs";
 import { checkAvatarExtrasJourney } from "./editor/avatar-extras.mjs";
 import { checkCaseStudyJourney } from "./editor/case-study.mjs";
 import { checkComponentControls } from "./editor/component-controls.mjs";
+import { checkContactFormJourney } from "./editor/contact-form.mjs";
 import { checkContactRecipientJourney } from "./editor/contact-recipient.mjs";
 import { checkCropControls } from "./editor/crop-controls.mjs";
 import { checkDraftPreviewJourney } from "./editor/draft-preview.mjs";
@@ -54,6 +55,7 @@ const journeys = {
   "face reveal": (editor) => checkFaceRevealJourney(editor.controls),
   "contact recipient": (editor) =>
     checkContactRecipientJourney(editor.controls),
+  "contact form": (editor) => checkContactFormJourney(editor.controls),
 };
 
 for (const [title, journey] of Object.entries(journeys))

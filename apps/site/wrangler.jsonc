@@ -4,7 +4,9 @@
   "workers_dev": false,
   "vars": {
     "APP_ENV": "local",
-    "ASSET_ORIGIN": "https://assets.hasaweb.site"
+    "ASSET_ORIGIN": "https://assets.hasaweb.site",
+    // Cloudflare's always-pass Turnstile test key. Production sets its own.
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
   },
   "d1_databases": [
     {

@@ -1,11 +1,13 @@
+import { CONTACT_SOURCE_PATH } from "@hasaweb/components/contact";
 import type { RefreshQueue } from "@hasaweb/db/github-refresh";
 import {
   portfolioHeaders,
   unavailableResponse,
 } from "@hasaweb/render/response-policy";
+import { type ContactEnv, serveContact } from "./contact";
 import { serveGitHubGraph } from "./github-graph";
 
-export type PublicEnv = {
+export type PublicEnv = Omit<ContactEnv, "DB"> & {
   DB: D1Database;
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
@@ -51,6 +53,8 @@ type FileRow = {
   sha256: string;
   content_type: string;
   subdomain?: string;
+  // 1 when this file's version publishes a contact form.
+  contact?: number | null;
 };
 
 function allowedPath(path: string) {
@@ -124,7 +128,8 @@ async function portfolioFile(db: D1Database, name: string, path: string) {
         json_extract(f.value,'$.path') AS path,
         json_extract(f.value,'$.bytes') AS bytes,
         json_extract(f.value,'$.sha256') AS sha256,
-        json_extract(f.value,'$.contentType') AS content_type
+        json_extract(f.value,'$.contentType') AS content_type,
+        json_extract(x.value,'$.contact') AS contact
        FROM portfolio p
        JOIN subdomain_claim claim ON claim.portfolio_id=p.id AND claim.name=? AND claim.state='claimed'
        JOIN publish_version current ON current.portfolio_id=p.id AND current.n=p.published_version AND current.status='live'
@@ -199,6 +204,9 @@ async function serveFile(
     ...(path === "/resume" ? { objectOrigins: [assetOrigin] } : {}),
     // Only portfolio documents draw the live graph from this origin.
     connectSelf: file.content_type === "text/html; charset=utf-8",
+    // Documents of a version with a contact form load its spam check.
+    turnstile:
+      file.content_type === "text/html; charset=utf-8" && file.contact === 1,
   });
   headers.set("Content-Type", file.content_type);
   headers.set("ETag", `"${file.sha256}"`);
@@ -231,9 +239,12 @@ export async function servePublic(
   env: PublicEnv,
   background?: Background,
 ) {
-  if (request.method !== "GET" && request.method !== "HEAD")
-    return unavailableResponse();
   const url = new URL(request.url);
+  const contact =
+    url.pathname === CONTACT_SOURCE_PATH ||
+    url.pathname === `${CONTACT_SOURCE_PATH}/`;
+  if (request.method !== "GET" && request.method !== "HEAD" && !contact)
+    return unavailableResponse();
   const host = url.hostname.toLowerCase();
   if (url.host !== host) return unavailableResponse();
   if (
@@ -265,6 +276,7 @@ export async function servePublic(
   if (!LABEL.test(name) || RESERVED.has(name)) return unavailableResponse();
   const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "");
   if (path.startsWith("/assets/")) return unavailableResponse();
+  if (contact) return serveContact(request, env, name);
   if (path === "/_/github.json")
     return serveGitHubGraph(
       request,

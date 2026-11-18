@@ -448,13 +448,24 @@ try {
     assert.equal(manifest.format, "hasaweb-candidate-v1");
     assert.equal(manifest.candidateId, id);
     assert.equal(manifest.sourceRevision, revision);
-    assert.equal(manifest.rendererVersion, "publication-v6");
+    assert.equal(manifest.rendererVersion, "publication-v7");
     const seal = (
       await sql(
-        "SELECT json_extract(value,'$.manifest') AS seal FROM publication_candidate_index WHERE candidate_id=?",
+        "SELECT json_extract(value,'$.manifest') AS seal,json_extract(value,'$.contact') AS contact FROM publication_candidate_index WHERE candidate_id=?",
         [id],
       )
     ).results[0];
+    // Phase 44: `/_/contact` accepts posts only for a version with a form.
+    assert.equal(
+      seal.contact,
+      draft.components.some(
+        (component) =>
+          component.type === "contact" &&
+          !draft.samples[`components.${component.id}`],
+      )
+        ? 1
+        : null,
+    );
     assert.deepEqual(JSON.parse(seal.seal), {
       key: `candidate/${id}/manifest.json`,
       bytes: manifestBytes.length,

@@ -785,11 +785,25 @@ export async function checkDraftPreviewJourney({
       );
       await tab.evaluate(() => window.dispatchEvent(new Event("focus")));
       await tab.getByText("Saved elsewhere", { exact: true }).waitFor();
-      assert.equal(await tab.locator("form").count(), 0);
-      assert.match(
-        await tab.locator("body").innerText(),
-        /Contact form unavailable\./,
-      );
+      // The preview form has no source. Submitting it shows the preview-only
+      // notice and sends nothing (the request log is checked again below).
+      const form = tab.locator("form[data-contact-form]");
+      assert.equal(await form.count(), 1);
+      assert.equal(await form.getAttribute("data-contact-source"), null);
+      const outboxBeforeSubmit = await outbox();
+      const sentBeforeSubmit = sent.length;
+      await form.getByRole("button", { name: "Send message" }).click();
+      await form.getByText("Enter your name.").waitFor();
+      await form.getByLabel("Name").fill("Preview visitor");
+      await form.getByLabel("Email").fill("visitor@example.com");
+      await form.getByLabel("Message").fill("Does this send?");
+      await form.getByRole("button", { name: "Send message" }).click();
+      await form
+        .getByText(/^Preview only\. Messages are not sent from the preview\./)
+        .waitFor();
+      assert.equal(await form.getAttribute("data-state"), "preview");
+      assert.equal(await outbox(), outboxBeforeSubmit);
+      assert.deepEqual(sent.slice(sentBeforeSubmit), []);
       assert.equal(
         await tab.getByText("I check my own pages first.").count(),
         0,

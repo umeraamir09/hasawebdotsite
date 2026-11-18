@@ -1,4 +1,12 @@
 import {
+  CONTACT_SOURCE_PATH,
+  type ContactField,
+  checkContactFields,
+  FIELD_MESSAGES,
+  type FieldErrors,
+  TURNSTILE_SCRIPT,
+} from "./contact";
+import {
   contributionLabel,
   GRAPH_SOURCE_PATH,
   graphLayout,
@@ -91,6 +99,10 @@ export function installSite(
     "[data-github-graph][data-graph-source]",
   ))
     cleanups.push(installGraph(graph));
+  for (const form of root.querySelectorAll<HTMLFormElement>(
+    "form[data-contact-form]",
+  ))
+    cleanups.push(installContact(form));
   for (const image of root.querySelectorAll<HTMLImageElement>(
     ".pf-image img",
   )) {
@@ -290,4 +302,193 @@ function installGraph(graph: HTMLElement): () => void {
         graphMessage(graph, "unavailable", "Contribution graph unavailable.");
     });
   return () => controller.abort();
+}
+
+// Contact form (Phase 44). Success is shown only for a 202 from this origin's
+// `/_/contact`. Preview markup has no source, so it shows a notice and never
+// sends. Turnstile loads only on published pages whose endpoint is available.
+type TurnstileApi = {
+  render(
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      action: string;
+      callback?: (token: string) => void;
+      "expired-callback"?: () => void;
+    },
+  ): string;
+  getResponse(widget: string): string | undefined;
+  reset(widget: string): void;
+  remove(widget: string): void;
+};
+type TurnstileWindow = Window & { turnstile?: TurnstileApi };
+
+const CONTACT_STATUS = {
+  preview:
+    "Preview only. Messages are not sent from the preview. Use Send test message in the contact settings.",
+  unavailable: "Messages can't be sent from this portfolio right now.",
+  sending: "Sending your message.",
+  accepted: "Thanks. Your message was accepted for delivery.",
+  fields: "Check the highlighted fields and try again.",
+  check: "Complete the spam check, then send your message again.",
+  blocked:
+    "Your message was blocked by spam protection and was not sent. Complete the check and try again.",
+  retry:
+    "Messages can't be sent right now. Your message was not sent. Try again later.",
+  limited:
+    "Too many messages were sent recently. Your message was not sent. Try again later.",
+  failed:
+    "Your message was not sent. Check your connection and try again in a moment.",
+} as const;
+
+let turnstileLoad: Promise<TurnstileApi> | undefined;
+function loadTurnstile(view: TurnstileWindow): Promise<TurnstileApi> {
+  if (view.turnstile) return Promise.resolve(view.turnstile);
+  turnstileLoad ??= new Promise<TurnstileApi>((resolve, reject) => {
+    const script = view.document.createElement("script");
+    script.src = TURNSTILE_SCRIPT;
+    script.async = true;
+    script.addEventListener("load", () =>
+      view.turnstile ? resolve(view.turnstile) : reject(new Error("Turnstile")),
+    );
+    script.addEventListener("error", () => reject(new Error("Turnstile")));
+    view.document.head.appendChild(script);
+  }).catch((error) => {
+    turnstileLoad = undefined;
+    throw error;
+  });
+  return turnstileLoad;
+}
+
+function installContact(form: HTMLFormElement): () => void {
+  const view = form.ownerDocument.defaultView as TurnstileWindow | null;
+  const button = form.querySelector<HTMLButtonElement>("button[type=submit]");
+  const status = form.querySelector<HTMLElement>("[data-contact-status]");
+  const check = form.querySelector<HTMLElement>("[data-contact-check]");
+  const live = form.dataset.contactSource === CONTACT_SOURCE_PATH;
+  const controller = new AbortController();
+  let widget: string | undefined;
+  let api: TurnstileApi | undefined;
+  let busy = false;
+  const control = (name: ContactField) =>
+    form.elements.namedItem(name) as
+      | HTMLInputElement
+      | HTMLTextAreaElement
+      | null;
+  const say = (state: string, message: string) => {
+    form.dataset.state = state;
+    if (status) status.textContent = message;
+  };
+  const showErrors = (errors: FieldErrors) => {
+    let first: HTMLElement | undefined;
+    for (const name of ["name", "email", "message"] as const) {
+      const input = control(name);
+      const error = errors[name];
+      const slot = form.querySelector<HTMLElement>(
+        `[data-field-error="${name}"]`,
+      );
+      if (slot) slot.textContent = error ? FIELD_MESSAGES[name][error] : "";
+      if (!input) continue;
+      if (error) {
+        input.setAttribute("aria-invalid", "true");
+        first ??= input;
+      } else input.removeAttribute("aria-invalid");
+    }
+    first?.focus();
+  };
+  const unavailable = () => {
+    say("unavailable", CONTACT_STATUS.unavailable);
+    if (button) button.disabled = true;
+  };
+  const submit = async (event: SubmitEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    const { values, errors } = checkContactFields({
+      name: control("name")?.value ?? "",
+      email: control("email")?.value ?? "",
+      message: control("message")?.value ?? "",
+    });
+    showErrors(errors);
+    if (Object.keys(errors).length) return say("error", CONTACT_STATUS.fields);
+    if (!live) return say("preview", CONTACT_STATUS.preview);
+    if (!view || !api || widget === undefined) return unavailable();
+    const token = api.getResponse(widget);
+    if (!token) return say("error", CONTACT_STATUS.check);
+    busy = true;
+    if (button) button.disabled = true;
+    say("sending", CONTACT_STATUS.sending);
+    let outcome: keyof typeof CONTACT_STATUS = "failed";
+    try {
+      const response = await view.fetch(CONTACT_SOURCE_PATH, {
+        method: "POST",
+        credentials: "omit",
+        cache: "no-store",
+        redirect: "error",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...values, token }),
+        signal: controller.signal,
+      });
+      const body = (await response.json().catch(() => null)) as {
+        status?: unknown;
+        error?: unknown;
+        fields?: FieldErrors;
+      } | null;
+      if (response.status === 202 && body?.status === "accepted")
+        outcome = "accepted";
+      else if (body?.error === "invalid_fields" && body.fields) {
+        showErrors(body.fields);
+        outcome = "fields";
+      } else if (body?.error === "blocked") outcome = "blocked";
+      else if (body?.error === "limited") outcome = "limited";
+      else if (body?.error === "unavailable" && response.status === 404)
+        return unavailable();
+      else if (body?.error === "unavailable") outcome = "retry";
+    } catch {
+      if (controller.signal.aborted) return;
+    } finally {
+      busy = false;
+    }
+    // Tokens are single use, whatever the outcome.
+    api.reset(widget);
+    if (button) button.disabled = false;
+    if (outcome === "accepted") {
+      form.reset();
+      showErrors({});
+    }
+    say(outcome === "accepted" ? "accepted" : "error", CONTACT_STATUS[outcome]);
+  };
+  form.addEventListener("submit", submit);
+  if (!live) {
+    if (button) button.disabled = false;
+  } else if (!view || typeof view.fetch !== "function" || !check) unavailable();
+  else
+    view
+      .fetch(CONTACT_SOURCE_PATH, {
+        credentials: "omit",
+        cache: "no-store",
+        redirect: "error",
+        signal: controller.signal,
+      })
+      .then((response) => (response.ok ? response.json() : null))
+      .then(async (value: unknown) => {
+        const body = value as { siteKey?: unknown } | null;
+        if (typeof body?.siteKey !== "string" || !body.siteKey)
+          throw new Error("Contact unavailable");
+        const loaded = await loadTurnstile(view);
+        if (controller.signal.aborted) return;
+        api = loaded;
+        widget = loaded.render(check, {
+          sitekey: body.siteKey,
+          action: "contact",
+        });
+        if (button) button.disabled = false;
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) unavailable();
+      });
+  return () => {
+    controller.abort();
+    form.removeEventListener("submit", submit);
+    if (api && widget !== undefined) api.remove(widget);
+  };
 }

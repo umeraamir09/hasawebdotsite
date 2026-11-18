@@ -1,6 +1,7 @@
 export * from "./addresses";
 export * from "./bounded-save";
 export * from "./contact-recipient";
+export * from "./contact-submission";
 export * from "./draft-api";
 export * from "./email-budget";
 export * from "./github";
