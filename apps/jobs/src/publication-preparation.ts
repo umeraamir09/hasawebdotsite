@@ -39,6 +39,10 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
   z.strictObject({ kind: z.literal("resume-page") }),
   z.strictObject({
+    kind: z.literal("contact-form"),
+    id: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/),
+  }),
+  z.strictObject({
     kind: z.literal("resume-file"),
     path,
     variant: z.enum(["component", "page"]),
@@ -293,6 +297,7 @@ export async function advancePreparation(
   if (command.kind === "frame") return markup(command);
   if (command.kind === "literal")
     return markup({ kind: "text", text: command.text });
+  if (command.kind === "contact-form") return markup(command);
   if (command.kind === "discover") {
     if (await source.discover(command.index))
       stack.push({ ...command, index: command.index + 4 });
@@ -581,7 +586,8 @@ export async function advancePreparation(
           break;
         }
         case "contact":
-          children.push(...empty("Contact form unavailable."));
+          // The live form. Its endpoint checks the recipient on each post.
+          children.push({ kind: "contact-form", id });
           break;
       }
       push(wrap("section", children, { id, component: type }));

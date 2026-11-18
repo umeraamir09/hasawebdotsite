@@ -44,7 +44,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 - Dependencies: 16, 25, 43. Integrate before completion: 23, 26.
 - Public form and same-origin `/_/contact` with field errors, Turnstile, submission limits, and atomic budget reservation plus outbox insertion.
-- [ ] Complete when success means accepted for delivery, blocked/limited/failed submissions never report success, competing requests cannot exceed budgets, and unavailable portfolios reject submissions.
+- [x] Complete when success means accepted for delivery, blocked/limited/failed submissions never report success, competing requests cannot exceed budgets, and unavailable portfolios reject submissions.
+  - Published form and preview form (`publication-v7`), site `/_/contact` with Turnstile, hourly visitor limits and the atomic reservation + outbox batch. Queue hand-off and delivery are Phase 45; a live Turnstile widget is configured in 52.
 
 ### Phase 45. Deliver messages, retry, and test setup
 

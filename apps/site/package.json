@@ -8,6 +8,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@hasaweb/components": "workspace:*",
     "@hasaweb/config": "workspace:*",
     "@hasaweb/db": "workspace:*",
     "@hasaweb/github": "workspace:*",

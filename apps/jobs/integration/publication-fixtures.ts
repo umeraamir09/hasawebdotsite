@@ -280,6 +280,7 @@ export function expected(draft: DraftDoc, id: string) {
       };
     },
     graph: "live",
+    contact: "live",
   });
   return [
     profileHtml(model.profile),
@@ -308,6 +309,7 @@ export function expectedPages(draft: DraftDoc, id: string) {
         : {}),
     }),
     graph: "live",
+    contact: "live",
   });
   let ordinal = 1;
   for (const component of draft.components) {

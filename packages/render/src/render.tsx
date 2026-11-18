@@ -2,6 +2,7 @@ import {
   type AppearanceModel,
   AssetImage,
   appearanceAttributes,
+  ContactForm,
   PortfolioAvatar,
   PortfolioLayout,
   PortfolioProfile,
@@ -66,6 +67,11 @@ const fragmentSchema = z.discriminatedUnion("kind", [
     component: componentModelSchema,
   }),
   z.strictObject({ kind: z.literal("resume-page"), file: fileSchema }),
+  // The published form inside a bounded contact section. Fixed markup.
+  z.strictObject({
+    kind: z.literal("contact-form"),
+    id: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$/),
+  }),
 ]);
 export type RenderFragment =
   | z.infer<typeof fragmentSchema>
@@ -113,6 +119,11 @@ export function renderFragment(
   const parsed = fragmentSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid" };
   const fragment = parsed.data;
+  if (fragment.kind === "contact-form")
+    return {
+      status: "ready",
+      html: renderToStaticMarkup(<ContactForm id={fragment.id} mode="live" />),
+    };
   const components =
     fragment.kind === "components"
       ? fragment.components

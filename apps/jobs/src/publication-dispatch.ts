@@ -278,6 +278,7 @@ export function preparationSource(
           publicAsset(row.asset_origin, row.id, assetId, purpose),
         // A snapshot never holds counts. The page asks the graph endpoint.
         graph: "live",
+        contact: "live",
       });
       const render = (
         components: ComponentModel[],

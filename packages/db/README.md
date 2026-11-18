@@ -50,7 +50,7 @@ The repositories provide portfolio creation/reads, asset metadata, candidate pub
 
 Owner counters use an encoded namespace and a cascading user reference. Owners cannot access shared email budget keys through this repository. Shared budgets and operator audits require trusted service repositories when their flows arrive. The schema exports support those services; raw queries do not belong in request handlers.
 
-Registry reads are available through the owner repository. Database triggers prevent name changes and transfer, keep claimed names permanent, and reject platform-reserved inserts. Held reservations release before portfolio deletion; claimed names retain permanent ownerless rows. Phase 25's internal commit converts the owned hold and changes the live pointer in one guarded D1 batch. Explicit Address confirmation is the reservation mutation described below. Authenticated draft-save HTTP endpoints exist through the Phase 13 named owner API. Contact acceptance, delivery retries and provider grant verification remain in their scheduled phases.
+Registry reads are available through the owner repository. Database triggers prevent name changes and transfer, keep claimed names permanent, and reject platform-reserved inserts. Held reservations release before portfolio deletion; claimed names retain permanent ownerless rows. Phase 25's internal commit converts the owned hold and changes the live pointer in one guarded D1 batch. Explicit Address confirmation is the reservation mutation described below. Authenticated draft-save HTTP endpoints exist through the Phase 13 named owner API. Contact delivery retries and provider grant verification remain in their scheduled phases.
 
 ## Initial setup storage
 
@@ -103,6 +103,10 @@ Account deletion (Phase 49) must also resolve `consent` reservations whose attem
 `ownerContactRecipient(db, identity, { provider, appOrigin })` is the owner-session service behind the recipient routes ([architecture](../../docs/architecture.md#contact-form-phases-4345)). Every read and write repeats the persisted session, expiry and deletion checks. `useAccountEmail` copies the account email only while `user.email_verified` is set, in the same statement. `requestVerification` reserves the verification allowance and the dispatch attempt before it changes the row, so a limited request leaves the current recipient untouched. It stores only the token's SHA-256. `verify` is one compare-and-set on the owner's pending hash and expiry.
 
 Migration `0018_email_budget.sql` adds `email_reservation` and `email_dispatch`; their triggers hold the allowances. `reserveEmail` and `reserveDispatch` (`email-budget.ts`) map trigger aborts to `limited`, `verification-limited`, `deferred`, `daily-limited` or `monthly-limited`, and treat a replayed ID as already reserved. Reservations have no foreign key to the portfolio, so a deleted account's spent allowance still counts for the day. Pruning old days is Phase 51.
+
+## Contact submissions (Phase 44)
+
+`contact-submission.ts` backs the site's `/_/contact`. `contactPortfolio` finds the portfolio whose claimed host's live version sealed `$.contact` (written by publication finalization when the source has a contact component). `countVisitorAttempt` increments one `counter` row per visitor key and UTC hour, deleting that key's earlier windows in the same batch. `acceptSubmission` is one D1 batch: the contact `email_reservation` insert (guarded by the published-form and verified-recipient conditions) and the `queued` `contact_outbox` row that exists only if that reservation does. A trigger abort rolls back both and returns `limited`; no reservation means `unavailable`. Outbox IDs equal reservation IDs. The api e2e check (`e2e/draft-api/contact-submission.mjs`) races 16 visitors against the ten-a-day portfolio allowance.
 
 ## Verification
 

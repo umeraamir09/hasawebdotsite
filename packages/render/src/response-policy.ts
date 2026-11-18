@@ -1,3 +1,4 @@
+import { TURNSTILE_ORIGIN } from "@hasaweb/components/contact";
 import { isWebUrl } from "@hasaweb/schema";
 
 export type RenderContext = "preview" | "public";
@@ -9,6 +10,7 @@ export function portfolioHeaders(
     objectOrigins = [],
     parentOrigin,
     connectSelf = false,
+    turnstile = false,
   }: {
     assetOrigins?: readonly string[];
     // Embedded documents, used only by the /resume PDF viewer.
@@ -17,6 +19,9 @@ export function portfolioHeaders(
     // Published pages read their own origin's live graph endpoint, and
     // nothing else. Every other document keeps `connect-src 'none'`.
     connectSelf?: boolean;
+    // Published documents with a contact form load Turnstile's script and
+    // challenge frame. Nothing else may come from that origin.
+    turnstile?: boolean;
   } = {},
 ): Headers {
   const checked = (values: readonly string[]) =>
@@ -27,9 +32,9 @@ export function portfolioHeaders(
     });
   const origins = checked(assetOrigins);
   const objects = checked(objectOrigins);
-  const embed = objects.length
-    ? `object-src ${objects.join(" ")}; frame-src ${objects.join(" ")}`
-    : "object-src 'none'";
+  const frames = [...objects, ...(turnstile ? [TURNSTILE_ORIGIN] : [])];
+  const embed = `object-src ${objects.length ? objects.join(" ") : "'none'"}${frames.length ? `; frame-src ${frames.join(" ")}` : ""}`;
+  const scripts = [...origins, ...(turnstile ? [TURNSTILE_ORIGIN] : [])];
   if (
     parentOrigin &&
     (!isWebUrl(parentOrigin) || new URL(parentOrigin).origin !== parentOrigin)
@@ -41,7 +46,7 @@ export function portfolioHeaders(
       context === "preview"
         ? "private, no-store"
         : "public, max-age=0, must-revalidate",
-    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${origins.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src ${connectSelf ? "'self'" : "'none'"}; ${embed}; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
+    "Content-Security-Policy": `default-src 'none'; script-src 'self' ${scripts.join(" ")}; style-src 'self' ${origins.join(" ")}; img-src 'self' ${origins.join(" ")}; font-src 'self' ${origins.join(" ")}; connect-src ${connectSelf ? "'self'" : "'none'"}; ${embed}; base-uri 'none'; form-action 'none'; frame-ancestors ${context === "preview" && parentOrigin ? parentOrigin : "'none'"}`,
     "X-Content-Type-Options": "nosniff",
     "Referrer-Policy": "no-referrer",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",

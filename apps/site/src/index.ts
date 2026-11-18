@@ -10,6 +10,9 @@ interface Env {
   CONTACT_QUEUE: Queue;
   GITHUB_QUEUE: Queue<RefreshMessage>;
   ASSET_ORIGIN?: string;
+  TURNSTILE_SITE_KEY?: string;
+  TURNSTILE_SECRET?: string;
+  TURNSTILE_VERIFY_ORIGIN?: string;
 }
 export default {
   async fetch(request, env, ctx) {

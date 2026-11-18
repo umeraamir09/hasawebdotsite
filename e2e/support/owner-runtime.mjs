@@ -20,6 +20,11 @@ import {
   startGitHubFixture,
 } from "./github-fixture.mjs";
 import { freePort } from "./ports.mjs";
+import {
+  startTurnstileFixture,
+  TURNSTILE_FIXTURE_SECRET,
+  TURNSTILE_FIXTURE_SITE_KEY,
+} from "./turnstile-fixture.mjs";
 
 const root = fileURLToPath(new URL("../../", import.meta.url)),
   require = createRequire(import.meta.url);
@@ -263,6 +268,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
   const github = await startGitHubFixture(await freePort());
   // A local stand-in for Resend (Phase 43 recipient confirmation).
   const email = await startEmailFixture(await freePort());
+  const turnstile = await startTurnstileFixture(await freePort());
   async function stop() {
     if (!child || child.exitCode !== null || child.signalCode !== null) return;
     const exited = new Promise((r) => child.once("exit", r));
@@ -352,6 +358,10 @@ export async function startOwnerRuntime({ directory, evidence }) {
         RESEND_API_KEY: RESEND_FIXTURE_KEY,
         EMAIL_FROM,
         RESEND_API_ORIGIN: email.origin,
+        // Phase 44 `/_/contact`, verified against the local stand-in.
+        TURNSTILE_SITE_KEY: TURNSTILE_FIXTURE_SITE_KEY,
+        TURNSTILE_SECRET: TURNSTILE_FIXTURE_SECRET,
+        TURNSTILE_VERIFY_ORIGIN: turnstile.origin,
       },
     }),
   );
@@ -588,6 +598,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
     tokens,
     github,
     email,
+    turnstile,
     esbuild,
     fixture,
     progress,
@@ -613,6 +624,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
       await stop();
       await github.close();
       await email.close();
+      await turnstile.close();
     },
     logs: () => logs,
   };

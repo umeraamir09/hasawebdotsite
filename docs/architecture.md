@@ -32,7 +32,7 @@ How hasaweb.site is built and the contracts new work must keep. [product.md](pro
 | Worker | Responsibility |
 | --- | --- |
 | `web` | Next.js app and Better Auth. Handlers that run **before OpenNext**: private uploads and asset reads (`/api/assets/*`), setup check/handoff, full-page draft preview (`/preview*`), the editor preview iframe (`/editor/preview`), and forwarding of `/api/owner/*` to jobs. Never serves portfolios. |
-| `site` | Resolves claimed `*.hasaweb.site` hosts and the public asset host through the active version's manifest, streams R2 files, denies unknown/unpublished hosts. Serves `/_/github.json`; `/_/contact` is Phase 44. Imports no React. |
+| `site` | Resolves claimed `*.hasaweb.site` hosts and the public asset host through the active version's manifest, streams R2 files, denies unknown/unpublished hosts. Serves `/_/github.json` and `/_/contact`. Imports no React. |
 | `jobs` | Named Hono `OwnerApi` for every hot owner route (provisioning, drafts, progress, recovery, address, publication, GitHub), the bounded publication dispatcher, Queue consumers and cron. Its default HTTP entry exposes no owner routes. |
 
 Keeping hot owner APIs out of OpenNext is deliberate: measured OpenNext handlers and whole-document 1 MiB saves exceeded the CPU budget. Do not add whole-draft parsing, validation or serialization to a hot path.
@@ -96,7 +96,7 @@ Exact versions live in the manifests and lockfile. Dependency upgrades need thei
 | GitHub (`github_connection`, `github_activity`, `github_grant`, `github_legacy_credential`, `github_refresh`, `github_published_activity`, consent attempts) | Generation-checked, encrypted, coordinated per app/account. See [GitHub](#github-activity). |
 | `contact_recipient` | One private recipient per portfolio: address, `verified_at`, and a pending link's SHA-256 token hash and expiry. Never in drafts, publication facts or output. |
 | `email_reservation`, `email_dispatch` | Shared email budgets (migration `0018`): one row per accepted email and per provider attempt, no addresses or content. Triggers enforce the allowances in [Contact form](#contact-form-phases-4345). |
-| `contact_outbox`, `counter` | Phases 44–45: transactional outbox and fixed-window submission limits. |
+| `contact_outbox`, `counter` | Transactional outbox (one row per accepted message, keyed by its reservation ID) and fixed-window visitor limits (`contact:{portfolio}:{hashed visitor}` per UTC hour). Delivery is Phase 45. |
 | `operator_email_audit` | Phase 51: operator lookups recorded without the email, kept 90 days or until account deletion. |
 
 ### Draft document
@@ -179,7 +179,7 @@ Implemented end to end locally; owner routes are `POST /api/owner/publication/*`
 3. **Commit.** One guarded D1 batch verifies the expected state, converts the hold to a claim on first Publish (or verifies the existing claim), moves `published_version`, marks the new version live and records a durable receipt. A retry of a committed publication returns the receipt; a delayed retry can never restore an older version.
 4. **Cleanup.** A checkpointed operation scans superseded manifests in batches of eight, deletes removed public uploads, verifies absence and keeps private assets and unchanged retained files.
 
-Failure before commit leaves the pointer and namespace row untouched. After commit, cleanup failure reports that the new version is live and offers Retry. `PUBLICATION_RENDERER_VERSION` is `publication-v6`; retain content-hashed platform files so old versions keep working.
+Failure before commit leaves the pointer and namespace row untouched. After commit, cleanup failure reports that the new version is live and offers Retry. `PUBLICATION_RENDERER_VERSION` is `publication-v7`; retain content-hashed platform files so old versions keep working.
 
 **Case study URLs.** `/projects/{slug}`: lowercase ASCII letters, digits and hyphens, ≤80 characters, `project` when empty, collisions get `-2`, `-3`… Slugs follow the title until first publication, then freeze. A deleted case study keeps its slug reserved until the deletion is published; the `case_study_url` check rejects drafts that change a frozen slug or take another project's live slug.
 
@@ -216,7 +216,9 @@ Errors are closed codes and include the current status: `invalid_email` 422, `ac
 
 **Budgets** (UTC days, enforced by D1 triggers so concurrent requests cannot exceed them). Acceptance: 90 contact messages in total, ten per portfolio, two of them tests; ten owner notices in total (verification and final-failure notices share them), three verifications per portfolio. A notice over the allowance is deferred, never sent. Provider attempts: 100 a day (90 contact, 10 notice) and 3,000 a month, charged per attempt on the dispatch day, so cross-midnight retries stay inside the provider cap. Every send reserves acceptance, then the attempt, then calls the provider. Replayed IDs are not charged twice.
 
-**Submissions** (Phases 44–45). Visitor posts to `/_/contact` with a Turnstile token. `site` validates fields, applies limits (five per visitor/IP per site per hour), checks the recipient is verified, then atomically reserves the contact allowance and inserts a `contact_outbox` row before returning 202. Delivery goes through `EmailProvider` with an idempotency key and the visitor as Reply-To: immediately, then at 5 min, 30 min, 4 h and 24 h, at most five attempts, permanent errors fail at once. Final failure deletes the payload and notifies the owner. Test messages use the same path. Preview forms never send. The recipient address never appears in public HTML or data.
+**Submissions** (Phase 44). Published pages render the form (`form[data-contact-form][data-contact-source="/_/contact"]`); preview markup has no source and only shows a preview-only notice. The platform script reads `GET /_/contact` (`{siteKey}`, or 404 when the active version has no form), loads Turnstile explicitly and posts same-origin JSON `{name, email, message, token}` (≤32 KiB). `site` (`apps/site/src/contact.ts`) then checks, in order: exact portfolio `Origin` and JSON (403/415/413/400 `invalid_request`); fields (422 `invalid_fields` with `{field: required|invalid|too_long}`; name ≤100 characters, email ≤254 bytes and one plain address, message ≤5,000 characters, shared with the browser in `packages/components/src/contact.ts`); that the claimed host's live version sealed `$.contact` (404 `unavailable`); five complete attempts per visitor per portfolio per UTC hour, blocked ones included (429 `limited` with `Retry-After`; the visitor key is a truncated SHA-256 of portfolio and `CF-Connecting-IP`); Turnstile siteverify (403 `blocked`; outside local/test the token's hostname must be the portfolio host and its action `contact`; Turnstile failures are 503 `unavailable`). Finally one D1 batch inserts the contact reservation and the `queued` outbox row (payload `{name, email, message, recipientVerifiedAt}`, deadline 24 hours) only while the portfolio is still published with a form and its recipient is verified. The allowance trigger aborts the whole batch (429 `limited`); an unverified recipient or a concurrent unpublish inserts nothing (503 `unavailable`). Only then does the endpoint return 202 `{status: "accepted"}`, and only 202 shows success. D1 errors return 503 `failed`. Responses are `no-store` and never contain the recipient. `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET` and the local/test-only `TURNSTILE_VERIFY_ORIGIN` live on `site`.
+
+**Delivery** (Phase 45). Delivery goes through `EmailProvider` with an idempotency key and the visitor as Reply-To: immediately, then at 5 min, 30 min, 4 h and 24 h, at most five attempts, permanent errors fail at once. Final failure deletes the payload and notifies the owner. Test messages use the same path. Preview forms never send. The recipient address never appears in public HTML or data.
 
 ### Unpublish, delete, suspend (Phases 48, 49, 51)
 
@@ -241,11 +243,11 @@ Errors are closed codes and include the current status: `invalid_email` 422, `ac
 | Area | Measure |
 | --- | --- |
 | Owner content | No raw HTML, scripts or CSS. Rich text is Tiptap JSON checked against an allowlist and serialized by our code. Link schemes `https`, `http`, `mailto`; external links get `rel="noopener noreferrer"`. |
-| Published CSP | `default-src 'none'`; scripts only from hashed platform files (and Turnstile later); images from `assets.hasaweb.site`; `object-src`/`frame-src` only on `/resume`; no inline script or style; `nosniff`, `Referrer-Policy`, `Permissions-Policy`. |
+| Published CSP | `default-src 'none'`; scripts only from hashed platform files, plus `https://challenges.cloudflare.com` in `script-src` and `frame-src` on documents of a version with a contact form; images from `assets.hasaweb.site`; `object-src`/`frame-src` only on `/resume`; no inline script or style; `nosniff`, `Referrer-Policy`, `Permissions-Policy`. |
 | Origins | Apex-only host-only auth cookies; portfolio pages run only our code and receive no auth cookies. Submit `hasaweb.site` to the Public Suffix List after launch. |
 | CSRF | Better Auth origin checks, SameSite=Lax, exact `Origin` plus JSON content type on every mutation. |
 | Authorization | Repository functions take the session user. Drafts, previews and private assets return 404 to anyone else. |
-| Secrets | `BETTER_AUTH_SECRET`, OAuth credentials, `GITHUB_SERVICE_TOKEN`, `GITHUB_ACTIVITY_*`, `RESEND_API_KEY` (with the `EMAIL_FROM` variable), `TURNSTILE_SECRET`, cache-purge token. Never in the repo. |
+| Secrets | `BETTER_AUTH_SECRET`, OAuth credentials, `GITHUB_SERVICE_TOKEN`, `GITHUB_ACTIVITY_*`, `RESEND_API_KEY` (with the `EMAIL_FROM` variable), `TURNSTILE_SECRET` (with the `TURNSTILE_SITE_KEY` variable), cache-purge token. Never in the repo. |
 | Tokens | GitHub tokens AES-GCM encrypted; deleted and revoked on withdrawal or deletion. Activity key rotation is not implemented. |
 | Contact data | Payload kept only until delivered or finally failed. |
 | Dev probes | `isLocalProbe` (`packages/config`) allows fixture routes only on loopback in local/test environments. Integration fixtures are built from `apps/*/integration`, never imported by production code. |

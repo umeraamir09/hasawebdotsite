@@ -320,3 +320,55 @@ p {
   margin: 0;
   font-size: 0.875rem;
 }
+/* Contact form (Phase 44). Errors use the ink color so every palette keeps
+   its measured contrast; weight and the field outline carry the state. */
+.pf-contact {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+.pf-field {
+  display: grid;
+  gap: 6px;
+}
+.pf-field label {
+  font-weight: 600;
+}
+.pf-field input,
+.pf-field textarea {
+  font: inherit;
+  color: var(--pf-ink);
+  background: var(--pf-raised);
+  border: 1px solid var(--pf-control);
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-height: 44px;
+  width: 100%;
+}
+.pf-field textarea {
+  resize: vertical;
+}
+.pf-field [aria-invalid="true"] {
+  border-width: 2px;
+  border-color: var(--pf-ink);
+}
+.pf-field-error,
+.pf-contact-status {
+  margin: 0;
+}
+.pf-field-error:empty,
+.pf-contact-status:empty {
+  display: none;
+}
+.pf-field-error,
+.pf-contact[data-state="error"] .pf-contact-status {
+  font-weight: 600;
+}
+.pf-contact button[type="submit"] {
+  justify-self: start;
+  font-weight: 600;
+}
+.pf-contact button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
