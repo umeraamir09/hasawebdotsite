@@ -37,19 +37,19 @@ Docs describe the current system only. When a change alters a contract, update t
 | Command | Runs | When |
 | --- | --- | --- |
 | `pnpm check` | Biome, typecheck, Vitest (~1 min) | Constantly |
-| `pnpm e2e --project=<name> -g "<test>"` | One e2e test against the last build | For each e2e test you add or change, and when debugging |
+| `pnpm e2e --project=<name> -g "<test>"` | One e2e test against the last build; add `GROUP_FILTER=<regexp>` to run only some of its groups or API checks | For each e2e test you add or change, and when debugging |
 | `pnpm verify` | `check`, build, and the e2e projects your diff affects, up to a local limit (three per e2e worker) | Before a PR that changes app code |
 | `pnpm verify --projects=<a,b>` | `check`, build and the named projects | When you want specific projects regardless of the diff |
 | `pnpm verify --all` | `check`, build, every e2e project | Rarely; CI already does this in parallel |
 
-E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). On a 4-core machine they run on one worker, so all eight projects take about 30 minutes locally. CI runs them in parallel in about six minutes on every PR that touches code. When a diff touches a shared path (`packages/db`, `packages/schema`, `e2e/support`, the lockfile) verify selects every project, goes over the local limit and leaves them to CI. Run the tests you wrote or changed yourself, then push. Don't re-run tests that already passed in this session, and fix anything CI reports, including tests marked flaky.
+E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). On a 4-core machine they run on one worker, so all eight projects take about 30 minutes locally. CI runs them in parallel in about six minutes on every PR that touches code. When a diff touches a shared path (`packages/db`, `packages/schema`, `e2e/support`, the lockfile) verify selects every project, goes over the local limit and leaves them to CI. Run the tests you wrote or changed yourself, then push. If `pnpm verify --dry-run` shows every project left to CI and `pnpm check` and `pnpm build` have passed since your last code change, skip verify. On a branch stacked on another PR, pass `--base=origin/<parent branch>` so the parent's files don't count. Don't re-run tests that already passed in this session, and fix anything CI reports, including tests marked flaky.
 
 Run the e2e tests that cover your change, plus a careful self-review of the diff, for any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion. These boundaries are where bugs cost real users.
 
 When an e2e test fails:
 
-- Read its evidence first: `test-results/evidence/<label>-failure-N.{json,png,html}` and `error-context.md`. Most failures are explained there.
-- Iterate on one test with `pnpm e2e --project=<name> -g "<test>" --reporter=line`. Local runs don't retry. Don't filter the output through `grep`; a filter that matches nothing hides the failure.
+- Read its evidence first: `test-results/evidence/<fixture>-<worker>/<label>-failure-N.{json,png,html}` (for example `evidence/owner-0/editor-failure-1.html`) and `test-results/*/error-context.md`. Most failures are explained there.
+- Iterate on one test with `pnpm e2e --project=<name> -g "<test>" --reporter=line`, and narrow it to the failing group or API check with `GROUP_FILTER`. Local runs don't retry. Don't filter the output through `grep`; a filter that matches nothing hides the failure.
 - Set `BROWSER_GROUP_LIMIT_MS=20000` so a stuck browser step fails in 20 seconds instead of 120.
 - Run `pnpm build` again only after changing app or package code. Changes under `e2e/` don't need a rebuild.
 
