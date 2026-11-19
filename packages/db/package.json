@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "generate": "drizzle-kit generate --config drizzle.config.ts"
+    "generate": "drizzle-kit generate --config drizzle.config.ts && biome format --write migrations"
   },
   "dependencies": {
     "@hasaweb/email": "workspace:*",
