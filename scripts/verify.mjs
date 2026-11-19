@@ -207,6 +207,8 @@ if (
     console.log("\nSummary");
     for (const { command, seconds, ok } of results)
       console.log(`  ${ok ? "pass" : "FAIL"} ${seconds}s  ${command}`);
+    if (deferred.length)
+      console.log(`  not run   e2e ${deferred.join(", ")} (left to CI)`);
     process.exitCode = results.every((result) => result.ok) ? 0 : 1;
   }
 }
