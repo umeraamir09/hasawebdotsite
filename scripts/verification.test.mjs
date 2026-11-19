@@ -62,24 +62,28 @@ it("leaves a large affected set to CI unless projects are requested", () => {
   ).toThrow("Unknown e2e project: nope");
 });
 
-it("plans parallel hosted e2e jobs for the affected projects only", async () => {
+it("plans the same seven hosted e2e jobs as CI always ran", async () => {
   const { ciMatrix } = await import("./ci-plan.mjs");
-  expect(ciMatrix({ affected: [], selfHosted: false })).toEqual([]);
-  expect(ciMatrix({ affected: ["api", "editor"], selfHosted: false })).toEqual([
-    { name: "editor 1/3", args: "--project=editor --shard=1/3", workers: "1" },
-    { name: "editor 2/3", args: "--project=editor --shard=2/3", workers: "1" },
-    { name: "editor 3/3", args: "--project=editor --shard=3/3", workers: "1" },
-    { name: "publication and api", args: "--project=api", workers: "1" },
-  ]);
-  expect(ciMatrix({ affected: [...projects], selfHosted: false })).toHaveLength(
-    7,
+  expect(ciMatrix({ selfHosted: false })).toEqual(
+    [
+      ["editor 1/3", "--project=editor --shard=1/3"],
+      ["editor 2/3", "--project=editor --shard=2/3"],
+      ["editor 3/3", "--project=editor --shard=3/3"],
+      ["autosave", "--project=autosave"],
+      ["uploads and auth", "--project=uploads --project=auth"],
+      ["renderer and runtime", "--project=renderer --project=runtime"],
+      ["publication and api", "--project=publication --project=api"],
+    ].map(([name, args]) => ({ name, args, workers: "1" })),
   );
 });
 
-it("plans one two-worker e2e job on a self-hosted runner", async () => {
+it("plans every project in one two-worker job on a self-hosted runner", async () => {
   const { ciMatrix } = await import("./ci-plan.mjs");
-  expect(ciMatrix({ affected: ["auth", "api"], selfHosted: true })).toEqual([
-    { name: "auth, api", args: "--project=auth --project=api", workers: "2" },
+  expect(ciMatrix({ selfHosted: true })).toEqual([
+    {
+      name: "all projects",
+      args: projects.map((name) => `--project=${name}`).join(" "),
+      workers: "2",
+    },
   ]);
-  expect(ciMatrix({ affected: [], selfHosted: true })).toEqual([]);
 });
