@@ -2,10 +2,17 @@ import { Buffer } from "node:buffer";
 import { appearanceModelSchema, fontFileName } from "@hasaweb/components";
 import { type Candidate, candidateActive } from "@hasaweb/db";
 import {
+  type DocumentMetadata,
   documentShell,
   PAGE_UNAVAILABLE_HTML,
   portfolioDocumentFrame,
 } from "@hasaweb/render";
+import {
+  idSchema,
+  resolveSeo,
+  type SeoPage,
+  seoPageTitle,
+} from "@hasaweb/schema";
 import { z } from "zod";
 import type { DispatchEnv } from "./publication-dispatch";
 import { putBoundedStream } from "./publication-stream";
@@ -82,6 +89,62 @@ const snapshotPart = (
   kind = "snapshot",
 ) => `${prefix(row)}${kind}-parts/${level}/${index}`;
 const hex = (bytes: ArrayBuffer) => Buffer.from(bytes).toString("hex");
+
+// Enough source text for the clipped title and description.
+const SEO_SOURCE_CHARACTERS = 1024;
+const text = z.string().nullable();
+const seoSourceSchema = z.strictObject({
+  address: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/),
+  name: text,
+  bio: text,
+  bannerId: idSchema.nullable(),
+  bannerAlt: text,
+  title: text,
+  description: text,
+  ogImageId: idSchema.nullable(),
+  projectTitle: text,
+});
+
+/**
+ * Title and sharing tags for one page of the sealed source. The documents
+ * are immutable, so only a new Publish changes what a page advertises.
+ */
+export function pageMetadata(
+  source: z.infer<typeof seoSourceSchema>,
+  path: string,
+  assetUrl: (assetId: string) => string,
+): { title: string; metadata: DocumentMetadata } {
+  const resolved = resolveSeo({
+    profile: {
+      name: source.name ?? "",
+      bio: source.bio ?? "",
+      ...(source.bannerId
+        ? { banner: { assetId: source.bannerId, alt: source.bannerAlt ?? "" } }
+        : {}),
+    },
+    seo: {
+      ...(source.title ? { title: source.title } : {}),
+      ...(source.description ? { description: source.description } : {}),
+      ...(source.ogImageId ? { ogImage: { assetId: source.ogImageId } } : {}),
+    },
+  });
+  const page: SeoPage =
+    path === "/resume"
+      ? { kind: "resume" }
+      : path.startsWith("/projects/")
+        ? { kind: "case-study", projectTitle: source.projectTitle ?? "" }
+        : { kind: "home" };
+  return {
+    title: seoPageTitle(resolved, page),
+    metadata: {
+      description: resolved.description,
+      canonicalUrl: `https://${source.address}.hasaweb.site${path}`,
+      image: resolved.image
+        ? { url: assetUrl(resolved.image.assetId), alt: resolved.image.alt }
+        : null,
+    },
+  };
+}
 
 async function digest(object: R2ObjectBody) {
   const stream = new crypto.DigestStream("SHA-256");
@@ -349,11 +412,25 @@ export async function finalizePublication(
       // The sealed source's appearance applies to every page of this version.
       // Publication validation already checked catalog membership; the strict
       // parse fails the candidate rather than publish a different appearance.
+      // Search metadata reads bounded prefixes of the sealed source, so a
+      // 1 MiB bio never enters this Worker. Clipping happens in resolveSeo.
       const packed = await env.DB.prepare(
-        "SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?",
+        `SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance,
+          json_object(
+            'address',json_extract(c.facts,'$.address.name'),
+            'name',substr(json_extract(c.source,'$.profile.name'),1,${SEO_SOURCE_CHARACTERS}),
+            'bio',substr(json_extract(c.source,'$.profile.bio'),1,${SEO_SOURCE_CHARACTERS}),
+            'bannerId',json_extract(c.source,'$.profile.banner.assetId'),
+            'bannerAlt',substr(json_extract(c.source,'$.profile.banner.alt'),1,${SEO_SOURCE_CHARACTERS}),
+            'title',substr(json_extract(c.source,'$.seo.title'),1,${SEO_SOURCE_CHARACTERS}),
+            'description',substr(json_extract(c.source,'$.seo.description'),1,${SEO_SOURCE_CHARACTERS}),
+            'ogImageId',json_extract(c.source,'$.seo.ogImage.assetId'),
+            'projectTitle',(SELECT substr(json_extract(c.source,json_extract(k.value,'$.path')||'.title'),1,${SEO_SOURCE_CHARACTERS}) FROM json_each(x.value,'$.cases') k WHERE '/projects/'||json_extract(k.value,'$.slug')=? LIMIT 1)
+          ) AS seo
+         FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?`,
       )
-        .bind(row.id)
-        .first<{ pack: string; appearance: string }>();
+        .bind(page.path, row.id)
+        .first<{ pack: string; appearance: string; seo: string }>();
       const files = packSchema.parse(JSON.parse(packed?.pack ?? "null")).files;
       const appearance = appearanceModelSchema.parse(
         JSON.parse(packed?.appearance ?? "null"),
@@ -363,12 +440,18 @@ export async function finalizePublication(
       if (!css || !script) throw new Error("Candidate platform incomplete");
       const marker = "HASA_CONTROLLED_DOCUMENT_BODY";
       const frame = portfolioDocumentFrame();
+      const { title, metadata } = pageMetadata(
+        seoSourceSchema.parse(JSON.parse(packed?.seo ?? "null")),
+        page.path,
+        (assetId) => `${row.asset_origin}/${root}assets/${assetId}`,
+      );
       const shell = documentShell({
         markup: frame.open + marker + frame.close,
-        title: "Portfolio",
+        title,
         context: "public",
         assets: { cssUrl: css.path, scriptUrl: script.path },
         appearance,
+        metadata,
       });
       // Resource paths remain rooted for Phase 25's manifest-authorized serving.
       const [open, close] = shell.split(marker);
@@ -397,9 +480,15 @@ export async function finalizePublication(
         "/404",
         "text/html; charset=utf-8",
       );
+      const address = await env.DB.prepare(
+        "SELECT json_extract(facts,'$.address.name') AS name FROM publication_candidate WHERE id=?",
+      )
+        .bind(row.id)
+        .first<{ name: string }>();
+      const site = seoSourceSchema.shape.address.parse(address?.name);
       await env.SITES_BUCKET.put(
         `${root}robots.txt`,
-        "User-agent: *\nAllow: /\n",
+        `User-agent: *\nAllow: /\nSitemap: https://${site}.hasaweb.site/sitemap.xml\n`,
       );
       await recordObject(
         env,

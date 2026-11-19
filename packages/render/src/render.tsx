@@ -183,23 +183,54 @@ function escapeText(value: string): string {
 // parallel. The script is deliberately render-blocking: its first statement
 // applies the visitor's stored light/dark choice before <body> is parsed.
 // Appearance attributes are validated against the approved catalog.
+// Search and sharing tags of one published page. Values are plain text and
+// absolute HTTP(S) URLs; every one is escaped into an attribute.
+export type DocumentMetadata = {
+  description: string;
+  canonicalUrl: string;
+  image: { url: string; alt: string } | null;
+};
+function metadataTags(title: string, metadata: DocumentMetadata): string {
+  for (const url of [metadata.canonicalUrl, metadata.image?.url])
+    if (url !== undefined && !isWebUrl(url))
+      throw new Error("Metadata URLs must be absolute HTTP(S) URLs");
+  const tag = (attribute: "name" | "property", key: string, value: string) =>
+    `<meta ${attribute}="${key}" content="${escapeText(value)}">`;
+  const { description, canonicalUrl, image } = metadata;
+  return [
+    description ? tag("name", "description", description) : "",
+    `<link rel="canonical" href="${escapeText(canonicalUrl)}">`,
+    tag("property", "og:type", "website"),
+    tag("property", "og:url", canonicalUrl),
+    tag("property", "og:title", title),
+    description ? tag("property", "og:description", description) : "",
+    image ? tag("property", "og:image", image.url) : "",
+    image?.alt ? tag("property", "og:image:alt", image.alt) : "",
+    tag("name", "twitter:card", image ? "summary_large_image" : "summary"),
+  ].join("");
+}
 export function documentShell({
   markup,
   title,
   context,
   assets,
   appearance,
+  metadata,
 }: {
   markup: string;
   title: string;
   context: RenderContext;
   assets: PlatformAssets;
   appearance: AppearanceModel;
+  // Published pages only. Previews stay noindex and carry no sharing tags.
+  metadata?: DocumentMetadata;
 }): string {
+  if (metadata && context !== "public")
+    throw new Error("Only published pages carry search metadata");
   const attributes = Object.entries(appearanceAttributes(appearance))
     .map(([name, value]) => ` ${name}="${escapeText(value)}"`)
     .join("");
-  return `<!doctype html><html lang="en"${attributes}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title><link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}"></script></head><body>${markup}</body></html>`;
+  return `<!doctype html><html lang="en"${attributes}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title>${metadata ? metadataTags(title, metadata) : ""}<link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}"></script></head><body>${markup}</body></html>`;
 }
 export function portfolioDocumentFrame() {
   const marker = "HASA_CONTROLLED_PAGE_FRAME";
