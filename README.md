@@ -52,6 +52,8 @@ A pre-commit hook (installed by `pnpm install`) runs Biome on staged files.
 
 CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip those jobs. The final `ci` job passes only when every other job passed or was skipped, so it is the one check to require before merging.
 
+Jobs run on GitHub-hosted runners unless the repository variable `CI_RUNNER` is set. With `CI_RUNNER=self-hosted`, every job runs on a [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners) instead, which uses no Actions minutes. The owner's runner lives in `~/actions-runner` on their WSL machine as a systemd service; CI waits while that machine is off. Switch back with `gh variable delete CI_RUNNER`. Keep self-hosted runners on a private repository only, since a public one would run pull requests from forks on that machine.
+
 ## Workspace
 
 | Path | Contents |

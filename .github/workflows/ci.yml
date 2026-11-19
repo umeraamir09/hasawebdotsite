@@ -13,13 +13,16 @@ concurrency:
   # Pushes to main always finish so every merge has a result.
   group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+# Jobs run on GitHub-hosted runners unless the repository variable CI_RUNNER
+# names a runner label (`self-hosted` sends every job to the owner's machine;
+# see README). One self-hosted runner takes the jobs one at a time.
 env:
   NEXT_TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_TELEMETRY_DISABLED: "1"
 jobs:
   changes:
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 5
     outputs:
       code: ${{ steps.diff.outputs.code }}
@@ -43,7 +46,7 @@ jobs:
   check:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +66,7 @@ jobs:
   build:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
@@ -96,7 +99,7 @@ jobs:
 
   e2e:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -118,7 +121,8 @@ jobs:
             args: --project=publication --project=api
     name: e2e (${{ matrix.name }})
     env:
-      # Hosted runners have two cores: one runtime and browser at a time.
+      # Hosted runners have two cores, and a self-hosted runner shares its
+      # machine: one runtime and browser at a time.
       E2E_WORKERS: "1"
     steps:
       - uses: actions/checkout@v4
@@ -149,7 +153,7 @@ jobs:
   ci:
     if: always()
     needs: [changes, check, build, e2e]
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
     timeout-minutes: 2
     steps:
       - env:
