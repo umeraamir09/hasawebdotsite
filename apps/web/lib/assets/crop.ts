@@ -1,7 +1,8 @@
 import { IMAGE_BYTES, signatureMatches, uploadFormat } from "./formats";
 
 // The Face Reveal photo shares the avatar shape so both images swap in place.
-export type CropPurpose = "avatar" | "banner" | "face";
+// The sharing image uses the 1.91:1 card shape that link previews display.
+export type CropPurpose = "avatar" | "banner" | "face" | "og";
 export type CropPosition = { zoom: number; x: number; y: number };
 export type ImageDimensions = { width: number; height: number };
 export const initialCrop: CropPosition = { zoom: 1, x: 0.5, y: 0.5 };
@@ -9,6 +10,7 @@ export const cropSizes = {
   avatar: { width: 848, height: 880 },
   face: { width: 848, height: 880 },
   banner: { width: 1600, height: 480 },
+  og: { width: 1200, height: 630 },
 } satisfies Record<CropPurpose, ImageDimensions>;
 
 export function cropRectangle(
