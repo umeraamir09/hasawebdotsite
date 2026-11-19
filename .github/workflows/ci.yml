@@ -1,10 +1,11 @@
 name: CI
+# Every pull request runs this workflow so the final `ci` job always reports.
+# Docs-only changes skip the check, build and e2e jobs inside it instead of
+# skipping the workflow, which would leave a required check waiting forever.
 on:
   pull_request:
-    paths-ignore: ["**/*.md", "docs/**", ".agents/**"]
   push:
     branches: [main]
-    paths-ignore: ["**/*.md", "docs/**", ".agents/**"]
 permissions:
   contents: read
 concurrency:
@@ -17,7 +18,31 @@ env:
   WRANGLER_SEND_METRICS: "false"
   TURBO_TELEMETRY_DISABLED: "1"
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          # An unknown base (a new branch, a rewritten history) counts as code.
+          if ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE" HEAD | grep -qvE '(\.md$|^docs/|^\.agents/)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   check:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -36,6 +61,8 @@ jobs:
       - run: pnpm check
 
   build:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -116,3 +143,19 @@ jobs:
           path: |
             test-results
             playwright-report
+
+  # The one check to require before merging: it fails if any job above failed
+  # or was cancelled, and passes when they passed or were skipped as docs-only.
+  ci:
+    if: always()
+    needs: [changes, check, build, e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in success | skipped) ;; *) exit 1 ;; esac
+          done

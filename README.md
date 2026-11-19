@@ -50,7 +50,7 @@ End-to-end suites live in [`e2e/`](e2e/README.md) and run on Playwright Test aga
 
 A pre-commit hook (installed by `pnpm install`) runs Biome on staged files.
 
-CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip CI.
+CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip those jobs. The final `ci` job passes only when every other job passed or was skipped, so it is the one check to require before merging.
 
 ## Workspace
 
