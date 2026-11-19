@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 # Jobs run on GitHub-hosted runners unless the repository variable CI_RUNNER
 # names a runner label (`self-hosted` sends every job to the owner's machine;
-# see README). One self-hosted runner takes the jobs one at a time.
+# see README). Each self-hosted runner takes one job at a time.
 env:
   NEXT_TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
@@ -66,8 +66,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # A self-hosted runner keeps the Turbo cache on its own disk, capped by
       # the prune step, instead of round-tripping it through GitHub's cache.
+      # Each runner on a machine has its own, so concurrent jobs never share one.
       - if: vars.CI_RUNNER
-        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo" >> "$GITHUB_ENV"
+        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo-$RUNNER_NAME" >> "$GITHUB_ENV"
       - if: ${{ !vars.CI_RUNNER }}
         uses: actions/cache@v4
         with:
@@ -104,8 +105,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       # A self-hosted runner keeps the Turbo cache on its own disk, capped by
       # the prune step, instead of round-tripping it through GitHub's cache.
+      # Each runner on a machine has its own, so concurrent jobs never share one.
       - if: vars.CI_RUNNER
-        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo" >> "$GITHUB_ENV"
+        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo-$RUNNER_NAME" >> "$GITHUB_ENV"
       # Turbo replays unchanged package builds; Next reuses its compiler cache.
       - if: ${{ !vars.CI_RUNNER }}
         uses: actions/cache@v4
