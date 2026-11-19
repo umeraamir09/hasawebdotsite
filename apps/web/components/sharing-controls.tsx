@@ -1,12 +1,22 @@
 "use client";
 
 import {
+  SHARING_CARD,
+  SHARING_CARD_DECORATIONS,
+  SharingCard,
+  sharingCardLinks,
+  sharingCardPalette,
+  sharingCardText,
+} from "@hasaweb/components/sharing-card";
+import platformFiles from "@hasaweb/components/static/manifest.json";
+import {
   type DraftDoc,
   resolveSeo,
   SEO_DESCRIPTION_MAX,
   SEO_TITLE_MAX,
 } from "@hasaweb/schema";
-import { useId, useState } from "react";
+import { appearanceCatalog } from "@hasaweb/theme";
+import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { privateImageUrl } from "../lib/assets/browser";
 import type { DraftController } from "../lib/draft/controller";
@@ -81,6 +91,77 @@ function OverrideField({
   );
 }
 
+// The generated card, drawn by the same component Publish renders to PNG,
+// from private owner-only image URLs, scaled to the panel's width.
+function CardPreview({ draft }: { draft: DraftDoc }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(0);
+  const font = appearanceCatalog.fonts.find(
+    (entry) => entry.id === draft.appearance.fontId,
+  );
+  const family = font ? `hasaweb-card-${font.id}` : "";
+  useEffect(() => {
+    const element = box.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) =>
+      setScale((entry?.contentRect.width ?? 0) / SHARING_CARD.width),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const file = font?.asset.split("/").at(-1) ?? "";
+    const path = (platformFiles as Record<string, string>)[file];
+    if (!font || !path || [...document.fonts].some((f) => f.family === family))
+      return;
+    const face = new FontFace(family, `url(${path})`, {
+      weight: `${font.weight[0]} ${font.weight[1]}`,
+    });
+    document.fonts.add(face);
+    void face.load().catch(() => {});
+  }, [font, family]);
+  const { profile } = draft;
+  const decoration =
+    profile.decorationId === "cat" || profile.decorationId === "hands"
+      ? profile.decorationId
+      : "none";
+  return (
+    <div className="sharing-card-generated" ref={box}>
+      <div style={{ transform: `scale(${scale})` }}>
+        <SharingCard
+          palette={sharingCardPalette(
+            draft.appearance.themeId,
+            draft.appearance.colorMode,
+          )}
+          fontFamily={`"${family}", ${font?.fallback ?? "sans-serif"}`}
+          {...sharingCardText({
+            name: profile.name,
+            bio: profile.bio,
+            location: profile.location,
+            links: sharingCardLinks(draft.links),
+          })}
+          banner={
+            profile.banner
+              ? privateImageUrl(profile.banner.assetId, "banner")
+              : null
+          }
+          avatar={
+            profile.avatar
+              ? privateImageUrl(profile.avatar.assetId, "avatar")
+              : null
+          }
+          decoration={decoration}
+          decorationImage={
+            decoration === "none"
+              ? null
+              : SHARING_CARD_DECORATIONS[decoration].path
+          }
+        />
+      </div>
+    </div>
+  );
+}
+
 export function SharingControls({
   controller,
   disabled,
@@ -125,15 +206,17 @@ export function SharingControls({
       />
       <figure className="sharing-card" aria-label="Sharing preview">
         <div className="sharing-card-image">
-          {image && unavailable !== image.assetId ? (
+          {image.kind === "card" ? (
+            <CardPreview draft={draft} />
+          ) : unavailable !== image.assetId ? (
             // biome-ignore lint/performance/noImgElement: Private owner assets are same-origin, authorized and no-store; image optimization is disabled.
             <img
-              src={privateImageUrl(image.assetId, image.purpose)}
+              src={privateImageUrl(image.assetId, "og")}
               alt=""
               onError={() => setUnavailable(image.assetId)}
             />
           ) : (
-            <span>{image ? "Image unavailable" : "No sharing image"}</span>
+            <span>Image unavailable</span>
           )}
         </div>
         <figcaption>
@@ -173,8 +256,8 @@ export function SharingControls({
         />
         <p className="editor-muted">
           {resolved.overridden.image
-            ? "Remove it to use your banner again."
-            : "Your banner is used until you add one. Sharing cards show a 1.91:1 image."}
+            ? "Remove it to use your generated profile card again."
+            : "Until you add one, links show a card of your profile in your theme: banner, avatar, bio and links. Sharing cards show a 1.91:1 image."}
         </p>
       </div>
       <p className="editor-muted">

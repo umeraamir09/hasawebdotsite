@@ -14,6 +14,11 @@ import {
   seoPageTitle,
 } from "@hasaweb/schema";
 import { z } from "zod";
+import {
+  renderCandidateCard,
+  SHARING_CARD_ASSET,
+  SHARING_CARD_PATH,
+} from "./publication-card";
 import type { DispatchEnv } from "./publication-dispatch";
 import { putBoundedStream } from "./publication-stream";
 
@@ -71,6 +76,7 @@ const cursorSchema = z.discriminatedUnion("stage", [
     index: z.number().int().nonnegative(),
     written: z.number().int().nonnegative(),
   }),
+  z.object({ stage: z.literal("card") }),
   z.object({
     stage: z.literal("pages"),
     index: z.number().int().nonnegative(),
@@ -97,8 +103,6 @@ const seoSourceSchema = z.strictObject({
   address: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/),
   name: text,
   bio: text,
-  bannerId: idSchema.nullable(),
-  bannerAlt: text,
   title: text,
   description: text,
   ogImageId: idSchema.nullable(),
@@ -118,9 +122,6 @@ export function pageMetadata(
     profile: {
       name: source.name ?? "",
       bio: source.bio ?? "",
-      ...(source.bannerId
-        ? { banner: { assetId: source.bannerId, alt: source.bannerAlt ?? "" } }
-        : {}),
     },
     seo: {
       ...(source.title ? { title: source.title } : {}),
@@ -139,9 +140,14 @@ export function pageMetadata(
     metadata: {
       description: resolved.description,
       canonicalUrl: `https://${source.address}.hasaweb.site${path}`,
-      image: resolved.image
-        ? { url: assetUrl(resolved.image.assetId), alt: resolved.image.alt }
-        : null,
+      image: {
+        url: assetUrl(
+          resolved.image.kind === "upload"
+            ? resolved.image.assetId
+            : SHARING_CARD_ASSET,
+        ),
+        alt: resolved.image.alt,
+      },
     },
   };
 }
@@ -389,7 +395,7 @@ export async function finalizePublication(
       }
       cursor =
         kind === "snapshot"
-          ? { stage: "pages", index: 0 }
+          ? { stage: "card" }
           : kind === "sitemap"
             ? { stage: "assets", index: 0 }
             : { stage: "seal" };
@@ -402,6 +408,27 @@ export async function finalizePublication(
         written: 0,
       };
     else cursor = { ...state, index: end, written: state.written + 1 };
+  } else if (cursor.stage === "card") {
+    const packed = await env.DB.prepare(
+      "SELECT json_extract(value,'$.platform') AS pack FROM publication_candidate_index WHERE candidate_id=?",
+    )
+      .bind(row.id)
+      .first<{ pack: string }>();
+    const font = packSchema
+      .parse(JSON.parse(packed?.pack ?? "null"))
+      .files.find((file) => file.role === "font");
+    if (!font) throw new Error("Candidate platform incomplete");
+    const key = await renderCandidateCard(env, row, font.path);
+    if (key)
+      await recordObject(
+        env,
+        row,
+        "assets",
+        key,
+        SHARING_CARD_PATH,
+        "image/png",
+      );
+    cursor = { stage: "pages", index: 0 };
   } else if (cursor.stage === "pages") {
     const page = await env.DB.prepare(
       "SELECT ordinal,path FROM publication_page WHERE candidate_id=? ORDER BY ordinal LIMIT 1 OFFSET ?",
@@ -420,8 +447,6 @@ export async function finalizePublication(
             'address',json_extract(c.facts,'$.address.name'),
             'name',substr(json_extract(c.source,'$.profile.name'),1,${SEO_SOURCE_CHARACTERS}),
             'bio',substr(json_extract(c.source,'$.profile.bio'),1,${SEO_SOURCE_CHARACTERS}),
-            'bannerId',json_extract(c.source,'$.profile.banner.assetId'),
-            'bannerAlt',substr(json_extract(c.source,'$.profile.banner.alt'),1,${SEO_SOURCE_CHARACTERS}),
             'title',substr(json_extract(c.source,'$.seo.title'),1,${SEO_SOURCE_CHARACTERS}),
             'description',substr(json_extract(c.source,'$.seo.description'),1,${SEO_SOURCE_CHARACTERS}),
             'ogImageId',json_extract(c.source,'$.seo.ogImage.assetId'),
@@ -519,7 +544,7 @@ export async function finalizePublication(
     } else cursor = { stage: "manifest", index: 0 };
   } else {
     const complete = await env.DB.prepare(
-      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
+      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT json_type(source,'$.seo.ogImage') IS NULL FROM publication_candidate WHERE id=x.candidate_id)+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
     )
       .bind(row.id)
       .first();

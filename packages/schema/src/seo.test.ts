@@ -20,7 +20,7 @@ describe("search and sharing defaults", () => {
     expect(resolveSeo({ profile, seo: {} })).toEqual({
       title: "Ada Lovelace",
       description: "I write programs for engines that do not exist yet.",
-      image: { assetId: "banner-1", purpose: "banner", alt: "Punched cards" },
+      image: { kind: "card", alt: "Ada Lovelace's portfolio profile" },
       identity: "Ada Lovelace",
       overridden: { title: false, description: false, image: false },
     });
@@ -37,7 +37,11 @@ describe("search and sharing defaults", () => {
     });
     expect(resolved.title).toBe("Ada · Analyst");
     expect(resolved.description).toBe("Notes on the engine");
-    expect(resolved.image).toEqual({ assetId: "og-1", purpose: "og", alt: "" });
+    expect(resolved.image).toEqual({
+      kind: "upload",
+      assetId: "og-1",
+      alt: "",
+    });
     expect(resolved.overridden).toEqual({
       title: true,
       description: true,
@@ -72,7 +76,7 @@ describe("search and sharing defaults", () => {
     expect(emoji).toBe("😀😀😀😀…");
   });
 
-  it("has no image without a banner or override, and a fallback title", () => {
+  it("uses the generated card and a fallback title without a name", () => {
     const resolved = resolveSeo({
       profile: { name: " ", bio: "" },
       seo: {},
@@ -80,7 +84,7 @@ describe("search and sharing defaults", () => {
     expect(resolved).toMatchObject({
       title: "Portfolio",
       description: "",
-      image: null,
+      image: { kind: "card", alt: "Portfolio's portfolio profile" },
       identity: "Portfolio",
     });
   });

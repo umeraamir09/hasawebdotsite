@@ -853,7 +853,7 @@ try {
         assert.ok((await newPage.text()).includes(preparedForCommit[1].html));
         // Phase 46: without overrides, metadata comes from the profile, and
         // case studies and the resume name the portfolio in their titles.
-        const bannerUrl = `https://s8-assets.invalid/candidate/${id}/assets/banner`;
+        const cardUrl = `https://s8-assets.invalid/candidate/${id}/assets/sharing-card`;
         const description = "I build &lt;tools&gt; &amp; interfaces. 😀";
         for (const [path, title] of [
           ["/", "عمر Example"],
@@ -868,10 +868,22 @@ try {
           assert.equal(page.description, description, path);
           assert.equal(page.canonical, url, path);
           assert.equal(page.og("url"), url, path);
-          assert.equal(page.og("image"), bannerUrl, path);
-          assert.equal(page.og("image:alt"), "Banner", path);
+          assert.equal(page.og("image"), cardUrl, path);
+          assert.equal(
+            page.og("image:alt"),
+            "عمر Example&#39;s portfolio profile",
+            path,
+          );
         }
-        assert.equal((await visitor(bannerUrl)).status, 200);
+        // The generated profile card is a 1200x630 PNG public asset.
+        const card = await visitor(cardUrl);
+        assert.equal(card.status, 200);
+        assert.equal(card.headers.get("Content-Type"), "image/png");
+        const cardBytes = Buffer.from(await card.arrayBuffer());
+        assert.deepEqual(
+          [cardBytes.readUInt32BE(16), cardBytes.readUInt32BE(20)],
+          [1200, 630],
+        );
         assert.equal(
           await (
             await visitor("https://s8-fixture.hasaweb.site/sitemap.xml")
@@ -994,6 +1006,23 @@ try {
           await visitor("https://s8-fixture.hasaweb.site/sitemap.xml")
         ).text();
         assert.ok(!sitemap.includes("/projects/"), sitemap);
+        // Version 3 has its own card; version 2's no longer serves.
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${preparedForCommit[1].id}/assets/sharing-card`,
+            )
+          ).status,
+          404,
+        );
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${id}/assets/sharing-card`,
+            )
+          ).status,
+          200,
+        );
         assert.ok(
           sitemap.includes("https://s8-fixture.hasaweb.site/resume</loc>"),
         );

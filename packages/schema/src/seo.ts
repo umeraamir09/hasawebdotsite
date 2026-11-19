@@ -7,19 +7,18 @@ export const SEO_TITLE_MAX = 70;
 export const SEO_DESCRIPTION_MAX = 160;
 
 export type SeoSource = {
-  profile: Pick<DraftDoc["profile"], "name" | "bio" | "banner">;
+  profile: Pick<DraftDoc["profile"], "name" | "bio">;
   seo: DraftDoc["seo"];
 };
-export type SharingImage = {
-  assetId: string;
-  // `og` is the owner's sharing image; `banner` is the profile default.
-  purpose: "og" | "banner";
-  alt: string;
-};
+// The owner's uploaded sharing image, or the profile card that Publish
+// generates from the banner, avatar, decoration, bio and profile links.
+export type SharingImage =
+  | { kind: "upload"; assetId: string; alt: string }
+  | { kind: "card"; alt: string };
 export type ResolvedSeo = {
   title: string;
   description: string;
-  image: SharingImage | null;
+  image: SharingImage;
   // The name used in page-specific titles.
   identity: string;
   overridden: { title: boolean; description: boolean; image: boolean };
@@ -56,31 +55,26 @@ export function clipSeoText(value: string, max: number): string {
 /**
  * The one rule for search and sharing values, shared by the editor's sharing
  * preview and the publish step. Empty overrides fall back to the profile:
- * title to the name, description to the bio, image to the banner.
+ * title to the name, description to the bio, image to the generated card.
  */
 export function resolveSeo({ profile, seo }: SeoSource): ResolvedSeo {
   const name = clipSeoText(profile.name, SEO_TITLE_MAX);
   const title = normalizeSeoText(seo.title);
   const description = normalizeSeoText(seo.description);
-  const image: SharingImage | null = seo.ogImage
-    ? { assetId: seo.ogImage.assetId, purpose: "og", alt: "" }
-    : profile.banner
-      ? {
-          assetId: profile.banner.assetId,
-          purpose: "banner",
-          alt: clipSeoText(profile.banner.alt ?? "", SEO_DESCRIPTION_MAX),
-        }
-      : null;
   const resolvedTitle = title
     ? clipSeoText(title, SEO_TITLE_MAX)
     : name || FALLBACK_TITLE;
+  const identity = name || resolvedTitle;
+  const image: SharingImage = seo.ogImage
+    ? { kind: "upload", assetId: seo.ogImage.assetId, alt: "" }
+    : { kind: "card", alt: `${identity}'s portfolio profile` };
   return {
     title: resolvedTitle,
     description: description
       ? clipSeoText(description, SEO_DESCRIPTION_MAX)
       : clipSeoText(profile.bio, SEO_DESCRIPTION_MAX),
     image,
-    identity: name || resolvedTitle,
+    identity,
     overridden: {
       title: Boolean(title),
       description: Boolean(description),

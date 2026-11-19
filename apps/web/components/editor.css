@@ -544,7 +544,7 @@
   color: #596053;
   font-size: 13px;
 }
-.sharing-card-image img {
+.sharing-card-image > img {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -567,4 +567,14 @@
   font-size: 13px;
   line-height: 1.5;
   color: #596053;
+}
+.sharing-card-generated {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+.sharing-card-generated > div {
+  width: 1200px;
+  height: 630px;
+  transform-origin: 0 0;
 }

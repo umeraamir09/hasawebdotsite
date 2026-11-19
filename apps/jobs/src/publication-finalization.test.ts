@@ -5,8 +5,6 @@ const source = {
   address: "ada",
   name: "Ada Lovelace",
   bio: "Writes programs for engines.",
-  bannerId: "banner-1",
-  bannerAlt: "Punched cards",
   title: null,
   description: null,
   ogImageId: null,
@@ -15,15 +13,15 @@ const source = {
 const url = (id: string) => `https://assets.example/candidate/c/assets/${id}`;
 
 describe("published page metadata", () => {
-  it("uses profile defaults and the banner on the portfolio root", () => {
+  it("uses profile defaults and the generated card on the portfolio root", () => {
     expect(pageMetadata(source, "/", url)).toEqual({
       title: "Ada Lovelace",
       metadata: {
         description: "Writes programs for engines.",
         canonicalUrl: "https://ada.hasaweb.site/",
         image: {
-          url: "https://assets.example/candidate/c/assets/banner-1",
-          alt: "Punched cards",
+          url: "https://assets.example/candidate/c/assets/sharing-card",
+          alt: "Ada Lovelace's portfolio profile",
         },
       },
     });
