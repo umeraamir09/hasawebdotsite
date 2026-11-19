@@ -44,7 +44,14 @@ Docs describe the current system only. When a change alters a contract, update t
 
 E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). On a 4-core machine they run on one worker, so all eight projects take about 30 minutes locally. CI runs them in parallel in about six minutes on every PR that touches code. When a diff touches a shared path (`packages/db`, `packages/schema`, `e2e/support`, the lockfile) verify selects every project, goes over the local limit and leaves them to CI. Run the tests you wrote or changed yourself, then push. If `pnpm verify --dry-run` shows every project left to CI and `pnpm check` and `pnpm build` have passed since your last code change, skip verify. On a branch stacked on another PR, pass `--base=origin/<parent branch>` so the parent's files don't count. Don't re-run tests that already passed in this session, and fix anything CI reports, including tests marked flaky.
 
-Run the e2e tests that cover your change, plus a careful self-review of the diff, for any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion. These boundaries are where bugs cost real users.
+For any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion, run the projects that cover it in full with `pnpm verify --projects=<names>`, even above the local limit, plus a careful self-review of the diff. These boundaries are where bugs cost real users.
+
+| Boundary | Projects |
+| --- | --- |
+| Sign-in, sessions, provisioning | `auth`, `api` |
+| Owner authorization, drafts, migrations, account or portfolio deletion | `api` |
+| Private uploads and asset reads | `uploads` |
+| Publication, withdrawal, public serving | `publication`, `api`, and the editor journey for the feature (`pnpm e2e --project=editor -g "<journey>"`) |
 
 When an e2e test fails:
 
