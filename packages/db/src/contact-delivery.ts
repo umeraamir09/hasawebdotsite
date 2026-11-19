@@ -40,6 +40,9 @@ export const DELIVERY_LEASE_MS = 2 * MINUTE;
 // A queued row this far past its deadline is abandoned (no provider, or the
 // sweep was down) rather than kept forever.
 const ABANDON_AFTER_MS = HOUR;
+// How often a message waiting for the owner to confirm a new recipient
+// checks again.
+const UNCONFIRMED_RECHECK_MS = 5 * MINUTE;
 const NOTICE_ATTEMPTS = 3;
 const NOTICE_RETRY_MS = 5 * MINUTE;
 const SWEEP_MESSAGES = 10;
@@ -104,9 +107,8 @@ const payloadSchema = z.union([
     name: z.string(),
     email: z.string(),
     message: z.string(),
-    recipientVerifiedAt: z.number(),
   }),
-  z.object({ test: z.literal(1), recipientVerifiedAt: z.number() }),
+  z.object({ test: z.literal(1) }),
 ]);
 
 async function send(
@@ -192,22 +194,40 @@ export async function deliverMessage(
   const parsed = payloadSchema.safeParse(JSON.parse(row.payload));
   if (!parsed.success) return finish({ status: "failed", code: "invalid" });
   const payload = parsed.data;
-  // The message belongs to the recipient verified when it was accepted. A
-  // changed or unconfirmed recipient, or an account being deleted, ends it.
+  // Messages go to whichever recipient is confirmed at attempt time. While
+  // the owner is confirming a new address the message waits, without
+  // spending an attempt, until the deadline. A suspended portfolio or an
+  // account being deleted ends it.
   const recipient = await db
     .prepare(
-      `SELECT r.email,r.verified_at FROM contact_recipient r
-      JOIN portfolio p ON p.id=r.portfolio_id JOIN user u ON u.id=p.user_id
-      WHERE r.portfolio_id=? AND u.deleting_at IS NULL AND p.status NOT IN ('suspended','deleting')`,
+      `SELECT r.email,r.verified_at,(u.deleting_at IS NULL AND p.status NOT IN ('suspended','deleting')) AS active
+      FROM portfolio p JOIN user u ON u.id=p.user_id LEFT JOIN contact_recipient r ON r.portfolio_id=p.id
+      WHERE p.id=?`,
     )
     .bind(row.portfolio_id)
-    .first<{ email: string; verified_at: number | null }>();
-  if (
-    !recipient ||
-    recipient.verified_at === null ||
-    recipient.verified_at !== payload.recipientVerifiedAt
-  )
-    return finish({ status: "failed", code: "recipient_changed" });
+    .first<{
+      email: string | null;
+      verified_at: number | null;
+      active: number;
+    }>();
+  if (!recipient?.active)
+    return finish({ status: "failed", code: "unavailable" });
+  if (recipient.email === null || recipient.verified_at === null) {
+    if (now >= row.deadline_at)
+      return finish({ status: "failed", code: "recipient_unconfirmed" });
+    await db
+      .prepare(
+        `UPDATE contact_outbox SET status='queued',attempts=attempts-1,next_attempt_at=?,last_error='recipient_unconfirmed' ${guard}`,
+      )
+      .bind(
+        Math.min(now + UNCONFIRMED_RECHECK_MS, row.deadline_at),
+        id,
+        attempts,
+      )
+      .run();
+    return "retrying";
+  }
+  const to = recipient.email;
 
   const reservation = { id, kind: "contact" as const };
   const dispatch = await reserveDispatch(
@@ -229,10 +249,7 @@ export async function deliverMessage(
       .run();
     return "retrying";
   }
-  const email =
-    "test" in payload
-      ? testEmail(recipient.email)
-      : contactEmail(recipient.email, payload);
+  const email = "test" in payload ? testEmail(to) : contactEmail(to, payload);
   return finish(
     deliveryDecision(
       attempt,
@@ -508,8 +525,7 @@ export function ownerContactDelivery(
           db
             .prepare(
               `INSERT INTO contact_outbox(id,portfolio_id,payload,status,attempts,next_attempt_at,is_test,accepted_at,deadline_at,budget_window_start)
-              SELECT ?2,?1,json_object('test',1,'recipientVerifiedAt',
-                (SELECT verified_at FROM contact_recipient WHERE portfolio_id=?1)),
+              SELECT ?2,?1,json_object('test',1),
                 'queued',0,?3,1,?3,?4,?5
               WHERE EXISTS(SELECT 1 FROM email_reservation WHERE id=?2 AND portfolio_id=?1)`,
             )

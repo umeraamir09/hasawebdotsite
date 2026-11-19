@@ -293,22 +293,56 @@ export async function checkContactDelivery({
     assert.equal(interrupted.payload, null);
     assert.equal(interrupted.notice, "sent");
 
-    // A changed recipient ends delivery without a provider attempt: the
-    // message belongs to the address verified when it was accepted.
+    // While the owner confirms a new address, a message waits without
+    // spending an attempt and then goes to the newly confirmed address.
     await reset();
-    await visit(fields());
+    const moved = "delivery-new-recipient@example.test";
+    await visit(fields({ message: "Moved hello" }));
     const changed = await only();
     await sql(
-      "UPDATE contact_recipient SET verified_at=? WHERE portfolio_id=?",
-      [verifiedAt + 1, portfolio],
+      "UPDATE contact_recipient SET email=?,verified_at=NULL WHERE portfolio_id=?",
+      [moved, portfolio],
     );
     await sweep(changed.accepted_at);
-    assert.equal((await only()).last_error, "recipient_changed");
-    assert.equal(email.to(recipient).length, 0);
+    const held = await only();
+    assert.equal(held.status, "queued");
+    assert.equal(held.attempts, 0);
+    assert.equal(held.last_error, "recipient_unconfirmed");
+    assert.equal(held.next_attempt_at, changed.accepted_at + 5 * MIN);
+    assert.equal(email.state.sent.length, 0);
     assert.deepEqual(await dispatches(changed.id), []);
     await sql(
       "UPDATE contact_recipient SET verified_at=? WHERE portfolio_id=?",
-      [verifiedAt, portfolio],
+      [changed.accepted_at + 4 * MIN, portfolio],
+    );
+    await sweep(changed.accepted_at + 5 * MIN);
+    const redirected = await only();
+    assert.equal(redirected.status, "sent");
+    assert.equal(redirected.attempts, 1);
+    assert.equal(email.to(moved).length, 1);
+    assert.match(email.to(moved)[0].text, /Moved hello/);
+    assert.equal(email.to(recipient).length, 0);
+
+    // A recipient still unconfirmed at the deadline ends the message.
+    await reset();
+    await visit(fields());
+    const unconfirmed = await only();
+    await sql(
+      "UPDATE contact_recipient SET verified_at=NULL WHERE portfolio_id=?",
+      [portfolio],
+    );
+    await sweep(unconfirmed.accepted_at + DAY - MIN);
+    assert.equal((await only()).next_attempt_at, unconfirmed.accepted_at + DAY);
+    await sweep(unconfirmed.accepted_at + DAY);
+    const expired = await only();
+    assert.equal(expired.status, "failed");
+    assert.equal(expired.last_error, "recipient_unconfirmed");
+    assert.equal(expired.notice, "sent");
+    assert.equal(email.state.sent.length, 1);
+    assert.equal(email.to(account).length, 1);
+    await sql(
+      "UPDATE contact_recipient SET email=?,verified_at=? WHERE portfolio_id=?",
+      [recipient, verifiedAt, portfolio],
     );
 
     // Over the shared notice allowance the notice is deferred to the next
