@@ -154,7 +154,10 @@ jobs:
 
   e2e:
     needs: [changes, build]
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    # On self-hosted machines only runners labelled `e2e` take this job, so
+    # one machine never runs two full e2e jobs at once (two of them exhausted
+    # the owner's memory). Other jobs still use every runner.
+    runs-on: ${{ vars.CI_RUNNER && fromJSON('["self-hosted", "e2e"]') || 'ubuntu-latest' }}
     # The self-hosted plan is one job with every project. A missing or invalid
     # plan fails this job, and with it the `ci` check.
     timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
