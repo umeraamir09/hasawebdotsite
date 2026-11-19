@@ -39,7 +39,8 @@ The committed `wrangler.jsonc` files name only local resources; do not deploy th
 
 ```sh
 pnpm check            # Biome, typecheck, Vitest (~1 min)
-pnpm verify           # check, then build and the e2e projects your diff affects
+pnpm verify           # check, then build and the e2e projects your diff affects (CI covers large sets)
+pnpm verify --projects=api,editor  # check, build and the named e2e projects
 pnpm verify --all     # check, build and every e2e project
 pnpm verify --dry-run # show what verify would run
 pnpm e2e --project=editor -g "resume download"   # one journey, against the last build

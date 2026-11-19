@@ -1,11 +1,17 @@
 // `pnpm verify`: unit checks, then the build and the e2e projects that the
-// changes against the base branch can affect. `--all` runs every project.
+// changes against the base branch can affect. When the diff affects more
+// projects than this machine runs quickly, verify builds and leaves them to
+// CI, which runs every project in parallel on each pull request.
 //
-//   pnpm verify                 # check + affected e2e projects
-//   pnpm verify --all           # check + build + every e2e project
-//   pnpm verify --base=<ref>    # compare against another ref (default origin/main)
-//   pnpm verify --dry-run       # print the plan only
+//   pnpm verify                     # check + build + affected e2e projects
+//   pnpm verify --projects=api,editor  # check + build + these projects only
+//   pnpm verify --all               # check + build + every e2e project
+//   pnpm verify --base=<ref>        # compare against another ref (default origin/main)
+//   pnpm verify --dry-run           # print the plan only
+//
+// VERIFY_MAX_PROJECTS overrides the local limit (default: three per e2e worker).
 import { spawnSync } from "node:child_process";
+import { availableParallelism } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -91,6 +97,36 @@ export function affectedProjects(paths) {
   return projects.filter((name) => selected.has(name));
 }
 
+// The most affected projects a plain `pnpm verify` runs locally. A shared path
+// selects all eight, which takes about 30 minutes on one worker; CI runs the
+// same set in about six.
+export function localProjectLimit(
+  env = process.env,
+  cores = availableParallelism(),
+) {
+  if (env.VERIFY_MAX_PROJECTS) return Number(env.VERIFY_MAX_PROJECTS);
+  const workers = Number(env.E2E_WORKERS ?? Math.max(1, Math.floor(cores / 4)));
+  return 3 * workers;
+}
+
+// Splits the e2e projects into those verify runs and those it leaves to CI.
+// `--all` and `--projects=` are explicit requests and always run.
+export function planProjects({ affected, all, requested, limit }) {
+  if (all) return { run: [...projects], deferred: [] };
+  if (requested) {
+    const unknown = requested.filter((name) => !projects.includes(name));
+    if (unknown.length)
+      throw new Error(`Unknown e2e project: ${unknown.join(", ")}`);
+    return {
+      run: projects.filter((name) => requested.includes(name)),
+      deferred: [],
+    };
+  }
+  return affected.length > limit
+    ? { run: [], deferred: affected }
+    : { run: affected, deferred: [] };
+}
+
 function git(root, args) {
   const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   if (result.status !== 0) throw new Error(result.stderr || "git failed");
@@ -125,30 +161,40 @@ if (
   const root = fileURLToPath(new URL("..", import.meta.url));
   const args = process.argv.slice(2);
   for (const arg of args)
-    if (!/^--(all|dry-run|base=.+)$/.test(arg))
+    if (!/^--(all|dry-run|base=.+|projects=.+)$/.test(arg))
       throw new Error(`Unknown argument: ${arg}`);
-  const base =
-    args.find((arg) => arg.startsWith("--base="))?.slice(7) ?? "origin/main";
-  const selected = args.includes("--all")
-    ? [...projects]
-    : affectedProjects(changedPaths(root, base));
+  const value = (name) =>
+    args.find((arg) => arg.startsWith(`--${name}=`))?.slice(name.length + 3);
+  const base = value("base") ?? "origin/main";
+  const all = args.includes("--all");
+  const requested = value("projects")?.split(",").filter(Boolean);
+  const affected =
+    all || requested ? [] : affectedProjects(changedPaths(root, base));
+  const limit = localProjectLimit();
+  const { run: selected, deferred } = planProjects({
+    affected,
+    all,
+    requested,
+    limit,
+  });
   const plan = [["pnpm", "check"]];
+  if (selected.length || deferred.length) plan.push(["pnpm", "build"]);
   if (selected.length)
-    plan.push(
-      ["pnpm", "build"],
-      [
-        "pnpm",
-        "exec",
-        "playwright",
-        "test",
-        ...selected.map((name) => `--project=${name}`),
-      ],
+    plan.push([
+      "pnpm",
+      "exec",
+      "playwright",
+      "test",
+      ...selected.map((name) => `--project=${name}`),
+    ]);
+  if (selected.length) console.log(`e2e projects: ${selected.join(", ")}`);
+  else if (deferred.length)
+    console.log(
+      `The diff affects ${deferred.length} e2e projects (${deferred.join(", ")}), more than the local limit of ${limit}.\n` +
+        "Verify builds but leaves them to CI, which runs every project in parallel.\n" +
+        'Run the tests you changed with `pnpm e2e --project=<name> -g "<test>"`, or pass --projects=<names> or --all.',
     );
-  console.log(
-    selected.length
-      ? `e2e projects: ${selected.join(", ")}`
-      : "No e2e project is affected; running unit checks only.",
-  );
+  else console.log("No e2e project is affected; running unit checks only.");
   if (args.includes("--dry-run")) {
     for (const command of plan) console.log(command.join(" "));
   } else {

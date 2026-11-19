@@ -8,6 +8,8 @@ pnpm e2e --project=editor                  # one project
 pnpm e2e --project=editor -g "case studies"  # one test
 GROUP_FILTER="withdraw" pnpm e2e --project=editor -g "resume"  # some steps of a test
 E2E_WORKERS=2 pnpm e2e                     # more workers (default: one per four cores)
+BROWSER_GROUP_LIMIT_MS=20000 pnpm e2e --project=editor -g "contact form" --reporter=line  # debug: stuck steps fail in 20s
+E2E_RETRIES=1 pnpm e2e --project=editor    # retry locally the way CI does
 ```
 
 ## Projects
@@ -34,4 +36,14 @@ E2E_WORKERS=2 pnpm e2e                     # more workers (default: one per four
 
 Add a `run("what it proves", async () => { … })` group to the journey that owns the feature, or a new journey file plus one line in `editor.spec.mjs`. Start each group from known state (`boot()` resets the owner's draft) so journeys can run in any order on any worker. Prove behavior through user actions and observed HTTP or storage results, not by calling internal controllers.
 
-Playwright retries a failed test once and reports a pass on retry as flaky. Treat flaky reports as bugs to fix with a proper wait, not as noise.
+Don't reuse the seeded owners (`alice`, `bob`, `revoked`) for checks that claim an address or set a contact recipient. Address claims are permanent by trigger (`claim_no_delete`, `claim_no_transfer`), so cleanup fails and later checks see the claim. Insert a dedicated synthetic owner and portfolio for that check instead.
+
+Each browser group has a 120-second limit (`BROWSER_GROUP_LIMIT_MS`). Lower it while debugging so a step that waits forever fails quickly.
+
+In CI, Playwright retries a failed test once and reports a pass on retry as flaky. Treat flaky reports as bugs to fix with a proper wait, not as noise. Local runs don't retry unless you set `E2E_RETRIES`, so a failure reports after one attempt.
+
+## Debugging a failure
+
+1. Read the evidence: `test-results/evidence/<label>-failure-N.{json,png,html}` holds the page state, a screenshot and the DOM at the failing step, and `test-results/*/error-context.md` holds Playwright's view.
+2. Re-run only that test with `--reporter=line`, and don't pipe the output through `grep`.
+3. Rebuild (`pnpm build`) only after changing code under `apps/` or `packages/`. Files under `e2e/` run directly.

@@ -14,13 +14,13 @@ hasaweb.site is a free portfolio builder: Next.js on OpenNext plus three Cloudfl
 | Visual design | [docs/ui-direction.md](docs/ui-direction.md) |
 | Commands | [README.md](README.md) |
 
-Read the roadmap entry and the sections relevant to your change. You do not need to read everything. Old phase records are in the `archive/specs-2026-11` git tag; look there only if you need a historical measurement.
+Read the roadmap entry and the sections relevant to your change. You do not need to read everything. In code, find what you need with `grep -n` and read that line range rather than whole files; everything you read stays in context for the rest of the session. Old phase records are in the `archive/specs-2026-11` git tag; look there only if you need a historical measurement.
 
 ## Workflow
 
 1. Pick a roadmap phase (or task) whose dependencies are checked off on `main`.
 2. Branch from `main` as `<type>/<short-description>` (see below). Use a worktree if other work is in flight.
-3. Implement it with tests. Run `pnpm check` while iterating, and the e2e tests for what you changed (`pnpm verify` picks them from your diff) before opening the PR.
+3. Implement it with tests. Run `pnpm check` while iterating, and the e2e tests you added or changed before opening the PR (`pnpm verify` picks projects from your diff).
 4. Open a PR. Its description is the record: what changed, how it was verified, and anything left open.
 5. When the phase's completion criteria pass, check its roadmap box in the same PR with a one-line note. **A merged PR is the owner's approval**; no separate approval step or commit.
 
@@ -37,13 +37,23 @@ Docs describe the current system only. When a change alters a contract, update t
 | Command | Runs | When |
 | --- | --- | --- |
 | `pnpm check` | Biome, typecheck, Vitest (~1 min) | Constantly |
-| `pnpm verify` | `check`, then build and the e2e projects affected by your diff against `main` | Before a PR that changes app code |
+| `pnpm e2e --project=<name> -g "<test>"` | One e2e test against the last build | For each e2e test you add or change, and when debugging |
+| `pnpm verify` | `check`, build, and the e2e projects your diff affects, up to a local limit (three per e2e worker) | Before a PR that changes app code |
+| `pnpm verify --projects=<a,b>` | `check`, build and the named projects | When you want specific projects regardless of the diff |
 | `pnpm verify --all` | `check`, build, every e2e project | Rarely; CI already does this in parallel |
-| `pnpm e2e --project=<name> -g "<test>"` | One e2e project or test against the last build | Debugging |
 
-E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). A full local run takes a while on a small machine; CI runs every project in parallel on each PR that touches code (about five minutes), so it is fine to push and let CI cover the rest. Fix anything CI reports, including tests marked flaky.
+E2E projects run on Playwright Test against the built Workers in workerd (see `e2e/README.md`). On a 4-core machine they run on one worker, so all eight projects take about 30 minutes locally. CI runs them in parallel in about six minutes on every PR that touches code. When a diff touches a shared path (`packages/db`, `packages/schema`, `e2e/support`, the lockfile) verify selects every project, goes over the local limit and leaves them to CI. Run the tests you wrote or changed yourself, then push. Don't re-run tests that already passed in this session, and fix anything CI reports, including tests marked flaky.
 
-Run the matching e2e project, plus a careful self-review of the diff, for any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion. These boundaries are where bugs cost real users.
+Run the e2e tests that cover your change, plus a careful self-review of the diff, for any change to authentication, authorization, private data, publication or withdrawal, migrations or deletion. These boundaries are where bugs cost real users.
+
+When an e2e test fails:
+
+- Read its evidence first: `test-results/evidence/<label>-failure-N.{json,png,html}` and `error-context.md`. Most failures are explained there.
+- Iterate on one test with `pnpm e2e --project=<name> -g "<test>" --reporter=line`. Local runs don't retry. Don't filter the output through `grep`; a filter that matches nothing hides the failure.
+- Set `BROWSER_GROUP_LIMIT_MS=20000` so a stuck browser step fails in 20 seconds instead of 120.
+- Run `pnpm build` again only after changing app or package code. Changes under `e2e/` don't need a rebuild.
+
+Run long commands such as `pnpm verify` in the background and continue when the completion notice arrives. Don't poll the log with `sleep` or `until` loops.
 
 Write tests for user-visible behavior, privacy and data safety. Prefer a Vitest unit test when the logic can be tested without the runtime; add e2e coverage for flows that cross Workers or the browser.
 
