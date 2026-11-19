@@ -322,8 +322,16 @@ export async function startOwnerRuntime({ directory, evidence }) {
           { binding: "PUBLICATION_QUEUE", queue: "hasaweb-publication-local" },
           // Phase 42 GitHub refresh (visits, status reads, daily sweep).
           { binding: "GITHUB_QUEUE", queue: "hasaweb-github-local" },
+          // Phase 45 first delivery attempts. The visitor fixture binds it
+          // only for posts that ask for it (`queue: true`).
+          { binding: "CONTACT_QUEUE", queue: "hasaweb-contact-local" },
         ],
         consumers: [
+          {
+            queue: "hasaweb-contact-local",
+            max_batch_size: 1,
+            max_batch_timeout: 1,
+          },
           {
             queue: "hasaweb-publication-local",
             max_batch_size: 1,

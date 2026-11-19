@@ -1,5 +1,6 @@
 export * from "./addresses";
 export * from "./bounded-save";
+export * from "./contact-delivery";
 export * from "./contact-recipient";
 export * from "./contact-submission";
 export * from "./draft-api";

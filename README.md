@@ -28,8 +28,8 @@ If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package
 2. Set `APP_ORIGIN` to the exact browser origin without a trailing slash: `http://127.0.0.1:8787` for `pnpm dev`, `http://127.0.0.1:3000` for `pnpm dev:web`. Never a LAN address, portfolio host or path.
 3. Register development OAuth apps with callbacks `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`.
 4. To use the real guide and editor, add `OWNER_ENTRY_ACTIVATION=active` to `apps/web/.dev.vars`. Without it `/auth/entry` and `/editor` show the welcome shell.
-5. Email (contact recipient confirmation) prints to the jobs console unless `RESEND_API_KEY` and `EMAIL_FROM` are set in `apps/jobs/.dev.vars`.
-6. Published contact forms use Turnstile. `apps/site/wrangler.jsonc` sets Cloudflare's always-pass test site key; copy `apps/site/.dev.vars.example` to `apps/site/.dev.vars` for the matching test secret. Accepted messages wait in `contact_outbox` (delivery is Phase 45).
+5. Email (recipient confirmation, contact delivery and failure notices) prints to the jobs console unless `RESEND_API_KEY` and `EMAIL_FROM` are set in `apps/jobs/.dev.vars`.
+6. Published contact forms use Turnstile. `apps/site/wrangler.jsonc` sets Cloudflare's always-pass test site key; copy `apps/site/.dev.vars.example` to `apps/site/.dev.vars` for the matching test secret. Accepted messages go to `contact_outbox`; the jobs contact queue makes the first attempt and the jobs cron retries.
 
 ### Production configuration (Phase 52)
 
@@ -39,7 +39,8 @@ The committed `wrangler.jsonc` files name only local resources; do not deploy th
 
 ```sh
 pnpm check            # Biome, typecheck, Vitest (~1 min)
-pnpm verify           # check, then build and the e2e projects your diff affects
+pnpm verify           # check, then build and the e2e projects your diff affects (CI covers large sets)
+pnpm verify --projects=api,editor  # check, build and the named e2e projects
 pnpm verify --all     # check, build and every e2e project
 pnpm verify --dry-run # show what verify would run
 pnpm e2e --project=editor -g "resume download"   # one journey, against the last build
@@ -49,7 +50,7 @@ End-to-end suites live in [`e2e/`](e2e/README.md) and run on Playwright Test aga
 
 A pre-commit hook (installed by `pnpm install`) runs Biome on staged files.
 
-CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip CI.
+CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip those jobs. The final `ci` job passes only when every other job passed or was skipped, so it is the one check to require before merging.
 
 ## Workspace
 

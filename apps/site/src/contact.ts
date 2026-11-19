@@ -23,7 +23,11 @@ export type ContactEnv = {
   TURNSTILE_SECRET?: string;
   // Local and test fixtures only: a stand-in for Turnstile's siteverify API.
   TURNSTILE_VERIFY_ORIGIN?: string;
+  // Phase 45: wakes jobs for the first delivery attempt. The outbox row is
+  // the record, so a lost message only waits for the cron sweep.
+  CONTACT_QUEUE?: { send(body: { outboxId: string }): Promise<unknown> };
 };
+type Background = { waitUntil(work: Promise<unknown>): void };
 export type Turnstile = "passed" | "blocked" | "unavailable";
 
 const MAX_BODY_BYTES = 32 * 1024;
@@ -138,10 +142,18 @@ export async function serveContact(
   request: Request,
   env: ContactEnv,
   name: string,
-  { now = Date.now, turnstile = verifyTurnstile } = {},
+  {
+    now = Date.now,
+    turnstile = verifyTurnstile,
+    background,
+  }: {
+    now?: () => number;
+    turnstile?: typeof verifyTurnstile;
+    background?: Background | undefined;
+  } = {},
 ): Promise<Response> {
   try {
-    return await handle(request, env, name, now, turnstile);
+    return await handle(request, env, name, now, turnstile, background);
   } catch {
     // D1 or the platform failed. Nothing was accepted; the visitor may retry.
     return reply(503, { error: "failed" }, retryAfter(30_000));
@@ -154,6 +166,7 @@ async function handle(
   name: string,
   now: () => number,
   turnstile: typeof verifyTurnstile,
+  background: Background | undefined,
 ): Promise<Response> {
   const host = new URL(request.url).host;
   if (request.method === "GET" || request.method === "HEAD") {
@@ -210,7 +223,14 @@ async function handle(
     ...values,
     now: at,
   });
-  if (result.status === "accepted") return reply(202, { status: "accepted" });
+  if (result.status === "accepted") {
+    const queue = env.CONTACT_QUEUE;
+    if (queue && background)
+      background.waitUntil(
+        queue.send({ outboxId: result.id }).catch(() => undefined),
+      );
+    return reply(202, { status: "accepted" });
+  }
   if (result.status === "limited")
     return reply(
       429,

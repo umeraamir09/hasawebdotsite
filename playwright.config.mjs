@@ -18,8 +18,10 @@ export default defineConfig({
     process.env.E2E_WORKERS ??
       Math.max(1, Math.floor(availableParallelism() / 4)),
   ),
-  // A pass on retry is reported as flaky, so flakes stay visible.
-  retries: 1,
+  // CI retries once and reports a pass on retry as flaky, so flakes stay
+  // visible. Local runs fail on the first attempt so a broken test reports
+  // quickly; set E2E_RETRIES to change that.
+  retries: ci ? 1 : Number(process.env.E2E_RETRIES ?? 0),
   forbidOnly: ci,
   reporter: ci
     ? [["list"], ["github"], ["html", { open: "never" }]]

@@ -209,6 +209,15 @@ export function contactEmail(
     text: `Name: ${visitor.name}\nEmail: ${visitor.email}\n\n${visitor.message}`,
   };
 }
+/** The owner's Send test message. It travels the visitor message's path. */
+export function testEmail(to: string): Email {
+  return {
+    kind: "contact",
+    to,
+    subject: "Test message from your hasaweb.site portfolio",
+    text: "This is a test of your portfolio's contact form. Visitor messages will arrive at this address the same way, with the visitor as the reply-to address.",
+  };
+}
 export function failureNotice(to: string): Email {
   return {
     kind: "failure-notice",

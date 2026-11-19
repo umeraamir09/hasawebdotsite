@@ -1193,4 +1193,11 @@ export async function checkDraftApi(runtime, check) {
       await checkContactSubmission({ origin, secrets, sql, turnstile });
     },
   );
+  await check(
+    "contact delivery retries, exhausts, notifies and sends tests",
+    async () => {
+      const { checkContactDelivery } = await import("./contact-delivery.mjs");
+      await checkContactDelivery({ origin, secrets, sql, email, request });
+    },
+  );
 }

@@ -500,10 +500,22 @@ export const contactOutbox = sqliteTable(
     acceptedAt: integer("accepted_at", { mode: "timestamp_ms" }).notNull(),
     deadlineAt: integer("deadline_at", { mode: "timestamp_ms" }).notNull(),
     budgetWindowStart: integer("budget_window_start").notNull(),
+    // Phase 45: when the row reached sent or failed, and the owner's
+    // final-failure notice (null when none is owed: sent rows and tests).
+    finishedAt: integer("finished_at"),
+    notice: text("notice", {
+      enum: ["pending", "deferred", "sent", "failed"],
+    }),
+    noticeAttempts: integer("notice_attempts").notNull().default(0),
+    noticeNextAt: integer("notice_next_at"),
+    // The UTC acceptance time of the notice's email reservation, so a retry
+    // on a later day replays the same reservation instead of charging again.
+    noticeReservedAt: integer("notice_reserved_at"),
   },
   (t) => [
     index("outbox_portfolio_idx").on(t.portfolioId),
     index("outbox_due_idx").on(t.status, t.nextAttemptAt),
+    index("outbox_notice_idx").on(t.notice, t.noticeNextAt),
     check(
       "outbox_status",
       sql`${t.status} in ('queued','sending','sent','failed')`,

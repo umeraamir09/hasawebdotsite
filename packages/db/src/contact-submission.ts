@@ -9,7 +9,7 @@ import { utcDay } from "./email-budget";
 export const VISITOR_HOURLY_LIMIT = 5;
 const HOUR_MS = 60 * 60 * 1000;
 // Delivery retries run for 24 hours after acceptance (Phase 45).
-const DELIVERY_DEADLINE_MS = 24 * HOUR_MS;
+export const DELIVERY_DEADLINE_MS = 24 * HOUR_MS;
 
 // The portfolio behind a claimed host whose active version publishes a form.
 const PUBLISHED = `FROM portfolio p
