@@ -61,3 +61,25 @@ it("leaves a large affected set to CI unless projects are requested", () => {
     planProjects({ affected: [], requested: ["nope"], limit: 3 }),
   ).toThrow("Unknown e2e project: nope");
 });
+
+it("plans parallel hosted e2e jobs for the affected projects only", async () => {
+  const { ciMatrix } = await import("./ci-plan.mjs");
+  expect(ciMatrix({ affected: [], selfHosted: false })).toEqual([]);
+  expect(ciMatrix({ affected: ["api", "editor"], selfHosted: false })).toEqual([
+    { name: "editor 1/3", args: "--project=editor --shard=1/3", workers: "1" },
+    { name: "editor 2/3", args: "--project=editor --shard=2/3", workers: "1" },
+    { name: "editor 3/3", args: "--project=editor --shard=3/3", workers: "1" },
+    { name: "publication and api", args: "--project=api", workers: "1" },
+  ]);
+  expect(ciMatrix({ affected: [...projects], selfHosted: false })).toHaveLength(
+    7,
+  );
+});
+
+it("plans one two-worker e2e job on a self-hosted runner", async () => {
+  const { ciMatrix } = await import("./ci-plan.mjs");
+  expect(ciMatrix({ affected: ["auth", "api"], selfHosted: true })).toEqual([
+    { name: "auth, api", args: "--project=auth --project=api", workers: "2" },
+  ]);
+  expect(ciMatrix({ affected: [], selfHosted: true })).toEqual([]);
+});

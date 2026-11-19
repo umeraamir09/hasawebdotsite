@@ -26,6 +26,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       code: ${{ steps.diff.outputs.code }}
+      matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,6 +43,12 @@ jobs:
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
+      # The e2e jobs for the projects this change can affect (as `pnpm verify`
+      # selects them); docs-only changes and unit tests select none.
+      - id: plan
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: node scripts/ci-plan.mjs
 
   check:
     needs: changes
@@ -54,14 +61,32 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
+          # A self-hosted runner keeps its pnpm store on disk.
+          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
-      - uses: actions/cache@v4
+      # A self-hosted runner keeps the Turbo cache on its own disk, capped by
+      # the prune step, instead of round-tripping it through GitHub's cache.
+      - if: vars.CI_RUNNER
+        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo" >> "$GITHUB_ENV"
+      - if: ${{ !vars.CI_RUNNER }}
+        uses: actions/cache@v4
         with:
           path: .turbo/cache
           key: turbo-check-${{ github.sha }}
           restore-keys: turbo-check-
       - run: pnpm check
+      # Drops entries unused for a week, then the least recently used ones
+      # until the cache is under 2 GB.
+      - if: always() && vars.CI_RUNNER
+        run: |
+          dir="$TURBO_CACHE_DIR"
+          [ -d "$dir" ] || exit 0
+          find "$dir" -type f -atime +7 -delete
+          find "$dir" -type f -printf '%A@ %s %p\n' | sort -n |
+            awk -v cap=$((2 * 1024 * 1024 * 1024)) '{ total += $2; line[NR] = $0 }
+              END { for (i = 1; i <= NR && total > cap; i++) { split(line[i], f, " "); print f[3]; total -= f[2] } }' |
+            xargs -r rm -f
+          du -sh "$dir"
 
   build:
     needs: changes
@@ -74,10 +99,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
+          # A self-hosted runner keeps its pnpm store on disk.
+          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
+      # A self-hosted runner keeps the Turbo cache on its own disk, capped by
+      # the prune step, instead of round-tripping it through GitHub's cache.
+      - if: vars.CI_RUNNER
+        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo" >> "$GITHUB_ENV"
       # Turbo replays unchanged package builds; Next reuses its compiler cache.
-      - uses: actions/cache@v4
+      - if: ${{ !vars.CI_RUNNER }}
+        uses: actions/cache@v4
         with:
           path: |
             .turbo/cache
@@ -85,6 +116,18 @@ jobs:
           key: turbo-build-${{ github.sha }}
           restore-keys: turbo-build-
       - run: pnpm build
+      # Drops entries unused for a week, then the least recently used ones
+      # until the cache is under 2 GB.
+      - if: always() && vars.CI_RUNNER
+        run: |
+          dir="$TURBO_CACHE_DIR"
+          [ -d "$dir" ] || exit 0
+          find "$dir" -type f -atime +7 -delete
+          find "$dir" -type f -printf '%A@ %s %p\n' | sort -n |
+            awk -v cap=$((2 * 1024 * 1024 * 1024)) '{ total += $2; line[NR] = $0 }
+              END { for (i = 1; i <= NR && total > cap; i++) { split(line[i], f, " "); print f[3]; total -= f[2] } }' |
+            xargs -r rm -f
+          du -sh "$dir"
       # E2E jobs run these built Workers instead of rebuilding.
       - uses: actions/upload-artifact@v4
         with:
@@ -98,39 +141,28 @@ jobs:
             apps/jobs/dist
 
   e2e:
-    needs: build
+    needs: [changes, build]
+    if: needs.changes.outputs.matrix != '[]'
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-    timeout-minutes: 15
+    # The self-hosted plan is one job with every affected project.
+    timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - name: editor 1/3
-            args: --project=editor --shard=1/3
-          - name: editor 2/3
-            args: --project=editor --shard=2/3
-          - name: editor 3/3
-            args: --project=editor --shard=3/3
-          - name: autosave
-            args: --project=autosave
-          - name: uploads and auth
-            args: --project=uploads --project=auth
-          - name: renderer and runtime
-            args: --project=renderer --project=runtime
-          - name: publication and api
-            args: --project=publication --project=api
+        include: ${{ fromJSON(needs.changes.outputs.matrix) }}
     name: e2e (${{ matrix.name }})
     env:
-      # Hosted runners have two cores, and a self-hosted runner shares its
-      # machine: one runtime and browser at a time.
-      E2E_WORKERS: "1"
+      # Hosted runners have two cores: one runtime and browser at a time. The
+      # self-hosted machine has four, so its single job runs two.
+      E2E_WORKERS: ${{ matrix.workers }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
+          # A self-hosted runner keeps its pnpm store on disk.
+          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
       - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
