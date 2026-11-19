@@ -1,18 +1,15 @@
-// The CI e2e plan: which jobs run which projects, from the same affected-path
-// rules as `pnpm verify`. Writes `matrix=<json>` for the workflow.
+// The CI e2e plan. Writes `matrix=<json>` for the workflow.
 //
-//   BASE=<sha> node scripts/ci-plan.mjs   (in a job on the same kind of runner)
+//   node scripts/ci-plan.mjs   (in a job on the same kind of runner)
 //
-// GitHub-hosted runners run every project in seven parallel groups on every
-// code change, as CI always has. A self-hosted runner takes jobs one at a
-// time, so it gets a single job that runs only the affected projects with two
-// Playwright workers. An unknown base, and any change to the CI workflow or
-// these scripts, runs every project.
-import { spawnSync } from "node:child_process";
+// Every code change runs every e2e project, on any runner. GitHub-hosted
+// runners split them into seven parallel one-worker jobs. A self-hosted
+// runner takes jobs one at a time, so it runs them all in a single job with
+// two Playwright workers instead, which saves six rounds of job setup.
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { affectedProjects, projects } from "./verify.mjs";
+import { projects } from "./verify.mjs";
 
 const hostedGroups = [
   { name: "editor 1/3", projects: ["editor"], shard: "1/3" },
@@ -30,44 +27,21 @@ const args = (names, shard) =>
     ...(shard ? [`--shard=${shard}`] : []),
   ].join(" ");
 
-export function ciMatrix({ affected, selfHosted }) {
-  if (!selfHosted)
-    return hostedGroups.map((group) => ({
-      name: group.name,
-      args: args(group.projects, group.shard),
-      workers: "1",
-    }));
-  if (!affected.length) return [];
-  return [{ name: affected.join(", "), args: args(affected), workers: "2" }];
-}
-
-// The workflow and its planning scripts decide how every e2e job runs, so a
-// change to them must exercise all of them.
-export const ciPaths = /^(\.github\/|scripts\/(ci-plan|verify)\.mjs$)/;
-
-export function ciAffected(paths) {
-  return paths.some((path) => ciPaths.test(path))
-    ? [...projects]
-    : affectedProjects(paths);
+export function ciMatrix({ selfHosted }) {
+  if (selfHosted)
+    return [{ name: "all projects", args: args(projects), workers: "2" }];
+  return hostedGroups.map((group) => ({
+    name: group.name,
+    args: args(group.projects, group.shard),
+    workers: "1",
+  }));
 }
 
 if (
   process.argv[1] &&
   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 ) {
-  const base = process.env.BASE ?? "";
-  const known =
-    /^[0-9a-f]{40}$/.test(base) &&
-    spawnSync("git", ["cat-file", "-e", `${base}^{commit}`]).status === 0;
-  const paths = known
-    ? spawnSync("git", ["diff", "--name-only", base, "HEAD"], {
-        encoding: "utf8",
-      })
-        .stdout.split("\n")
-        .filter(Boolean)
-    : null;
   const matrix = ciMatrix({
-    affected: paths ? ciAffected(paths) : [...projects],
     // The runner sets RUNNER_ENVIRONMENT to github-hosted or self-hosted.
     selfHosted: process.env.RUNNER_ENVIRONMENT === "self-hosted",
   });

@@ -43,13 +43,9 @@ jobs:
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
-      # The e2e jobs: every project in seven parallel groups on GitHub-hosted
-      # runners; on a self-hosted runner, one job with the projects this change
-      # can affect (as `pnpm verify` selects them, and all of them when CI
-      # itself changes).
+      # The e2e jobs: every project, in seven parallel groups on GitHub-hosted
+      # runners and in one two-worker job on a self-hosted runner.
       - id: plan
-        env:
-          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: node scripts/ci-plan.mjs
 
   check:
@@ -158,10 +154,9 @@ jobs:
 
   e2e:
     needs: [changes, build]
-    if: needs.changes.outputs.matrix != '[]'
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-    # The self-hosted plan is one job with every affected project. A missing
-    # or invalid plan fails this job, and with it the `ci` check.
+    # The self-hosted plan is one job with every project. A missing or invalid
+    # plan fails this job, and with it the `ci` check.
     timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
     strategy:
       fail-fast: false
