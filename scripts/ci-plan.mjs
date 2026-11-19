@@ -3,10 +3,11 @@
 //
 //   BASE=<sha> node scripts/ci-plan.mjs   (in a job on the same kind of runner)
 //
-// GitHub-hosted runners get one job per group so they run in parallel. One
-// self-hosted runner takes jobs one at a time, so it gets a single job that
-// runs every affected project with two Playwright workers, which saves the
-// per-job setup. An unknown base runs every project.
+// GitHub-hosted runners run every project in seven parallel groups on every
+// code change, as CI always has. A self-hosted runner takes jobs one at a
+// time, so it gets a single job that runs only the affected projects with two
+// Playwright workers. An unknown base, and any change to the CI workflow or
+// these scripts, runs every project.
 import { spawnSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -30,15 +31,24 @@ const args = (names, shard) =>
   ].join(" ");
 
 export function ciMatrix({ affected, selfHosted }) {
+  if (!selfHosted)
+    return hostedGroups.map((group) => ({
+      name: group.name,
+      args: args(group.projects, group.shard),
+      workers: "1",
+    }));
   if (!affected.length) return [];
-  if (selfHosted)
-    return [{ name: affected.join(", "), args: args(affected), workers: "2" }];
-  return hostedGroups.flatMap((group) => {
-    const names = group.projects.filter((name) => affected.includes(name));
-    return names.length
-      ? [{ name: group.name, args: args(names, group.shard), workers: "1" }]
-      : [];
-  });
+  return [{ name: affected.join(", "), args: args(affected), workers: "2" }];
+}
+
+// The workflow and its planning scripts decide how every e2e job runs, so a
+// change to them must exercise all of them.
+export const ciPaths = /^(\.github\/|scripts\/(ci-plan|verify)\.mjs$)/;
+
+export function ciAffected(paths) {
+  return paths.some((path) => ciPaths.test(path))
+    ? [...projects]
+    : affectedProjects(paths);
 }
 
 if (
@@ -57,7 +67,7 @@ if (
         .filter(Boolean)
     : null;
   const matrix = ciMatrix({
-    affected: paths ? affectedProjects(paths) : [...projects],
+    affected: paths ? ciAffected(paths) : [...projects],
     // The runner sets RUNNER_ENVIRONMENT to github-hosted or self-hosted.
     selfHosted: process.env.RUNNER_ENVIRONMENT === "self-hosted",
   });

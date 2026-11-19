@@ -43,8 +43,10 @@ jobs:
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
-      # The e2e jobs for the projects this change can affect (as `pnpm verify`
-      # selects them); docs-only changes and unit tests select none.
+      # The e2e jobs: every project in seven parallel groups on GitHub-hosted
+      # runners; on a self-hosted runner, one job with the projects this change
+      # can affect (as `pnpm verify` selects them, and all of them when CI
+      # itself changes).
       - id: plan
         env:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -58,10 +60,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # Per-runner, so two runners on one machine never replace each
-        # other's pnpm (the default is a shared ~/setup-pnpm).
+        # On a self-hosted runner, per runner, so two runners on one machine
+        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
         with:
-          dest: ${{ runner.temp }}/setup-pnpm
+          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
@@ -103,10 +105,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # Per-runner, so two runners on one machine never replace each
-        # other's pnpm (the default is a shared ~/setup-pnpm).
+        # On a self-hosted runner, per runner, so two runners on one machine
+        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
         with:
-          dest: ${{ runner.temp }}/setup-pnpm
+          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
@@ -158,7 +160,8 @@ jobs:
     needs: [changes, build]
     if: needs.changes.outputs.matrix != '[]'
     runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
-    # The self-hosted plan is one job with every affected project.
+    # The self-hosted plan is one job with every affected project. A missing
+    # or invalid plan fails this job, and with it the `ci` check.
     timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
     strategy:
       fail-fast: false
@@ -172,10 +175,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # Per-runner, so two runners on one machine never replace each
-        # other's pnpm (the default is a shared ~/setup-pnpm).
+        # On a self-hosted runner, per runner, so two runners on one machine
+        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
         with:
-          dest: ${{ runner.temp }}/setup-pnpm
+          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version

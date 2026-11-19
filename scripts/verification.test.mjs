@@ -62,18 +62,19 @@ it("leaves a large affected set to CI unless projects are requested", () => {
   ).toThrow("Unknown e2e project: nope");
 });
 
-it("plans parallel hosted e2e jobs for the affected projects only", async () => {
+it("plans the same seven hosted e2e jobs for every code change", async () => {
   const { ciMatrix } = await import("./ci-plan.mjs");
-  expect(ciMatrix({ affected: [], selfHosted: false })).toEqual([]);
-  expect(ciMatrix({ affected: ["api", "editor"], selfHosted: false })).toEqual([
-    { name: "editor 1/3", args: "--project=editor --shard=1/3", workers: "1" },
-    { name: "editor 2/3", args: "--project=editor --shard=2/3", workers: "1" },
-    { name: "editor 3/3", args: "--project=editor --shard=3/3", workers: "1" },
-    { name: "publication and api", args: "--project=api", workers: "1" },
-  ]);
-  expect(ciMatrix({ affected: [...projects], selfHosted: false })).toHaveLength(
-    7,
-  );
+  const hosted = [
+    ["editor 1/3", "--project=editor --shard=1/3"],
+    ["editor 2/3", "--project=editor --shard=2/3"],
+    ["editor 3/3", "--project=editor --shard=3/3"],
+    ["autosave", "--project=autosave"],
+    ["uploads and auth", "--project=uploads --project=auth"],
+    ["renderer and runtime", "--project=renderer --project=runtime"],
+    ["publication and api", "--project=publication --project=api"],
+  ].map(([name, args]) => ({ name, args, workers: "1" }));
+  for (const affected of [[], ["api"], [...projects]])
+    expect(ciMatrix({ affected, selfHosted: false })).toEqual(hosted);
 });
 
 it("plans one two-worker e2e job on a self-hosted runner", async () => {
@@ -82,4 +83,16 @@ it("plans one two-worker e2e job on a self-hosted runner", async () => {
     { name: "auth, api", args: "--project=auth --project=api", workers: "2" },
   ]);
   expect(ciMatrix({ affected: [], selfHosted: true })).toEqual([]);
+});
+
+it("runs every project when CI itself changes", async () => {
+  const { ciAffected } = await import("./ci-plan.mjs");
+  for (const path of [
+    ".github/workflows/ci.yml",
+    "scripts/ci-plan.mjs",
+    "scripts/verify.mjs",
+  ])
+    expect(ciAffected(["docs/roadmap.md", path])).toEqual(projects);
+  expect(ciAffected(["docs/roadmap.md"])).toEqual([]);
+  expect(ciAffected(["packages/email/src/index.ts"])).toEqual(["api"]);
 });
