@@ -319,8 +319,14 @@ export async function createEditorHarness({
     await context.addCookies([
       { name: "fixture-session", value: "alice", url: browserOrigin },
     ]);
-    await sql("DELETE FROM owner_save_attempt WHERE user_id='draft-alice'");
-    await sql("DELETE FROM portfolio WHERE user_id='draft-alice'");
+    await sql(
+      "DELETE FROM owner_save_attempt WHERE user_id='draft-alice'",
+      [],
+      { idempotent: true },
+    );
+    await sql("DELETE FROM portfolio WHERE user_id='draft-alice'", [], {
+      idempotent: true,
+    });
     await page.goto(`${browserOrigin}/empty`);
     await page.evaluate(() =>
       fetch("/api/owner/portfolio", {
