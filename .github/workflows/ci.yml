@@ -63,7 +63,9 @@ jobs:
           node-version-file: .node-version
           # A self-hosted runner keeps its pnpm store on disk.
           cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      - run: pnpm install --frozen-lockfile
+      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
+      # new empty folder; a self-hosted runner reuses the machine's store.
+      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
       # A self-hosted runner keeps the Turbo cache on its own disk, capped by
       # the prune step, instead of round-tripping it through GitHub's cache.
       # Each runner on a machine has its own, so concurrent jobs never share one.
@@ -102,7 +104,9 @@ jobs:
           node-version-file: .node-version
           # A self-hosted runner keeps its pnpm store on disk.
           cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      - run: pnpm install --frozen-lockfile
+      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
+      # new empty folder; a self-hosted runner reuses the machine's store.
+      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
       # A self-hosted runner keeps the Turbo cache on its own disk, capped by
       # the prune step, instead of round-tripping it through GitHub's cache.
       # Each runner on a machine has its own, so concurrent jobs never share one.
@@ -165,7 +169,9 @@ jobs:
           node-version-file: .node-version
           # A self-hosted runner keeps its pnpm store on disk.
           cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      - run: pnpm install --frozen-lockfile
+      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
+      # new empty folder; a self-hosted runner reuses the machine's store.
+      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
       - uses: actions/download-artifact@v4
         with:
           name: builds
