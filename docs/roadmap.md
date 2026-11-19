@@ -28,7 +28,7 @@ Every phase below is merged to `main`. Their records are in the `archive/specs-2
 Known work left by completed phases. Fold each into the phase that touches it, or do it on its own.
 
 - **Custom color delivery (36).** The generator exists; editor controls, immediate preview and CSP-safe token delivery do not, and the renderer ignores `customColor`. Needed before 53.
-- **Owner-entry activation (42E).** `OWNER_ENTRY_ACTIVATION` stays closed until contact delivery (43–45) replaces the contact placeholder. Opening it is part of 52.
+- **Owner-entry activation (42E).** `OWNER_ENTRY_ACTIVATION` stays closed; contact delivery (43–45) is in place. Opening it is part of 52.
 - **Boundary reviews** the owner asked for and that have not run: authorization/privacy for 20 and 23, withdrawal for 38, access and headers for 39. Do them before 52.
 
 ## Remaining phases
@@ -51,7 +51,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 - Dependencies: 44. Integrate before completion: 17, 39.
 - Idempotent delivery, the confirmed retry schedule and deadline, stuck-outbox recovery, payload deletion, final-failure notices and status. Send test message in settings under its daily limit.
-- [ ] Complete when controlled failures exercise delivery and exhaustion, test messages report outcomes, preview submissions send nothing, and deferred owner notices still show as failures in the editor. No inbox, attachments or automatic replies.
+- [x] Complete when controlled failures exercise delivery and exhaustion, test messages report outcomes, preview submissions send nothing, and deferred owner notices still show as failures in the editor. No inbox, attachments or automatic replies.
+  - Queue hand-off, cron retries and stuck-lease recovery, owner notices and the editor's delivery section (migration `0019`). Live Resend delivery is verified in 52.
 
 ### Phase 46. Add search and sharing metadata
 

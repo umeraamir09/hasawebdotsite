@@ -2,7 +2,15 @@ import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
 import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
-import { type Wake, wakeSchema } from "@hasaweb/db";
+import {
+  deliverMessage,
+  type OutboxMessage,
+  outboxMessageSchema,
+  sweepContactOutbox,
+  type Wake,
+  wakeSchema,
+} from "@hasaweb/db";
+import { emailProvider } from "@hasaweb/email";
 import { parseRefreshMessage, type RefreshMessage } from "@hasaweb/github";
 import type { ContactBindings } from "./contact-routes";
 import {
@@ -39,12 +47,14 @@ export class OwnerApi extends WorkerEntrypoint<
 interface Env
   extends DispatchEnv,
     PublicationCacheEnv,
+    ContactBindings,
     Partial<Omit<GitHubBindings, "GITHUB_QUEUE">> {
   APP_ENV: string;
   DB: D1Database;
   SITES_BUCKET: R2Bucket;
   PUBLIC_ASSETS_BUCKET: R2Bucket;
-  CONTACT_QUEUE: Queue<{ id: string }>;
+  CONTACT_QUEUE: Queue<{ id: string } | OutboxMessage>;
+  CONTACT_QUEUE_NAME?: string;
   GITHUB_QUEUE: Queue<RefreshMessage>;
   PUBLISH_WORKFLOW: Workflow<{ id: string }>;
   PUBLICATION_QUEUE_NAME?: string;
@@ -105,6 +115,38 @@ export default {
       return;
     }
     let messages = batch.messages;
+    if (batch.queue === (env.CONTACT_QUEUE_NAME ?? "hasaweb-contact-local")) {
+      const probes: (typeof messages)[number][] = [];
+      const provider = emailProvider(env);
+      for (const message of messages) {
+        const delivery = outboxMessageSchema.safeParse(message.body);
+        if (!delivery.success) {
+          probes.push(message);
+          continue;
+        }
+        // The outbox row is the durable record: a failure here leaves it due
+        // (or leased) for the cron sweep, never for redelivery.
+        if (provider)
+          await deliverMessage(
+            env.DB,
+            provider,
+            delivery.data.outboxId,
+            Date.now(),
+          ).catch((error: unknown) =>
+            console.error(
+              "contact delivery failed",
+              error instanceof Error ? error.name : typeof error,
+            ),
+          );
+        message.ack();
+      }
+      if (!probes.length) return;
+      if (env.APP_ENV !== "local") {
+        for (const message of probes) message.ack();
+        return;
+      }
+      messages = probes;
+    }
     if (batch.queue === (env.GITHUB_QUEUE_NAME ?? "hasaweb-github-local")) {
       const probes: (typeof messages)[number][] = [];
       for (const message of messages) {
@@ -152,6 +194,14 @@ export default {
     // Durable grant revocation: pending cleanups retry here until GitHub
     // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
     await sweepGitHubCleanups(env).catch(() => []);
+    // Contact delivery retries, interrupted attempts and owner notices.
+    await sweepContactOutbox(env.DB, emailProvider(env), Date.now()).catch(
+      (error: unknown) =>
+        console.error(
+          "contact sweep failed",
+          error instanceof Error ? error.name : typeof error,
+        ),
+    );
     // Daily private refresh: one bounded batch of due connections per tick.
     await sweepGitHubRefreshes(env).catch((error: unknown) =>
       console.error(
@@ -164,4 +214,7 @@ export default {
       "INSERT OR REPLACE INTO runtime_probe (key, value) VALUES ('cron', 'complete')",
     ).run();
   },
-} satisfies ExportedHandler<Env, { id: string } | Wake | RefreshMessage>;
+} satisfies ExportedHandler<
+  Env,
+  { id: string } | Wake | RefreshMessage | OutboxMessage
+>;

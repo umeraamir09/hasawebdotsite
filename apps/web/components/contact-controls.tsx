@@ -4,6 +4,15 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import {
+  DeliveryError,
+  type DeliveryStatus,
+  deliveryMessages,
+  noticeMessages,
+  readDelivery,
+  sendTestMessage,
+  testOutcomeMessages,
+} from "../lib/editor/contact-delivery";
+import {
   chooseAccountRecipient,
   RecipientError,
   type RecipientStatus,
@@ -33,12 +42,21 @@ export function ContactControls({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const live = useRef(true);
+  const [delivery, setDelivery] = useState<DeliveryStatus | null>(null);
+  const [testing, setTesting] = useState(false);
+  const [testNotice, setTestNotice] = useState("");
+  const [testError, setTestError] = useState("");
 
   useEffect(() => {
     live.current = true;
     readRecipient(ownerId).then(
       (value) => live.current && setStatus(value),
       () => live.current && setLoadFailed(true),
+    );
+    // Delivery status is informational; the panel works without it.
+    readDelivery(ownerId).then(
+      (value) => live.current && setDelivery(value),
+      () => undefined,
     );
     return () => {
       live.current = false;
@@ -63,6 +81,30 @@ export function ContactControls({
       setError(recipientMessages[code ?? "unavailable"]);
     } finally {
       if (live.current) setBusy(false);
+    }
+  }
+
+  async function sendTest() {
+    setTesting(true);
+    setTestNotice("");
+    setTestError("");
+    try {
+      const result = await sendTestMessage(ownerId);
+      if (!live.current) return;
+      setDelivery(result);
+      if (result.outcome === "failed") setTestError(testOutcomeMessages.failed);
+      else setTestNotice(testOutcomeMessages[result.outcome]);
+    } catch (failure) {
+      if (!live.current) return;
+      if (failure instanceof DeliveryError && failure.status)
+        setDelivery(failure.status);
+      setTestError(
+        deliveryMessages[
+          failure instanceof DeliveryError ? failure.code : "unavailable"
+        ],
+      );
+    } finally {
+      if (live.current) setTesting(false);
     }
   }
 
@@ -167,6 +209,49 @@ export function ContactControls({
         {busy ? "Working..." : notice}
       </p>
       {error && <p role="alert">{error}</p>}
+      <section aria-label="Message delivery">
+        <h3>Delivery</h3>
+        <p className="editor-muted">
+          Send yourself a test message to check delivery before you share your
+          portfolio. You can send two a day.
+        </p>
+        <button
+          type="button"
+          disabled={inactive || testing || recipient?.state !== "verified"}
+          onClick={() => void sendTest()}
+        >
+          Send test message
+        </button>
+        <p role="status" className="editor-muted" data-test-message-status="">
+          {testing ? "Sending a test message..." : testNotice}
+        </p>
+        {testError && <p role="alert">{testError}</p>}
+        {delivery && delivery.delivering > 0 && (
+          <p className="editor-muted">
+            {delivery.delivering === 1
+              ? "1 message is being delivered."
+              : `${delivery.delivering} messages are being delivered.`}
+          </p>
+        )}
+        {delivery && delivery.failures.length > 0 && (
+          <>
+            <h4>Undelivered messages</h4>
+            <ul aria-label="Undelivered messages">
+              {delivery.failures.map((failure) => (
+                <li
+                  key={`${failure.acceptedAt}-${failure.failedAt}`}
+                  data-notice={failure.notice}
+                >
+                  A message sent on{" "}
+                  {new Date(failure.acceptedAt).toLocaleString()} couldn't be
+                  delivered and is no longer kept.{" "}
+                  {noticeMessages[failure.notice]}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
     </section>
   );
 }

@@ -1,5 +1,7 @@
 import { authSettings } from "@hasaweb/auth";
 import {
+  type DeliveryFailure,
+  ownerContactDelivery,
   ownerContactRecipient,
   privateJson,
   type RecipientFailure,
@@ -50,6 +52,17 @@ async function parse<T>(c: ContactContext, schema: z.ZodType<T>) {
 const invalid = () => privateJson({ error: "invalid_input" }, 422);
 
 export const CONTACT_RECIPIENT_PATH = "/api/owner/contact/recipient";
+// Delivery status and Send test message (Phase 45). No message content.
+export const CONTACT_DELIVERY_PATH = "/api/owner/contact/delivery";
+const deliveryStatus = {
+  no_recipient: 409,
+  limited: 429,
+  unavailable: 503,
+} as const satisfies Record<DeliveryFailure, number>;
+const delivery = (c: ContactContext) =>
+  ownerContactDelivery(c.env.DB, c.get("identity"), {
+    provider: emailProvider(c.env),
+  });
 
 export function addContactRoutes(app: Hono<OwnerBindings>) {
   app.use(`${CONTACT_RECIPIENT_PATH}/*`, expectedOwner);
@@ -75,6 +88,26 @@ export function addContactRoutes(app: Hono<OwnerBindings>) {
   });
   for (const action of ["", "/account", "/verify"])
     app.all(`${CONTACT_RECIPIENT_PATH}${action}`, () =>
+      privateJson({ error: "invalid_input" }, 405),
+    );
+
+  app.use(`${CONTACT_DELIVERY_PATH}/*`, expectedOwner);
+  app.use(CONTACT_DELIVERY_PATH, expectedOwner);
+  app.get(CONTACT_DELIVERY_PATH, async (c) =>
+    privateJson(await delivery(c).status()),
+  );
+  app.post(`${CONTACT_DELIVERY_PATH}/test`, async (c) => {
+    if (!(await parse(c, emptySchema))) return invalid();
+    const result = await delivery(c).sendTest();
+    return result.ok
+      ? privateJson({ outcome: result.outcome, ...result.status })
+      : privateJson(
+          { error: result.error, ...result.status },
+          deliveryStatus[result.error],
+        );
+  });
+  for (const action of ["", "/test"])
+    app.all(`${CONTACT_DELIVERY_PATH}${action}`, () =>
       privateJson({ error: "invalid_input" }, 405),
     );
 }

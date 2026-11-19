@@ -28,8 +28,8 @@ If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package
 2. Set `APP_ORIGIN` to the exact browser origin without a trailing slash: `http://127.0.0.1:8787` for `pnpm dev`, `http://127.0.0.1:3000` for `pnpm dev:web`. Never a LAN address, portfolio host or path.
 3. Register development OAuth apps with callbacks `{APP_ORIGIN}/api/auth/callback/github` and `{APP_ORIGIN}/api/auth/callback/google`.
 4. To use the real guide and editor, add `OWNER_ENTRY_ACTIVATION=active` to `apps/web/.dev.vars`. Without it `/auth/entry` and `/editor` show the welcome shell.
-5. Email (contact recipient confirmation) prints to the jobs console unless `RESEND_API_KEY` and `EMAIL_FROM` are set in `apps/jobs/.dev.vars`.
-6. Published contact forms use Turnstile. `apps/site/wrangler.jsonc` sets Cloudflare's always-pass test site key; copy `apps/site/.dev.vars.example` to `apps/site/.dev.vars` for the matching test secret. Accepted messages wait in `contact_outbox` (delivery is Phase 45).
+5. Email (recipient confirmation, contact delivery and failure notices) prints to the jobs console unless `RESEND_API_KEY` and `EMAIL_FROM` are set in `apps/jobs/.dev.vars`.
+6. Published contact forms use Turnstile. `apps/site/wrangler.jsonc` sets Cloudflare's always-pass test site key; copy `apps/site/.dev.vars.example` to `apps/site/.dev.vars` for the matching test secret. Accepted messages go to `contact_outbox`; the jobs contact queue makes the first attempt and the jobs cron retries.
 
 ### Production configuration (Phase 52)
 

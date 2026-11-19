@@ -104,6 +104,47 @@ describe("/_/contact", () => {
       expect.arrayContaining(["Visitor", "visitor@example.com", "Hello"]),
     );
   });
+  it("wakes delivery with the outbox ID only after acceptance", async () => {
+    const sent: unknown[] = [];
+    const waits: Promise<unknown>[] = [];
+    const queue = {
+      send: async (body: { outboxId: string }) => {
+        sent.push(body);
+      },
+    };
+    const state: State = {
+      published: true,
+      verified: true,
+      count: 0,
+      allowance: true,
+      accepted: [],
+    };
+    const submit = (env: Partial<ContactEnv>, request = post()) =>
+      serveContact(
+        request,
+        { DB: database(state), APP_ENV: "test", ...env },
+        "ada",
+        {
+          turnstile: async () => "passed",
+          background: { waitUntil: (work) => waits.push(work) },
+        },
+      );
+    expect((await submit({ CONTACT_QUEUE: queue })).status).toBe(202);
+    await Promise.all(waits);
+    expect(sent).toEqual([{ outboxId: state.accepted[0]?.[1] }]);
+    // A lost wake-up never turns an accepted message into a failure.
+    const broken = {
+      send: async () => {
+        throw new Error("queue down");
+      },
+    };
+    expect((await submit({ CONTACT_QUEUE: broken })).status).toBe(202);
+    await Promise.all(waits);
+    // Rejected submissions wake nothing.
+    state.verified = false;
+    expect((await submit({ CONTACT_QUEUE: queue })).status).toBe(503);
+    expect(sent).toHaveLength(1);
+  });
   it("tells the published form its site key, and nothing else", async () => {
     const { send } = setup();
     expect(

@@ -276,7 +276,7 @@ export async function servePublic(
   if (!LABEL.test(name) || RESERVED.has(name)) return unavailableResponse();
   const path = url.pathname === "/" ? "/" : url.pathname.replace(/\/$/, "");
   if (path.startsWith("/assets/")) return unavailableResponse();
-  if (contact) return serveContact(request, env, name);
+  if (contact) return serveContact(request, env, name, { background });
   if (path === "/_/github.json")
     return serveGitHubGraph(
       request,

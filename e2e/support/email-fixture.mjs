@@ -7,8 +7,10 @@ export const RESEND_FIXTURE_KEY = "resend-fixture-key";
 export const EMAIL_FROM = "hello@mail.hasaweb.site";
 
 export async function startEmailFixture(port) {
-  // `failure` answers every send with { status, name } until cleared.
-  const state = { failure: null, sent: [] };
+  // `failure` answers sends with { status, name } until cleared: every send,
+  // or only those to `failure.to`. `failure.retryAfter` (seconds) adds a
+  // Retry-After header. `failed` counts the sends it refused.
+  const state = { failure: null, sent: [], failed: 0 };
   const seen = new Map();
   const server = createServer((request, response) => {
     let body = "";
@@ -16,16 +18,31 @@ export async function startEmailFixture(port) {
       body += chunk;
     });
     request.on("end", () => {
-      const send = (status, value) => {
-        response.writeHead(status, { "Content-Type": "application/json" });
+      const send = (status, value, headers = {}) => {
+        response.writeHead(status, {
+          "Content-Type": "application/json",
+          ...headers,
+        });
         response.end(JSON.stringify(value));
       };
       if (request.method !== "POST" || request.url !== "/emails")
         return send(404, {});
       if (request.headers.authorization !== `Bearer ${RESEND_FIXTURE_KEY}`)
         return send(401, { name: "missing_api_key" });
-      if (state.failure)
-        return send(state.failure.status, { name: state.failure.name });
+      const failure = state.failure;
+      if (
+        failure &&
+        (!failure.to || JSON.parse(body).to?.includes(failure.to))
+      ) {
+        state.failed += 1;
+        return send(
+          failure.status,
+          { name: failure.name },
+          failure.retryAfter === undefined
+            ? {}
+            : { "Retry-After": String(failure.retryAfter) },
+        );
+      }
       const key = request.headers["idempotency-key"];
       const previous = seen.get(key);
       if (previous) return send(200, { id: previous });

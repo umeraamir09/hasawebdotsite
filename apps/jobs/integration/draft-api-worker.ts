@@ -1,7 +1,8 @@
 // Isolated correctness/benchmark entry. Never imported by product code.
 import { WorkerEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
-import { privateJson } from "@hasaweb/db";
+import { privateJson, sweepContactOutbox } from "@hasaweb/db";
+import { emailProvider } from "@hasaweb/email";
 import { servePublic } from "../../site/src/public-serving";
 import jobsWorker from "../src/index";
 import { ownerRouter } from "../src/owner-api";
@@ -12,6 +13,10 @@ import { measureDb } from "./measure-db";
 
 type Env = AuthEnvironment &
   DispatchEnv & {
+    RESEND_API_KEY?: string;
+    EMAIL_FROM?: string;
+    RESEND_API_ORIGIN?: string;
+    CONTACT_QUEUE?: Queue;
     RUNTIME_KEY: string;
     RUNTIME_ENABLED: string;
     MEASURE_DB?: string;
@@ -149,18 +154,36 @@ export default {
         method?: string;
         headers?: Record<string, string>;
         body?: string;
+        queue?: boolean;
       }>();
       // The visitor path, including Phase 42 refresh-on-visit and Phase 44
-      // contact posts (with the visitor's headers and raw body).
+      // contact posts (with the visitor's headers and raw body). Accepted
+      // messages wake delivery only when the check asks (Phase 45), so
+      // outbox checks can inspect rows before any attempt.
+      const { CONTACT_QUEUE, ...rest } = env;
       return servePublic(
         new Request(body.url, {
           method: body.method ?? "GET",
           headers: body.headers ?? {},
           ...(body.body !== undefined ? { body: body.body } : {}),
         }),
-        env,
+        body.queue ? env : rest,
         ctx,
       );
+    }
+    if (
+      new URL(request.url).pathname === "/__fixture/contact-sweep" &&
+      request.method === "POST"
+    ) {
+      // The cron sweep at a chosen time, so checks can walk the 24-hour
+      // retry schedule without waiting for it.
+      const { now } = await request.json<{ now: number }>();
+      await sweepContactOutbox(
+        env.DB,
+        emailProvider({ ...env, APP_ENV: "test" }),
+        now,
+      );
+      return privateJson({ swept: true });
     }
     if (
       new URL(request.url).pathname === "/__fixture/sql" &&
