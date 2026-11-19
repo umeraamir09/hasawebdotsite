@@ -50,7 +50,9 @@ End-to-end suites live in [`e2e/`](e2e/README.md) and run on Playwright Test aga
 
 A pre-commit hook (installed by `pnpm install`) runs Biome on staged files.
 
-CI runs `pnpm check`, the build and all e2e projects on every pull request and push to `main` that changes code. Documentation-only changes skip those jobs. The final `ci` job passes only when every other job passed or was skipped, so it is the one check to require before merging.
+CI runs `pnpm check`, the build and the e2e projects the change can affect on every pull request and push to `main` that changes code. `scripts/ci-plan.mjs` picks the projects with the same rules as `pnpm verify`, so a shared path (the lockfile, `packages/db`, `packages/schema`, `e2e/support`) runs all of them. Documentation-only changes skip those jobs. The final `ci` job passes only when every other job passed or was skipped, so it is the one check to require before merging.
+
+Jobs run on GitHub-hosted runners unless the repository variable `CI_RUNNER` is set. With `CI_RUNNER=self-hosted`, every job runs on a [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners) instead, which uses no Actions minutes. The owner runs two runners on their WSL machine, `~/actions-runner` and `~/actions-runner-2`, as systemd services, so two jobs (such as `check` and `build`) run at once; CI waits while that machine is off. There, e2e runs as one job with two Playwright workers instead of seven parallel jobs, and each runner keeps its Turbo cache in `~/.cache/hasaweb-ci/turbo-<runner name>`, pruned to entries used in the last week and at most 2 GB. Switch back with `gh variable delete CI_RUNNER`. Keep self-hosted runners on a private repository only, since a public one would run pull requests from forks on that machine.
 
 ## Workspace
 
