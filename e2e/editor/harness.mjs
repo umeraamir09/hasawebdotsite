@@ -158,8 +158,12 @@ export async function createEditorHarness({
       // records and every owner API request stay the product's.
       // `fixture-session` models the account the provider signs in (`as`), a
       // cancellation or a failure.
+      // Connecting a sign-in method uses the same provider hop. The real
+      // link flow (OAuth state, ownership, account rules) is the auth
+      // project's; here the browser only shows where it would go.
       if (
-        url.pathname === "/api/auth/sign-in/social" &&
+        (url.pathname === "/api/auth/sign-in/social" ||
+          url.pathname === "/api/auth/link-social") &&
         req.method === "POST"
       ) {
         const body = [];

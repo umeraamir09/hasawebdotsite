@@ -578,3 +578,44 @@
   height: 630px;
   transform-origin: 0 0;
 }
+.sign-in-methods {
+  margin-top: 32px;
+  padding-top: 8px;
+  border-top: 1px solid #dde2d8;
+}
+.sign-in-methods ul {
+  list-style: none;
+  margin: 0 0 24px;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.sign-in-method-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sign-in-method-row > span {
+  display: grid;
+  gap: 2px;
+  font-size: 14px;
+}
+.sign-in-method-row .editor-muted {
+  font-size: 12px;
+  line-height: 18px;
+}
+.sign-in-methods fieldset {
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid #dde2d8;
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sign-in-methods fieldset p {
+  margin: 0 0 4px;
+  font-size: 14px;
+  line-height: 1.5;
+}

@@ -21,7 +21,7 @@ E2E_RETRIES=1 pnpm e2e --project=editor    # retry locally the way CI does
 | `autosave` | `autosave.spec.mjs` | Autosave, local recovery, conflict review and reauthentication (`autosave/harness.mjs`; its groups share a page and run in order) |
 | `api` | `draft-api.spec.mjs`, `persistence.spec.mjs` | Draft/progress API contracts, setup entry and publication API, D1 migrations and owner boundaries |
 | `uploads` | `uploads.spec.mjs` | Private uploads and owner-only asset reads |
-| `auth` | `auth.spec.mjs` | Provider fixtures, sessions, provisioning, cookie isolation, the rendered sign-in UI |
+| `auth` | `auth.spec.mjs` | Provider fixtures, sessions, provisioning, connecting and disconnecting providers, cookie isolation, the rendered sign-in UI |
 | `renderer` | `renderer.spec.mjs` | Preview and static output parity, first paint, Face Reveal markup |
 | `publication` | `publication.spec.mjs` | Dispatcher with maximum assets; commit and public serving |
 | `runtime` | `runtime.spec.mjs` | The three committed Worker configs with bindings, queue and restart persistence (uses `.wrangler/state`) |

@@ -121,7 +121,14 @@ Jobs cannot read the draft bucket. Publication reads private sources through a n
 
 ## 5. Authentication and owner entry
 
-Sign-in is GitHub or Google at `/sign-in`. GitHub requests only `user:email`; Google its default identity scopes. Accounts auto-link only on a provider-verified matching email; missing or unverified emails never merge owners. The HTTP surface accepts only social sign-in, sign-out, session lookup and the two callbacks; no passwords, arbitrary scopes or callback destinations. Provider settings (link/disconnect) are Phase 47.
+Sign-in is GitHub or Google at `/sign-in`. GitHub requests only `user:email`; Google its default identity scopes. Accounts auto-link at sign-in only on a provider-verified matching email; missing or unverified emails never merge owners. The HTTP surface accepts only social sign-in, linking, sign-out, session lookup and the two callbacks; no passwords, arbitrary scopes or callback destinations.
+
+**Connected sign-in methods** (Phase 47). The editor's Sharing panel lists GitHub and Google. An owner has at most one account per provider (a Better Auth account hook refuses a second one, and any account for an owner being deleted).
+
+- Connect: `POST /api/auth/link-social` accepts only `{provider, callbackURL, errorCallbackURL}` with the fixed returns `/editor?account=connected` and `/editor?account=not-connected`, from a signed-in owner (uncached check) who has not connected that provider (409 `already_connected`). Completing the provider's OAuth flow in the same browser is the proof of ownership. The provider account's email must be provider-verified but may differ from the account email; an account already linked to another owner is refused.
+- `GET /api/owner/providers` returns `{providers: [{provider, connected}]}`, no identities or emails.
+- `POST /api/owner/providers/disconnect` accepts `{provider}` with a matching `X-Expected-Owner-Id`. It returns 409 `last_method` rather than remove the last sign-in provider; the check and delete are one statement, so concurrent disconnects leave one. Disconnecting GitHub first runs the GitHub private-activity withdrawal (`withdrawPrivateActivity`, then the cleanup sweep): private output goes at once, the grant is revoked, and the public graph stays. If the withdrawal cannot commit, sign-in is kept and the owner retries. Reconnecting restores no grant; private activity needs new consent. Activity consent and its withdrawal never add or remove a sign-in provider.
+- A disconnected provider whose verified email matches the account email links again automatically the next time it is used to sign in, by the rule above.
 
 Cookies are host-only. HTTPS uses `__Host-hasaweb` cookies (Secure, HttpOnly, SameSite=Lax, Path=/, no Domain); only loopback HTTP uses non-Secure `hasaweb-local` cookies. The Better Auth cookie cache (300 s) is kept for status endpoints, but every owner/editor authorization performs an uncached lookup plus repository access checks, so sign-out and deletion take effect immediately.
 

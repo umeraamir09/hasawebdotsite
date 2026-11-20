@@ -976,4 +976,236 @@ export async function checkGitHubGraphJourney({
       page = getPage();
     },
   );
+
+  await run(
+    "Connected sign-in methods: disconnecting GitHub withdraws private activity through the same cleanup, keeps the last method, and reconnecting needs new consent",
+    async () => {
+      github.state.failure = null;
+      github.state.consent = { as: null, cancel: false };
+      github.addUser({
+        login: "Signin-Owner",
+        counts: { [recent]: 1 },
+        privateCounts: { [recent]: 6 },
+      });
+      const live = "https://signin-graph.hasaweb.site";
+      const total = async () => {
+        const response = await publicRead(`${live}/_/github.json`);
+        if (response.status !== 200) return null;
+        const graph = await response.json();
+        return graph.days.reduce((sum, item) => sum + item.count, 0);
+      };
+      const settled = async () => {
+        for (let attempt = 0; attempt < 100; attempt++) {
+          const state = (
+            await sql(
+              "SELECT state FROM github_grant WHERE github_user_id='node-signin-owner'",
+            )
+          )[0]?.state;
+          if (state !== "pending" && state !== "inflight") return state;
+          await getPage().waitForTimeout(100);
+        }
+        throw new Error("grant cleanup did not finish");
+      };
+      const providers = async () =>
+        (
+          await sql(
+            "SELECT provider_id FROM account WHERE user_id='draft-alice' ORDER BY provider_id",
+          )
+        ).map((row) => row.provider_id);
+      const link = (provider) => {
+        const now = Date.now();
+        return sql(
+          "INSERT INTO account(id,account_id,provider_id,user_id,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+          [
+            `alice-${provider}`,
+            `alice-${provider}-id`,
+            provider,
+            "draft-alice",
+            now,
+            now,
+          ],
+        );
+      };
+      let page = await start("signin-graph");
+      github.state.callbackOrigin = new URL(page.url()).origin;
+      let controls = await addGraph(page);
+      const reopen = async () => {
+        await page.waitForURL(/\/editor(\?github=consent)?$/, {
+          timeout: 60000,
+        });
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        controls = page.getByRole("region", {
+          name: "GitHub activity controls",
+          exact: true,
+        });
+        await controls.waitFor({ timeout: 30000 });
+      };
+      const authorize = async () => {
+        await controls
+          .getByRole("switch", { name: /Include private activity/ })
+          .check();
+        await controls
+          .getByRole("button", { name: "Authorize private activity" })
+          .click();
+        await reopen();
+        await controls
+          .locator("[data-github-private-status]")
+          .getByText(/Private activity authorized/)
+          .waitFor({ timeout: 30000 });
+      };
+      try {
+        await sql("DELETE FROM account WHERE user_id='draft-alice'");
+        await link("github");
+        await link("google");
+        await fetchFor(controls, "Signin-Owner", /Connected\. Fetched/);
+        await authorize();
+        await publish();
+        assert.equal(await total(), 7);
+        github.state.calls.length = 0;
+
+        // Both methods are listed; either can be disconnected.
+        await page
+          .getByRole("button", { name: "Sharing", exact: true })
+          .click();
+        const methods = page.getByRole("region", {
+          name: "Connected sign-in methods",
+          exact: true,
+        });
+        const row = (provider) =>
+          methods.locator(`[data-sign-in-method="${provider}"]`);
+        await row("github").getByText("Connected", { exact: true }).waitFor();
+        await row("google").getByText("Connected", { exact: true }).waitFor();
+
+        // Cancel changes nothing.
+        await methods
+          .getByRole("button", { name: "Disconnect GitHub", exact: true })
+          .click();
+        await methods
+          .getByRole("group", { name: "Confirm disconnecting GitHub" })
+          .getByText(/Private GitHub activity access is removed now/)
+          .waitFor();
+        await methods.getByRole("button", { name: "Cancel" }).click();
+        assert.deepEqual(await providers(), ["github", "google"]);
+
+        // Disconnecting GitHub sign-in runs the Phase 41 withdrawal: private
+        // counts leave the live site without Publish and the grant is revoked.
+        await methods
+          .getByRole("button", { name: "Disconnect GitHub", exact: true })
+          .click();
+        await methods
+          .getByRole("button", { name: "Disconnect GitHub now" })
+          .click();
+        await methods
+          .getByRole("status")
+          .getByText("GitHub disconnected.", { exact: true })
+          .waitFor({ timeout: 30000 });
+        assert.deepEqual(await providers(), ["google"]);
+        assert.equal(await total(), 1);
+        assert.equal((await connection()).private_enabled, 0);
+        assert.equal((await connection()).token_enc, null);
+        assert.equal(await settled(), "idle");
+        assert.ok(
+          github.state.calls.some((call) => call.kind === "delete-grant"),
+        );
+        await flush();
+        assert.equal(
+          (await savedDraft()).components.find((item) => item.type === "github")
+            .data.includePrivate,
+          false,
+        );
+
+        // The last method cannot be disconnected.
+        await row("github")
+          .getByRole("button", { name: "Connect GitHub", exact: true })
+          .waitFor();
+        assert.equal(
+          await methods
+            .getByRole("button", { name: /^Disconnect Google/ })
+            .count(),
+          0,
+        );
+        await methods
+          .getByText("Keep at least one sign-in method connected.")
+          .waitFor();
+
+        // Connect leaves for the provider with the fixed editor returns.
+        // Completing the link (OAuth state, ownership, account rules) is
+        // covered by the auth project's provider fixtures.
+        await page.route("https://github.com/o/authorize**", (route) =>
+          route.fulfill({
+            status: 200,
+            contentType: "text/html",
+            body: "<p>GitHub stand-in</p>",
+          }),
+        );
+        await row("github")
+          .getByRole("button", { name: "Connect GitHub", exact: true })
+          .click();
+        await page.waitForURL(/^https:\/\/github\.com\/o\/authorize/);
+        const authorizeUrl = new URL(page.url());
+        const editorOrigin = github.state.callbackOrigin;
+        assert.equal(authorizeUrl.searchParams.get("provider"), "github");
+        assert.equal(
+          authorizeUrl.searchParams.get("cb"),
+          `${editorOrigin}/editor?account=connected`,
+        );
+        assert.equal(
+          authorizeUrl.searchParams.get("err"),
+          `${editorOrigin}/editor?account=not-connected`,
+        );
+        await page.unroute("https://github.com/o/authorize**");
+
+        // A cancelled return opens the settings panel with the outcome and
+        // drops the parameters; nothing is connected.
+        await page.goto(
+          `${editorOrigin}/editor?account=not-connected&error=access_denied`,
+        );
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        await methods
+          .getByRole("alert")
+          .getByText("Connecting was cancelled. Nothing changed.")
+          .waitFor();
+        assert.equal(new URL(page.url()).search, "");
+        await row("github")
+          .getByRole("button", { name: "Connect GitHub", exact: true })
+          .waitFor();
+
+        // Reconnected sign-in restores nothing by itself: private activity
+        // needs new consent, which proceeds because the cleanup finished.
+        await link("github");
+        await page.goto(`${editorOrigin}/editor?account=connected`);
+        await page.waitForFunction(() => window.editorFixture?.ready);
+        await methods
+          .getByRole("status")
+          .getByText(/Sign-in method connected/)
+          .waitFor();
+        await row("github").getByText("Connected", { exact: true }).waitFor();
+        assert.equal(new URL(page.url()).search, "");
+        await page
+          .getByRole("button", { name: "Content", exact: true })
+          .click();
+        await page
+          .getByRole("region", { name: "Portfolio sections", exact: true })
+          .getByRole("button", { name: "GitHub activity", exact: true })
+          .click();
+        controls = page.getByRole("region", {
+          name: "GitHub activity controls",
+          exact: true,
+        });
+        assert.equal(
+          await controls
+            .getByRole("switch", { name: /Include private activity/ })
+            .isChecked(),
+          false,
+        );
+        assert.equal((await connection()).private_enabled, 0);
+        await authorize();
+        assert.equal((await connection()).private_enabled, 1);
+      } finally {
+        // Other groups expect an owner without a GitHub sign-in.
+        await sql("DELETE FROM account WHERE user_id='draft-alice'");
+        page = getPage();
+      }
+    },
+  );
 }

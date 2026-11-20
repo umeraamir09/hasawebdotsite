@@ -2,18 +2,31 @@ import {
   account,
   OwnerAccessError,
   ownerRepositories,
+  ownerSignInProviders,
   privateJson,
+  SIGN_IN_PROVIDERS,
+  type SignInProvider,
   session,
   user,
   verification,
 } from "@hasaweb/db";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { getOAuthState, getSessionFromCtx } from "better-auth/api";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { providerPhotoUrl } from "./provider-photo";
 
 export { providerPhotoUrl } from "./provider-photo";
+
+/**
+ * Fixed returns for connecting another sign-in provider from the editor
+ * (Phase 47). Better Auth appends `error` to the second one.
+ */
+export const LINK_RETURNS = {
+  connected: "/editor?account=connected",
+  failed: "/editor?account=not-connected",
+} as const;
 
 export type AuthEnvironment = {
   APP_ENV: string;
@@ -99,12 +112,50 @@ export function createProductAuth(env: AuthEnvironment) {
         enabled: true,
         trustedProviders: [],
         requireLocalEmailVerified: true,
-        allowDifferentEmails: false,
+        // Consulted only by explicit linking from the editor, where the owner
+        // is signed in and completes the provider's OAuth flow (proof of
+        // ownership). Sign-in still links automatically only on a matching
+        // provider-verified email; the linked provider's email must still be
+        // verified.
+        allowDifferentEmails: true,
         allowUnlinkingAll: false,
       },
     },
     session: { cookieCache: { enabled: true, maxAge: 300 } },
     databaseHooks: {
+      account: {
+        create: {
+          // One account per provider per owner, and none for an owner being
+          // deleted. A link callback that would add a second GitHub or
+          // Google account fails without changing anything.
+          async before(value, context) {
+            // Better Auth binds a link flow to the browser and the user who
+            // started it. Also require that user's live session at the
+            // callback, so a flow abandoned before sign-out cannot be
+            // finished by whoever signs in next on that browser.
+            const link = (await getOAuthState())?.link;
+            if (link) {
+              const current = context
+                ? await getSessionFromCtx(context, {
+                    disableCookieCache: true,
+                  }).catch(() => null)
+                : null;
+              if (
+                link.userId !== value.userId ||
+                current?.user.id !== link.userId
+              )
+                return false;
+            }
+            const row = await env.DB.prepare(
+              `SELECT EXISTS(SELECT 1 FROM user WHERE id=? AND deleting_at IS NOT NULL)
+                OR EXISTS(SELECT 1 FROM account WHERE user_id=? AND provider_id=?) AS blocked`,
+            )
+              .bind(value.userId, value.userId, value.providerId)
+              .first<{ blocked: number }>();
+            return !row?.blocked;
+          },
+        },
+      },
       session: {
         create: {
           async before(value) {
@@ -226,6 +277,32 @@ export async function ownerSummaryResponse(
   });
 }
 
+// Exactly a provider and the two fixed returns: no ID tokens, scopes, login
+// hints or extra data, so linking can only start the normal OAuth flow.
+async function linkBody(request: Request) {
+  let body: unknown;
+  try {
+    body = await request.clone().json();
+  } catch {
+    return null;
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  const value = body as Record<string, unknown>;
+  const provider = SIGN_IN_PROVIDERS.find((item) => item === value.provider);
+  if (
+    !provider ||
+    Object.keys(value).some(
+      (key) => !["provider", "callbackURL", "errorCallbackURL"].includes(key),
+    )
+  )
+    return null;
+  return {
+    provider,
+    callbackURL: value.callbackURL,
+    errorCallbackURL: value.errorCallbackURL,
+  };
+}
+
 export async function authResponse(
   request: Request,
   env: AuthEnvironment,
@@ -248,7 +325,9 @@ export async function authResponse(
     )
       return privateJson(null, 415);
   }
-  // Connected-provider/account-management endpoints belong to Phase 47.
+  // Listing and disconnecting providers are owner routes in jobs, so
+  // disconnecting GitHub can withdraw private activity first. Only linking,
+  // which needs the OAuth state, runs here.
   const allowed = read
     ? [
         "/api/auth/get-session",
@@ -256,7 +335,11 @@ export async function authResponse(
         "/api/auth/callback/google",
         "/api/auth/error",
       ]
-    : ["/api/auth/sign-in/social", "/api/auth/sign-out"];
+    : [
+        "/api/auth/sign-in/social",
+        "/api/auth/link-social",
+        "/api/auth/sign-out",
+      ];
   if (!allowed.includes(path)) return privateJson(null, 404);
   if (path === "/api/auth/get-session")
     return ownerResponse(request, env, auth);
@@ -283,6 +366,28 @@ export async function authResponse(
       body.callbackURL === `${origin}/auth/recovery` &&
       body.errorCallbackURL === `${origin}/auth/recovery/error`;
     if (!normal && !recovery) return privateJson(null, 403);
+  }
+  if (path === "/api/auth/link-social") {
+    const body = await linkBody(request);
+    if (!body) return privateJson(null, 400);
+    if (
+      body.callbackURL !== `${origin}${LINK_RETURNS.connected}` ||
+      body.errorCallbackURL !== `${origin}${LINK_RETURNS.failed}`
+    )
+      return privateJson(null, 403);
+    let connected: SignInProvider[];
+    try {
+      const owner = await currentOwner(env, request.headers, auth);
+      if (!owner) return privateJson(null, 401);
+      connected = await ownerSignInProviders(
+        env.DB,
+        owner.identity,
+      ).connected();
+    } catch (error) {
+      return privateJson(null, error instanceof OwnerAccessError ? 401 : 503);
+    }
+    if (connected.includes(body.provider))
+      return privateJson({ error: "already_connected" }, 409);
   }
   const response = await auth.handler(request);
   const headers = new Headers(response.headers);

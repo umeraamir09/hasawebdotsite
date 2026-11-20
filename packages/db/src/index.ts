@@ -21,3 +21,4 @@ export * from "./repositories";
 export * from "./reserved-subdomains";
 export * from "./schema";
 export * from "./setup-entry";
+export * from "./sign-in-providers";
