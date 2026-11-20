@@ -12,6 +12,7 @@ import {
   RESEND_FIXTURE_KEY,
   startEmailFixture,
 } from "./email-fixture.mjs";
+import { createFixtureSql } from "./fixture-sql.mjs";
 import {
   ACTIVITY_CLIENT_ID,
   ACTIVITY_CLIENT_SECRET,
@@ -78,36 +79,17 @@ export async function startOwnerRuntime({ directory, evidence }) {
     assert.equal(result.status, 0, result.stdout + result.stderr);
     return result.stdout;
   }
-  // Test-only SQL against the fixture D1. Miniflare occasionally drops the
-  // connection to its D1 service under CI load ("Network connection lost").
-  // Reads are safe to repeat, so retry them; writes fail loudly because a
-  // dropped write may already have applied.
-  const readOnly = /^\s*(select|with|pragma)\b/i;
-  async function sql(query, values = []) {
-    for (let attempt = 1; ; attempt++) {
-      const response = await fetch(`${origin}/__fixture/sql`, {
-        method: "POST",
-        headers: {
-          "X-Runtime-Key": secrets.RUNTIME_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query, values }),
-        signal: AbortSignal.timeout(30000),
-      });
-      if (response.status === 200) return (await response.json()).results;
-      const text = await response.text();
-      if (
-        attempt < 4 &&
-        response.status === 500 &&
-        readOnly.test(query) &&
-        text.includes("Network connection lost")
-      ) {
-        await setTimeout(250 * attempt);
-        continue;
-      }
-      assert.fail(`fixture sql ${response.status}: ${text}`);
-    }
-  }
+  const sql = createFixtureSql(({ query, values }) =>
+    fetch(`${origin}/__fixture/sql`, {
+      method: "POST",
+      headers: {
+        "X-Runtime-Key": secrets.RUNTIME_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ query, values }),
+      signal: AbortSignal.timeout(30000),
+    }),
+  );
   function cookie(id) {
     const token = tokens[id];
     return `__Host-hasaweb.session_token=${encodeURIComponent(`${token}.${createHmac("sha256", secrets.BETTER_AUTH_SECRET).update(token).digest("base64")}`)}`;
@@ -453,7 +435,8 @@ export async function startOwnerRuntime({ directory, evidence }) {
       extra,
     );
   const pending = () => request("pending");
-  const clear = () => sql("DELETE FROM owner_save_attempt");
+  const clear = () =>
+    sql("DELETE FROM owner_save_attempt", [], { idempotent: true });
   const setDraft = async (draft, generation = 2) => {
     await clear();
     await sql(
@@ -481,8 +464,12 @@ export async function startOwnerRuntime({ directory, evidence }) {
   await start();
   await sql(
     "CREATE TABLE IF NOT EXISTS runtime_probe(key TEXT PRIMARY KEY,value TEXT NOT NULL)",
+    [],
+    { idempotent: true },
   );
-  await sql("DELETE FROM user WHERE id LIKE 'draft-%'");
+  await sql("DELETE FROM user WHERE id LIKE 'draft-%'", [], {
+    idempotent: true,
+  });
   for (const id of Object.keys(tokens)) {
     const owner = id === "alice-other" ? "alice" : id,
       now = Date.now();
