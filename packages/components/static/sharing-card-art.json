@@ -1,0 +1,22 @@
+{
+  "cat": {
+    "file": "sharing-card-cat.png",
+    "path": "/portfolio-platform/d05e0894299f9de3-sharing-card-cat.png",
+    "sha256": "d05e0894299f9de34ea0e2d1d7b26dd85c3400acb34a9e88b215bc61afd241d6",
+    "portraitSize": 124,
+    "x": -100.8,
+    "y": -102.45,
+    "width": 193,
+    "height": 200
+  },
+  "hands": {
+    "file": "sharing-card-hands.png",
+    "path": "/portfolio-platform/eba31e0ac406823e-sharing-card-hands.png",
+    "sha256": "eba31e0ac406823e31a59e60777fe91b8c75c2604d61b7f2f657a8ae21ea6290",
+    "portraitSize": 124,
+    "x": -92,
+    "y": -92.27,
+    "width": 184,
+    "height": 185
+  }
+}

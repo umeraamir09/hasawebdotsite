@@ -41,7 +41,9 @@ export function ImageCropDialog({
       ? "Adjust avatar"
       : purpose === "face"
         ? "Adjust Face Reveal photo"
-        : "Adjust banner";
+        : purpose === "og"
+          ? "Adjust sharing image"
+          : "Adjust banner";
   useEffect(() => {
     alive.current = true;
     const element = dialog.current;

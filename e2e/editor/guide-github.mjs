@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addLink } from "./links.mjs";
 
 const day = (offset) =>
   new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
@@ -134,7 +135,7 @@ export async function checkGuideGitHub({
     }
     await proceed(page);
     await waitStep(page, "links");
-    await click(page, "Add link");
+    await addLink(page);
     await page.getByLabel("Link label").fill("Profile");
     await page.getByLabel("Destination URL").fill(link);
     await proceed(page);

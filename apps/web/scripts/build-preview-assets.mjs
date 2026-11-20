@@ -35,6 +35,18 @@ export async function buildPreviewAssets() {
       join(platform, basename(path)),
     );
   }
+  // The editor's sharing preview draws the same decoration stills.
+  const art = JSON.parse(
+    await readFile(
+      join(root, "packages/components/static/sharing-card-art.json"),
+      "utf8",
+    ),
+  );
+  for (const { file, path } of Object.values(art))
+    await copyFile(
+      join(root, "packages/components/static", file),
+      join(platform, basename(path)),
+    );
   await esbuild.build({
     entryPoints: {
       app: join(web, "lib/editor/full-preview-entry.ts"),

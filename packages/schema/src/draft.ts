@@ -9,6 +9,7 @@ import {
 } from "./primitives";
 import { profileDefinition, profileSchema } from "./profile";
 import { componentContentSchema, componentRegistry } from "./registry";
+import { SEO_DESCRIPTION_MAX, SEO_TITLE_MAX } from "./seo";
 
 export const DRAFT_SCHEMA_VERSION = 2;
 // Availability/reserved-name checks belong to the address service. This value
@@ -50,8 +51,8 @@ export const appearanceSchema = z.strictObject({
   colorMode: z.enum(["light", "dark", "system"]),
 });
 export const seoSchema = z.strictObject({
-  title: z.string().optional(),
-  description: z.string().optional(),
+  title: z.string().max(SEO_TITLE_MAX).optional(),
+  description: z.string().max(SEO_DESCRIPTION_MAX).optional(),
   ogImage: z.strictObject({ assetId: idSchema }).optional(),
 });
 

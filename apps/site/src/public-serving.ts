@@ -209,6 +209,8 @@ async function serveFile(
       file.content_type === "text/html; charset=utf-8" && file.contact === 1,
   });
   headers.set("Content-Type", file.content_type);
+  // A removed or missing page is not a result to index.
+  if (path === "/404") headers.set("X-Robots-Tag", "noindex");
   headers.set("ETag", `"${file.sha256}"`);
   // These files can be withdrawn. Query variants cannot extend their lifetime.
   headers.set("Cache-Control", "no-store");

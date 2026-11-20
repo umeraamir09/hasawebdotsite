@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addLink } from "./links.mjs";
 
 // Phase 42F: the Phase 15 callback continuation and the complete new-user
 // journey through the production guide, Review, handoff, editor and Publish.
@@ -456,7 +457,7 @@ export async function checkGuideJourney({
 
       // Links: one website link; no account email is added by itself.
       await waitStep(page, "links");
-      await click(page, "Add link");
+      await addLink(page);
       await page.getByLabel("Link label").fill("My site");
       await page.getByLabel("Destination URL").fill("https://example.com/me");
       await proceed(page);
@@ -611,7 +612,7 @@ export async function checkGuideJourney({
     await upload(page, "banner", await pngFile(page, "#2448e8"));
     await proceed(page);
     await waitStep(page, "links");
-    await click(page, "Add link");
+    await addLink(page);
     await page.getByLabel("Link label").fill("My site");
     await page.getByLabel("Destination URL").fill(link);
     await proceed(page);
@@ -960,7 +961,7 @@ export async function checkGuideJourney({
         await upload(first, "banner", await pngFile(first, "#2448e8"));
         await proceed(first);
         await waitStep(first, "links");
-        await click(first, "Add link");
+        await addLink(first);
         await first.getByLabel("Link label").fill("Original");
         await first.getByLabel("Destination URL").fill("https://example.com/a");
         await first.locator('.guide-save[data-save-status="saved"]').waitFor();
