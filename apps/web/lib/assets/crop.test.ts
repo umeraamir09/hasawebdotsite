@@ -9,7 +9,7 @@ import {
 import { IMAGE_BYTES } from "./formats";
 
 describe("finished profile crops", () => {
-  for (const purpose of ["avatar", "banner"] as const) {
+  for (const purpose of ["avatar", "banner", "og"] as const) {
     for (const image of [
       { width: 1200, height: 600 },
       { width: 600, height: 1200 },

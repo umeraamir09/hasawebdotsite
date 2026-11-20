@@ -58,7 +58,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 - Dependencies: 16–17. Integrate before completion: 20, 25, 30, 34, 39.
 - Derive title, description and sharing image from the profile, with owner overrides and a sharing preview. Render page-specific metadata, robots and sitemap into published versions.
-- [ ] Complete when served metadata matches published values, public pages allow indexing, drafts stay private, and removed pages stop serving their metadata.
+- [x] Complete when served metadata matches published values, public pages allow indexing, drafts stay private, and removed pages stop serving their metadata.
+  - Shared `resolveSeo` defaults (name, bio and a generated profile card image), the editor's Sharing panel with a 1.91:1 sharing image and card preview, and per-page title, description, canonical, Open Graph and card tags in immutable documents (`publication-v8`).
 
 ### Phase 47. Finish connected-provider settings
 

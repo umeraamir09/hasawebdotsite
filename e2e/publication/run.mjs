@@ -104,6 +104,33 @@ function visitor(url, options = {}) {
     body: JSON.stringify({ url, ...options }),
   });
 }
+// Phase 46: a served page's <head>, with the sharing tags it advertises.
+async function servedHead(url) {
+  const response = await visitor(url);
+  const html = await response.text();
+  // The unavailable page has no explicit <head>; read the whole document.
+  const end = html.indexOf("</head>");
+  const head = end < 0 ? html : html.slice(0, end + 7);
+  const meta = (attribute, key) =>
+    new RegExp(`<meta ${attribute}="${key}" content="([^"]*)">`).exec(
+      head,
+    )?.[1];
+  return {
+    response,
+    html,
+    head,
+    title: /<title>([^<]*)<\/title>/.exec(head)?.[1],
+    canonical: /<link rel="canonical" href="([^"]*)">/.exec(head)?.[1],
+    description: meta("name", "description"),
+    og: (key) => meta("property", `og:${key}`),
+    card: meta("name", "twitter:card"),
+  };
+}
+function assertIndexable(page, url) {
+  assert.equal(page.response.status, 200, url);
+  assert.equal(page.response.headers.get("X-Robots-Tag"), null, url);
+  assert.ok(!/noindex|name="robots"/.test(page.head), url);
+}
 async function sql(query, values = []) {
   if (remote) {
     const saved = await readFile(
@@ -318,12 +345,22 @@ try {
     "small,mixed,privacy,unicode,surrogate,surrogate-boundary,description,deep,dense,hands,cat,face,cat-face,assets,assets-face,max"
   ).split(",")) {
     const draft = makeDraft(kind);
-    if (commitMode && kind === "small") draft.profile.faceReveal.enabled = true;
+    if (commitMode && kind === "small") {
+      draft.profile.faceReveal.enabled = true;
+      // Owner overrides, with characters that must be escaped.
+      draft.seo = {
+        title: 'Owner "title" <one> & co',
+        description: "Shared & described <here>",
+        ogImage: { assetId: "sharing-image" },
+      };
+    }
     if (commitMode && kind === "cat") {
       const projects = draft.components.find(
         (item) => item.type === "projects",
       );
       delete projects.data.entries[0].image;
+      // Version 3 removes the case study that version 2 published.
+      delete projects.data.entries[0].caseStudy;
     }
     for (const ref of assetReferences(draft)) {
       if (assets.has(ref.id)) continue;
@@ -448,7 +485,7 @@ try {
     assert.equal(manifest.format, "hasaweb-candidate-v1");
     assert.equal(manifest.candidateId, id);
     assert.equal(manifest.sourceRevision, revision);
-    assert.equal(manifest.rendererVersion, "publication-v7");
+    assert.equal(manifest.rendererVersion, "publication-v8");
     const seal = (
       await sql(
         "SELECT json_extract(value,'$.manifest') AS seal,json_extract(value,'$.contact') AS contact FROM publication_candidate_index WHERE candidate_id=?",
@@ -533,6 +570,14 @@ try {
           document,
           /<script src="\/platform\/[a-f0-9]+\.js"><\/script><\/head>/,
         );
+        // Every page names its own canonical address and allows indexing.
+        assert.ok(
+          document.includes(
+            `<link rel="canonical" href="https://s8-fixture.hasaweb.site${page.path}">`,
+          ),
+          page.path,
+        );
+        assert.ok(!/noindex|name="robots"/.test(document), page.path);
       }
       assert.ok(!/portrait|reference|raw|generator|source-map/.test(file.path));
     }
@@ -709,6 +754,36 @@ try {
           ).results[0].state,
           "claimed",
         );
+        // Phase 46: served metadata matches the owner's published overrides.
+        const home = await servedHead(publicUrl);
+        assertIndexable(home, publicUrl);
+        assert.equal(
+          home.title,
+          "Owner &quot;title&quot; &lt;one&gt; &amp; co",
+        );
+        assert.equal(home.og("title"), home.title);
+        assert.equal(home.description, "Shared &amp; described &lt;here&gt;");
+        assert.equal(home.og("description"), home.description);
+        assert.equal(home.canonical, publicUrl);
+        assert.equal(home.og("url"), publicUrl);
+        assert.equal(home.og("type"), "website");
+        const sharingUrl = `https://s8-assets.invalid/candidate/${id}/assets/sharing-image`;
+        assert.equal(home.og("image"), sharingUrl);
+        assert.equal(home.card, "summary_large_image");
+        assert.equal((await visitor(sharingUrl)).status, 200);
+        const robots = await visitor(
+          "https://s8-fixture.hasaweb.site/robots.txt",
+        );
+        assert.equal(
+          await robots.text(),
+          "User-agent: *\nAllow: /\nSitemap: https://s8-fixture.hasaweb.site/sitemap.xml\n",
+        );
+        assert.equal(
+          await (
+            await visitor("https://s8-fixture.hasaweb.site/sitemap.xml")
+          ).text(),
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://s8-fixture.hasaweb.site/</loc></url></urlset>',
+        );
         const oldPage = await visitor(publicUrl);
         assert.equal(oldPage.status, 200);
         assert.ok((await oldPage.text()).includes(preparedForCommit[0].html));
@@ -776,6 +851,54 @@ try {
         const newPage = await visitor(publicUrl);
         assert.equal(newPage.status, 200);
         assert.ok((await newPage.text()).includes(preparedForCommit[1].html));
+        // Phase 46: without overrides, metadata comes from the profile, and
+        // case studies and the resume name the portfolio in their titles.
+        const cardUrl = `https://s8-assets.invalid/candidate/${id}/assets/sharing-card`;
+        const description = "I build &lt;tools&gt; &amp; interfaces. 😀";
+        for (const [path, title] of [
+          ["/", "عمر Example"],
+          ["/projects/project", "Project · عمر Example"],
+          ["/resume", "Resume · عمر Example"],
+        ]) {
+          const url = `https://s8-fixture.hasaweb.site${path}`;
+          const page = await servedHead(url);
+          assertIndexable(page, url);
+          assert.equal(page.title, title, path);
+          assert.equal(page.og("title"), title, path);
+          assert.equal(page.description, description, path);
+          assert.equal(page.canonical, url, path);
+          assert.equal(page.og("url"), url, path);
+          assert.equal(page.og("image"), cardUrl, path);
+          assert.equal(
+            page.og("image:alt"),
+            "عمر Example&#39;s portfolio profile",
+            path,
+          );
+        }
+        // The generated profile card is a 1200x630 PNG public asset.
+        const card = await visitor(cardUrl);
+        assert.equal(card.status, 200);
+        assert.equal(card.headers.get("Content-Type"), "image/png");
+        const cardBytes = Buffer.from(await card.arrayBuffer());
+        assert.deepEqual(
+          [cardBytes.readUInt32BE(16), cardBytes.readUInt32BE(20)],
+          [1200, 630],
+        );
+        assert.equal(
+          await (
+            await visitor("https://s8-fixture.hasaweb.site/sitemap.xml")
+          ).text(),
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url><loc>https://s8-fixture.hasaweb.site/</loc></url><url><loc>https://s8-fixture.hasaweb.site/projects/project</loc></url><url><loc>https://s8-fixture.hasaweb.site/resume</loc></url></urlset>',
+        );
+        // The replaced sharing image is no longer public.
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${preparedForCommit[0].id}/assets/sharing-image`,
+            )
+          ).status,
+          404,
+        );
         for (const file of manifest.files) {
           if (file.path === "snapshot.json") continue;
           const url = file.path.startsWith("/assets/")
@@ -862,6 +985,47 @@ try {
           "claimed",
         );
         assert.equal((await visitor(publicUrl)).status, 200);
+        // Phase 46: the removed case study stops serving its content and
+        // metadata, and leaves the sitemap. The unavailable page is noindex.
+        const removedCase = await servedHead(
+          "https://s8-fixture.hasaweb.site/projects/project",
+        );
+        assert.equal(removedCase.response.status, 404);
+        assert.equal(
+          removedCase.response.headers.get("X-Robots-Tag"),
+          "noindex",
+        );
+        assert.ok(
+          removedCase.head.includes('<meta name="robots" content="noindex">'),
+        );
+        assert.equal(removedCase.title, "Page unavailable");
+        assert.equal(removedCase.canonical, undefined);
+        assert.ok(!removedCase.html.includes("Case study"));
+        assert.ok(!removedCase.html.includes("og:"));
+        const sitemap = await (
+          await visitor("https://s8-fixture.hasaweb.site/sitemap.xml")
+        ).text();
+        assert.ok(!sitemap.includes("/projects/"), sitemap);
+        // Version 3 has its own card; version 2's no longer serves.
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${preparedForCommit[1].id}/assets/sharing-card`,
+            )
+          ).status,
+          404,
+        );
+        assert.equal(
+          (
+            await visitor(
+              `https://s8-assets.invalid/candidate/${id}/assets/sharing-card`,
+            )
+          ).status,
+          200,
+        );
+        assert.ok(
+          sitemap.includes("https://s8-fixture.hasaweb.site/resume</loc>"),
+        );
         const removedAsset = preparedForCommit[1].manifest.files.find(
           (file) => file.path === "/assets/project-image",
         );

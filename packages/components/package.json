@@ -14,7 +14,8 @@
     "./model": "./src/model.ts",
     "./site-entry": "./src/site-entry.ts",
     "./frames": "./src/frames.tsx",
-    "./appearance": "./src/appearance.ts"
+    "./appearance": "./src/appearance.ts",
+    "./sharing-card": "./src/sharing-card.tsx"
   },
   "scripts": {
     "build": "tsc --noEmit",

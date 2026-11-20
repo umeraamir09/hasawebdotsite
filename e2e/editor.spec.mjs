@@ -14,6 +14,7 @@ import { checkPublicationControls } from "./editor/publication.mjs";
 import { checkPublishJourney } from "./editor/publish-journey.mjs";
 import { checkResumeJourney } from "./editor/resume.mjs";
 import { checkSetupGuide } from "./editor/setup-guide.mjs";
+import { checkSharingJourney } from "./editor/sharing.mjs";
 import { checkSkillsControls } from "./editor/skills-controls.mjs";
 import { checkSocialLinks } from "./editor/social-links.mjs";
 import { checkSocialLinksJourney } from "./editor/social-links-publish.mjs";
@@ -24,7 +25,7 @@ import { expect, step, test } from "./support/fixtures.mjs";
 // Each journey boots its own editor state, so journeys run in any order and
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
-// Order balances CI's three editor shards (7/7/7 tests, about 2.3 min each).
+// Order balances CI's three editor shards (8/7/7 tests, about 2.3 min each).
 const journeys = {
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
@@ -56,6 +57,7 @@ const journeys = {
   "contact recipient": (editor) =>
     checkContactRecipientJourney(editor.controls),
   "contact form": (editor) => checkContactFormJourney(editor.controls),
+  "search and sharing": (editor) => checkSharingJourney(editor.controls),
 };
 
 for (const [title, journey] of Object.entries(journeys))

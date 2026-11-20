@@ -988,3 +988,102 @@ describe("saved preset appearance", () => {
       expect(policy).not.toMatch(/unsafe-|sha256-|nonce-/);
   });
 });
+
+describe("published search and sharing metadata", () => {
+  const appearance = {
+    themeId: "matcha",
+    fontId: "dm-sans",
+    colorMode: "system",
+  } as const;
+  const shell = (
+    metadata: Parameters<typeof documentShell>[0]["metadata"],
+    title = 'Ada "<Lovelace>" & co',
+    context: "public" | "preview" = "public",
+  ) =>
+    documentShell({
+      markup: "<main></main>",
+      title,
+      context,
+      assets,
+      appearance,
+      ...(metadata ? { metadata } : {}),
+    });
+
+  it("renders escaped title, description, canonical, Open Graph and card tags", () => {
+    const html = shell({
+      description: `Builds "engines" <today> & 'tomorrow'`,
+      canonicalUrl: "https://ada.hasaweb.site/projects/engine",
+      image: {
+        url: "https://assets.hasaweb.site/candidate/c/assets/og-1",
+        alt: 'A "card"',
+      },
+    });
+    const head = html.slice(0, html.indexOf("</head>"));
+    expect(head).toContain(
+      "<title>Ada &quot;&lt;Lovelace&gt;&quot; &amp; co</title>",
+    );
+    expect(head).toContain(
+      '<meta name="description" content="Builds &quot;engines&quot; &lt;today&gt; &amp; &#39;tomorrow&#39;">',
+    );
+    expect(head).toContain(
+      '<link rel="canonical" href="https://ada.hasaweb.site/projects/engine">',
+    );
+    expect(head).toContain('<meta property="og:type" content="website">');
+    expect(head).toContain(
+      '<meta property="og:url" content="https://ada.hasaweb.site/projects/engine">',
+    );
+    expect(head).toContain(
+      '<meta property="og:title" content="Ada &quot;&lt;Lovelace&gt;&quot; &amp; co">',
+    );
+    expect(head).toContain(
+      '<meta property="og:image" content="https://assets.hasaweb.site/candidate/c/assets/og-1">',
+    );
+    expect(head).toContain(
+      '<meta property="og:image:alt" content="A &quot;card&quot;">',
+    );
+    expect(head).toContain(
+      '<meta name="twitter:card" content="summary_large_image">',
+    );
+    expect(head).not.toMatch(/noindex|robots/);
+  });
+
+  it("omits empty values and uses a summary card without an image", () => {
+    const html = shell({
+      description: "",
+      canonicalUrl: "https://ada.hasaweb.site/",
+      image: null,
+    });
+    expect(html).not.toContain('name="description"');
+    expect(html).not.toContain("og:description");
+    expect(html).not.toContain("og:image");
+    expect(html).toContain('<meta name="twitter:card" content="summary">');
+  });
+
+  it("rejects relative or scripted URLs and metadata on previews", () => {
+    for (const canonicalUrl of ["/", "javascript:alert(1)"])
+      expect(() =>
+        shell({ description: "", canonicalUrl, image: null }),
+      ).toThrow();
+    expect(() =>
+      shell({
+        description: "",
+        canonicalUrl: "https://ada.hasaweb.site/",
+        image: { url: "data:image/png;base64,AA", alt: "" },
+      }),
+    ).toThrow();
+    expect(() =>
+      shell(
+        {
+          description: "",
+          canonicalUrl: "https://a.hasaweb.site/",
+          image: null,
+        },
+        "Preview",
+        "preview",
+      ),
+    ).toThrow();
+    expect(shell(undefined, "Preview", "preview")).toContain(
+      '<meta name="robots" content="noindex,nofollow,noarchive">',
+    );
+  });
+});

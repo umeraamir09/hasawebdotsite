@@ -25,6 +25,7 @@ import {
   PublicationChecklist,
   PublicationCorrection,
 } from "./publication-checklist";
+import { SharingControls } from "./sharing-controls";
 import "./editor.css";
 
 export function EditorSession(props: {
@@ -91,7 +92,9 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
   const [selection, setSelection] = useState<PreviewSelection>({
     kind: "profile",
   });
-  const [panel, setPanel] = useState<"content" | "customization">("content");
+  const [panel, setPanel] = useState<"content" | "customization" | "sharing">(
+    "content",
+  );
   const [view, setView] = useState<"edit" | "preview">("edit");
   const [correction, setCorrection] = useState<{
     issue: PublicationIssue;
@@ -215,13 +218,20 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
             >
               Customization
             </button>
+            <button
+              type="button"
+              aria-pressed={panel === "sharing"}
+              onClick={() => setPanel("sharing")}
+            >
+              Sharing
+            </button>
           </fieldset>
           <PublicationChecklist
             controller={controller}
             disabled={disabled}
             onPublished={() => setPublicationKey(crypto.randomUUID())}
             onOpen={(issue) => {
-              setPanel("content");
+              setPanel(issue.path[0] === "seo" ? "sharing" : "content");
               setView("edit");
               const index =
                 issue.path[0] === "components" &&
@@ -310,8 +320,10 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
                 publicationKey={publicationKey}
               />
             </>
-          ) : (
+          ) : panel === "customization" ? (
             <AppearanceControls controller={controller} disabled={disabled} />
+          ) : (
+            <SharingControls controller={controller} disabled={disabled} />
           )}
           <DraftRecovery recovery={recovery} />
         </aside>
