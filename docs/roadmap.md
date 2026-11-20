@@ -66,7 +66,7 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - Dependencies: 11, 22A, 41.
 - Show providers; allow ownership-proven linking and disconnect; prevent removing the last usable sign-in method. Disconnecting GitHub sign-in reuses the Phase 41 activity-grant cleanup; activity consent or removal alone never adds or removes a sign-in provider.
 - [x] Complete when remaining providers reopen the same editor portfolio without rerunning setup, and disconnect/reconnect reuses activity cleanup.
-- Settings section in the editor's Sharing panel, ownership-proven linking, guarded disconnect; GitHub disconnect calls the Phase 41 withdrawal. Remote revocation of the sign-in app's own GitHub authorization is not done (the stored token is deleted).
+- #76: settings section in the editor's Sharing panel, ownership-proven linking, guarded disconnect; GitHub disconnect calls the Phase 41 withdrawal. Remote revocation of the sign-in app's own GitHub authorization is not done (the stored token is deleted).
 
 ### Phase 48. Add unpublish and restore
 
