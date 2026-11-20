@@ -45,9 +45,9 @@ export async function checkSetupGuide({
   const guarded = (name, work) =>
     (part === "journeys") !== journeys
       ? undefined
-      : run(name, async () => {
+      : run(name, async (mark) => {
           try {
-            await work();
+            await work(mark);
           } catch (error) {
             let index = 0;
             for (const page of opened) {

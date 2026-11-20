@@ -6,6 +6,8 @@ import { join } from "node:path";
 // GROUP_FILTER=<regexp> runs only matching groups, for debugging one group
 // without editing code. Each group has a time limit: a stuck wait fails with
 // the group's name and diagnostics instead of running until the test times out.
+// `work` receives `mark(step)`; the last marked step is named in the error and
+// the failure report, so a hang says where it stopped.
 export function groupFilter(filter = process.env.GROUP_FILTER) {
   const pattern = filter ? new RegExp(filter) : null;
   return (name) => !pattern || pattern.test(name);
@@ -33,15 +35,19 @@ export function createGroupRunner({
     const seconds = () => ((performance.now() - started) / 1000).toFixed(1);
     const knownErrors = errors.length;
     let timer;
+    let at = null;
+    const mark = (step) => {
+      at = step;
+    };
     try {
       await Promise.race([
-        work(),
+        work(mark),
         new Promise((_, reject) => {
           timer = setTimeout(
             () =>
               reject(
                 new Error(
-                  `${label} group exceeded ${limitMs / 1000}s: ${name}`,
+                  `${label} group exceeded ${limitMs / 1000}s: ${name}${at ? ` (at step: ${at})` : ""}`,
                 ),
               ),
             limitMs,
@@ -55,6 +61,7 @@ export function createGroupRunner({
       const report = {
         group: name,
         seconds: Number(seconds()),
+        step: at,
         error: String(error?.stack ?? error),
         pageErrors: errors.slice(knownErrors),
       };

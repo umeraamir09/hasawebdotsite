@@ -34,6 +34,15 @@ export async function checkGuideReview({
     page.locator('.guide-save[data-save-status="saved"]').waitFor();
   const skip = (page, name) =>
     page.getByRole("button", { name, exact: true }).click();
+  // The optional steps focus a new entry's first input on the next animation
+  // frame; filling before it lands lets that focus move away mid-entry.
+  const addEntry = async (page, button, id) => {
+    await page.getByRole("button", { name: button }).click();
+    await page.waitForFunction(
+      (id) => document.activeElement?.matches(`[${id}] input`),
+      id,
+    );
+  };
   const until = async (check, message) => {
     for (let attempt = 0; attempt < 100; attempt++) {
       if (await check()) return;
@@ -136,27 +145,31 @@ export async function checkGuideReview({
 
   await guarded(
     "setup guide Review, Skip remaining, statuses and handoff into the editor",
-    async () => {
+    async (mark) => {
       await reset();
       const page = await guidePage();
       await provision(page, "alice");
       await stubSignIn(page);
+      mark("setup owner sent to /editor");
       // A setup owner sent to /editor is resolved back to the guide.
       await page.goto(`${browserOrigin}/editor`);
       await page.waitForURL(`${browserOrigin}/auth/entry`);
       await page.waitForFunction(() => window.guideFixture?.ready);
       const name = `review-${suffix()}`;
+      mark("required steps");
       await completeRequired(page, name);
 
+      mark("skills and partial project");
       // Skills, then a partial project, then Skip remaining steps.
-      await page.getByRole("button", { name: "Add skill" }).click();
+      await addEntry(page, "Add skill", "data-skill-id");
       await page.getByLabel("Skill name").fill("TypeScript");
       await proceed(page);
       await waitStep(page, "projects");
-      await page.getByRole("button", { name: "Add project" }).click();
+      await addEntry(page, "Add project", "data-project-id");
       await page.getByLabel("Project title").fill("Half done");
       // Unfinished optional input stays local for editor recovery.
       await page.getByLabel("Code URL (optional)").fill("htt");
+      mark("Skip remaining to Review");
       await skip(page, "Skip remaining steps");
       await waitStep(page, "review");
       await until(
@@ -164,6 +177,7 @@ export async function checkGuideReview({
         "Skip remaining did not save Review",
       );
 
+      mark("Review heading and address");
       // Review: heading, private address line, Back, no skips, Open editor.
       assert.equal(
         await page.getByRole("heading", { level: 1 }).innerText(),
@@ -187,6 +201,7 @@ export async function checkGuideReview({
         .getByText("Your portfolio stays private until you Publish.")
         .waitFor();
 
+      mark("Review preview frame");
       // The shared renderer shows the saved draft: profile, link, then the
       // entered optional sections in Skills/Projects order.
       let frame = await reviewFrame(page);
@@ -199,6 +214,7 @@ export async function checkGuideReview({
       const draftBefore = await stored();
       assert.equal(draftBefore.components.length, 2);
 
+      mark("Review statuses");
       // Honest statuses: the partial project is reported, not hidden, and
       // the local-only input is identified as unsaved.
       const status = page.locator("[data-review-status]");
@@ -216,6 +232,7 @@ export async function checkGuideReview({
         0,
       );
 
+      mark("preview width switching");
       // Desktop/mobile switching uses the actual child widths.
       const width = page.getByRole("group", { name: "Preview width" });
       await width.getByRole("button", { name: "Mobile" }).click();
@@ -237,6 +254,7 @@ export async function checkGuideReview({
       });
       await width.getByRole("button", { name: "Desktop" }).click();
 
+      mark("Back, then Skip remaining again");
       // Back returns to GitHub; Skip remaining from there lands on Review.
       await page.getByRole("button", { name: "Back" }).click();
       await waitStep(page, "github");
@@ -247,6 +265,7 @@ export async function checkGuideReview({
         fullPage: true,
       });
 
+      mark("failed handoff");
       // A lost handoff request is a failure, never a false success.
       let blocked = 0;
       await page.route("**/api/owner/setup/handoff", (route) => {
@@ -265,6 +284,7 @@ export async function checkGuideReview({
       const savedBefore = await stored();
       await page.getByRole("button", { name: "Retry opening editor" }).click();
 
+      mark("handoff into the editor");
       // The permanent handoff opens the editor in the same tab with exactly
       // the prepared content.
       await page.waitForURL(`${browserOrigin}/editor`, { timeout: 30000 });
@@ -292,6 +312,7 @@ export async function checkGuideReview({
       await page.getByRole("button", { name: "Sign out" }).click();
       assert.equal(await page.evaluate(() => window.editorFixture.signOuts), 1);
 
+      mark("returning sign-ins");
       // Returning sign-ins reopen the editor; the consent marker survives.
       await page.goto(`${browserOrigin}/auth/entry`);
       await page.waitForURL(`${browserOrigin}/editor`);
@@ -299,6 +320,7 @@ export async function checkGuideReview({
       await page.waitForURL(/\/editor$/, { timeout: 30000 });
       await page.waitForFunction(() => window.editorFixture?.ready);
 
+      mark("stale setup tab");
       // A stale setup tab cannot reapply setup or replay progress.
       const stale = await guidePage();
       await stale.goto(`${browserOrigin}/guide`);
@@ -324,6 +346,7 @@ export async function checkGuideReview({
 
       await stale.close();
 
+      mark("preserved input review");
       // The preserved setup input goes through Phase 15 selected review into
       // a fresh content scope: it is shown, nothing is applied unselected,
       // and setup progress stays frozen.
@@ -356,6 +379,7 @@ export async function checkGuideReview({
       assert.equal((await portfolio()).step, "review");
       assert.equal((await portfolio()).entered, row.entered);
 
+      mark("missing required content");
       // Later missing required content blocks Publish without onboarding.
       await page.evaluate(() =>
         window.editorFixture.recovery.store
