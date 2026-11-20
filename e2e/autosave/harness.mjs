@@ -154,8 +154,14 @@ export async function checkAutosave({
     await context.addCookies([
       { name: "fixture-session", value: "alice", url: browserOrigin },
     ]);
-    await sql("DELETE FROM owner_save_attempt WHERE user_id='draft-alice'");
-    await sql("DELETE FROM portfolio WHERE user_id='draft-alice'");
+    await sql(
+      "DELETE FROM owner_save_attempt WHERE user_id='draft-alice'",
+      [],
+      { idempotent: true },
+    );
+    await sql("DELETE FROM portfolio WHERE user_id='draft-alice'", [], {
+      idempotent: true,
+    });
     // Provision through the product entry so defaults and ownership remain real.
     await page.goto(`${browserOrigin}/empty`);
     await page.evaluate(() =>
