@@ -102,12 +102,14 @@ export function linkReturnNotice(search: string) {
   const text =
     error === "access_denied"
       ? "Connecting was cancelled. Nothing changed."
-      : error === "account_already_linked_to_different_user"
-        ? "That account already signs in to a different hasaweb.site account, so it wasn't connected."
-        : error === "unable_to_link_account" ||
-            error === "email_not_verified" ||
-            error === "email_not_found"
-          ? "We couldn't connect that account. Check that its email address is verified with the provider, then try again."
-          : "Connecting didn't finish. Nothing changed. Try again.";
+      : error === "email_does_not_match"
+        ? "That Google account uses a different email address. Connect the Google account that uses your hasaweb.site account's email."
+        : error === "account_already_linked_to_different_user"
+          ? "That account already signs in to a different hasaweb.site account, so it wasn't connected."
+          : error === "unable_to_link_account" ||
+              error === "email_not_verified" ||
+              error === "email_not_found"
+            ? "We couldn't connect that account. Check that its email address is verified with the provider, then try again."
+            : "Connecting didn't finish. Nothing changed. Try again.";
   return { kind: "error" as const, text };
 }

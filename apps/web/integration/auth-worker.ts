@@ -41,7 +41,13 @@ export default {
     }
     if (url.pathname === "/__fixture/counts") {
       const counts = await Promise.all(
-        ["user", "account", "session", "portfolio"].map(async (table) => [
+        [
+          "user",
+          "account",
+          "session",
+          "portfolio",
+          "disconnected_provider",
+        ].map(async (table) => [
           table,
           (
             await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{

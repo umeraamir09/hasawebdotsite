@@ -94,6 +94,9 @@ describe("authentication configuration", () => {
     expect(authErrorMessage("user_email_not_found")).toContain(
       "email settings",
     );
+    expect(authErrorMessage("unable_to_link_account")).toContain(
+      "connect it again",
+    );
     expect(
       authErrorMessage("<script>secret-provider-detail</script>"),
     ).not.toContain("script");

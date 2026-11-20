@@ -1204,6 +1204,9 @@ export async function checkGitHubGraphJourney({
       } finally {
         // Other groups expect an owner without a GitHub sign-in.
         await sql("DELETE FROM account WHERE user_id='draft-alice'");
+        await sql(
+          "DELETE FROM disconnected_provider WHERE user_id='draft-alice'",
+        );
         page = getPage();
       }
     },

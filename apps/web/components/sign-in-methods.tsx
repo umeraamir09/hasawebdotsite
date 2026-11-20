@@ -132,7 +132,11 @@ export function SignInMethods({
                 <span>
                   <strong>{providerNames[provider]}</strong>
                   <span className="editor-muted">
-                    {connected ? "Connected" : "Add another way to sign in"}
+                    {connected
+                      ? "Connected"
+                      : provider === "google"
+                        ? "Add another way to sign in with your account's email"
+                        : "Add another way to sign in"}
                   </span>
                 </span>
                 {connected ? (

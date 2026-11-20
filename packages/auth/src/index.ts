@@ -114,11 +114,33 @@ export function createProductAuth(env: AuthEnvironment) {
         requireLocalEmailVerified: true,
         // Consulted only by explicit linking from the editor, where the owner
         // is signed in and completes the provider's OAuth flow (proof of
-        // ownership). Sign-in still links automatically only on a matching
-        // provider-verified email; the linked provider's email must still be
-        // verified.
+        // ownership). Only GitHub may use a different email; Google must
+        // match (`validateUserInfo` below). Sign-in still links automatically
+        // only on a matching provider-verified email, and a linked
+        // provider's email must still be verified.
         allowDifferentEmails: true,
         allowUnlinkingAll: false,
+      },
+    },
+    user: {
+      // A Google account links only with the account's own email. GitHub
+      // may link with a different verified email.
+      async validateUserInfo({ user: info, source }) {
+        if (
+          source.action !== "link-account" ||
+          source.method !== "oauth" ||
+          source.oauth?.providerId !== "google"
+        )
+          return;
+        const owner = await env.DB.prepare("SELECT email FROM user WHERE id=?")
+          .bind(info.id)
+          .first<{ email: string }>();
+        if (
+          !owner ||
+          typeof info.email !== "string" ||
+          info.email.toLowerCase() !== owner.email.toLowerCase()
+        )
+          return { error: "email_does_not_match" };
       },
     },
     session: { cookieCache: { enabled: true, maxAge: 300 } },
@@ -146,13 +168,32 @@ export function createProductAuth(env: AuthEnvironment) {
               )
                 return false;
             }
+            // A provider the owner disconnected links again only through an
+            // explicit Connect, never by a matching email at sign-in.
             const row = await env.DB.prepare(
               `SELECT EXISTS(SELECT 1 FROM user WHERE id=? AND deleting_at IS NOT NULL)
-                OR EXISTS(SELECT 1 FROM account WHERE user_id=? AND provider_id=?) AS blocked`,
+                OR EXISTS(SELECT 1 FROM account WHERE user_id=? AND provider_id=?)
+                OR (? AND EXISTS(SELECT 1 FROM disconnected_provider WHERE user_id=? AND provider_id=?)) AS blocked`,
             )
-              .bind(value.userId, value.userId, value.providerId)
+              .bind(
+                value.userId,
+                value.userId,
+                value.providerId,
+                link ? 0 : 1,
+                value.userId,
+                value.providerId,
+              )
               .first<{ blocked: number }>();
             return !row?.blocked;
+          },
+          // An explicit Connect ends the disconnect.
+          async after(value) {
+            if (!(await getOAuthState())?.link) return;
+            await env.DB.prepare(
+              "DELETE FROM disconnected_provider WHERE user_id=? AND provider_id=?",
+            )
+              .bind(value.userId, value.providerId)
+              .run();
           },
         },
       },

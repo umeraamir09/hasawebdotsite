@@ -67,6 +67,28 @@ const profiles: Record<string, Profile> = {
     email: "fourth@example.invalid",
     verified: true,
   },
+  // A GitHub-first owner and a Google account with the same email.
+  matchGithub: {
+    id: "match-github",
+    email: "match@example.invalid",
+    verified: true,
+  },
+  matchGoogle: {
+    id: "match-google",
+    email: "match@example.invalid",
+    verified: true,
+  },
+  // One person's Google and GitHub accounts with the same verified email.
+  stickyGoogle: {
+    id: "sticky-google",
+    email: "sticky@example.invalid",
+    verified: true,
+  },
+  stickyGithub: {
+    id: "sticky-github",
+    email: "sticky@example.invalid",
+    verified: true,
+  },
   linkTaken: {
     id: "link-taken",
     email: "taken@example.invalid",

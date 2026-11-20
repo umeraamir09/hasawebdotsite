@@ -14,6 +14,10 @@ describe("connected sign-in methods", () => {
         "?account=not-connected&error=account_already_linked_to_different_user",
       )?.text,
     ).toMatch(/different hasaweb\.site account/);
+    expect(
+      linkReturnNotice("?account=not-connected&error=email_does_not_match")
+        ?.text,
+    ).toMatch(/different email address/);
     const reflected = linkReturnNotice(
       "?account=not-connected&error=%3Cb%3Eprovider%3C%2Fb%3E&error_description=secret",
     );

@@ -42,19 +42,31 @@ export function ownerSignInProviders(
   return {
     connected,
     /**
-     * Removes one provider only while another sign-in provider remains. The
-     * check and the delete are one statement, so concurrent removals in two
-     * tabs cannot leave the owner without a way to sign in.
+     * Removes one provider only while another sign-in provider remains, and
+     * records the disconnect. The check and the delete are one statement, so
+     * concurrent removals in two tabs cannot leave the owner without a way
+     * to sign in.
      */
     async remove(provider: SignInProvider): Promise<ProviderRemoval> {
-      const result = await db
-        .prepare(
-          `DELETE FROM account WHERE user_id=? AND provider_id=? AND ${liveOwner}
+      const [result] = await db.batch([
+        db
+          .prepare(
+            `DELETE FROM account WHERE user_id=? AND provider_id=? AND ${liveOwner}
           AND EXISTS(SELECT 1 FROM account other WHERE other.user_id=account.user_id
             AND other.provider_id IN (${providerList}) AND other.provider_id<>account.provider_id)`,
-        )
-        .bind(userId, provider, ...live())
-        .run();
+          )
+          .bind(userId, provider, ...live()),
+        // Same transaction: only a removal records the disconnect, so signing
+        // in with that provider no longer links it back by matching email.
+        db
+          .prepare(
+            `INSERT INTO disconnected_provider(user_id,provider_id,created_at)
+            SELECT ?,?,? WHERE changes()>0
+            ON CONFLICT(user_id,provider_id) DO UPDATE SET created_at=excluded.created_at`,
+          )
+          .bind(userId, provider, Date.now()),
+      ]);
+      if (!result) throw new Error("Provider removal returned no result");
       if (result.meta.changes > 0) return "removed";
       return (await connected()).includes(provider)
         ? "last_method"

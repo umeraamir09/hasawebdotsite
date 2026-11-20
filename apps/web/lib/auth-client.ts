@@ -64,6 +64,10 @@ export function authErrorMessage(error: string | null) {
   if (!error) return null;
   if (["access_denied", "user_cancelled", "cancelled"].includes(error))
     return "Sign-in was cancelled. Choose a provider to try again.";
+  // Only the account hook refuses a link at sign-in: most often a provider
+  // the owner disconnected, which links again only through Connect.
+  if (error === "unable_to_link_account")
+    return "This sign-in method isn't connected to your account. Sign in another way, then connect it again in your editor's Sharing settings.";
   if (
     [
       "account_not_linked",

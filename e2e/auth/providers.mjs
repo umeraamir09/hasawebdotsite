@@ -293,4 +293,73 @@ export async function checkConnectedProviders({
       assert.deepEqual(await entry(signedIn.jar), saved);
     },
   );
+  await check(
+    "providers: a disconnected provider with the account's email stays disconnected at sign-in until Connect",
+    async () => {
+      const sticky = await login("google", "stickyGoogle");
+      // Same verified email: the existing rule links GitHub at sign-in.
+      assert.equal(
+        (await login("github", "stickyGithub")).data.user.id,
+        sticky.data.user.id,
+      );
+      const before = await counts();
+      assert.equal((await disconnect("github", sticky)).status, 200);
+      assert.equal(
+        (await counts()).disconnected_provider,
+        before.disconnected_provider + 1,
+      );
+      // A refused removal records nothing.
+      assert.equal((await disconnect("google", sticky)).status, 409);
+      const marked = await counts();
+      assert.equal(
+        marked.disconnected_provider,
+        before.disconnected_provider + 1,
+      );
+
+      // Signing in with it neither links it back nor creates an account.
+      const refused = await login("github", "stickyGithub");
+      assert.equal(refused.data, null);
+      const destination = new URL(refused.completed.headers.get("location"));
+      assert.equal(destination.pathname, "/sign-in");
+      assert.equal(destination.searchParams.get("provider"), "github");
+      assert.equal(
+        destination.searchParams.get("error"),
+        "unable_to_link_account",
+      );
+      assert.deepEqual(await counts(), marked);
+      assert.deepEqual(await providers(sticky.jar), {
+        github: false,
+        google: true,
+      });
+
+      // Connect from settings links it and ends the disconnect.
+      const connected = await link("github", sticky, "stickyGithub");
+      assert.equal(connected.searchParams.get("account"), "connected");
+      assert.equal(
+        (await counts()).disconnected_provider,
+        before.disconnected_provider,
+      );
+      const signedIn = await login("github", "stickyGithub");
+      assert.equal(signedIn.data.user.id, sticky.data.user.id);
+    },
+  );
+  await check(
+    "providers: Google links only with the account's email; GitHub may use another",
+    async () => {
+      const githubFirst = await login("github", "matchGithub");
+      const before = await counts();
+      const mismatch = await link("google", githubFirst, "linkFourth");
+      assert.equal(mismatch.pathname, "/editor");
+      assert.equal(mismatch.searchParams.get("account"), "not-connected");
+      assert.equal(mismatch.searchParams.get("error"), "email_does_not_match");
+      assert.deepEqual(await counts(), before);
+      assert.equal((await providers(githubFirst.jar)).google, false);
+      const matched = await link("google", githubFirst, "matchGoogle");
+      assert.equal(matched.searchParams.get("account"), "connected");
+      assert.equal(
+        (await login("google", "matchGoogle")).data.user.id,
+        githubFirst.data.user.id,
+      );
+    },
+  );
 }
