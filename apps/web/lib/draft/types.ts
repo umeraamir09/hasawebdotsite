@@ -116,7 +116,7 @@ export interface Coordinator {
 }
 export type DraftState = {
   suspended: boolean;
-  pendingImages: Partial<Record<"avatar" | "banner" | "face", boolean>>;
+  pendingImages: Partial<Record<"avatar" | "banner" | "face" | "og", boolean>>;
   confirmed: DraftReadResult | null;
   working: DraftDoc | null;
   progress: SetupProgress | null;

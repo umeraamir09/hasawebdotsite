@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
+import { addLink } from "./links.mjs";
 
 // Phase 42E: Review, the permanent first editor handoff and the activated
 // account entry. These groups go through `/auth/entry` and `/editor`, which
@@ -101,7 +102,7 @@ export async function checkGuideReview({
     }
     await proceed(page);
     await waitStep(page, "links");
-    await page.getByRole("button", { name: "Add link", exact: true }).click();
+    await addLink(page);
     await page.getByLabel("Link label").fill("My site");
     await page.getByLabel("Destination URL").fill("https://example.com");
     await proceed(page);

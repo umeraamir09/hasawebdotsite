@@ -23,7 +23,9 @@ export async function purgePublicationHosts(
     `https://api.cloudflare.com/client/v4/zones/${config.CLOUDFLARE_ZONE_ID}/purge_cache`,
     {
       method: "POST",
-      redirect: "error",
+      // Workers fetch rejects "error". A redirect is never followed and,
+      // as a non-2xx status, is classified as a rejection below.
+      redirect: "manual",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${config.CLOUDFLARE_CACHE_PURGE_TOKEN}`,

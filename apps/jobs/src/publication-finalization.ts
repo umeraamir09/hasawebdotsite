@@ -2,11 +2,23 @@ import { Buffer } from "node:buffer";
 import { appearanceModelSchema, fontFileName } from "@hasaweb/components";
 import { type Candidate, candidateActive } from "@hasaweb/db";
 import {
+  type DocumentMetadata,
   documentShell,
   PAGE_UNAVAILABLE_HTML,
   portfolioDocumentFrame,
 } from "@hasaweb/render";
+import {
+  idSchema,
+  resolveSeo,
+  type SeoPage,
+  seoPageTitle,
+} from "@hasaweb/schema";
 import { z } from "zod";
+import {
+  renderCandidateCard,
+  SHARING_CARD_ASSET,
+  SHARING_CARD_PATH,
+} from "./publication-card";
 import type { DispatchEnv } from "./publication-dispatch";
 import { putBoundedStream } from "./publication-stream";
 
@@ -64,6 +76,7 @@ const cursorSchema = z.discriminatedUnion("stage", [
     index: z.number().int().nonnegative(),
     written: z.number().int().nonnegative(),
   }),
+  z.object({ stage: z.literal("card") }),
   z.object({
     stage: z.literal("pages"),
     index: z.number().int().nonnegative(),
@@ -82,6 +95,62 @@ const snapshotPart = (
   kind = "snapshot",
 ) => `${prefix(row)}${kind}-parts/${level}/${index}`;
 const hex = (bytes: ArrayBuffer) => Buffer.from(bytes).toString("hex");
+
+// Enough source text for the clipped title and description.
+const SEO_SOURCE_CHARACTERS = 1024;
+const text = z.string().nullable();
+const seoSourceSchema = z.strictObject({
+  address: z.string().regex(/^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/),
+  name: text,
+  bio: text,
+  title: text,
+  description: text,
+  ogImageId: idSchema.nullable(),
+  projectTitle: text,
+});
+
+/**
+ * Title and sharing tags for one page of the sealed source. The documents
+ * are immutable, so only a new Publish changes what a page advertises.
+ */
+export function pageMetadata(
+  source: z.infer<typeof seoSourceSchema>,
+  path: string,
+  assetUrl: (assetId: string) => string,
+): { title: string; metadata: DocumentMetadata } {
+  const resolved = resolveSeo({
+    profile: {
+      name: source.name ?? "",
+      bio: source.bio ?? "",
+    },
+    seo: {
+      ...(source.title ? { title: source.title } : {}),
+      ...(source.description ? { description: source.description } : {}),
+      ...(source.ogImageId ? { ogImage: { assetId: source.ogImageId } } : {}),
+    },
+  });
+  const page: SeoPage =
+    path === "/resume"
+      ? { kind: "resume" }
+      : path.startsWith("/projects/")
+        ? { kind: "case-study", projectTitle: source.projectTitle ?? "" }
+        : { kind: "home" };
+  return {
+    title: seoPageTitle(resolved, page),
+    metadata: {
+      description: resolved.description,
+      canonicalUrl: `https://${source.address}.hasaweb.site${path}`,
+      image: {
+        url: assetUrl(
+          resolved.image.kind === "upload"
+            ? resolved.image.assetId
+            : SHARING_CARD_ASSET,
+        ),
+        alt: resolved.image.alt,
+      },
+    },
+  };
+}
 
 async function digest(object: R2ObjectBody) {
   const stream = new crypto.DigestStream("SHA-256");
@@ -326,7 +395,7 @@ export async function finalizePublication(
       }
       cursor =
         kind === "snapshot"
-          ? { stage: "pages", index: 0 }
+          ? { stage: "card" }
           : kind === "sitemap"
             ? { stage: "assets", index: 0 }
             : { stage: "seal" };
@@ -339,6 +408,27 @@ export async function finalizePublication(
         written: 0,
       };
     else cursor = { ...state, index: end, written: state.written + 1 };
+  } else if (cursor.stage === "card") {
+    const packed = await env.DB.prepare(
+      "SELECT json_extract(value,'$.platform') AS pack FROM publication_candidate_index WHERE candidate_id=?",
+    )
+      .bind(row.id)
+      .first<{ pack: string }>();
+    const font = packSchema
+      .parse(JSON.parse(packed?.pack ?? "null"))
+      .files.find((file) => file.role === "font");
+    if (!font) throw new Error("Candidate platform incomplete");
+    const key = await renderCandidateCard(env, row, font.path);
+    if (key)
+      await recordObject(
+        env,
+        row,
+        "assets",
+        key,
+        SHARING_CARD_PATH,
+        "image/png",
+      );
+    cursor = { stage: "pages", index: 0 };
   } else if (cursor.stage === "pages") {
     const page = await env.DB.prepare(
       "SELECT ordinal,path FROM publication_page WHERE candidate_id=? ORDER BY ordinal LIMIT 1 OFFSET ?",
@@ -349,11 +439,23 @@ export async function finalizePublication(
       // The sealed source's appearance applies to every page of this version.
       // Publication validation already checked catalog membership; the strict
       // parse fails the candidate rather than publish a different appearance.
+      // Search metadata reads bounded prefixes of the sealed source, so a
+      // 1 MiB bio never enters this Worker. Clipping happens in resolveSeo.
       const packed = await env.DB.prepare(
-        "SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?",
+        `SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance,
+          json_object(
+            'address',json_extract(c.facts,'$.address.name'),
+            'name',substr(json_extract(c.source,'$.profile.name'),1,${SEO_SOURCE_CHARACTERS}),
+            'bio',substr(json_extract(c.source,'$.profile.bio'),1,${SEO_SOURCE_CHARACTERS}),
+            'title',substr(json_extract(c.source,'$.seo.title'),1,${SEO_SOURCE_CHARACTERS}),
+            'description',substr(json_extract(c.source,'$.seo.description'),1,${SEO_SOURCE_CHARACTERS}),
+            'ogImageId',json_extract(c.source,'$.seo.ogImage.assetId'),
+            'projectTitle',(SELECT substr(json_extract(c.source,json_extract(k.value,'$.path')||'.title'),1,${SEO_SOURCE_CHARACTERS}) FROM json_each(x.value,'$.cases') k WHERE '/projects/'||json_extract(k.value,'$.slug')=? LIMIT 1)
+          ) AS seo
+         FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?`,
       )
-        .bind(row.id)
-        .first<{ pack: string; appearance: string }>();
+        .bind(page.path, row.id)
+        .first<{ pack: string; appearance: string; seo: string }>();
       const files = packSchema.parse(JSON.parse(packed?.pack ?? "null")).files;
       const appearance = appearanceModelSchema.parse(
         JSON.parse(packed?.appearance ?? "null"),
@@ -363,12 +465,18 @@ export async function finalizePublication(
       if (!css || !script) throw new Error("Candidate platform incomplete");
       const marker = "HASA_CONTROLLED_DOCUMENT_BODY";
       const frame = portfolioDocumentFrame();
+      const { title, metadata } = pageMetadata(
+        seoSourceSchema.parse(JSON.parse(packed?.seo ?? "null")),
+        page.path,
+        (assetId) => `${row.asset_origin}/${root}assets/${assetId}`,
+      );
       const shell = documentShell({
         markup: frame.open + marker + frame.close,
-        title: "Portfolio",
+        title,
         context: "public",
         assets: { cssUrl: css.path, scriptUrl: script.path },
         appearance,
+        metadata,
       });
       // Resource paths remain rooted for Phase 25's manifest-authorized serving.
       const [open, close] = shell.split(marker);
@@ -397,9 +505,15 @@ export async function finalizePublication(
         "/404",
         "text/html; charset=utf-8",
       );
+      const address = await env.DB.prepare(
+        "SELECT json_extract(facts,'$.address.name') AS name FROM publication_candidate WHERE id=?",
+      )
+        .bind(row.id)
+        .first<{ name: string }>();
+      const site = seoSourceSchema.shape.address.parse(address?.name);
       await env.SITES_BUCKET.put(
         `${root}robots.txt`,
-        "User-agent: *\nAllow: /\n",
+        `User-agent: *\nAllow: /\nSitemap: https://${site}.hasaweb.site/sitemap.xml\n`,
       );
       await recordObject(
         env,
@@ -430,7 +544,7 @@ export async function finalizePublication(
     } else cursor = { stage: "manifest", index: 0 };
   } else {
     const complete = await env.DB.prepare(
-      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
+      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT json_type(source,'$.seo.ogImage') IS NULL FROM publication_candidate WHERE id=x.candidate_id)+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
     )
       .bind(row.id)
       .first();

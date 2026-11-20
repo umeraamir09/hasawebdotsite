@@ -31,6 +31,7 @@ export function ImageUpload({
   noun = purpose,
   value,
   description,
+  describe = true,
   descriptionInvalid = false,
   ownerId,
   providerPortfolioId,
@@ -45,6 +46,8 @@ export function ImageUpload({
   noun?: string;
   value: ImageReference | undefined;
   description: string;
+  // Off for images whose surface has no description field (sharing image).
+  describe?: boolean;
   descriptionInvalid?: boolean;
   ownerId: string;
   providerPortfolioId?: string;
@@ -206,10 +209,14 @@ export function ImageUpload({
   }
   const busy = state.kind === "loading" || state.kind === "uploading";
   // Project and case-study images keep the validated, re-encoded upload as
-  // supplied. Only avatar and banner have fixed crop shapes.
+  // supplied. Avatar, banner, Face Reveal and sharing images have fixed
+  // crop shapes.
   const uncropped = purpose === "project" || purpose === "case_study";
   return (
-    <section className="profile-image-control" aria-label={`${label} image`}>
+    <section
+      className="profile-image-control"
+      aria-label={/ image$/i.test(label) ? label : `${label} image`}
+    >
       <h3>{label}</h3>
       <div className={`profile-image-preview profile-image-preview-${purpose}`}>
         {value && unavailable !== value.assetId ? (
@@ -299,7 +306,7 @@ export function ImageUpload({
           for your avatar. Cancel keeps your current image.
         </p>
       )}
-      {value && (
+      {value && describe && (
         <div className="editor-field">
           <label htmlFor={`${id}-description`}>{label} description</label>
           <input

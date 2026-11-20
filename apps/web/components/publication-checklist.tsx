@@ -439,7 +439,7 @@ export function PublicationCorrection({
           Turn Face Reveal off
         </button>
       )}
-      {issue.path[0] === "seo" && (
+      {issue.path[0] === "seo" && issue.path[1] === "ogImage" && (
         <button
           type="button"
           disabled={disabled}

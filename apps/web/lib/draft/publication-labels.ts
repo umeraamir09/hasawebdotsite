@@ -40,7 +40,12 @@ export function publicationFieldLabel(
   if (root === "links")
     return issue.path.length === 1 ? "profile link" : (fields[last] ?? "link");
   if (root === "appearance") return last === "themeId" ? "theme" : "font";
-  if (root === "seo") return "sharing image";
+  if (root === "seo")
+    return issue.path[1] === "title"
+      ? "page title"
+      : issue.path[1] === "description"
+        ? "sharing description"
+        : "sharing image";
   if (root === "profile")
     return index === "decorationId"
       ? "avatar decoration"

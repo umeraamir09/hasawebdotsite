@@ -22,7 +22,8 @@
     "db:migrate:local": "wrangler d1 migrations apply hasaweb-local --local --config apps/web/wrangler.jsonc --persist-to .wrangler/state",
     "db:generate": "pnpm --filter @hasaweb/db generate",
     "generate:avatar": "node apps/web/scripts/regenerate-avatar-safe.mjs",
-    "generate:renderer-assets": "node scripts/generate-renderer-avatar.mjs"
+    "generate:renderer-assets": "node scripts/generate-renderer-avatar.mjs",
+    "generate:sharing-card-art": "node scripts/generate-sharing-card-art.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

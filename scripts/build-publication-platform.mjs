@@ -34,6 +34,22 @@ export async function buildPublicationPlatform(directory) {
       path,
     );
   }
+  // Sharing-card decoration stills. Publication reads them from the platform
+  // build to draw the card; they are not page dependencies, so they stay out
+  // of the retained platform pack.
+  const art = JSON.parse(
+    await readFile(
+      join(root, "packages/components/static/sharing-card-art.json"),
+      "utf8",
+    ),
+  );
+  for (const { file, path } of Object.values(art)) {
+    await mkdir(join(directory, path, ".."), { recursive: true });
+    await writeFile(
+      join(directory, path),
+      await readFile(join(root, "packages/components/static", file)),
+    );
+  }
   const css = await esbuild.build({
     entryPoints: [join(root, "packages/components/static/portfolio.css")],
     bundle: true,
