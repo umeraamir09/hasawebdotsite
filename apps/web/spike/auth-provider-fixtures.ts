@@ -41,6 +41,64 @@ const profiles: Record<string, Profile> = {
     email: "fresh@example.invalid",
     verified: true,
   },
+  // Phase 47 explicit linking. Each provider account has its own email.
+  linkOwner: {
+    id: "link-owner",
+    email: "owner@example.invalid",
+    verified: true,
+  },
+  linkOther: {
+    id: "link-other",
+    email: "work@example.invalid",
+    verified: true,
+  },
+  linkSecond: {
+    id: "link-second",
+    email: "second@example.invalid",
+    verified: true,
+  },
+  linkThird: {
+    id: "link-third",
+    email: "third@example.invalid",
+    verified: true,
+  },
+  linkFourth: {
+    id: "link-fourth",
+    email: "fourth@example.invalid",
+    verified: true,
+  },
+  // A GitHub-first owner and a Google account with the same email.
+  matchGithub: {
+    id: "match-github",
+    email: "match@example.invalid",
+    verified: true,
+  },
+  matchGoogle: {
+    id: "match-google",
+    email: "match@example.invalid",
+    verified: true,
+  },
+  // One person's Google and GitHub accounts with the same verified email.
+  stickyGoogle: {
+    id: "sticky-google",
+    email: "sticky@example.invalid",
+    verified: true,
+  },
+  stickyGithub: {
+    id: "sticky-github",
+    email: "sticky@example.invalid",
+    verified: true,
+  },
+  linkTaken: {
+    id: "link-taken",
+    email: "taken@example.invalid",
+    verified: true,
+  },
+  linkUnverified: {
+    id: "link-unverified",
+    email: "unverified-link@example.invalid",
+    verified: false,
+  },
 };
 function json(value: unknown, status = 200) {
   return Response.json(value, { status });

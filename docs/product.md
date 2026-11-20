@@ -70,7 +70,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 ### 2. Create an account and start a portfolio
 
 - Owners sign up or sign in with GitHub or Google before editing. Password and email-only sign-in are outside the MVP.
-- Both providers open the same account when they supply the same verified email. Linking an additional provider requires proof of ownership; an unverified or missing email must not cause automatic account merging.
+- Both providers open the same account when they supply the same verified email, unless the owner disconnected that provider in settings; then only connecting it again from settings restores it. Linking an additional provider requires proof of ownership; a linked Google account must use the account email, while a GitHub account may use another verified email; an unverified or missing email must not cause automatic account merging.
 - A new account starts one private portfolio in the preselected template. There is no template picker or alternative layout in this release.
 - The sequence is Address, Profile, Links, Skills, Projects, GitHub, Review, then Editor. Address, Profile, and Links are required before first editor entry, with no initial skip or direct-editor bypass. Profile is one screen containing name, bio, avatar, banner, image previews, and cropping/adjustment controls.
 - Address checks format and current availability; a successful save reserves the name. Links requires at least one valid labeled social/website URL or email shown in the profile.

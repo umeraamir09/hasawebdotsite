@@ -239,7 +239,7 @@ function background(c: Context<OwnerBindings>, work: Promise<unknown>) {
 
 // Revocation after a withdrawal or a rejected token starts at once and the
 // scheduled sweep retries it. It never delays or changes the response.
-function startCleanup(c: Context<OwnerBindings>) {
+export function startCleanup(c: Context<OwnerBindings>) {
   return background(
     c,
     sweepGitHubCleanups(c.env, authSettings(c.env).origin).catch(() => []),

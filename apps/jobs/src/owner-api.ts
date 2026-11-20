@@ -21,6 +21,7 @@ import {
   consentReturn,
   type GitHubBindings,
 } from "./github-routes";
+import { addProviderRoutes } from "./provider-routes";
 import {
   addPublicationRoutes,
   type PublicationBindings,
@@ -217,6 +218,7 @@ export function createOwnerRouter() {
   addPublicationRoutes(app);
   addGitHubRoutes(app);
   addContactRoutes(app);
+  addProviderRoutes(app);
   return app;
 }
 
