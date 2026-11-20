@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { checkGuideGitHub } from "./guide-github.mjs";
 import { checkGuideJourney } from "./guide-journey.mjs";
 import { checkGuideReview } from "./guide-review.mjs";
+import { addLink } from "./links.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
 // mounted by the direct `/guide` fixture. Phase 42E's groups (Review, handoff
@@ -646,7 +647,7 @@ export async function checkSetupGuide({
     await proceed(page);
     await alert.filter({ hasText: "Add at least one valid link" }).waitFor();
     assert.equal((await portfolio()).step, "links");
-    await page.getByRole("button", { name: "Add link", exact: true }).click();
+    await addLink(page);
     await page.getByLabel("Link label").fill("My site");
     await page.getByLabel("Destination URL").fill("nope");
     await proceed(page);
