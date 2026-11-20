@@ -92,18 +92,21 @@ export async function withdrawPublication(env: WithdrawalEnv, id: string) {
     }
     if (!local) {
       const page =
-        await env.DB.prepare(`SELECT json_extract(f.value,'$.sha256') AS sha256
+        await env.DB.prepare(`SELECT p.status,json_extract(f.value,'$.sha256') AS sha256
         FROM portfolio p JOIN publish_version v ON v.portfolio_id=p.id AND v.n=p.published_version
         JOIN publication_candidate_index x ON x.candidate_id=v.candidate_id JOIN json_each(x.value,'$.receipts') f
-        WHERE p.id=? AND p.status='published' AND json_extract(f.value,'$.path')='/' LIMIT 1`)
+        WHERE p.id=? AND json_extract(f.value,'$.path')='/' LIMIT 1`)
           .bind(operation.portfolio_id)
-          .first<{ sha256: string }>();
+          .first<{ status: string; sha256: string }>();
       if (!page) throw new Error("Live publication is unavailable");
-      await verifyPublicationUrl(
-        env,
-        `https://${operation.address}.hasaweb.site/`,
-        { status: 200, sha256: page.sha256 },
-      );
+      // After Unpublish the host serves nothing and that withdrawal verifies
+      // the absence, so only a still-published portfolio is checked here.
+      if (page.status === "published")
+        await verifyPublicationUrl(
+          env,
+          `https://${operation.address}.hasaweb.site/`,
+          { status: 200, sha256: page.sha256 },
+        );
     }
     await env.DB.prepare(
       "UPDATE publication_operation SET completed_at=?,cleanup_attempts=0 WHERE id=? AND cleanup_cursor=? AND completed_at IS NULL",

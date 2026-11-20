@@ -1,6 +1,7 @@
 import { type AuthEnvironment, currentSessionIdentity } from "@hasaweb/auth";
 import {
   ownerPublicationCommit,
+  ownerPublicationSite,
   PublicationCommitError,
   publicationRetainsAsset,
   publicationTasks,
@@ -13,6 +14,7 @@ import {
   runPublicationBatch,
   sweepPublicationTasks,
 } from "../src/publication-dispatch";
+import { withdrawUnpublished } from "../src/publication-unpublish";
 import { withPublicationFault } from "./publication-faults";
 import { measureDispatch } from "./publication-measure";
 
@@ -118,6 +120,18 @@ export default {
           }).commit(await request.json()),
         );
       }
+      // Phase 48: the owner's Unpublish, with its cleanup driven by
+      // /withdraw-unpublished rather than the queue.
+      if (url.pathname === "/unpublish" && request.method === "POST") {
+        const identity = await currentSessionIdentity(env, request.headers);
+        if (!identity) return reply({ code: "unauthorized" }, 401);
+        const woken: unknown[] = [];
+        const site = await ownerPublicationSite(env.DB, identity).unpublish(
+          "s8-portfolio",
+          { send: async (body) => void woken.push(body) },
+        );
+        return reply({ site, woken });
+      }
       if (url.pathname === "/serve" && request.method === "POST") {
         const body = await request.json<{
           url: string;
@@ -189,6 +203,17 @@ export default {
       }
       if (url.pathname === "/claim")
         return reply(await publicationTasks(env.DB).claim(id));
+      if (url.pathname === "/withdraw-unpublished")
+        return reply(
+          await withdrawUnpublished(
+            {
+              ...env,
+              APP_ENV: "test",
+              PUBLICATION_QUEUE: { send: async () => {} } as never,
+            },
+            id,
+          ),
+        );
       if (url.pathname === "/sweep")
         return reply(await sweepPublicationTasks(env));
       if (url.pathname === "/cleanup") {

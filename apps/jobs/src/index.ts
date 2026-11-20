@@ -7,6 +7,8 @@ import {
   type OutboxMessage,
   outboxMessageSchema,
   sweepContactOutbox,
+  type UnpublishWake,
+  unpublishWakeSchema,
   type Wake,
   wakeSchema,
 } from "@hasaweb/db";
@@ -27,6 +29,10 @@ import {
   sweepPublicationTasks,
 } from "./publication-dispatch";
 import type { PublicationBindings } from "./publication-routes";
+import {
+  sweepUnpublishWithdrawals,
+  withdrawUnpublished,
+} from "./publication-unpublish";
 import {
   sweepPublicationWithdrawals,
   withdrawPublication,
@@ -100,13 +106,17 @@ export default {
     ) {
       for (const message of batch.messages) {
         const wake = wakeSchema.safeParse(message.body);
-        if (!wake.success) {
+        const unpublish = unpublishWakeSchema.safeParse(message.body);
+        if (!wake.success && !unpublish.success) {
           message.ack();
           continue;
         }
         try {
-          await runPublicationBatch(env, wake.data.candidateId);
-          await withdrawPublication(env, wake.data.candidateId);
+          if (wake.success) {
+            await runPublicationBatch(env, wake.data.candidateId);
+            await withdrawPublication(env, wake.data.candidateId);
+          } else if (unpublish.success)
+            await withdrawUnpublished(env, unpublish.data.withdrawalId);
           message.ack();
         } catch {
           message.retry({ delaySeconds: 2 });
@@ -191,6 +201,7 @@ export default {
   async scheduled(_event, env) {
     await sweepPublicationTasks(env);
     await sweepPublicationWithdrawals(env);
+    await sweepUnpublishWithdrawals(env);
     // Durable grant revocation: pending cleanups retry here until GitHub
     // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
     await sweepGitHubCleanups(env).catch(() => []);
@@ -216,5 +227,5 @@ export default {
   },
 } satisfies ExportedHandler<
   Env,
-  { id: string } | Wake | RefreshMessage | OutboxMessage
+  { id: string } | Wake | UnpublishWake | RefreshMessage | OutboxMessage
 >;

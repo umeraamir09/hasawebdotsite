@@ -171,6 +171,10 @@ The immutable commit receipt joined to an unfinished operation is the durable wi
 
 The named owner API accepts same-origin JSON POSTs with `X-Expected-Owner-Id`, checked against uncached authenticated identity. `/api/owner/publication/start` accepts `{ portfolioId, revision, operationId }`; `/status` accepts `{ portfolioId, operationId? }`; `/commit` accepts `{ portfolioId, operationId }`. Bodies are capped at 1 KiB. Unknown fields fail validation. Responses use private/no-store headers and the shared operation schema. No request may supply owner identity, expected pointer state, public URL or an object key.
 
+## Unpublish (Phase 48)
+
+`ownerPublicationSite(db, identity)` backs `/api/owner/publication/site` and `/unpublish` (same body rules as above: `{ portfolioId }`, 1 KiB, `X-Expected-Owner-Id`). `read` returns the shared `publicationSiteSchema` state. `unpublish` moves a `published` portfolio to `unpublished` and, in the same batch and only when that update applied (`changes()=1`), inserts one `publication_withdrawal` row (migration `0020_publication_withdrawal.sql`) holding the address and the published version at that moment. A repeat returns the current state; a draft portfolio is 409 `not_published`. It then sends `{ withdrawalId }` on the publication queue (`unpublishWakeSchema`); the jobs cron sweep resumes lost wakes. `apps/jobs/src/publication-unpublish.ts` runs the cleanup in batches of eight under the cursor: delete and head-check public-bucket objects of versions up to the recorded one, purge, then observe absence (`verify:` cursor) before completion. Later versions are never touched, so a republish during cleanup is safe. The row is the input to Phase 49 deletion along with the operation history.
+
 ## Independent refresh (Phase 42)
 
 Migration `0016_github_refresh.sql` adds `github_refresh` (one request row per portfolio, no GitHub data) and `github_published_activity` (the published account's public calendar while the draft selects another account). `github-refresh.ts` is also exported as the `@hasaweb/db/github-refresh` subpath for `site`.

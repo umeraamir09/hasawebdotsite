@@ -306,6 +306,40 @@
   display: block;
   border-radius: 12px;
 }
+/* Phase 48, Figma "08 / Site settings": Unpublish under the live address. */
+.publication-unpublish {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #dde2d8;
+}
+.publication-unpublish h3 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 500;
+}
+.publication-unpublish p,
+.publication-unpublished p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.publication-checklist .publication-unpublish button {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid #7a856e;
+  border-radius: 999px;
+  background: transparent;
+}
+.publication-unpublished {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #dde2d8;
+  border-radius: 12px;
+  background: #f7f8f5;
+}
+.publication-unpublished p:last-child {
+  margin-bottom: 0;
+}
 
 .component-controls {
   padding-bottom: 24px;

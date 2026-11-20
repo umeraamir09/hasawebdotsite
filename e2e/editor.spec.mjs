@@ -19,13 +19,14 @@ import { checkSkillsControls } from "./editor/skills-controls.mjs";
 import { checkSocialLinks } from "./editor/social-links.mjs";
 import { checkSocialLinksJourney } from "./editor/social-links-publish.mjs";
 import { checkTextControls } from "./editor/text-controls.mjs";
+import { checkUnpublishJourney } from "./editor/unpublish-restore.mjs";
 import { checkWorkExperienceControls } from "./editor/work-experience.mjs";
 import { expect, step, test } from "./support/fixtures.mjs";
 
 // Each journey boots its own editor state, so journeys run in any order and
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
-// Order balances CI's three editor shards (8/7/7 tests, about 2.3 min each).
+// Order balances CI's three editor shards (8/8/7 tests, about 2.3 min each).
 const journeys = {
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
@@ -45,6 +46,7 @@ const journeys = {
   "profile controls": (editor) => checkProfileControls(editor.controls),
   "draft preview": (editor) => checkDraftPreviewJourney(editor.controls),
   "social links": (editor) => checkSocialLinks(editor.controls),
+  "unpublish and restore": (editor) => checkUnpublishJourney(editor.controls),
   "crop controls": (editor) => checkCropControls(editor.controls),
   "avatar extras": (editor) => checkAvatarExtrasJourney(editor.controls),
   "social links publish": (editor) => checkSocialLinksJourney(editor.controls),

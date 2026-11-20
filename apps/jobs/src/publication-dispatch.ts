@@ -10,6 +10,7 @@ import {
   PUBLICATION_TOMBSTONE_MS,
   preparePublicationIndex,
   publicationTasks,
+  type UnpublishWake,
   type Wake,
 } from "@hasaweb/db";
 import { renderFragment } from "@hasaweb/render";
@@ -36,7 +37,7 @@ export type DispatchEnv = {
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   PRIVATE_SOURCE: Fetcher;
   PLATFORM_ASSETS: Fetcher;
-  PUBLICATION_QUEUE: Queue<Wake>;
+  PUBLICATION_QUEUE: Queue<Wake | UnpublishWake>;
   ASSET_ORIGIN: string;
   PUBLICATION_TASK_BATCH?: string;
 };

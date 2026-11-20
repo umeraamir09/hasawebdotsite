@@ -1,14 +1,18 @@
 import {
   ownerCaseStudyAddresses,
   ownerPublicationOperations,
+  ownerPublicationSite,
   PublicationCommitError,
   type PublicationPolicy,
   privateJson,
   SaveError,
+  UnpublishError,
+  type UnpublishWake,
 } from "@hasaweb/db";
 import {
   caseStudyAddressCommandSchema,
   publicationCommitRequestSchema,
+  publicationSiteCommandSchema,
   publicationStatusCommandSchema,
 } from "@hasaweb/schema";
 import type { Hono } from "hono";
@@ -18,7 +22,7 @@ import type { OwnerBindings } from "./owner-api";
 
 export type PublicationBindings = {
   ASSET_ORIGIN: string;
-  PUBLICATION_QUEUE: PublicationPolicy["queue"];
+  PUBLICATION_QUEUE: PublicationPolicy["queue"] & Queue<UnpublishWake>;
 };
 export function addPublicationRoutes(app: Hono<OwnerBindings>) {
   app.post("/api/owner/publication/case-studies", async (c) => {
@@ -44,6 +48,35 @@ export function addPublicationRoutes(app: Hono<OwnerBindings>) {
   app.all("/api/owner/publication/case-studies", () =>
     privateJson({ error: "invalid_input" }, 405),
   );
+  // Phase 48. `site` reads the public state; `unpublish` withdraws it.
+  for (const action of ["site", "unpublish"] as const) {
+    app.post(`/api/owner/publication/${action}`, async (c) => {
+      try {
+        const command = publicationSiteCommandSchema.parse(
+          await readBody(c.req.raw, 1024),
+        );
+        const site = ownerPublicationSite(c.env.DB, c.get("identity"));
+        if (action === "site")
+          return privateJson(await site.read(command.portfolioId));
+        if (!c.env.PUBLICATION_QUEUE)
+          return privateJson({ error: "publication_unavailable" }, 503);
+        return privateJson(
+          await site.unpublish(command.portfolioId, c.env.PUBLICATION_QUEUE),
+        );
+      } catch (error) {
+        if (error instanceof ZodError)
+          return privateJson({ error: "invalid_input" }, 422);
+        if (error instanceof SaveError)
+          return privateJson({ error: error.code }, error.status);
+        if (error instanceof UnpublishError)
+          return privateJson({ error: error.code }, 409);
+        return privateJson({ error: "publication_unavailable" }, 503);
+      }
+    });
+    app.all(`/api/owner/publication/${action}`, () =>
+      privateJson({ error: "invalid_input" }, 405),
+    );
+  }
   for (const action of ["start", "status", "commit"] as const) {
     app.post(`/api/owner/publication/${action}`, async (c) => {
       if (!c.env.ASSET_ORIGIN || !c.env.PUBLICATION_QUEUE)

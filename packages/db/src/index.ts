@@ -17,6 +17,7 @@ export * from "./publication-commit";
 export * from "./publication-index";
 export * from "./publication-operation";
 export * from "./publication-tasks";
+export * from "./publication-unpublish";
 export * from "./repositories";
 export * from "./reserved-subdomains";
 export * from "./schema";

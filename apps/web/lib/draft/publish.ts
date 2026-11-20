@@ -1,6 +1,8 @@
 import {
   type PublicationOperation,
+  type PublicationSite,
   publicationOperationSchema,
+  publicationSiteSchema,
 } from "@hasaweb/schema";
 import { z } from "zod";
 import type { DraftController } from "./controller";
@@ -33,15 +35,24 @@ export const publicationMessages: Record<string, string> = {
   withdrawal_pending:
     "Your new version is live, but withdrawn-file cleanup is pending. Retry to finish removal.",
 };
+export const unpublishMessages: Record<string, string> = {
+  not_published:
+    "Your portfolio is not published, so there is nothing to unpublish.",
+  unauthorized: "Sign in again, then retry Unpublish.",
+  owner_changed:
+    "This portfolio belongs to another account. Return to the original account.",
+  publication_unavailable:
+    "Could not unpublish. Your site may still be live. Retry Unpublish.",
+};
 const savedCommand = z.strictObject({
   operationId: z.string().uuid(),
   revision: z.number().int().nonnegative(),
 });
-export async function publicationRequest(
+async function ownerPost(
   controller: DraftController,
-  action: "start" | "status" | "commit",
+  action: string,
   command: object,
-  send: typeof fetch = fetch,
+  send: typeof fetch,
 ) {
   const response = await send(`/api/owner/publication/${action}`, {
     method: "POST",
@@ -73,6 +84,28 @@ export async function publicationRequest(
       error.success ? error.data.error : "publication_unavailable",
     );
   }
+  return body;
+}
+/** Phase 48: reads the public state, or unpublishes after confirmation. */
+export async function siteRequest(
+  controller: DraftController,
+  action: "site" | "unpublish",
+  send: typeof fetch = fetch,
+): Promise<PublicationSite> {
+  const site = publicationSiteSchema.parse(
+    await ownerPost(controller, action, {}, send),
+  );
+  if (site.portfolioId !== controller.identity.portfolioId)
+    throw new DraftFailure("owner_changed");
+  return site;
+}
+export async function publicationRequest(
+  controller: DraftController,
+  action: "start" | "status" | "commit",
+  command: object,
+  send: typeof fetch = fetch,
+) {
+  const body = await ownerPost(controller, action, command, send);
   if (body === null) return null;
   const result = publicationOperationSchema.parse(body);
   if (result.portfolioId !== controller.identity.portfolioId)
