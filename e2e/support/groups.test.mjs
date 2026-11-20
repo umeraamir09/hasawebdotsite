@@ -55,16 +55,20 @@ it("fails a stuck group by name and records its evidence", async () => {
     { name: "passes", passed: true, seconds: expect.any(Number) },
   ]);
   await expect(
-    run("hangs", async () => {
+    run("hangs", async (mark) => {
+      mark("waiting forever");
       errors.push("late page error");
       await new Promise(() => {});
     }),
-  ).rejects.toThrow("fixture group exceeded 0.05s: hangs");
+  ).rejects.toThrow(
+    "fixture group exceeded 0.05s: hangs (at step: waiting forever)",
+  );
   const report = JSON.parse(
     await readFile(join(evidence, "fixture-failure-1.json"), "utf8"),
   );
   expect(report).toMatchObject({
     group: "hangs",
+    step: "waiting forever",
     pageErrors: ["late page error"],
   });
   expect(checks).toHaveLength(1);
