@@ -13,16 +13,13 @@ concurrency:
   # Pushes to main always finish so every merge has a result.
   group: ci-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-# Jobs run on GitHub-hosted runners unless the repository variable CI_RUNNER
-# names a runner label (`self-hosted` sends every job to the owner's machine;
-# see README). Each self-hosted runner takes one job at a time.
 env:
   NEXT_TELEMETRY_DISABLED: "1"
   WRANGLER_SEND_METRICS: "false"
   TURBO_TELEMETRY_DISABLED: "1"
 jobs:
   changes:
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       code: ${{ steps.diff.outputs.code }}
@@ -43,84 +40,45 @@ jobs:
           else
             echo "code=false" >> "$GITHUB_OUTPUT"
           fi
-      # The e2e jobs: every project, in seven parallel groups on GitHub-hosted
-      # runners and in one two-worker job on a self-hosted runner.
+      # The e2e jobs: every project, in seven parallel groups.
       - id: plan
         run: node scripts/ci-plan.mjs
 
   check:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # On a self-hosted runner, per runner, so two runners on one machine
-        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
-        with:
-          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          # A self-hosted runner keeps its pnpm store on disk.
-          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
-      # new empty folder; a self-hosted runner reuses the machine's store.
-      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
-      # A self-hosted runner keeps the Turbo cache on its own disk, capped by
-      # the prune step, instead of round-tripping it through GitHub's cache.
-      # Each runner on a machine has its own, so concurrent jobs never share one.
-      - if: vars.CI_RUNNER
-        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo-$RUNNER_NAME" >> "$GITHUB_ENV"
-      - if: ${{ !vars.CI_RUNNER }}
-        uses: actions/cache@v4
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/cache@v4
         with:
           path: .turbo/cache
           key: turbo-check-${{ github.sha }}
           restore-keys: turbo-check-
       - run: pnpm check
-      # Drops entries unused for a week, then the least recently used ones
-      # until the cache is under 2 GB.
-      - if: always() && vars.CI_RUNNER
-        run: |
-          dir="$TURBO_CACHE_DIR"
-          [ -d "$dir" ] || exit 0
-          find "$dir" -type f -atime +7 -delete
-          find "$dir" -type f -printf '%A@ %s %p\n' | sort -n |
-            awk -v cap=$((2 * 1024 * 1024 * 1024)) '{ total += $2; line[NR] = $0 }
-              END { for (i = 1; i <= NR && total > cap; i++) { split(line[i], f, " "); print f[3]; total -= f[2] } }' |
-            xargs -r rm -f
-          du -sh "$dir"
 
   build:
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # On a self-hosted runner, per runner, so two runners on one machine
-        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
-        with:
-          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          # A self-hosted runner keeps its pnpm store on disk.
-          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
-      # new empty folder; a self-hosted runner reuses the machine's store.
-      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
-      # A self-hosted runner keeps the Turbo cache on its own disk, capped by
-      # the prune step, instead of round-tripping it through GitHub's cache.
-      # Each runner on a machine has its own, so concurrent jobs never share one.
-      - if: vars.CI_RUNNER
-        run: echo "TURBO_CACHE_DIR=$HOME/.cache/hasaweb-ci/turbo-$RUNNER_NAME" >> "$GITHUB_ENV"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       # Turbo replays unchanged package builds; Next reuses its compiler cache.
-      - if: ${{ !vars.CI_RUNNER }}
-        uses: actions/cache@v4
+      - uses: actions/cache@v4
         with:
           path: |
             .turbo/cache
@@ -128,18 +86,6 @@ jobs:
           key: turbo-build-${{ github.sha }}
           restore-keys: turbo-build-
       - run: pnpm build
-      # Drops entries unused for a week, then the least recently used ones
-      # until the cache is under 2 GB.
-      - if: always() && vars.CI_RUNNER
-        run: |
-          dir="$TURBO_CACHE_DIR"
-          [ -d "$dir" ] || exit 0
-          find "$dir" -type f -atime +7 -delete
-          find "$dir" -type f -printf '%A@ %s %p\n' | sort -n |
-            awk -v cap=$((2 * 1024 * 1024 * 1024)) '{ total += $2; line[NR] = $0 }
-              END { for (i = 1; i <= NR && total > cap; i++) { split(line[i], f, " "); print f[3]; total -= f[2] } }' |
-            xargs -r rm -f
-          du -sh "$dir"
       # E2E jobs run these built Workers instead of rebuilding.
       - uses: actions/upload-artifact@v4
         with:
@@ -154,37 +100,25 @@ jobs:
 
   e2e:
     needs: [changes, build]
-    # On self-hosted machines only runners labelled `e2e` take this job, so
-    # one machine never runs two full e2e jobs at once (two of them exhausted
-    # the owner's memory). Other jobs still use every runner.
-    runs-on: ${{ vars.CI_RUNNER && fromJSON('["self-hosted", "e2e"]') || 'ubuntu-latest' }}
-    # The self-hosted plan is one job with every project. A missing or invalid
-    # plan fails this job, and with it the `ci` check.
-    timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
+    runs-on: ubuntu-latest
+    # A missing or invalid plan fails this job, and with it the `ci` check.
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         include: ${{ fromJSON(needs.changes.outputs.matrix) }}
     name: e2e (${{ matrix.name }})
     env:
-      # Hosted runners have two cores: one runtime and browser at a time. The
-      # self-hosted machine has four, so its single job runs two.
-      E2E_WORKERS: ${{ matrix.workers }}
+      # Hosted runners have two cores: one runtime and browser at a time.
+      E2E_WORKERS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        # On a self-hosted runner, per runner, so two runners on one machine
-        # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
-        with:
-          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          # A self-hosted runner keeps its pnpm store on disk.
-          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
-      # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
-      # new empty folder; a self-hosted runner reuses the machine's store.
-      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
           name: builds
@@ -206,7 +140,7 @@ jobs:
   ci:
     if: always()
     needs: [changes, check, build, e2e]
-    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
       - env:
