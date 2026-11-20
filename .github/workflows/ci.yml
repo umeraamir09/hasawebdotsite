@@ -154,13 +154,12 @@ jobs:
 
   e2e:
     needs: [changes, build]
-    # On self-hosted machines only runners labelled `e2e` take this job, so
-    # one machine never runs two full e2e jobs at once (two of them exhausted
-    # the owner's memory). Other jobs still use every runner.
-    runs-on: ${{ vars.CI_RUNNER && fromJSON('["self-hosted", "e2e"]') || 'ubuntu-latest' }}
-    # The self-hosted plan is one job with every project. A missing or invalid
-    # plan fails this job, and with it the `ci` check.
-    timeout-minutes: ${{ vars.CI_RUNNER && 60 || 15 }}
+    # The plan from `changes` picks the runner, timeout and caching, not
+    # vars.CI_RUNNER: a queued job reads `vars` when it starts, so a variable
+    # changed mid-run would mismatch the plan (see scripts/ci-plan.mjs). A
+    # missing or invalid plan fails this job, and with it the `ci` check.
+    runs-on: ${{ matrix.runsOn }}
+    timeout-minutes: ${{ matrix.timeout }}
     strategy:
       fail-fast: false
       matrix:
@@ -176,15 +175,15 @@ jobs:
         # On a self-hosted runner, per runner, so two runners on one machine
         # never replace each other's pnpm (the default is a shared ~/setup-pnpm).
         with:
-          dest: ${{ vars.CI_RUNNER && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
+          dest: ${{ matrix.selfHosted && format('{0}/setup-pnpm', runner.temp) || '~/setup-pnpm' }}
       - uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
           # A self-hosted runner keeps its pnpm store on disk.
-          cache: ${{ !vars.CI_RUNNER && 'pnpm' || '' }}
+          cache: ${{ !matrix.selfHosted && 'pnpm' || '' }}
       # pnpm/action-setup's PNPM_HOME would otherwise move the store into a
       # new empty folder; a self-hosted runner reuses the machine's store.
-      - run: pnpm install --frozen-lockfile ${{ vars.CI_RUNNER && '--store-dir ~/.local/share/pnpm/store' || '' }}
+      - run: pnpm install --frozen-lockfile ${{ matrix.selfHosted && '--store-dir ~/.local/share/pnpm/store' || '' }}
       - uses: actions/download-artifact@v4
         with:
           name: builds
