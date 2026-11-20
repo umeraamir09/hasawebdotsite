@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addLink } from "./links.mjs";
 
 export async function checkSocialLinks({
   getPage,
@@ -147,9 +148,7 @@ export async function checkSocialLinks({
             ),
           ].length === 2,
       );
-      await control()
-        .getByRole("button", { name: "Add link", exact: true })
-        .click();
+      await addLink(control());
       const second = entries().nth(1);
       await second.getByLabel("Link label", { exact: true }).fill("Say hello");
       await second
