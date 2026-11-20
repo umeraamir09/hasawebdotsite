@@ -62,9 +62,9 @@ it("leaves a large affected set to CI unless projects are requested", () => {
   ).toThrow("Unknown e2e project: nope");
 });
 
-it("plans the same seven hosted e2e jobs as CI always ran", async () => {
+it("plans every e2e project in seven parallel CI jobs", async () => {
   const { ciMatrix } = await import("./ci-plan.mjs");
-  expect(ciMatrix({ selfHosted: false })).toEqual(
+  expect(ciMatrix()).toEqual(
     [
       ["editor 1/3", "--project=editor --shard=1/3"],
       ["editor 2/3", "--project=editor --shard=2/3"],
@@ -73,27 +73,6 @@ it("plans the same seven hosted e2e jobs as CI always ran", async () => {
       ["uploads and auth", "--project=uploads --project=auth"],
       ["renderer and runtime", "--project=renderer --project=runtime"],
       ["publication and api", "--project=publication --project=api"],
-    ].map(([name, args]) => ({
-      name,
-      args,
-      workers: "1",
-      runsOn: "ubuntu-latest",
-      timeout: 15,
-      selfHosted: false,
-    })),
+    ].map(([name, args]) => ({ name, args })),
   );
-});
-
-it("plans every project in one two-worker job on a self-hosted runner", async () => {
-  const { ciMatrix } = await import("./ci-plan.mjs");
-  expect(ciMatrix({ selfHosted: true })).toEqual([
-    {
-      name: "all projects",
-      args: projects.map((name) => `--project=${name}`).join(" "),
-      workers: "2",
-      runsOn: ["self-hosted", "e2e"],
-      timeout: 60,
-      selfHosted: true,
-    },
-  ]);
 });
