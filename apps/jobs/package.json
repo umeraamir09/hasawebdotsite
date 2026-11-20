@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "node scripts/extract-satori-wasm.mjs && node ../../scripts/build-publication-platform.mjs && wrangler deploy --dry-run --outdir dist",
+    "postinstall": "node scripts/extract-satori-wasm.mjs",
+    "build": "node ../../scripts/build-publication-platform.mjs && wrangler deploy --dry-run --outdir dist",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
