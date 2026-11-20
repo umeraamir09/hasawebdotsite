@@ -14,6 +14,7 @@ import {
   type RecoveryCoordinator,
 } from "../lib/draft/recovery-coordinator";
 import type { FieldPath } from "../lib/draft/types";
+import { LINK_RETURN_PARAM, linkReturnNotice } from "../lib/sign-in-methods";
 import { AddressControl } from "./address-control";
 import { AppearanceControls } from "./appearance-controls";
 import { Brand } from "./brand";
@@ -26,6 +27,7 @@ import {
   PublicationCorrection,
 } from "./publication-checklist";
 import { SharingControls } from "./sharing-controls";
+import { SignInMethods } from "./sign-in-methods";
 import "./editor.css";
 
 export function EditorSession(props: {
@@ -92,8 +94,21 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
   const [selection, setSelection] = useState<PreviewSelection>({
     kind: "profile",
   });
+  // Connecting a sign-in method returns to `/editor?account=…`. Show its
+  // outcome in the settings panel and drop the parameters from the URL.
+  const [linkNotice] = useState(() =>
+    typeof location === "undefined" ? null : linkReturnNotice(location.search),
+  );
+  useEffect(() => {
+    if (!linkNotice) return;
+    const url = new URL(location.href);
+    url.searchParams.delete(LINK_RETURN_PARAM);
+    url.searchParams.delete("error");
+    url.searchParams.delete("error_description");
+    history.replaceState(history.state, "", url);
+  }, [linkNotice]);
   const [panel, setPanel] = useState<"content" | "customization" | "sharing">(
-    "content",
+    linkNotice ? "sharing" : "content",
   );
   const [view, setView] = useState<"edit" | "preview">("edit");
   const [correction, setCorrection] = useState<{
@@ -323,7 +338,14 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
           ) : panel === "customization" ? (
             <AppearanceControls controller={controller} disabled={disabled} />
           ) : (
-            <SharingControls controller={controller} disabled={disabled} />
+            <>
+              <SharingControls controller={controller} disabled={disabled} />
+              <SignInMethods
+                controller={controller}
+                disabled={disabled}
+                initialNotice={linkNotice}
+              />
+            </>
           )}
           <DraftRecovery recovery={recovery} />
         </aside>

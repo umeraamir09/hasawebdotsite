@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { type AuthEnvironment, appAuthRequest, authSettings } from "./auth";
+import {
+  type AuthEnvironment,
+  appAuthRequest,
+  authResponse,
+  authSettings,
+} from "./auth";
 import { authErrorMessage } from "./auth-client";
 
 const env: AuthEnvironment = {
@@ -89,8 +94,63 @@ describe("authentication configuration", () => {
     expect(authErrorMessage("user_email_not_found")).toContain(
       "email settings",
     );
+    expect(authErrorMessage("unable_to_link_account")).toContain(
+      "connect it again",
+    );
     expect(
       authErrorMessage("<script>secret-provider-detail</script>"),
     ).not.toContain("script");
+  });
+});
+
+describe("connecting another sign-in provider", () => {
+  const link = (body: unknown) =>
+    authResponse(
+      new Request("https://hasaweb.site/api/auth/link-social", {
+        method: "POST",
+        headers: {
+          Origin: "https://hasaweb.site",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      }),
+      env,
+    );
+  const fixed = {
+    callbackURL: "https://hasaweb.site/editor?account=connected",
+    errorCallbackURL: "https://hasaweb.site/editor?account=not-connected",
+  };
+  it("accepts only a provider with the fixed editor returns", async () => {
+    for (const body of [
+      null,
+      [],
+      { ...fixed },
+      { ...fixed, provider: "apple" },
+      { ...fixed, provider: "github", idToken: { token: "forged" } },
+      { ...fixed, provider: "github", scopes: ["repo"] },
+      { ...fixed, provider: "google", additionalData: { userId: "other" } },
+      { ...fixed, provider: "google", requestSignUp: true },
+    ])
+      expect((await link(body)).status).toBe(400);
+    for (const returns of [
+      {
+        callbackURL: "https://evil.test/editor",
+        errorCallbackURL: fixed.errorCallbackURL,
+      },
+      {
+        callbackURL: "https://hasaweb.site/auth/entry",
+        errorCallbackURL: fixed.errorCallbackURL,
+      },
+      {
+        callbackURL: fixed.callbackURL,
+        errorCallbackURL: "https://hasaweb.site/sign-in?provider=github",
+      },
+      {
+        callbackURL: `${fixed.callbackURL}&next=/x`,
+        errorCallbackURL: fixed.errorCallbackURL,
+      },
+      {},
+    ])
+      expect((await link({ provider: "github", ...returns })).status).toBe(403);
   });
 });

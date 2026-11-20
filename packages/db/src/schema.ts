@@ -69,6 +69,20 @@ export const account = sqliteTable(
     uniqueIndex("account_provider_identity").on(t.providerId, t.accountId),
   ],
 );
+// A sign-in provider the owner disconnected (Phase 47). While a row exists,
+// signing in with that provider never links it again by matching email; only
+// an explicit Connect from settings does, and it removes the row.
+export const disconnectedProvider = sqliteTable(
+  "disconnected_provider",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    providerId: text("provider_id").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.providerId] })],
+);
 export const verification = sqliteTable(
   "verification",
   {

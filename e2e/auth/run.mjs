@@ -10,6 +10,7 @@ import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
 import { freePort } from "../support/ports.mjs";
 import { writeJsonEvidence } from "../support/write-json-evidence.mjs";
 import { checkBrowserCookies } from "./cookie.mjs";
+import { checkConnectedProviders } from "./providers.mjs";
 import { checkPortfolioProvisioning } from "./provisioning.mjs";
 import { checkAuthUi } from "./ui.mjs";
 
@@ -499,8 +500,8 @@ try {
         "sign-up/email",
         "sign-in/email",
         "forget-password",
-        "link-social",
         "unlink-account",
+        "list-accounts",
         "update-user",
         "delete-user",
       ]) {
@@ -641,6 +642,16 @@ try {
     },
   );
   await checkPortfolioProvisioning({ check, login, request, port, origin });
+  await checkConnectedProviders({
+    check,
+    login,
+    request,
+    callback,
+    counts,
+    identity,
+    Jar,
+    origin,
+  });
   await check(
     "Chromium enforces apex-only HTTPS cookies and rejects sibling injection",
     async () => {
