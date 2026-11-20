@@ -73,7 +73,14 @@ it("plans the same seven hosted e2e jobs as CI always ran", async () => {
       ["uploads and auth", "--project=uploads --project=auth"],
       ["renderer and runtime", "--project=renderer --project=runtime"],
       ["publication and api", "--project=publication --project=api"],
-    ].map(([name, args]) => ({ name, args, workers: "1" })),
+    ].map(([name, args]) => ({
+      name,
+      args,
+      workers: "1",
+      runsOn: "ubuntu-latest",
+      timeout: 15,
+      selfHosted: false,
+    })),
   );
 });
 
@@ -84,6 +91,9 @@ it("plans every project in one two-worker job on a self-hosted runner", async ()
       name: "all projects",
       args: projects.map((name) => `--project=${name}`).join(" "),
       workers: "2",
+      runsOn: ["self-hosted", "e2e"],
+      timeout: 60,
+      selfHosted: true,
     },
   ]);
 });
