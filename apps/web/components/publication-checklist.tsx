@@ -5,6 +5,7 @@ import {
   componentRegistry,
   type PublicationIssue,
   type PublicationOperation,
+  type PublicationSite,
   richText,
 } from "@hasaweb/schema";
 import { appearanceCatalog } from "@hasaweb/theme";
@@ -22,6 +23,8 @@ import {
   publicationMessages,
   publicationRequest,
   publishSavedDraft,
+  siteRequest,
+  unpublishMessages,
 } from "../lib/draft/publish";
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
 import { removeEditorComponent } from "../lib/editor/components";
@@ -29,6 +32,7 @@ import { withdrawGraphAccess } from "../lib/editor/github-graph";
 import { ComponentRemovalDialog } from "./component-controls";
 import { DraftTextField } from "./draft-text-field";
 import { ResumeUpload } from "./resume-controls";
+import { UnpublishControl } from "./unpublish-control";
 
 export function PublicationChecklist({
   controller,
@@ -49,8 +53,16 @@ export function PublicationChecklist({
   const [error, setError] = useState("");
   const [operation, setOperation] = useState<PublicationOperation | null>(null);
   const [copied, setCopied] = useState(false);
+  const [site, setSite] = useState<PublicationSite | null>(null);
   const publishing = useRef<AbortController | null>(null);
   const alive = useRef(true);
+  const refreshSite = () =>
+    siteRequest(controller, "site")
+      .then((next) => {
+        if (alive.current) setSite(next);
+      })
+      .catch(() => {});
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshSite reads only controller and refs
   useEffect(() => {
     alive.current = true;
     void publicationRequest(controller, "status", {})
@@ -58,6 +70,7 @@ export function PublicationChecklist({
         if (alive.current && !publishing.current) setOperation(current);
       })
       .catch(() => {});
+    void refreshSite();
     return () => {
       alive.current = false;
       publishing.current?.abort();
@@ -111,6 +124,7 @@ export function PublicationChecklist({
             ) {
               notified = true;
               onPublished?.();
+              void refreshSite();
             }
           }
         },
@@ -121,6 +135,7 @@ export function PublicationChecklist({
       else {
         setOperation(next.operation);
         if (!notified) onPublished?.();
+        void refreshSite();
       }
     } catch (cause) {
       if (alive.current)
@@ -138,6 +153,37 @@ export function PublicationChecklist({
       if (alive.current) setBusy(false);
     }
   }
+  async function unpublish() {
+    setError("");
+    try {
+      const next = await siteRequest(controller, "unpublish");
+      if (alive.current) {
+        setSite(next);
+        setCopied(false);
+      }
+      return null;
+    } catch (cause) {
+      return (
+        unpublishMessages[
+          cause instanceof DraftFailure || cause instanceof PublishFailure
+            ? cause.code
+            : "publication_unavailable"
+        ] ??
+        unpublishMessages.publication_unavailable ??
+        "Retry Unpublish."
+      );
+    }
+  }
+  const live =
+    site?.status === "published" ||
+    (site?.status !== "unpublished" &&
+      (operation?.stage === "published" || operation?.stage === "withdrawing"));
+  const liveUrl =
+    site?.status === "published" && site.url
+      ? site.url
+      : operation && "url" in operation
+        ? operation.url
+        : null;
   const stageLabel = {
     admitting: "Saving publication request...",
     preparing: "Preparing your saved content...",
@@ -182,7 +228,10 @@ export function PublicationChecklist({
       </button>
       {error && <p role="alert">{error}</p>}
       <div role="status" aria-live="polite">
-        {operation && <p>{stageLabel[operation.stage]}</p>}
+        {operation &&
+          !(
+            site?.status === "unpublished" && operation.stage === "published"
+          ) && <p>{stageLabel[operation.stage]}</p>}
         {current && !current.issues.length && !current.hasMoreIssues && (
           <p>Saved draft passed the checklist. You can publish it now.</p>
         )}
@@ -193,32 +242,37 @@ export function PublicationChecklist({
           <p>More issues remain. Fix the listed items and check again.</p>
         )}
       </div>
-      {operation &&
-        (operation.stage === "published" ||
-          operation.stage === "withdrawing") && (
-          <div className="publication-url">
-            <p>Published portfolio</p>
-            <a href={operation.url} target="_blank" rel="noopener noreferrer">
-              Open published portfolio
-            </a>
-            <button
-              type="button"
-              onClick={() => {
-                void navigator.clipboard
-                  .writeText(operation.url)
-                  .then(() => setCopied(true))
-                  .catch(() =>
-                    setError(
-                      "Could not copy the URL. Select and copy the address below.",
-                    ),
-                  );
-              }}
-            >
-              {copied ? "Copied" : "Copy public URL"}
-            </button>
-            <p>{operation.url}</p>
-          </div>
-        )}
+      {live && liveUrl && (
+        <div className="publication-url">
+          <p>Published portfolio</p>
+          <a href={liveUrl} target="_blank" rel="noopener noreferrer">
+            Open published portfolio
+          </a>
+          <button
+            type="button"
+            onClick={() => {
+              void navigator.clipboard
+                .writeText(liveUrl)
+                .then(() => setCopied(true))
+                .catch(() =>
+                  setError(
+                    "Could not copy the URL. Select and copy the address below.",
+                  ),
+                );
+            }}
+          >
+            {copied ? "Copied" : "Copy public URL"}
+          </button>
+          <p>{liveUrl}</p>
+        </div>
+      )}
+      {site && (
+        <UnpublishControl
+          site={site}
+          disabled={disabled || busy}
+          onUnpublish={unpublish}
+        />
+      )}
       {Object.values(state.inputs).length > 0 && (
         <ul>
           {Object.values(state.inputs).map((input) => {

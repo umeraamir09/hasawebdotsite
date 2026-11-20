@@ -774,3 +774,25 @@ export const publicationOperation = sqliteTable(
     ),
   ],
 );
+
+// Phase 48. One durable cleanup per unpublish: deletes every public object of
+// versions up to `version`, purges, then verifies absence (S-9).
+export const publicationWithdrawal = sqliteTable(
+  "publication_withdrawal",
+  {
+    id: text("id").primaryKey(),
+    portfolioId: portfolioId(),
+    address: text("address").notNull(),
+    version: integer("version").notNull(),
+    cursor: text("cursor").notNull().default(""),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at").notNull().default(0),
+    completedAt: integer("completed_at"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    index("publication_withdrawal_portfolio").on(t.portfolioId, t.createdAt),
+    index("publication_withdrawal_due").on(t.completedAt, t.nextAttemptAt),
+    check("publication_withdrawal_version", sql`${t.version} > 0`),
+  ],
+);

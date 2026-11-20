@@ -51,3 +51,18 @@ export const publicationOperationSchema = z.discriminatedUnion("stage", [
   }),
 ]);
 export type PublicationOperation = z.infer<typeof publicationOperationSchema>;
+
+// Phase 48. The portfolio's public state, independent of the latest
+// publication operation: `unpublished` keeps the claimed address and draft.
+export const publicationSiteCommandSchema = z.strictObject({
+  portfolioId: z.string().min(1),
+});
+export const publicationSiteSchema = z.strictObject({
+  portfolioId: z.string(),
+  status: z.enum(["draft", "published", "unpublished", "suspended"]),
+  url: z.string().url().nullable(),
+  // Unpublish cleanup (public object deletion, purge, absence checks) that
+  // has not finished. Public access already ended when status changed.
+  withdrawal: z.strictObject({ retrying: z.boolean() }).nullable(),
+});
+export type PublicationSite = z.infer<typeof publicationSiteSchema>;

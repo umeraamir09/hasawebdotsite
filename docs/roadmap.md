@@ -71,7 +71,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 
 - Dependencies: 25–26 and the withdrawal cache policy. Integrate before completion: 38, 40–41, 44.
 - Remove access to the portfolio, case studies, resume, live endpoints and public assets; keep the private draft and address claim; purge caches.
-- [ ] Complete when old page and asset URLs no longer expose content, no other account can claim the address, and republishing restores the portfolio at that address.
+- [x] Complete when old page and asset URLs no longer expose content, no other account can claim the address, and republishing restores the portfolio at that address.
+  - `POST /api/owner/publication/unpublish` and `/site`, the durable `publication_withdrawal` cleanup (migration `0020`) and the editor's Unpublish control with confirmation. Deployed CDN absence after purge is still verified in 52 (S-9).
 
 ### Phase 49. Add permanent account deletion
 

@@ -954,21 +954,158 @@ try {
           2,
         );
       } else if (preparedForCommit.length === 3) {
-        await sql(
-          "UPDATE portfolio SET status='unpublished' WHERE id='s8-portfolio'",
-        );
-        assert.equal((await visitor(publicUrl)).status, 404);
+        // Phase 48: the owner's Unpublish ends every public route at once,
+        // keeps the claim and draft, and its cleanup deletes public objects.
         const first = preparedForCommit[0];
         const oldAsset = first.manifest.files.find((file) =>
           file.path.startsWith("/assets/"),
         );
+        const oldAssetUrl = `https://s8-assets.invalid/candidate/${first.id}${oldAsset.path}`;
+        const live = preparedForCommit[1];
+        const liveAssets = live.manifest.files
+          .filter((file) => file.path.startsWith("/assets/"))
+          .map(
+            (file) =>
+              `https://s8-assets.invalid/candidate/${live.id}${file.path}`,
+          );
+        const livePages = live.manifest.files
+          .filter(
+            (file) =>
+              // Private files such as snapshot.json have no visitor route.
+              file.path.startsWith("/") &&
+              !file.path.startsWith("/assets/") &&
+              !file.path.startsWith("/platform/") &&
+              !file.path.startsWith("/portfolio-platform/"),
+          )
+          .map((file) => `https://s8-fixture.hasaweb.site${file.path}`);
+        assert.ok(
+          livePages.includes("https://s8-fixture.hasaweb.site/resume"),
+          JSON.stringify(livePages),
+        );
+        assert.ok(
+          livePages.some((url) => url.includes("/projects/")),
+          JSON.stringify(livePages),
+        );
+        for (const url of [
+          publicUrl,
+          ...livePages.filter((url) => !url.endsWith("/404")),
+          ...liveAssets,
+        ])
+          assert.equal((await visitor(url)).status, 200, url);
+        const draftBefore = (
+          await sql(
+            "SELECT draft,draft_rev FROM portfolio WHERE id='s8-portfolio'",
+          )
+        ).results[0];
+        const unpublishResponse = await request("/unpublish", {
+          method: "POST",
+        });
+        const unpublished = await unpublishResponse.json();
+        assert.equal(
+          unpublishResponse.status,
+          200,
+          JSON.stringify(unpublished),
+        );
+        assert.deepEqual(unpublished.value.site, {
+          portfolioId: "s8-portfolio",
+          status: "unpublished",
+          url: "https://s8-fixture.hasaweb.site",
+          withdrawal: { retrying: false },
+        });
+        const withdrawalId = unpublished.value.woken[0].withdrawalId;
+        // A repeated request is the same unpublish, not a second cleanup.
+        const repeated = await (
+          await request("/unpublish", { method: "POST" })
+        ).json();
+        assert.equal(repeated.value.woken[0].withdrawalId, withdrawalId);
         assert.equal(
           (
-            await visitor(
-              `https://s8-assets.invalid/candidate/${first.id}${oldAsset.path}`,
+            await sql(
+              "SELECT count(*) AS n FROM publication_withdrawal WHERE portfolio_id='s8-portfolio'",
             )
-          ).status,
-          404,
+          ).results[0].n,
+          1,
+        );
+        for (const url of [
+          publicUrl,
+          ...livePages,
+          ...liveAssets,
+          ...liveAssets.map((url) => `${url}?variant=warm`),
+          ...liveAssets.map((url) => `${url}/view`),
+          oldAssetUrl,
+          "https://s8-fixture.hasaweb.site/_/github.json",
+          "https://s8-fixture.hasaweb.site/_/contact",
+        ]) {
+          const response = await visitor(url);
+          assert.equal(response.status, 404, url);
+          assert.match(response.headers.get("Cache-Control"), /no-store/, url);
+          assert.ok(!(await response.text()).includes("Case study"), url);
+        }
+        const kept = (
+          await sql(
+            "SELECT p.status,p.subdomain,p.published_version,p.draft,p.draft_rev,c.state FROM portfolio p JOIN subdomain_claim c ON c.portfolio_id=p.id WHERE p.id='s8-portfolio'",
+          )
+        ).results[0];
+        assert.deepEqual(
+          {
+            status: kept.status,
+            subdomain: kept.subdomain,
+            version: kept.published_version,
+            state: kept.state,
+            draft: kept.draft,
+            rev: kept.draft_rev,
+          },
+          {
+            status: "unpublished",
+            subdomain: "s8-fixture",
+            version: 2,
+            state: "claimed",
+            draft: draftBefore.draft,
+            rev: draftBefore.draft_rev,
+          },
+        );
+        // No other portfolio can take the withdrawn address.
+        await assert.rejects(
+          sql(
+            "INSERT INTO subdomain_claim(name,state,held_at) VALUES('s8-fixture','held',?)",
+            [Date.now()],
+          ),
+        );
+        await assert.rejects(
+          sql("DELETE FROM subdomain_claim WHERE name='s8-fixture'"),
+        );
+        const publicObjects = async () => {
+          let count = 0;
+          for (const candidate of preparedForCommit.slice(0, 2))
+            count += (await api(`/objects?id=${candidate.id}`)).value.assets
+              .objects.length;
+          return count;
+        };
+        assert.ok((await publicObjects()) > 0);
+        for (let n = 0; n < 100; n++) {
+          await api(`/withdraw-unpublished?id=${withdrawalId}`);
+          if (
+            (
+              await sql(
+                "SELECT completed_at FROM publication_withdrawal WHERE id=?",
+                [withdrawalId],
+              )
+            ).results[0].completed_at
+          )
+            break;
+        }
+        assert.ok(
+          (
+            await sql(
+              "SELECT completed_at FROM publication_withdrawal WHERE id=?",
+              [withdrawalId],
+            )
+          ).results[0].completed_at,
+        );
+        assert.equal(await publicObjects(), 0);
+        // Private page output stays for the retained versions; nothing serves it.
+        assert.ok(
+          (await api(`/objects?id=${live.id}`)).value.sites.objects.length > 0,
         );
         const committed = await commitPublication(
           command(preparedForCommit[2], 2, "unpublished"),
