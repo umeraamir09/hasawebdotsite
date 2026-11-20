@@ -36,6 +36,27 @@ it("purges every query key by host without treating acceptance as observed absen
   expect(send.mock.calls[1]?.[1]?.headers).toBeUndefined();
   expect(send.mock.calls[1]?.[1]?.cache).toBeUndefined();
 });
+it("purges without following redirects and treats a redirect as a failed purge", async () => {
+  const send = vi.fn<typeof fetch>(
+    async () =>
+      new Response(null, {
+        status: 302,
+        headers: { Location: "https://example.com/elsewhere" },
+      }),
+  );
+  await expect(
+    purgePublicationHosts(
+      {
+        CLOUDFLARE_ZONE_ID: "0".repeat(32),
+        CLOUDFLARE_CACHE_PURGE_TOKEN: "fixture-only",
+        CACHE_HTTP: { fetch: send },
+      },
+      ["owner.hasaweb.site"],
+    ),
+  ).rejects.toThrow("Cache purge rejected");
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(send.mock.calls[0]?.[1]?.redirect).toBe("manual");
+});
 it("requires no-store absence and the current page hash without following redirects", async () => {
   const send = vi.fn<typeof fetch>(
     async () =>
