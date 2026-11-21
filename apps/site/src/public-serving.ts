@@ -33,7 +33,6 @@ const RESERVED = new Set([
   "support",
   "static",
   "cdn",
-  "example",
   "demo",
 ]);
 const LABEL = /^[a-z0-9](?:[a-z0-9-]{1,28})[a-z0-9]$/;
