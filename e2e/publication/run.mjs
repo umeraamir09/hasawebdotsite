@@ -104,6 +104,148 @@ function visitor(url, options = {}) {
     body: JSON.stringify({ url, ...options }),
   });
 }
+// Phase 49: deleting the account ends public access at once and keeps the
+// published address only as an ownerless claim. Its cleanup removes every
+// candidate's output, the private uploads and the account rows, waits for
+// recent upload activity, and outlives the owner until the end.
+async function checkAccountDeletion() {
+  const live = preparedForCommit[2];
+  const publicUrls = [
+    "https://s8-fixture.hasaweb.site/",
+    "https://s8-fixture.hasaweb.site/resume",
+    "https://s8-fixture.hasaweb.site/sitemap.xml",
+    "https://s8-fixture.hasaweb.site/_/github.json",
+    "https://s8-fixture.hasaweb.site/_/contact",
+    ...live.manifest.files
+      .filter((file) => file.path.startsWith("/assets/"))
+      .map(
+        (file) => `https://s8-assets.invalid/candidate/${live.id}${file.path}`,
+      ),
+  ];
+  assert.equal((await visitor(publicUrls[0])).status, 200);
+  const candidates = (
+    await sql(
+      "SELECT id FROM publication_candidate WHERE portfolio_id='s8-portfolio'",
+    )
+  ).results.map((row) => row.id);
+  assert.ok(candidates.length >= 3, JSON.stringify(candidates));
+  const drafts = async () => (await api("/draft-objects")).length;
+  const objects = async () => {
+    let count = 0;
+    for (const candidate of candidates) {
+      const found = (await api(`/objects?id=${candidate}`)).value;
+      count += found.sites.objects.length + found.assets.objects.length;
+    }
+    return count;
+  };
+  assert.ok((await objects()) > 0);
+  assert.ok((await drafts()) > 0);
+  const deleted = await api("/delete-account", {});
+  const deletionId = deleted.value.deletionId;
+  assert.match(deletionId, /^[0-9a-f-]{36}$/);
+  // The session is gone, so the same cookie cannot repeat or undo it.
+  const repeated = await request("/delete-account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  });
+  assert.equal(repeated.status, 401);
+  for (const url of publicUrls) {
+    const response = await visitor(url);
+    assert.equal(response.status, 404, url);
+    assert.match(response.headers.get("Cache-Control"), /no-store/, url);
+  }
+  assert.deepEqual(
+    (
+      await sql(
+        "SELECT portfolio_id,state FROM subdomain_claim WHERE name='s8-fixture'",
+      )
+    ).results,
+    [{ portfolio_id: null, state: "claimed" }],
+  );
+  assert.equal(
+    (await sql("SELECT count(*) AS n FROM session WHERE user_id='s8-owner'"))
+      .results[0].n,
+    0,
+  );
+  // Recent upload activity holds back removal of the private prefix.
+  await sql(
+    "UPDATE asset SET updated_at=? WHERE id=(SELECT id FROM asset WHERE portfolio_id='s8-portfolio' LIMIT 1)",
+    [Date.now()],
+  );
+  const stages = [];
+  let waitedForUploads = false;
+  for (let n = 0; n < 500; n++) {
+    const before = (
+      await sql("SELECT stage FROM account_deletion WHERE id=?", [deletionId])
+    ).results[0]?.stage;
+    if (before && stages.at(-1) !== before) stages.push(before);
+    const step = (await api(`/run-deletion?id=${deletionId}`)).value;
+    if (step.stage === "done") break;
+    for (const wake of step.woken)
+      if (wake.candidateId)
+        for (let m = 0; m < 50; m++) {
+          const batch = await api(`/advance?id=${wake.candidateId}`);
+          if (!batch.value.claimed || batch.value.status === "cleaned") break;
+        }
+    if (step.stage === false) {
+      if (before === "draft" && !waitedForUploads) {
+        waitedForUploads = true;
+        assert.ok((await drafts()) > 0);
+        await sql(
+          "UPDATE asset SET created_at=created_at-600000,updated_at=updated_at-600000 WHERE portfolio_id='s8-portfolio'",
+        );
+      }
+      // Skip the five-second wait the queue delay would provide.
+      await sql("UPDATE account_deletion SET next_attempt_at=0 WHERE id=?", [
+        deletionId,
+      ]);
+    }
+    assert.ok(n < 499, JSON.stringify(stages.slice(-20)));
+  }
+  assert.ok(waitedForUploads, JSON.stringify(stages));
+  for (const stage of [
+    "public",
+    "purge",
+    "verify",
+    "candidates",
+    "draft",
+    "rows",
+    "final",
+  ])
+    assert.ok(stages.includes(stage), stage);
+  assert.equal(await objects(), 0);
+  assert.equal(await drafts(), 0);
+  for (const query of [
+    "SELECT count(*) AS n FROM user WHERE id='s8-owner'",
+    "SELECT count(*) AS n FROM portfolio WHERE id='s8-portfolio'",
+    "SELECT count(*) AS n FROM asset WHERE portfolio_id='s8-portfolio'",
+    "SELECT count(*) AS n FROM publish_version WHERE portfolio_id='s8-portfolio'",
+    "SELECT count(*) AS n FROM publication_candidate WHERE portfolio_id='s8-portfolio' OR owner_id='s8-owner'",
+    "SELECT count(*) AS n FROM account_deletion",
+  ])
+    assert.equal((await sql(query)).results[0].n, 0, query);
+  // The published name stays permanently unavailable to every account.
+  assert.deepEqual(
+    (
+      await sql(
+        "SELECT portfolio_id,state FROM subdomain_claim WHERE name='s8-fixture'",
+      )
+    ).results,
+    [{ portfolio_id: null, state: "claimed" }],
+  );
+  await assert.rejects(
+    sql(
+      "INSERT INTO subdomain_claim(name,state,held_at) VALUES('s8-fixture','held',?)",
+      [Date.now()],
+    ),
+  );
+  for (const url of publicUrls)
+    assert.equal((await visitor(url)).status, 404, url);
+  checks.push(
+    "Account deletion: immediate public and session denial, ownerless published claim, upload quiet wait, complete output, upload and row cleanup",
+  );
+}
 // Phase 46: a served page's <head>, with the sharing tags it advertises.
 async function servedHead(url) {
   const response = await visitor(url);
@@ -1222,6 +1364,7 @@ try {
         if ((await api(`/status?id=${staleId}`)).value.status === "cleaned") break;
       }
       assert.equal((await api(`/status?id=${staleId}`)).value.status, "cleaned");
+      await checkAccountDeletion();
     }
     checks.push("First claim, failure rollback, complete version serving, stale and delayed retries, retained dependencies, privacy, no-store query policy and republish after unpublish");
   } else {

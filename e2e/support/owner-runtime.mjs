@@ -61,6 +61,12 @@ export async function startOwnerRuntime({ directory, evidence }) {
       "expired",
       "deleting",
       "fresh",
+      // Phase 49: owners whose accounts the api check and the editor's
+      // deletion journey delete, each with a second device's session.
+      "leaver",
+      "leaver-other",
+      "closer",
+      "closer-other",
     ].map((id) => [id, randomBytes(24).toString("hex")]),
   );
   const checks = [],
@@ -471,7 +477,7 @@ export async function startOwnerRuntime({ directory, evidence }) {
     idempotent: true,
   });
   for (const id of Object.keys(tokens)) {
-    const owner = id === "alice-other" ? "alice" : id,
+    const owner = id.replace(/-other$/, ""),
       now = Date.now();
     await sql(
       "INSERT OR IGNORE INTO user(id,name,email,email_verified,deleting_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",

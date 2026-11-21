@@ -1200,4 +1200,11 @@ export async function checkDraftApi(runtime, check) {
       await checkContactDelivery({ origin, secrets, sql, email, request });
     },
   );
+  await check(
+    "account deletion ends every session and releases a never-published hold",
+    async () => {
+      const { checkAccountDeletion } = await import("./account-deletion.mjs");
+      await checkAccountDeletion({ origin, secrets, sql, cookie, request });
+    },
+  );
 }
