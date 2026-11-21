@@ -96,6 +96,7 @@ export function sqliteD1(): D1Database & { sqlite: DatabaseSync } {
 /** A Map-backed R2 bucket with the operations the Workers here use. */
 export function memoryBucket() {
   const objects = new Map<string, Uint8Array>();
+  const uploaded = new Map<string, Date>();
   const encode = (value: unknown) =>
     typeof value === "string"
       ? new TextEncoder().encode(value)
@@ -115,8 +116,10 @@ export function memoryBucket() {
   };
   const bucket = {
     objects,
+    uploaded,
     async put(key: string, value: unknown) {
       objects.set(key, encode(value));
+      uploaded.set(key, new Date());
       return object(key);
     },
     async get(key: string) {
@@ -126,23 +129,34 @@ export function memoryBucket() {
       return object(key);
     },
     async delete(keys: string | string[]) {
-      for (const key of Array.isArray(keys) ? keys : [keys])
+      for (const key of Array.isArray(keys) ? keys : [keys]) {
         objects.delete(key);
+        uploaded.delete(key);
+      }
     },
-    async list(options: { prefix?: string; limit?: number } = {}) {
+    async list(
+      options: { prefix?: string; limit?: number; cursor?: string } = {},
+    ) {
       const keys = [...objects.keys()]
         .filter((key) => key.startsWith(options.prefix ?? ""))
         .sort();
-      const page = keys.slice(0, options.limit ?? 1000);
+      const start = Number(options.cursor ?? 0);
+      const end = start + (options.limit ?? 1000);
+      const page = keys.slice(start, end);
       return {
         objects: page.map((key) => ({
           key,
           size: objects.get(key)?.byteLength ?? 0,
+          uploaded: uploaded.get(key) ?? new Date(0),
         })),
-        truncated: page.length < keys.length,
+        truncated: end < keys.length,
+        ...(end < keys.length ? { cursor: String(end) } : {}),
         delimitedPrefixes: [],
       };
     },
   };
-  return bucket as unknown as R2Bucket & { objects: Map<string, Uint8Array> };
+  return bucket as unknown as R2Bucket & {
+    objects: Map<string, Uint8Array>;
+    uploaded: Map<string, Date>;
+  };
 }

@@ -26,19 +26,31 @@ export async function preparePublicationIndex(db: D1Database, row: Candidate) {
     .run();
 }
 
-// A future draft collector must use this guard in addition to draft/live-version
-// reachability. Before indexing, retain the portfolio's assets conservatively.
+/**
+ * Whether a candidate of `portfolio` still needs `asset`, as one SQL
+ * expression over two column or parameter expressions. A sealed source
+ * retains its references before and after indexing, so before indexing it
+ * retains every asset of the portfolio; a version reference keeps the indexed
+ * references after the source is released. The Phase 51 upload collector
+ * applies this together with draft and staging references.
+ */
+export const publicationRetains = (
+  portfolio: string,
+  asset: string,
+) => `EXISTS(SELECT 1 FROM publication_candidate c
+    WHERE c.portfolio_id=${portfolio} AND (c.source IS NOT NULL OR EXISTS(SELECT 1 FROM publish_version v WHERE v.candidate_id=c.id)) AND (
+      NOT EXISTS(SELECT 1 FROM publication_candidate_index x WHERE x.candidate_id=c.id)
+      OR EXISTS(SELECT 1 FROM publication_candidate_index x,json_each(x.value,'$.assets') r
+        WHERE x.candidate_id=c.id AND json_extract(r.value,'$.id')=${asset})))`;
+
 export async function publicationRetainsAsset(
   db: D1Database,
   portfolioId: string,
   assetId: string,
 ) {
-  return !!(await db
-    .prepare(`SELECT 1 AS retained FROM publication_candidate c
-    WHERE c.portfolio_id=? AND (c.source IS NOT NULL OR EXISTS(SELECT 1 FROM publish_version v WHERE v.candidate_id=c.id)) AND (
-      NOT EXISTS(SELECT 1 FROM publication_candidate_index x WHERE x.candidate_id=c.id)
-      OR EXISTS(SELECT 1 FROM publication_candidate_index x,json_each(x.value,'$.assets') r
-        WHERE x.candidate_id=c.id AND json_extract(r.value,'$.id')=?)) LIMIT 1`)
+  const row = await db
+    .prepare(`SELECT ${publicationRetains("?", "?")} AS retained`)
     .bind(portfolioId, assetId)
-    .first());
+    .first<{ retained: number }>();
+  return row?.retained === 1;
 }

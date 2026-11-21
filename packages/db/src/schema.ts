@@ -237,6 +237,8 @@ export const asset = sqliteTable(
   },
   (t) => [
     index("asset_portfolio_idx").on(t.portfolioId),
+    // Phase 51 upload collection scans by state and age.
+    index("asset_collection_idx").on(t.status, t.updatedAt),
     check(
       "asset_kind",
       sql`${t.kind} in ('avatar','banner','face','project','case_study','resume','og')`,
@@ -617,6 +619,14 @@ export const operatorEmailAudit = sqliteTable(
   ],
 );
 
+// Phase 51: resumable positions of bounded maintenance passes (the draft
+// bucket orphan listing). Holds no owner data.
+export const maintenanceCursor = sqliteTable("maintenance_cursor", {
+  name: text("name").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+});
+
 export const schema = {
   user,
   session,
@@ -641,6 +651,7 @@ export const schema = {
   emailReservation,
   emailDispatch,
   operatorEmailAudit,
+  maintenanceCursor,
 };
 
 // Candidate tombstones survive owner deletion until private object cleanup.

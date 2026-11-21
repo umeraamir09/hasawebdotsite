@@ -24,6 +24,7 @@ import {
   sweepGitHubCleanups,
   sweepGitHubRefreshes,
 } from "./github-routes";
+import { runMaintenance } from "./maintenance";
 import { ownerRouter } from "./owner-api";
 import type { PublicationCacheEnv } from "./publication-cache";
 import {
@@ -204,7 +205,7 @@ export default {
       message.ack();
     }
   },
-  async scheduled(_event, env) {
+  async scheduled(event, env) {
     await sweepPublicationTasks(env);
     await sweepPublicationWithdrawals(env);
     await sweepUnpublishWithdrawals(env);
@@ -227,6 +228,8 @@ export default {
         error instanceof Error ? error.name : typeof error,
       ),
     );
+    // Phase 51 garbage collection and the D1 size check (each task bounded).
+    await runMaintenance(env, event.scheduledTime);
     if (env.APP_ENV !== "local") return;
     await env.DB.prepare(
       "INSERT OR REPLACE INTO runtime_probe (key, value) VALUES ('cron', 'complete')",
