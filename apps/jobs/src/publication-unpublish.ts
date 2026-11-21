@@ -5,7 +5,8 @@ import {
 import type { WithdrawalEnv } from "./publication-withdrawal";
 
 /**
- * Phase 48 cleanup after Unpublish. Origin access already ended with the
+ * Phase 48 cleanup after Unpublish, also recorded by an operator suspension
+ * (Phase 51). Origin access already ended with the
  * status change; this deletes every public object of the versions that were
  * public (up to the recorded version), purges both hosts and then verifies
  * absence under the S-9 policy. A later republish writes a new candidate
@@ -81,8 +82,9 @@ export async function withdrawUnpublished(env: WithdrawalEnv, id: string) {
       return true;
     }
     // A republish (or deletion) since then owns the host; its own cleanup
-    // verifies what it serves.
-    if (!local && row.status === "unpublished")
+    // verifies what it serves. Suspension (Phase 51) records the same
+    // withdrawal, so a suspended host is verified too.
+    if (!local && (row.status === "unpublished" || row.status === "suspended"))
       await verifyPublicationUrl(env, `https://${row.address}.hasaweb.site/`, {
         status: 404,
       });
