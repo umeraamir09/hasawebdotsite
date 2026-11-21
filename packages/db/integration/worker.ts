@@ -116,8 +116,37 @@ export default {
         "local seeds contain valid drafts and no sign-in sessions",
         async () => {
           const rows = await db.select().from(schema.portfolio);
-          equal(rows.length, 2);
+          // The two seeded drafts plus migration 0022's internal example.
+          equal(rows.map((row) => row.id).sort(), [
+            "internal-example",
+            "local-example-portfolio",
+            "local-portfolio",
+          ]);
           for (const row of rows) readDraft(row.draft);
+          const example = rows.find((row) => row.id === "internal-example");
+          equal(example?.userId, "internal-example");
+          equal(example?.draft.requestedSubdomain, "example");
+          equal(example?.draftValidationVersion, 2);
+          equal(example?.firstEditorEnteredAt, null);
+          equal(
+            (
+              await db
+                .select()
+                .from(schema.subdomainClaim)
+                .where(eq(schema.subdomainClaim.name, "example"))
+                .get()
+            )?.state,
+            "held",
+          );
+          equal(
+            (
+              await db
+                .select()
+                .from(schema.account)
+                .where(eq(schema.account.userId, "internal-example"))
+            ).length,
+            0,
+          );
           const legacy = rows.find((row) => row.id === "local-portfolio");
           equal(legacy?.draft.schemaVersion, 1);
           equal(legacy?.draft.profile.name, "Migration content");

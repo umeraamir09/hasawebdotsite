@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { watchAccountDeletion } from "../lib/account-deletion";
+import { takeAddressSuggestion } from "../lib/address-suggestion";
 import { signOutOwner } from "../lib/auth-client";
 import { createDraftController } from "../lib/draft/controller";
 import {
@@ -826,6 +827,24 @@ function AddressStep({
   });
   const { value, valid, busy, registry } = address;
   const status = address.status;
+  // A name typed on the entry page fills an empty field once and is checked
+  // like any typed name; only Continue reserves it.
+  const [suggested, setSuggested] = useState<string | null>(null);
+  const change = address.change;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: The suggestion is taken once, against the field as the step first shows it.
+  useEffect(() => {
+    const name = takeAddressSuggestion();
+    if (name && !value) {
+      change(name);
+      setSuggested(name);
+    }
+  }, []);
+  const check = address.check;
+  useEffect(() => {
+    if (suggested === null || suggested !== value) return;
+    setSuggested(null);
+    void check();
+  }, [suggested, value, check]);
   async function submit() {
     if (working || busy || disabled) return;
     if (!valid) {

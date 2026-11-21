@@ -29,6 +29,7 @@ The default appearance comes from the single template and the [approved catalog]
 ## Required setup and navigation
 
 - New signup starts at Address. Required screens offer Continue and applicable Back navigation, with field errors; they offer no skip or editor bypass.
+- A name typed on the entry page before sign-in fills an empty Address field once (same browser tab, sessionStorage) and is checked for availability like a typed name. It is a local edit until Continue reserves it.
 - The profile screen remains one step even though cropping opens a dialog. The Links step requires at least one valid, nonempty profile-displayed link.
 - Address continuation requires valid format, a successful current availability check, and a successful reservation save. Once the name is held, another owner cannot take it, and a later availability change cannot remove a valid reservation. Availability changes do not force a completed owner back through onboarding. First Publish verifies the reservation before converting it to the permanent claim.
 - After required setup, each optional screen offers Skip this step and Skip remaining steps. Skipping an individual screen advances to the next screen; skipping all remaining screens opens Review.

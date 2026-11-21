@@ -20,6 +20,8 @@ Open http://127.0.0.1:8787. `pnpm dev` builds and starts web, site and jobs toge
 
 Local D1/R2 state lives in `.wrangler/state/`. Delete it to reset, then seed again. The seed applies migrations and adds runtime fixtures and two development accounts with empty private drafts (no sessions or credentials).
 
+The entry page's example portfolio is a real portfolio owned by an internal account (migration `0022`). With `pnpm dev` running, `pnpm example:publish` uploads its images, saves its content from `scripts/example-portfolio/content.mjs`, completes its setup handoff and publishes it to `example.hasaweb.site` through the ordinary owner and publication routes, using a short-lived session it deletes afterwards. Rerun it after changing the content. It reads `APP_ORIGIN` and `BETTER_AUTH_SECRET` from `apps/web/.dev.vars`; for production, set both in the environment and pass `--remote --config=<production web config>`.
+
 If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package=pnpm@12.11.2 -- pnpm <command>`.
 
 ### Local setup
@@ -33,7 +35,7 @@ If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package
 
 ### Production configuration (Phase 52)
 
-The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs. Email needs jobs secret `RESEND_API_KEY` and variable `EMAIL_FROM` on the verified `mail.hasaweb.site` domain; without them recipient confirmation reports email unavailable. Contact forms need site secret `TURNSTILE_SECRET` and variable `TURNSTILE_SITE_KEY` from a Turnstile widget for `*.hasaweb.site`; without them published forms report that messages can't be sent.
+The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; `pnpm example:publish` run once after the first deploy so the entry page's example is live; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs. Email needs jobs secret `RESEND_API_KEY` and variable `EMAIL_FROM` on the verified `mail.hasaweb.site` domain; without them recipient confirmation reports email unavailable. Contact forms need site secret `TURNSTILE_SECRET` and variable `TURNSTILE_SITE_KEY` from a Turnstile widget for `*.hasaweb.site`; without them published forms report that messages can't be sent.
 
 ## Checks
 

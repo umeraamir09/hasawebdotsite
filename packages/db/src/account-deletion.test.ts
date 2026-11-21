@@ -151,7 +151,12 @@ describe("requestAccountDeletion", () => {
     expect(one(db, "SELECT deleting_at FROM user WHERE id='alice'")).toEqual({
       deleting_at: null,
     });
-    expect(one(db, "SELECT count(*) AS n FROM subdomain_claim")).toEqual({
+    expect(
+      one(
+        db,
+        "SELECT count(*) AS n FROM subdomain_claim WHERE name='alice-site'",
+      ),
+    ).toEqual({
       n: 1,
     });
     // A second device's session cannot start a second cleanup.

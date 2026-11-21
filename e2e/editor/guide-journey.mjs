@@ -387,6 +387,44 @@ export async function checkGuideJourney({
       .replace(/&amp;/g, "&")
       .replace(/\s+/g, " ");
 
+  // Phase 50: a name typed on the entry page rides through the provider
+  // round trip in the tab's sessionStorage and fills Address once, as an
+  // unchecked local edit. Only Continue reserves it.
+  await guarded(
+    "entry page address suggestion survives sign-in and prefills Address without reserving it",
+    async () => {
+      await reset();
+      const page = await guidePage();
+      await provision(page, "alice");
+      const name = `entry-${suffix()}`;
+      // What Start building stores (apps/web/lib/address-suggestion.ts).
+      await page.evaluate(
+        (name) => sessionStorage.setItem("hasaweb-address-suggestion-v1", name),
+        name,
+      );
+      // The provider returns this tab to the fixed post-auth destination.
+      await page.goto(
+        `${browserOrigin}/__provider/return?${new URLSearchParams({ as: "alice", cb: `${browserOrigin}/auth/entry` })}`,
+      );
+      await waitStep(page, "address");
+      assert.equal(await field(page).inputValue(), name);
+      await addressStatus(page)
+        .filter({ hasText: "Available now" })
+        .waitFor({ timeout: 30000 });
+      assert.deepEqual(await claims(), []);
+      assert.equal((await portfolio()).requested, null);
+      assert.equal(
+        await page.evaluate(() =>
+          sessionStorage.getItem("hasaweb-address-suggestion-v1"),
+        ),
+        null,
+      );
+      await proceed(page);
+      await waitStep(page, "profile");
+      assert.deepEqual(await claims(), [{ name, state: "held" }]);
+    },
+  );
+
   await guarded(
     "new-user journey, GitHub signup, everything completed: saved values equal Review, editor and published output",
     async () => {

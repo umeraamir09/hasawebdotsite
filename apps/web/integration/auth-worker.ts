@@ -49,8 +49,12 @@ export default {
           "disconnected_provider",
         ].map(async (table) => [
           table,
+          // Migration 0022's internal example account is platform data, not
+          // an account these sign-in checks create.
           (
-            await env.DB.prepare(`SELECT COUNT(*) AS n FROM ${table}`).first<{
+            await env.DB.prepare(
+              `SELECT COUNT(*) AS n FROM ${table} WHERE ${table === "user" ? "id" : "user_id"} IS NOT 'internal-example'`,
+            ).first<{
               n: number;
             }>()
           )?.n,

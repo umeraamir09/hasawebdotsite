@@ -941,7 +941,7 @@ export async function checkDraftApi(runtime, check) {
       });
     }
     const counts = await sql(
-      "SELECT (SELECT count(*) FROM subdomain_claim) claims,(SELECT count(*) FROM publish_version) publications,(SELECT count(*) FROM asset) assets,(SELECT count(*) FROM github_connection) github",
+      "SELECT (SELECT count(*) FROM subdomain_claim WHERE portfolio_id IS NOT 'internal-example') claims,(SELECT count(*) FROM publish_version) publications,(SELECT count(*) FROM asset) assets,(SELECT count(*) FROM github_connection) github",
     );
     assert.deepEqual(counts[0], {
       claims: 0,

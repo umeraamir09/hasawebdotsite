@@ -46,7 +46,9 @@ Keeping hot owner APIs out of OpenNext is deliberate: measured OpenNext handlers
 | `*.hasaweb.site` (one label) | `site` |
 | `mail.hasaweb.site` | Resend sending domain |
 
-Platform-reserved names (`www`, `app`, `api`, `assets`, `mail`, `admin`, `status`, `docs`, `blog`, `help`, `support`, `static`, `cdn`, `example`, `demo`, plus a brand deny-list) live in a code constant and the `reserved_subdomain` table. The marketing example portfolio is a real published site owned by an internal account.
+Platform-reserved names (`www`, `app`, `api`, `assets`, `mail`, `admin`, `status`, `docs`, `blog`, `help`, `support`, `static`, `cdn`, `demo`, plus a brand deny-list) live in a code constant and the `reserved_subdomain` table.
+
+The entry page's example portfolio is a real published site at `example.hasaweb.site`, owned by the internal account `internal-example`. Migration `0022` creates that account with no sign-in provider and an `internal-example@hasaweb.invalid` email, so nobody can sign in or be linked to it, and moves `example` from the reserved list to that portfolio's address hold in one step, so no owner can take it. `pnpm example:publish` (`scripts/example-portfolio`) fills and publishes it through the same routes an owner's browser uses: private uploads, revisioned patches, the setup handoff, then publication start, status and commit. Its only operator privilege is inserting a 15-minute session for that account (signed with `BETTER_AUTH_SECRET`), which it deletes when the run ends. The first run claims `example` permanently; later runs republish.
 
 Environments: local development and production only. Staging would need a second domain because Universal SSL covers one wildcard level.
 
