@@ -653,3 +653,75 @@
   font-size: 14px;
   line-height: 1.5;
 }
+
+/* Phase 49, Figma "Delete your account permanently?" (203:2226). */
+.account-deletion {
+  margin-top: 32px;
+  padding-top: 8px;
+  border-top: 1px solid #dde2d8;
+}
+.account-deletion-open,
+.account-deletion-dialog .account-deletion-keep,
+.account-deletion-dialog .account-deletion-confirm {
+  min-height: 48px;
+  padding: 12px 24px;
+  font: inherit;
+  font-weight: 500;
+  border: 1px solid #7a856e;
+  border-radius: 999px;
+  color: #20241e;
+  overflow-wrap: anywhere;
+}
+.account-deletion-open,
+.account-deletion-dialog .account-deletion-confirm {
+  background: #fcfdf9;
+}
+.account-deletion-dialog .account-deletion-keep {
+  background: #bdeb70;
+}
+.account-deletion-dialog .account-deletion-keep,
+.account-deletion-dialog .account-deletion-confirm {
+  width: min(220px, 100%);
+  font-size: 14px;
+  line-height: 20px;
+}
+.account-deletion-dialog {
+  max-width: min(560px, calc(100vw - 36px));
+}
+.account-deletion-title {
+  margin: 0 0 20px;
+  font-size: 24px;
+  line-height: 36px;
+  font-weight: 500;
+}
+.account-deletion-copy {
+  margin: 0 0 12px;
+  color: #596053;
+  font-size: 16px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.account-deletion-loss {
+  margin: 0 0 20px;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: #596053;
+  font-size: 16px;
+  line-height: 24px;
+  overflow-wrap: anywhere;
+}
+.account-deletion-actions {
+  display: grid;
+  gap: 20px;
+  justify-items: start;
+}
+.account-deleted-title {
+  margin: 24px 0 12px;
+  font-size: 32px;
+  font-weight: 500;
+}
+.account-deleted-note {
+  max-width: 560px;
+  line-height: 1.5;
+}

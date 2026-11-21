@@ -1386,12 +1386,14 @@ export function createDraftController(options: Options) {
     if (state().error === "owner_changed")
       throw new DraftFailure("owner_changed");
   }
-  function dispose() {
-    if (disposed) return;
+  // Resolves once the final local checkpoint (and every earlier queued
+  // write) has settled, so account deletion can remove the range after it.
+  function dispose(): Promise<void> {
+    if (disposed) return persistence;
     disposed = true;
     cancelTimer();
     coordinator.close();
-    void persist();
+    return persist();
   }
   return {
     identity: Object.freeze({

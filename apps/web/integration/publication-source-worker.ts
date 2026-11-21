@@ -1,5 +1,6 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { measureDb } from "../../jobs/integration/measure-db";
+import { purgeDeletedDrafts } from "../lib/assets/deleted-drafts";
 import {
   type PublicationSourceEnv,
   publicationSource,
@@ -9,6 +10,8 @@ export class PublicationAssets extends WorkerEntrypoint<
   PublicationSourceEnv & { MEASURE_QUOTAS?: string }
 > {
   async fetch(request: Request) {
+    if (new URL(request.url).pathname === "/account-deletion")
+      return purgeDeletedDrafts(request, this.env);
     if (this.env.MEASURE_QUOTAS !== "true")
       return publicationSource(request, this.env);
     const measurement = measureDb(this.env.DB);
@@ -45,6 +48,13 @@ export default {
       return new Response(null, { status: 404 });
     const url = new URL(request.url);
     if (url.pathname === "/health") return new Response("ok");
+    // Phase 49: what is left under the deleted portfolio's private prefix.
+    if (url.pathname === "/list")
+      return Response.json(
+        (
+          await env.DRAFT_BUCKET.list({ prefix: "draft/s8-portfolio/" })
+        ).objects.map((object) => object.key),
+      );
     const key = url.searchParams.get("key");
     if (!key?.startsWith("draft/s8-portfolio/"))
       return new Response(null, { status: 400 });

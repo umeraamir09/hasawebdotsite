@@ -1,6 +1,7 @@
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { candidateActive, candidateIdSchema } from "@hasaweb/db";
 import { z } from "zod";
+import { purgeDeletedDrafts } from "./deleted-drafts";
 
 export const transferRequestSchema = z.strictObject({
   candidateId: candidateIdSchema,
@@ -89,6 +90,8 @@ export async function publicationSource(
 
 export class PublicationAssets extends WorkerEntrypoint<PublicationSourceEnv> {
   fetch(request: Request) {
-    return publicationSource(request, this.env);
+    return new URL(request.url).pathname === "/account-deletion"
+      ? purgeDeletedDrafts(request, this.env)
+      : publicationSource(request, this.env);
   }
 }

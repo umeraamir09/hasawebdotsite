@@ -13,6 +13,7 @@ import {
   SaveError,
 } from "@hasaweb/db";
 import { Hono } from "hono";
+import { addAccountRoutes } from "./account-deletion";
 import { addContactRoutes, type ContactBindings } from "./contact-routes";
 import { addDraftRoutes } from "./draft-routes";
 import {
@@ -219,6 +220,7 @@ export function createOwnerRouter() {
   addGitHubRoutes(app);
   addContactRoutes(app);
   addProviderRoutes(app);
+  addAccountRoutes(app);
   return app;
 }
 

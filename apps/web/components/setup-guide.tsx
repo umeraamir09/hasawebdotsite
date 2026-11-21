@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
+import { watchAccountDeletion } from "../lib/account-deletion";
 import { signOutOwner } from "../lib/auth-client";
 import { createDraftController } from "../lib/draft/controller";
 import {
@@ -36,6 +37,7 @@ import {
   stepFields,
   stepIndex,
 } from "../lib/guide/steps";
+import { AccountDeleted } from "./account-deletion";
 import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
 import { GuideGitHub } from "./guide-github-step";
@@ -125,6 +127,7 @@ function Session({
   readyCallback.current = onReady;
   const [scope] = useState(owner);
   const [recovery, setRecovery] = useState<RecoveryCoordinator | null>(null);
+  const [deleted, setDeleted] = useState(false);
   useEffect(() => {
     let active = true;
     const options = { ...scope, context: "setup" as const };
@@ -137,11 +140,18 @@ function Session({
       .finally(() => {
         if (active) readyCallback.current?.(coordinator);
       });
+    // Phase 49: another tab deleted this account; stop writing at once.
+    const stopWatching = watchAccountDeletion(scope.ownerId, () => {
+      void coordinator.dispose();
+      setDeleted(true);
+    });
     return () => {
       active = false;
-      coordinator.dispose();
+      stopWatching();
+      void coordinator.dispose();
     };
   }, [scope]);
+  if (deleted) return <AccountDeleted elsewhere />;
   if (!recovery)
     return (
       <main className="setup-guide">

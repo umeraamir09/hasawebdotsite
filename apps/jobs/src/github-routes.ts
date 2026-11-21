@@ -228,7 +228,7 @@ const outcome = (result: Result) => {
   return privateJson({ error: result.error }, failureStatus[result.error]);
 };
 
-function background(c: Context<OwnerBindings>, work: Promise<unknown>) {
+export function background(c: Context<OwnerBindings>, work: Promise<unknown>) {
   try {
     c.executionCtx.waitUntil(work);
   } catch {
