@@ -1492,6 +1492,10 @@ export async function createEditorHarness({
     browserOrigin,
     authority,
     cookie,
+    // The owner runtime itself, for journeys that act as an operator would
+    // (Phase 50 publishes the internal example with a signed session).
+    origin,
+    secrets,
     root,
     github,
     email,

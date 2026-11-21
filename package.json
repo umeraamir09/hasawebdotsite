@@ -19,6 +19,7 @@
     "e2e": "playwright test",
     "verify": "node scripts/verify.mjs",
     "local:seed": "node scripts/seed.mjs",
+    "example:publish": "node scripts/publish-example.mjs",
     "db:migrate:local": "wrangler d1 migrations apply hasaweb-local --local --config apps/web/wrangler.jsonc --persist-to .wrangler/state",
     "db:generate": "pnpm --filter @hasaweb/db generate",
     "generate:avatar": "node apps/web/scripts/regenerate-avatar-safe.mjs",
