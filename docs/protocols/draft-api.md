@@ -59,7 +59,7 @@ Client obligations (enforced in `apps/web/lib/draft`, not by payload shape):
 - Discard journals pin the displayed attempt ID and survive lost abort/cleanup replies.
 - A known newer canonical snapshot is never replaced by an older receipt.
 
-`abort` discards staging. `cleanup` deletes at most 32 piece rows per call, then eligible empty attempts (terminal, expired, or created by a revoked session). Expiry blocks writes immediately but does not delete rows. Do not clean up a committed receipt before recording its revision. Scheduled collection of dormant staging is Phase 51.
+`abort` discards staging. `cleanup` deletes at most 32 piece rows per call, then eligible empty attempts (terminal, expired, or created by a revoked session). Expiry blocks writes immediately but does not delete rows. Do not clean up a committed receipt before recording its revision. The jobs cron also collects dormant staging: attempts expired for a week whose owner has no live session (see [`packages/db`](../../packages/db/README.md#operator-controls-and-cleanup-phase-51)).
 
 ## Legacy validation
 

@@ -95,7 +95,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - Dependencies: 11B, 13, 18, 25–26, 41, 45, 49.
 - Operator scripts (no product UI): suspend/unsuspend, abuse reporting, rerender, purge, outbox inspection, audited email lookup, audit cleanup.
 - Bounded garbage collection: abandoned unreachable uploads (never assets referenced by unfinished setup, partial drafts or sealed candidates, including references not yet in transfer rows); dormant staging attempts (protect active attempts and unreconciled receipts; never release address holds); candidate tombstones. Watch D1 size against a 350 MB alert. Keep GitHub cleanup state until revocation resolves.
-- [ ] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup can neither delete active setup assets nor retain a deleted account's data.
+- [x] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup can neither delete active setup assets nor retain a deleted account's data.
+  - `pnpm ops` operator scripts (suspend reuses the Unpublish withdrawal), cron garbage collection in `apps/jobs/src/maintenance.ts` with upload collection through `PublicationAssets`, migration `0023` and the hourly 350 MB D1 size log. Wiring that log to an alert and running the scripts against production are part of 52.
 
 ### Phase 52. Prepare production delivery and recovery
 

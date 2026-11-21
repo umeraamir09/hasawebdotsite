@@ -32,6 +32,7 @@ const tokens = Object.fromEntries(
     "deleting",
     "missing",
     "portfolio-deleting",
+    "collector",
   ].map((id) => [id, randomBytes(24).toString("hex")]),
 );
 const checks = [];
@@ -704,6 +705,82 @@ try {
       `Failed ${row.id} cleanup state`,
     );
   }
+  // Phase 51. Runs last: collection is global, and it runs 40 days ahead so
+  // every earlier upload is old enough to be eligible.
+  await check(
+    "collection never deletes setup, draft, staged or sealed-candidate uploads",
+    async () => {
+      const owner = "upload-collector";
+      const portfolio = "upload-portfolio-collector";
+      const later = Date.now() + 40 * 86_400_000;
+      const keyOf = (id) => `draft/${portfolio}/${id}`;
+      const kept = await upload(bytes(), "image/png", { owner: "collector" });
+      const loose = await upload(bytes(), "image/png", { owner: "collector" });
+      async function drain() {
+        for (let n = 0; n < 200; n++) {
+          const pass = await (await fixture(`collect?now=${later}`)).json();
+          const cursor = await sql(
+            "SELECT 1 FROM maintenance_cursor WHERE name='draft-orphans'",
+          );
+          if (!pass.abandoned && !pass.orphans && !cursor.length) return;
+        }
+        assert.fail("collection did not settle");
+      }
+      const present = async () => {
+        const keys = new Set((await objects()).map((object) => object.key));
+        const rows = new Set(
+          (
+            await sql("SELECT id FROM asset WHERE portfolio_id=?", [portfolio])
+          ).map((row) => row.id),
+        );
+        return [kept, loose].map(
+          ({ value: { id } }) => rows.has(id) && keys.has(keyOf(id)),
+        );
+      };
+      // Unfinished setup: local setup recovery may still name any upload.
+      await drain();
+      assert.deepEqual(await present(), [true, true]);
+      for (const { value } of [kept, loose])
+        await get(value.id, { owner: "collector" });
+      await sql(
+        "UPDATE portfolio SET draft_rev=draft_rev+1,first_editor_entered_at=?,draft=json_object('profile',json_object('avatar',json_object('assetId',?))) WHERE id=?",
+        [Date.now(), kept.value.id, portfolio],
+      );
+      // An open staged attempt protects every upload of its owner.
+      await sql(
+        "INSERT INTO owner_save_attempt(id,user_id,session_id,base_revision,state,draft,progress,expires_at) VALUES('collector-attempt',?,'s',0,'open','{}','{}',?)",
+        [owner, Date.now()],
+      );
+      await drain();
+      assert.deepEqual(await present(), [true, true]);
+      await sql("DELETE FROM owner_save_attempt WHERE id='collector-attempt'");
+      // A sealed candidate with no index or transfer rows yet protects
+      // the portfolio's uploads even when its source does not name them.
+      await sql(
+        "INSERT INTO publication_candidate(id,portfolio_id,owner_id,source_revision,source,status,cursor,next_attempt_at,deadline_at,created_at,updated_at) VALUES('88888888-8888-4888-8888-888888888888',?,?,0,'{}','preparing','[]',0,?,?,?)",
+        [portfolio, owner, later + 3600000, Date.now(), Date.now()],
+      );
+      await drain();
+      assert.deepEqual(await present(), [true, true]);
+      await sql(
+        "DELETE FROM publication_candidate WHERE id='88888888-8888-4888-8888-888888888888'",
+      );
+      // Now only the draft reference remains: the unreferenced upload goes,
+      // row and object, and stops being readable.
+      await drain();
+      assert.deepEqual(await present(), [true, false]);
+      await get(kept.value.id, { owner: "collector" });
+      await get(loose.value.id, { owner: "collector", status: 404 });
+      // An object whose row is gone (a deleted account's leftover) goes too.
+      await sql("DELETE FROM asset WHERE id=?", [kept.value.id]);
+      await drain();
+      assert.ok(
+        !(await objects()).some(
+          (object) => object.key === keyOf(kept.value.id),
+        ),
+      );
+    },
+  );
   await writeFile(
     join(evidence, "results.json"),
     JSON.stringify(

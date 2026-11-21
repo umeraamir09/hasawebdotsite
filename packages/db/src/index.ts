@@ -11,6 +11,7 @@ export * from "./github-private";
 export * from "./github-refresh";
 export * from "./github-setup";
 export * from "./legacy-validation";
+export * from "./maintenance";
 export * from "./owner-api";
 export * from "./private-assets";
 export * from "./publication";
