@@ -80,7 +80,8 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - Dependencies: 10, 11B, 15, 18, 24–26, 41, 48.
 - Explain the loss and require confirmation. Immediately deny public and owner access, invalidate sessions, revoke grants, then retry removal of draft, setup data, uploads, publication candidates/tasks/pages and output, and account rows. Cleanup records outlive the owner until output absence is confirmed.
 - Browser side: dispose the owner's controllers and wait for their writes, then remove only that owner's IndexedDB range (including review copies, prepared replacements and tab continuations). Add owner-scoped tombstones and cross-tab coordination so late writes cannot recreate it. Leave other accounts' recovery alone.
-- [ ] Complete when cached sessions cannot bypass deletion, cleanup failures recover, a never-published reservation is released, only a published address survives as an ownerless claim, and cancelling keeps the account.
+- [x] Complete when cached sessions cannot bypass deletion, cleanup failures recover, a never-published reservation is released, only a published address survives as an ownerless claim, and cancelling keeps the account.
+  - `POST /api/owner/account/delete`, the durable `account_deletion` cleanup (migration `0021`), the editor's Delete account confirmation and owner-scoped IndexedDB tombstones with cross-tab disposal. Deployed CDN absence after purge is still verified in 52 (S-9).
 
 ### Phase 50. Complete discovery and the example portfolio
 
