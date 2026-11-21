@@ -91,18 +91,28 @@ export function createRecoveryStorage(
         throw new Error("Recovery scope mismatch");
       // One read/write transaction, including across tabs: a deleted owner's
       // tombstone refuses the write instead of letting it recreate data.
-      let refused = false;
+      let refused = false,
+        failure: unknown = null;
       await database()("readwrite", (store) => {
         const tombstone = store.get([ownerId]);
         tombstone.onsuccess = () => {
           if (tombstone.result) {
             refused = true;
             store.transaction.abort();
-          } else store.put(record, [ownerId, portfolioId, record.id]);
+            return;
+          }
+          // A throwing put (for example a value that cannot be cloned) must
+          // reject this write, not escape as an uncaught handler error.
+          try {
+            store.put(record, [ownerId, portfolioId, record.id]);
+          } catch (error) {
+            failure = error;
+            store.transaction.abort();
+          }
         };
         return promisifyRequest(store.transaction);
       }).catch((error: unknown) => {
-        throw refused ? new DeletedOwnerError() : error;
+        throw refused ? new DeletedOwnerError() : (failure ?? error);
       });
     },
     async remove(id, expected) {

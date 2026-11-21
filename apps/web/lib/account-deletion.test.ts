@@ -127,6 +127,21 @@ describe("owner recovery removal", () => {
     expect(await keys()).toEqual(['["alice"]', '["bob","p1","b"]']);
   });
 
+  it("rejects a write whose put throws instead of raising it from the handler", async () => {
+    const storage = createRecoveryStorage("alice", "p1", open);
+    const put = IDBObjectStore.prototype.put;
+    IDBObjectStore.prototype.put = () => {
+      IDBObjectStore.prototype.put = put;
+      throw new Error("Checkpoint failed");
+    };
+    await expect(storage.put(record("alice", "p1", "r1"))).rejects.toThrow(
+      "Checkpoint failed",
+    );
+    expect(await keys()).toEqual([]);
+    await storage.put(record("alice", "p1", "r1"));
+    expect(await keys()).toEqual(['["alice","p1","r1"]']);
+  });
+
   it("orders a racing write either before the removal or after the tombstone", async () => {
     for (let run = 0; run < 10; run++) {
       const tab = createRecoveryStorage(`owner-${run}`, "p1", open);
