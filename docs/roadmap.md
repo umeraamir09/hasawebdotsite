@@ -88,7 +88,7 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - Dependencies: 16–17, 35. Integrate before completion: 25, 38–39, 45–46 and every capability the page presents.
 - Entry page with examples, the free one-portfolio offer, an explanation of public subdomains, and Start building. Explain required setup and optional steps (no direct editor bypass) and that choosing an address reserves it without creating a public site. Publish the internal example through the real pipeline.
 - [x] Complete when visitors can inspect the example and appearance options, understand the offer and required setup, sign in, and reach the full first-user flow.
-  - Entry page from the Figma landing frames with a live appearance preview and a setup section; the hero name prefills Address after sign-in; migration `0022` gives `example` to an internal account and `pnpm example:publish` publishes it through the owner routes. Running it against production is part of 52.
+  - #79: entry page from the Figma landing frames with a live appearance preview and a setup section; the hero name prefills Address after sign-in; migration `0022` gives `example` to an internal account and `pnpm example:publish` publishes it through the owner routes. Running it against production is part of 52.
 
 ### Phase 51. Add operator controls and cleanup
 
