@@ -64,7 +64,8 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 
 - The public entry page shows an example portfolio that visitors can inspect before creating an account.
 - It explains the included components, customization choices, and the one-portfolio limit. It shows appearance examples and explains how an address such as `username.hasaweb.site` works, including that choosing an address reserves it until the first publication and creates no public site.
-- It states that the MVP is free and provides a clear Start building action leading to authentication.
+- It states that the MVP is free and provides a clear Start building action leading to authentication. It explains that setup requires Address, Profile and Links before the editor, with no shortcut, and that Skills, Projects and GitHub are optional.
+- Visitors can type a name next to Start building. After sign-in it prefills the empty Address field of setup once, in the same browser tab, as an unchecked suggestion; nothing is checked or reserved until the owner continues from Address.
 - Prospective owners can understand what they can publish without buying a domain, configuring hosting, or writing code.
 
 ### 2. Create an account and start a portfolio

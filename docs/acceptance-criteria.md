@@ -15,7 +15,9 @@ Source: [Discover and evaluate the builder](product.md#1-discover-and-evaluate-t
 1. A signed-out visitor can open the entry page and inspect an example portfolio without authenticating.
 2. The page names the included components and customization options, shows appearance examples, and states the limit of one portfolio per account.
 3. The page states that the MVP is free, shows an example `username.hasaweb.site` address, and explains that publishing requires no purchased domain, hosting configuration, or code.
-4. Selecting Start building opens the authentication flow.
+4. Selecting Start building opens the authentication flow. The page explains that Address, Profile and Links are required before the editor, that Skills, Projects and GitHub can be skipped, and that choosing an address reserves it without creating a public site.
+5. A valid name typed next to Start building appears in the empty Address field after sign-in in the same tab, is checked like a typed name, and is reserved only when the owner continues. An invalid name shows the format rule and does not leave the page.
+6. The example portfolio is served at `example.hasaweb.site` from a version published through the ordinary publication pipeline, and no owner can reserve `example`.
 
 ## 2. Create an account and start a portfolio
 
