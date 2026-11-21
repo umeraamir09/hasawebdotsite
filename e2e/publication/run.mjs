@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildPublicationPlatform } from "../../scripts/build-publication-platform.mjs";
+import { operatorCommands } from "../../scripts/operator/commands.mjs";
 import { createEvidenceDirectory } from "../support/evidence-directory.mjs";
 import { freePort } from "../support/ports.mjs";
 
@@ -104,6 +105,120 @@ function visitor(url, options = {}) {
     body: JSON.stringify({ url, ...options }),
   });
 }
+// Phase 51: the operator commands, run against this suite's D1.
+const operator = operatorCommands({
+  sql: async (query, values) => (await sql(query, values)).results,
+});
+// Phase 51: an operator suspension stops serving at once and its withdrawal
+// removes the public upload copies. The owner cannot publish while
+// suspended; lifting it leaves the portfolio unpublished at its claimed
+// address until the next Publish restores it.
+async function checkSuspension() {
+  const live = preparedForCommit[2];
+  const liveAssets = live.manifest.files
+    .filter((file) => file.path.startsWith("/assets/"))
+    .map(
+      (file) => `https://s8-assets.invalid/candidate/${live.id}${file.path}`,
+    );
+  const urls = [
+    "https://s8-fixture.hasaweb.site/",
+    "https://s8-fixture.hasaweb.site/resume",
+    "https://s8-fixture.hasaweb.site/sitemap.xml",
+    "https://s8-fixture.hasaweb.site/_/github.json",
+    "https://s8-fixture.hasaweb.site/_/contact",
+    ...liveAssets,
+  ];
+  assert.equal((await visitor(urls[0])).status, 200);
+  assert.ok(liveAssets.length > 0);
+  const draftBefore = (
+    await sql("SELECT draft,draft_rev FROM portfolio WHERE id='s8-portfolio'")
+  ).results[0];
+  const suspended = await operator.suspend({
+    address: "s8-fixture",
+    case: "e2e-51",
+    reason: "operator check",
+  });
+  assert.equal(suspended.status, "suspended");
+  assert.equal(suspended.claim_state, "claimed");
+  for (const url of urls) {
+    const response = await visitor(url);
+    assert.equal(response.status, 404, url);
+    assert.match(response.headers.get("Cache-Control"), /no-store/, url);
+  }
+  const withdrawals = async () =>
+    (
+      await sql(
+        "SELECT id,completed_at FROM publication_withdrawal WHERE portfolio_id='s8-portfolio' AND created_at>=?",
+        [suspended.suspended_at],
+      )
+    ).results;
+  const [{ id: withdrawalId }] = await withdrawals();
+  for (let n = 0; n < 100; n++) {
+    await api(`/withdraw-unpublished?id=${withdrawalId}`);
+    if ((await withdrawals())[0].completed_at) break;
+  }
+  assert.ok((await withdrawals())[0].completed_at);
+  assert.equal(
+    (await api(`/objects?id=${live.id}`)).value.assets.objects.length,
+    0,
+  );
+  // A repeat is the same suspension, with no second cleanup.
+  await operator.suspend({
+    address: "s8-fixture",
+    case: "e2e-51",
+    reason: "operator check",
+  });
+  assert.equal((await withdrawals()).length, 1);
+
+  // A candidate prepared now cannot go live while suspended.
+  const revision = draftBefore.draft_rev;
+  const candidate = (await api("/create", { revision })).value;
+  for (let n = 0; n < 1000; n++) {
+    await api(`/advance?id=${candidate.id}`);
+    if ((await api(`/status?id=${candidate.id}`)).value.status === "ready")
+      break;
+  }
+  const command = (expectedStatus) => ({
+    portfolioId: "s8-portfolio",
+    candidateId: candidate.id,
+    expectedVersion: 3,
+    expectedStatus,
+  });
+  for (const status of ["published", "unpublished"])
+    assert.notEqual((await commitPublication(command(status))).status, 200);
+  assert.equal((await visitor(urls[0])).status, 404);
+
+  const lifted = await operator.unsuspend({
+    address: "s8-fixture",
+    case: "e2e-51",
+  });
+  assert.deepEqual(
+    {
+      status: lifted.status,
+      subdomain: lifted.subdomain,
+      version: lifted.published_version,
+      reason: lifted.suspended_reason,
+    },
+    {
+      status: "unpublished",
+      subdomain: "s8-fixture",
+      version: 3,
+      reason: null,
+    },
+  );
+  assert.equal((await visitor(urls[0])).status, 404);
+  const after = (
+    await sql("SELECT draft,draft_rev FROM portfolio WHERE id='s8-portfolio'")
+  ).results[0];
+  assert.deepEqual(after, draftBefore);
+  const republished = await commitPublication(command("unpublished"));
+  assert.equal(republished.status, 200, JSON.stringify(republished));
+  assert.equal(republished.value.version, 4);
+  assert.equal((await visitor(urls[0])).status, 200);
+  checks.push(
+    "Suspension: immediate serving stop, public upload withdrawal, no publish while suspended, unsuspend to unpublished and republish at the claimed address",
+  );
+}
 // Phase 49: deleting the account ends public access at once and keeps the
 // published address only as an ownerless claim. Its cleanup removes every
 // candidate's output, the private uploads and the account rows, waits for
@@ -140,6 +255,19 @@ async function checkAccountDeletion() {
   };
   assert.ok((await objects()) > 0);
   assert.ok((await drafts()) > 0);
+  // Phase 51: an operator email lookup leaves an audit without the email,
+  // which the account's deletion removes.
+  const lookup = await operator.emailLookup({
+    account: "s8-owner",
+    operator: "e2e-operator",
+    case: "e2e-51",
+  });
+  assert.ok(lookup.email.includes("@"));
+  const audits = (
+    await sql("SELECT * FROM operator_email_audit WHERE account_id='s8-owner'")
+  ).results;
+  assert.equal(audits.length, 1);
+  assert.ok(!JSON.stringify(audits).includes(lookup.email));
   const deleted = await api("/delete-account", {});
   const deletionId = deleted.value.deletionId;
   assert.match(deletionId, /^[0-9a-f-]{36}$/);
@@ -223,6 +351,7 @@ async function checkAccountDeletion() {
     "SELECT count(*) AS n FROM publish_version WHERE portfolio_id='s8-portfolio'",
     "SELECT count(*) AS n FROM publication_candidate WHERE portfolio_id='s8-portfolio' OR owner_id='s8-owner'",
     "SELECT count(*) AS n FROM account_deletion",
+    "SELECT count(*) AS n FROM operator_email_audit WHERE account_id='s8-owner'",
   ])
     assert.equal((await sql(query)).results[0].n, 0, query);
   // The published name stays permanently unavailable to every account.
@@ -243,7 +372,7 @@ async function checkAccountDeletion() {
   for (const url of publicUrls)
     assert.equal((await visitor(url)).status, 404, url);
   checks.push(
-    "Account deletion: immediate public and session denial, ownerless published claim, upload quiet wait, complete output, upload and row cleanup",
+    "Account deletion: immediate public and session denial, ownerless published claim, upload quiet wait, complete output, upload, lookup audit and row cleanup",
   );
 }
 // Phase 46: a served page's <head>, with the sharing tags it advertises.
@@ -1364,6 +1493,7 @@ try {
         if ((await api(`/status?id=${staleId}`)).value.status === "cleaned") break;
       }
       assert.equal((await api(`/status?id=${staleId}`)).value.status, "cleaned");
+      await checkSuspension();
       await checkAccountDeletion();
     }
     checks.push("First claim, failure rollback, complete version serving, stale and delayed retries, retained dependencies, privacy, no-store query policy and republish after unpublish");

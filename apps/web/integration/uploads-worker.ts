@@ -1,5 +1,6 @@
 import type { AssetPurpose } from "@hasaweb/schema";
 import { resolvePrivateAsset } from "../lib/assets";
+import { collectUploads } from "../lib/assets/collection";
 import worker from "../worker";
 
 type Env = CloudflareEnv & { RUNTIME_KEY: string; RUNTIME_ORIGIN: string };
@@ -33,6 +34,12 @@ export default {
           key,
           size,
         })),
+      );
+    // Phase 51: one upload collection pass at a chosen time, so the suite
+    // can age uploads without waiting.
+    if (url.pathname === "/__fixture/collect")
+      return Response.json(
+        await collectUploads(env, Number(url.searchParams.get("now"))),
       );
     if (url.pathname === "/__fixture/remove-object") {
       await env.DRAFT_BUCKET.delete(url.searchParams.get("key") ?? "");
