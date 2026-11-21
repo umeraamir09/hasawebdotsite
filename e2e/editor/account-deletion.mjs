@@ -140,6 +140,16 @@ export async function checkAccountDeletionJourney({
         return found.filter((key) => key[0] === owner).length >= 2;
       }, owner);
 
+      // Other accounts' records (seeded above, or left by earlier journeys in
+      // this browser) must all survive.
+      const others = (await keys(page)).filter(
+        (key) => !key.startsWith(JSON.stringify([owner]).slice(0, -1)),
+      );
+      assert.ok(
+        others.includes(
+          JSON.stringify(["draft-alice", "alice-portfolio", "kept"]),
+        ),
+      );
       await page.getByRole("button", { name: "Sharing", exact: true }).click();
       const section = page.getByRole("region", { name: "Delete account" });
       await section
@@ -201,22 +211,30 @@ export async function checkAccountDeletionJourney({
       // Every session, including the other device's, is denied at once.
       for (const session of ["closer", "closer-other"])
         assert.equal((await authority("/api/owner", {}, session)).status, 401);
+      // The queued cleanup may already have removed the account (this owner
+      // has no uploads to wait for); until then it is marked deleting.
       const [state] = await sql(
-        "SELECT u.deleting_at,p.status FROM user u JOIN portfolio p ON p.user_id=u.id WHERE u.id=?",
+        "SELECT u.deleting_at,p.status FROM user u LEFT JOIN portfolio p ON p.user_id=u.id WHERE u.id=?",
         [owner],
       );
-      assert.ok(state.deleting_at > 0);
-      assert.equal(state.status, "deleting");
+      if (state) {
+        assert.ok(state.deleting_at > 0);
+        assert.ok([null, "deleting"].includes(state.status), state.status);
+      }
+      assert.deepEqual(
+        await sql("SELECT count(*) AS n FROM session WHERE user_id=?", [owner]),
+        [{ n: 0 }],
+      );
       assert.deepEqual(
         await sql("SELECT * FROM subdomain_claim WHERE name=?", [name]),
         [],
       );
       // Only the owner's tombstone remains of its range; another account's
       // recovery stays. The other tab dropped its continuation.
-      assert.deepEqual((await keys(page)).sort(), [
-        JSON.stringify(["draft-alice", "alice-portfolio", "kept"]),
-        JSON.stringify([owner]),
-      ]);
+      assert.deepEqual(
+        (await keys(page)).sort(),
+        [...others, JSON.stringify([owner])].sort(),
+      );
       assert.equal(
         await other.evaluate(() =>
           sessionStorage.getItem("hasaweb-draft-auth-v1"),
@@ -246,10 +264,10 @@ export async function checkAccountDeletionJourney({
         { owner, portfolioId },
       );
       assert.equal(late, "This account was deleted");
-      assert.deepEqual((await keys(other)).sort(), [
-        JSON.stringify(["draft-alice", "alice-portfolio", "kept"]),
-        JSON.stringify([owner]),
-      ]);
+      assert.deepEqual(
+        (await keys(other)).sort(),
+        [...others, JSON.stringify([owner])].sort(),
+      );
       for (const tab of tabs) await tab.close();
     },
   );
