@@ -37,6 +37,7 @@ type RecoveryState = {
 };
 export function createRecoveryCoordinator(options: Options) {
   let disposed = false;
+  let disposal = Promise.resolve();
   const controllers = new Set<DraftController>();
   if (options.controller) controllers.add(options.controller);
   function assertActive() {
@@ -590,12 +591,18 @@ export function createRecoveryCoordinator(options: Options) {
         { releasePause: false },
       );
     },
-    dispose() {
-      if (disposed) return;
-      disposed = true;
-      store.getState().controller.dispose();
-      for (const controller of controllers) controller.dispose();
-      controllers.clear();
+    // Closes the current and temporary controllers and resolves once their
+    // final local checkpoints have settled.
+    async dispose() {
+      if (!disposed) {
+        disposed = true;
+        disposal = Promise.all([
+          store.getState().controller.dispose(),
+          ...[...controllers].map((controller) => controller.dispose()),
+        ]).then(() => {});
+        controllers.clear();
+      }
+      await disposal;
     },
     start,
     reopen,

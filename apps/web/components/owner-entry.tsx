@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { resumeAccountDeletion } from "../lib/account-deletion";
 import { resolveAccountEntry, signOutOwner } from "../lib/auth-client";
 import type { RecoveryCoordinator } from "../lib/draft/recovery-coordinator";
 import { Brand } from "./brand";
@@ -43,7 +44,11 @@ export function OwnerEntry({
   // biome-ignore lint/correctness/useExhaustiveDependencies: The retry counter explicitly restarts the entry request.
   useEffect(() => {
     const controller = new AbortController();
-    resolveAccountEntry(controller.signal)
+    // Phase 49: finish a local cleanup an earlier deletion left unfinished
+    // before any owner's recovery records open.
+    resumeAccountDeletion()
+      .catch(() => {})
+      .then(() => resolveAccountEntry(controller.signal))
       .then((current) => {
         if (controller.signal.aborted) return;
         if (!current?.portfolio) {

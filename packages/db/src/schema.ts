@@ -810,3 +810,41 @@ export const publicationWithdrawal = sqliteTable(
     check("publication_withdrawal_version", sql`${t.version} > 0`),
   ],
 );
+
+// Phase 49. One durable cleanup per deleted account. It has no foreign keys:
+// it outlives the owner's rows and is removed only after output absence is
+// confirmed. `address` is the published claim to purge and verify, if any.
+export const accountDeletion = sqliteTable(
+  "account_deletion",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    portfolioId: text("portfolio_id"),
+    address: text("address"),
+    stage: text("stage", {
+      enum: [
+        "public",
+        "purge",
+        "verify",
+        "candidates",
+        "draft",
+        "rows",
+        "final",
+      ],
+    })
+      .notNull()
+      .default("public"),
+    cursor: text("cursor").notNull().default(""),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: integer("next_attempt_at").notNull().default(0),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    uniqueIndex("account_deletion_user").on(t.userId),
+    index("account_deletion_due").on(t.nextAttemptAt),
+    check(
+      "account_deletion_stage",
+      sql`${t.stage} in ('public','purge','verify','candidates','draft','rows','final')`,
+    ),
+  ],
+);

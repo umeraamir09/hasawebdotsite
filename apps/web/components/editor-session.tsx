@@ -7,6 +7,7 @@ import type {
 import type { PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
+import { watchAccountDeletion } from "../lib/account-deletion";
 import { createDraftController } from "../lib/draft/controller";
 import { getAt } from "../lib/draft/planner";
 import {
@@ -15,6 +16,7 @@ import {
 } from "../lib/draft/recovery-coordinator";
 import type { FieldPath } from "../lib/draft/types";
 import { LINK_RETURN_PARAM, linkReturnNotice } from "../lib/sign-in-methods";
+import { AccountDeleted, AccountDeletion } from "./account-deletion";
 import { AddressControl } from "./address-control";
 import { AppearanceControls } from "./appearance-controls";
 import { Brand } from "./brand";
@@ -49,6 +51,7 @@ function Session({
   readyCallback.current = onReady;
   const [scope] = useState(owner);
   const [recovery, setRecovery] = useState<RecoveryCoordinator | null>(null);
+  const [deleted, setDeleted] = useState<"here" | "elsewhere" | null>(null);
   useEffect(() => {
     let active = true;
     const options = { ...scope, context: "content" as const };
@@ -61,11 +64,19 @@ function Session({
       .finally(() => {
         if (active) readyCallback.current?.(coordinator);
       });
+    // Phase 49: another tab deleted this account. Stop writing at once; the
+    // owner tombstone refuses anything still in flight.
+    const stopWatching = watchAccountDeletion(scope.ownerId, () => {
+      void coordinator.dispose();
+      setDeleted((current) => current ?? "elsewhere");
+    });
     return () => {
       active = false;
-      coordinator.dispose();
+      stopWatching();
+      void coordinator.dispose();
     };
   }, [scope]);
+  if (deleted) return <AccountDeleted elsewhere={deleted === "elsewhere"} />;
   if (!recovery)
     return <main className="editor-entry">Opening your editor...</main>;
   return (
@@ -74,6 +85,7 @@ function Session({
       owner={scope}
       previewDocument={previewDocument}
       onSignOut={onSignOut}
+      onDeleted={() => setDeleted("here")}
     />
   );
 }
@@ -82,12 +94,19 @@ type ScopeProps = {
   owner: PreviewIdentity;
   previewDocument: string;
   onSignOut?: (() => Promise<void>) | undefined;
+  onDeleted(): void;
 };
 function Workspace(props: ScopeProps) {
   const recoveryState = useStore(props.recovery.store);
   return <Scope key={recoveryState.controller.scopeKey} {...props} />;
 }
-function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
+function Scope({
+  recovery,
+  owner,
+  previewDocument,
+  onSignOut,
+  onDeleted,
+}: ScopeProps) {
   const recoveryState = useStore(recovery.store);
   const controller = recoveryState.controller;
   const state = useStore(controller.store);
@@ -344,6 +363,12 @@ function Scope({ recovery, owner, previewDocument, onSignOut }: ScopeProps) {
                 controller={controller}
                 disabled={disabled}
                 initialNotice={linkNotice}
+              />
+              <AccountDeletion
+                controller={controller}
+                recovery={recovery}
+                disabled={disabled}
+                onDeleted={onDeleted}
               />
             </>
           )}

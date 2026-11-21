@@ -1,4 +1,5 @@
 import {
+  type DeletionWake,
   ownerCaseStudyAddresses,
   ownerPublicationOperations,
   ownerPublicationSite,
@@ -22,7 +23,8 @@ import type { OwnerBindings } from "./owner-api";
 
 export type PublicationBindings = {
   ASSET_ORIGIN: string;
-  PUBLICATION_QUEUE: PublicationPolicy["queue"] & Queue<UnpublishWake>;
+  PUBLICATION_QUEUE: PublicationPolicy["queue"] &
+    Queue<UnpublishWake | DeletionWake>;
 };
 export function addPublicationRoutes(app: Hono<OwnerBindings>) {
   app.post("/api/owner/publication/case-studies", async (c) => {

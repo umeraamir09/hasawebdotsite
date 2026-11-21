@@ -6,6 +6,7 @@ import {
 import {
   type Candidate,
   candidateActive,
+  type DeletionWake,
   PUBLICATION_RENDERER_VERSION,
   PUBLICATION_TOMBSTONE_MS,
   preparePublicationIndex,
@@ -37,7 +38,7 @@ export type DispatchEnv = {
   PUBLIC_ASSETS_BUCKET: R2Bucket;
   PRIVATE_SOURCE: Fetcher;
   PLATFORM_ASSETS: Fetcher;
-  PUBLICATION_QUEUE: Queue<Wake | UnpublishWake>;
+  PUBLICATION_QUEUE: Queue<Wake | UnpublishWake | DeletionWake>;
   ASSET_ORIGIN: string;
   PUBLICATION_TASK_BATCH?: string;
 };

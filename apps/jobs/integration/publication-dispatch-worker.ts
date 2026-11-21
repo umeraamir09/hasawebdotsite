@@ -5,10 +5,12 @@ import {
   PublicationCommitError,
   publicationRetainsAsset,
   publicationTasks,
+  requestAccountDeletion,
   type Wake,
   wakeSchema,
 } from "@hasaweb/db";
 import { servePublic } from "../../site/src/public-serving";
+import { runAccountDeletion } from "../src/account-deletion";
 import {
   type DispatchEnv,
   runPublicationBatch,
@@ -132,6 +134,19 @@ export default {
         );
         return reply({ site, woken });
       }
+      // Phase 49: the owner's account deletion, with its cleanup driven by
+      // /run-deletion rather than the queue.
+      if (url.pathname === "/delete-account" && request.method === "POST") {
+        const identity = await currentSessionIdentity(env, request.headers);
+        if (!identity) return reply({ code: "unauthorized" }, 401);
+        return reply(await requestAccountDeletion(env.DB, identity));
+      }
+      if (url.pathname === "/draft-objects")
+        return env.SOURCE_FIXTURE.fetch(
+          new Request("https://fixture.internal/list", {
+            headers: { "X-Runtime-Key": env.RUNTIME_KEY },
+          }),
+        );
       if (url.pathname === "/serve" && request.method === "POST") {
         const body = await request.json<{
           url: string;
@@ -214,6 +229,20 @@ export default {
             id,
           ),
         );
+      if (url.pathname === "/run-deletion") {
+        const woken: unknown[] = [];
+        const stage = await runAccountDeletion(
+          {
+            ...env,
+            APP_ENV: "test",
+            PUBLICATION_QUEUE: {
+              send: async (body: unknown) => void woken.push(body),
+            },
+          },
+          id,
+        );
+        return reply({ stage, woken });
+      }
       if (url.pathname === "/sweep")
         return reply(await sweepPublicationTasks(env));
       if (url.pathname === "/cleanup") {

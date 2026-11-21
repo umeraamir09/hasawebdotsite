@@ -3,6 +3,8 @@ import { WorkerEntrypoint, WorkflowEntrypoint } from "cloudflare:workers";
 import type { AuthEnvironment } from "@hasaweb/auth";
 import { health, isLocalProbe } from "@hasaweb/config";
 import {
+  type DeletionWake,
+  deletionWakeSchema,
   deliverMessage,
   type OutboxMessage,
   outboxMessageSchema,
@@ -14,6 +16,7 @@ import {
 } from "@hasaweb/db";
 import { emailProvider } from "@hasaweb/email";
 import { parseRefreshMessage, type RefreshMessage } from "@hasaweb/github";
+import { runAccountDeletion, sweepAccountDeletions } from "./account-deletion";
 import type { ContactBindings } from "./contact-routes";
 import {
   type GitHubBindings,
@@ -107,7 +110,8 @@ export default {
       for (const message of batch.messages) {
         const wake = wakeSchema.safeParse(message.body);
         const unpublish = unpublishWakeSchema.safeParse(message.body);
-        if (!wake.success && !unpublish.success) {
+        const deletion = deletionWakeSchema.safeParse(message.body);
+        if (!wake.success && !unpublish.success && !deletion.success) {
           message.ack();
           continue;
         }
@@ -117,6 +121,8 @@ export default {
             await withdrawPublication(env, wake.data.candidateId);
           } else if (unpublish.success)
             await withdrawUnpublished(env, unpublish.data.withdrawalId);
+          else if (deletion.success)
+            await runAccountDeletion(env, deletion.data.deletionId);
           message.ack();
         } catch {
           message.retry({ delaySeconds: 2 });
@@ -202,6 +208,7 @@ export default {
     await sweepPublicationTasks(env);
     await sweepPublicationWithdrawals(env);
     await sweepUnpublishWithdrawals(env);
+    await sweepAccountDeletions(env);
     // Durable grant revocation: pending cleanups retry here until GitHub
     // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
     await sweepGitHubCleanups(env).catch(() => []);
@@ -227,5 +234,10 @@ export default {
   },
 } satisfies ExportedHandler<
   Env,
-  { id: string } | Wake | UnpublishWake | RefreshMessage | OutboxMessage
+  | { id: string }
+  | Wake
+  | UnpublishWake
+  | DeletionWake
+  | RefreshMessage
+  | OutboxMessage
 >;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { resumeAccountDeletion } from "../lib/account-deletion";
 import {
   authErrorMessage,
   type Provider,
@@ -28,6 +29,8 @@ export function AuthRecovery() {
     let current: RecoveryCoordinator | null = null;
     async function load() {
       try {
+        // A deleted owner's records and continuation are gone before lookup.
+        await resumeAccountDeletion().catch(() => {});
         const result = await loadRecoveryEntry();
         if (disposed) return;
         setEntry(result);
