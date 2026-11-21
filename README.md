@@ -37,6 +37,25 @@ If `pnpm` in WSL resolves to a Windows executable, use `npm exec --yes --package
 
 The committed `wrangler.jsonc` files name only local resources; do not deploy them. Production configs, resource IDs, routes and secrets arrive in Phase 52. Production needs `APP_ORIGIN=https://hasaweb.site` in web and jobs; matching `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_*` and `GOOGLE_CLIENT_*`; OAuth callbacks `https://hasaweb.site/api/auth/callback/{github,google}`; `pnpm example:publish` run once after the first deploy so the entry page's example is live; and, for private GitHub activity, a second GitHub OAuth app with callback `https://hasaweb.site/api/owner/github/consent/callback` and jobs secrets `GITHUB_ACTIVITY_CLIENT_ID`, `GITHUB_ACTIVITY_CLIENT_SECRET`, `GITHUB_ACTIVITY_KEY` (base64 of 32 random bytes; rotation is not supported). Public graphs need `GITHUB_SERVICE_TOKEN`, a zero-scope token, on jobs. Email needs jobs secret `RESEND_API_KEY` and variable `EMAIL_FROM` on the verified `mail.hasaweb.site` domain; without them recipient confirmation reports email unavailable. Contact forms need site secret `TURNSTILE_SECRET` and variable `TURNSTILE_SITE_KEY` from a Turnstile widget for `*.hasaweb.site`; without them published forms report that messages can't be sent.
 
+## Operator scripts
+
+Phase 51 operator controls; there is no admin UI. Each prints JSON. Locally they act on `.wrangler/state`; for production add `--remote --config=<production web config>` (Phase 52). Name the portfolio with exactly one of `--address=<name or URL>`, `--account=<user ID>` or `--portfolio=<ID>`. Case references are ticket IDs (no `@`); operator handles are lowercase (no `@`), so no audit can hold an email.
+
+```sh
+pnpm ops find --address=ada                       # portfolio, account ID, status and claim
+pnpm ops abuse-report --address=https://ada.hasaweb.site/projects/x
+pnpm ops suspend --address=ada --case=abuse-12 --reason="phishing page"
+pnpm ops unsuspend --address=ada --case=abuse-12  # back to unpublished (or draft); the owner republishes
+pnpm ops rerender --address=ada                   # republish the live revision with the current renderer
+pnpm ops purge --address=ada --remote             # purge both public hosts (CLOUDFLARE_ZONE_ID, CLOUDFLARE_CACHE_PURGE_TOKEN)
+pnpm ops outbox --status=failed --limit=20        # contact outbox state, never message content
+pnpm ops email-lookup --account=<id> --operator=<handle> --case=abuse-12
+pnpm ops audit-cleanup                            # delete lookup audits older than 90 days (the cron also does)
+pnpm ops d1-size --remote                         # database bytes and whether the 350 MB alert applies (local D1 reports no size)
+```
+
+Suspension stops serving at once; its withdrawal of public uploads and the purge run on the next jobs cron minute. Rerender refuses when the draft changed since the live version, and reads `APP_ORIGIN` and `BETTER_AUTH_SECRET` like `pnpm example:publish`. Every email lookup writes its audit before reading the email. Garbage collection needs no command: the jobs cron runs it.
+
 ## Checks
 
 ```sh
@@ -74,4 +93,4 @@ Jobs run on GitHub-hosted runners. The e2e projects run as seven parallel one-wo
 | `packages/email` | Email provider adapters and templates |
 | `packages/config` | Shared TypeScript config and runtime helpers |
 | `e2e` | Playwright Test suites and fixtures |
-| `scripts` | `verify`, seed and build helpers |
+| `scripts` | `verify`, seed, operator (`pnpm ops`) and build helpers |

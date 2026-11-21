@@ -22,7 +22,7 @@ Reads have a five-second idle deadline and transfers have a thirty-second total 
 
 A successful upload returns HTTP 201 and `{id,purpose,contentType,bytes,status:"ready"}`. The server generates the ID and `draft/{portfolioId}/{id}` key. Requests cannot select an identity, portfolio, ID, key or status. Every retry allocates a new asset. Store the new draft reference only after success. Existing ready assets remain unchanged.
 
-The lifecycle is `pending` to `ready` after successful R2 storage and conditional D1 finalization, or `pending` to `failed` after rejection. An uncertain D1 finalization is reread before cleanup. Cleanup cannot change a ready row to failed. Unavailable reconciliation leaves a private pending row/object. Failed R2 cleanup can leave a private failed object. A later lifecycle reconciler must retry these cases. This phase adds no orphan sweep or durable retry queue.
+The lifecycle is `pending` to `ready` after successful R2 storage and conditional D1 finalization, or `pending` to `failed` after rejection. An uncertain D1 finalization is reread before cleanup. Cleanup cannot change a ready row to failed. Unavailable reconciliation leaves a private pending row/object. Failed R2 cleanup can leave a private failed object. Phase 51 upload collection (below) removes both after a day.
 
 ## Private reads and readiness
 
@@ -32,7 +32,11 @@ The lifecycle is `pending` to `ready` after successful R2 storage and conditiona
 
 The inactive S-8 `PublicationAssets` named Worker entry supplies the candidate transfer contract. It accepts a candidate/lease/asset/purpose ticket through a service binding only, derives the private key from D1, and checks persisted ownership, deletion, reachability, readiness, purpose and bytes before streaming. The default HTTP handler does not expose this entry. No production jobs binding is configured. Jobs never receives `DRAFT_BUCKET`.
 
-The paid-at-launch decision authorizes local reuse of the integrated S-8 milestone. Historical Free failures and final paid-provider verification remain recorded; native capacity checks are release gates, not a requirement to upgrade during local development. Later garbage collection must use the database `publicationRetainsAsset` guard in addition to draft/live-version references. It conservatively protects the portfolio before candidate indexing, then protects sealed references even before transfer-row discovery and after removal from the current draft. Account deletion must revoke transfer before cleaning both candidate records/objects and draft objects. Passing local upload tests does not establish deployed transfer CPU or shared capacity.
+The paid-at-launch decision authorizes local reuse of the integrated S-8 milestone. Historical Free failures and final paid-provider verification remain recorded; native capacity checks are release gates, not a requirement to upgrade during local development. Upload collection uses the database `publicationRetains` guard in addition to draft, staging, transfer and source references. It conservatively protects the portfolio before candidate indexing, then protects sealed references even before transfer-row discovery and after removal from the current draft. Account deletion must revoke transfer before cleaning both candidate records/objects and draft objects. Passing local upload tests does not establish deployed transfer CPU or shared capacity.
+
+## Upload collection (Phase 51)
+
+`collectUploads(env, now)` (`collection.ts`) is one bounded pass, reached only through the `PublicationAssets` entry's `POST /upload-collection`, which the jobs cron calls every fifth minute. It takes no input. It deletes the objects of the rows `collectAbandonedUploads` removed (see [`packages/db`](../../../../packages/db/README.md#operator-controls-and-cleanup-phase-51) for what is never eligible: unfinished setup, draft, staged and sealed-candidate references), then lists one page of `draft/` from a stored cursor and deletes objects older than a day that no asset row or unfinished account deletion accounts for. Rows go before objects, so a failed object delete only leaves an orphan for a later pass.
 
 ## Verification
 
