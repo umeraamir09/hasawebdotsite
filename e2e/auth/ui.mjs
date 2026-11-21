@@ -576,6 +576,92 @@ export async function checkAuthUi({
       deviceScaleFactor: 1,
       mobile: false,
     });
+    // Phase 50: the signed-out entry page explains the offer, the example,
+    // components, appearance, setup and addresses, and Start building opens
+    // authentication carrying an optional, unreserved address suggestion.
+    await navigate("/");
+    await until(
+      "document.querySelector('.address-start') && document.fonts.status === 'loaded'",
+    );
+    await until(
+      "Array.from(document.images).every(i=>i.complete && i.naturalWidth>0)",
+    );
+    await screenshot("entry-desktop");
+    const entry = await evaluate(`({
+      overflow: document.documentElement.scrollWidth > innerWidth,
+      text: document.body.innerText,
+      example: document.querySelector('a[href="https://example.hasaweb.site/"]')?.textContent,
+      selects: Object.fromEntries([...document.querySelectorAll('.appearance-field')].map(f => [f.querySelector('label').textContent, [...f.querySelectorAll('option')].map(o => o.value)])),
+      starts: [...document.querySelectorAll('a[href="/sign-in"], .address-start button')].map(a => a.textContent),
+      questions: [...document.querySelectorAll('.faq summary')].map(s => s.textContent),
+      steps: [...document.querySelectorAll('.setup-steps li')].map(li => li.querySelector('.setup-badge').textContent + ' ' + li.querySelector('h3').textContent),
+    })`);
+    assert.equal(entry.overflow, false);
+    assert.equal(entry.example, "Open the live example");
+    for (const expected of [
+      "Free to start. One portfolio. Your own subdomain.",
+      "Example portfolio by Umer Aamir",
+      "Projects",
+      "GitHub activity",
+      "Work experience",
+      "Contact form",
+      "Resume",
+      "umer.hasaweb.site",
+      "reserves it for you but creates no public site",
+      "there is no domain to buy",
+      "No code or hosting setup",
+      "there is no way around them",
+    ])
+      assert.ok(entry.text.includes(expected), `entry page shows ${expected}`);
+    assert.deepEqual(entry.selects, {
+      Theme: ["leaf", "violet", "clay", "matcha", "strawberry", "coffee"],
+      Font: ["dm-sans", "manrope", "lora"],
+      "Initial mode": ["system", "light", "dark"],
+    });
+    assert.ok(entry.questions.includes("Is hasaweb.site free?"));
+    assert.ok(entry.questions.includes("Can I make more than one portfolio?"));
+    assert.deepEqual(entry.steps, [
+      "Required Address",
+      "Required Profile",
+      "Required Links",
+      "Optional Skills",
+      "Optional Projects",
+      "Optional GitHub",
+    ]);
+    assert.ok(
+      entry.starts.filter((label) => label === "Start building").length >= 3,
+    );
+    await command("Emulation.setDeviceMetricsOverride", {
+      width: 360,
+      height: 800,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+    await until("document.readyState === 'complete'");
+    assert.equal(
+      await evaluate("document.documentElement.scrollWidth > innerWidth"),
+      false,
+    );
+    await screenshot("entry-mobile");
+    await command("Emulation.setDeviceMetricsOverride", {
+      width: 1280,
+      height: 800,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await evaluate("document.querySelector('.address-start input').focus()");
+    await command("Input.insertText", { text: "Umer" });
+    await evaluate("document.querySelector('.address-start button').click()");
+    await until(
+      "location.pathname === '/sign-in' && document.querySelectorAll('.provider-button').length === 2",
+    );
+    assert.equal(
+      await evaluate("sessionStorage.getItem('hasaweb-address-suggestion-v1')"),
+      "umer",
+    );
+    checks.push(
+      "entry page shows the example, components, appearance options, required and optional setup, address reservation and the free one-portfolio offer; Start building opens sign-in with an unreserved address suggestion",
+    );
     await navigate("/sign-in");
     await until(
       "document.querySelectorAll('.provider-button').length === 2 && document.fonts.status === 'loaded'",

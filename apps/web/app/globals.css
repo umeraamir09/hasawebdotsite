@@ -268,22 +268,6 @@ button:disabled {
 .editor-entry .auth-error {
   margin-top: 24px;
 }
-.home {
-  max-width: 800px;
-  margin: 64px auto;
-  padding: 24px;
-  display: grid;
-  justify-items: start;
-  gap: 32px;
-}
-.home h1 {
-  font-size: 48px;
-  line-height: 54px;
-  letter-spacing: -1.6px;
-}
-.home .ghost-button {
-  background: var(--accent);
-}
 .auth-visual > * {
   flex-shrink: 0;
 }
