@@ -106,7 +106,8 @@ Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design 
 - Self-host Geist and Geist Mono (OFL, frozen by digest like the portfolio fonts) for the app only. Published portfolios keep their catalog fonts.
 - Build the shared controls from the Components board (`394:2`) and the icon set (`393:2`): Button, IconButton, Toggle, Field, Area, Chip, FilterChip, StatusPill, SectionRow, a segmented control, a popover, and a dialog that is a centered modal on desktop and a bottom sheet on mobile.
 - Update [ui-direction.md](ui-direction.md): Geist and the signal blue replace DM Sans and lime for the app, and the node table points to `392:2` and `325:2`.
-- [ ] Complete when every control renders in both schemes at WCAG 2.2 AA contrast with visible focus, dialogs trap and return focus, and `pnpm check` covers their keyboard behavior.
+- [x] Complete when every control renders in both schemes at WCAG 2.2 AA contrast with visible focus, dialogs trap and return focus, and `pnpm check` covers their keyboard behavior.
+  - #84: `--wb-*` tokens, Geist fonts and the controls in `apps/web/components/workbench`, shown at `/catalog/workbench`; five Figma colors moved to reach AA, listed in `workbench.test.ts`.
 
 ### Phase 51.2. Rebuild the editor shell, canvas and page outline
 
