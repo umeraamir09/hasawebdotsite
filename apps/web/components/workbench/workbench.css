@@ -348,7 +348,8 @@
 }
 textarea.wb-field-input {
   min-height: 20px;
-  resize: vertical;
+  resize: none;
+  field-sizing: content;
 }
 .wb-field-input::placeholder {
   color: var(--wb-text-tertiary);

@@ -122,16 +122,18 @@ function Board({ scheme }: { scheme: "light" | "dark" }) {
           />
         ))}
       </div>
-      <SegmentedControl
-        label="Mode"
-        value={mode}
-        onChange={setMode}
-        options={[
-          { value: "light", label: "Light", icon: "sun" },
-          { value: "dark", label: "Dark", icon: "moon" },
-          { value: "system", label: "System", icon: "monitor" },
-        ]}
-      />
+      <div className={styles.fields}>
+        <SegmentedControl
+          label="Mode"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "light", label: "Light", icon: "sun" },
+            { value: "dark", label: "Dark", icon: "moon" },
+            { value: "system", label: "System", icon: "monitor" },
+          ]}
+        />
+      </div>
       <div className={styles.row}>
         <SegmentedControl
           label="Preview size"
