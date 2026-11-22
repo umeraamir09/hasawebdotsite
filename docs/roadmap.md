@@ -27,7 +27,6 @@ Every phase below is merged to `main`. Their records are in the `archive/specs-2
 
 Known work left by completed phases. Fold each into the phase that touches it, or do it on its own.
 
-- **Custom color delivery (36).** The generator exists; editor controls, immediate preview and CSP-safe token delivery do not, and the renderer ignores `customColor`. Needed before 53.
 - **Owner-entry activation (42E).** `OWNER_ENTRY_ACTIVATION` stays closed; contact delivery (43–45) is in place. Opening it is part of 52.
 - **Boundary reviews** the owner asked for and that have not run: authorization/privacy for 20 and 23, withdrawal for 38, access and headers for 39. Do them before 52.
 
@@ -98,6 +97,57 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - [x] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup can neither delete active setup assets nor retain a deleted account's data.
   - `pnpm ops` operator scripts (suspend reuses the Unpublish withdrawal), cron garbage collection in `apps/jobs/src/maintenance.ts` with upload collection through `PublicationAssets`, migration `0023` and the hourly 350 MB D1 size log. Wiring that log to an alert and running the scripts against production are part of 52.
 
+Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design in the [Figma file](ui-direction.md). The editor design is on page "Editor / Workbench" (`392:2`). The setup guide design is the "Setup v2" sections of page "Onboarding / A little space to begin" (`325:2`); the older frames on that page are hidden and are not the target. These phases change layout and presentation. Draft contracts, autosave, validation and publication behavior stay the same, and existing e2e journeys move to the new controls instead of being dropped.
+
+### Phase 51.1. Adopt the Workbench foundations
+
+- Dependencies: 51.
+- Add the "Workbench" variable collection as CSS custom properties with light and dark values (backgrounds, lines, text, ink, signal, status colors and the scrim). The editor and guide follow the operating system's color scheme as each moves over.
+- Self-host Geist and Geist Mono (OFL, frozen by digest like the portfolio fonts) for the app only. Published portfolios keep their catalog fonts.
+- Build the shared controls from the Components board (`394:2`) and the icon set (`393:2`): Button, IconButton, Toggle, Field, Area, Chip, FilterChip, StatusPill, SectionRow, a segmented control, a popover, and a dialog that is a centered modal on desktop and a bottom sheet on mobile.
+- Update [ui-direction.md](ui-direction.md): Geist and the signal blue replace DM Sans and lime for the app, and the node table points to `392:2` and `325:2`.
+- [ ] Complete when every control renders in both schemes at WCAG 2.2 AA contrast with visible focus, dialogs trap and return focus, and `pnpm check` covers their keyboard behavior.
+
+### Phase 51.2. Rebuild the editor shell, canvas and page outline
+
+- Dependencies: 51.1.
+- Replace the Content, Customization and Sharing tabs in `editor-session.tsx` with the shell from "Editor shell" (`406:1147`). The top bar holds the address and status pill, the Desktop/Mobile preview switch, the preview scheme toggle, the save state, Preview and Publish. The rail holds Build, Style, Share and the account avatar. A 392 px panel sits beside the canvas.
+- The canvas shows the real renderer with hover and selected outlines, a section tag and move up, move down and remove actions (frames `407:1232` and `411:3276`). Canvas, panel and keyboard share the existing `PreviewSelection`, so selecting in one place selects in all of them.
+- The Build panel lists the profile card, the section rows with drag and keyboard reordering, and Add section. Add section opens a gallery whose tiles are scaled renders of each component type, with single-instance types marked once added (`411:4431`). Removal keeps the existing confirmation.
+- On mobile the preview comes first (`417:11033`). Tapping a section shows a dock of that section's actions, and the outline and editors open as bottom sheets (`417:11661`). This replaces the "Edit content" and "View preview" toggle.
+- [ ] Complete when every `editor` journey passes on the new shell, selection stays in sync across canvas, outline and keyboard, and the shell works across the confirmed viewport matrix.
+
+### Phase 51.3. Move the content editors into the panel
+
+- Dependencies: 51.2.
+- Profile (`409:2175`, mobile `417:12355`): banner and avatar with camera actions, then the Decoration and Face reveal rows, then name, bio, location and links with drag handles and visibility toggles.
+- The Decoration row shows the current decoration and opens a gallery (`431:15145`, mobile sheet `433:17711`). Each tile shows the owner's avatar wearing one catalog decoration as a still, using the renderer's avatar markup, and choosing a tile updates the preview at once. The gallery reads the catalog, so a new decoration needs no editor change. Search and filter chips (`431:15358`) appear only once the catalog has more than eight entries. The concept decorations in Figma are not catalog entries.
+- Section editors open in the panel under a back header (project `411:3276`). Case studies get the writing mode with an outline and a format toolbar (`415:10624`).
+- The owner decides before this phase whether to add the Role field the design shows. It is not in `profile.ts` or [product.md](product.md).
+- [ ] Complete when every content type is editable in the panel on desktop and mobile, every `PublicationCorrection` path opens the right editor, the decoration gallery works with pointer and keyboard, and `editor` and `uploads` pass.
+
+### Phase 51.4. Rebuild Style, Share, Publish and account
+
+- Dependencies: 51.2.
+- Style (`413:6305`): theme swatches from each catalog palette, Custom color with its generated light and dark pair, Mode, and font tiles. This finishes custom color from 36: editor controls, immediate preview, CSP-safe token delivery, and a renderer that reads `customColor`.
+- Share (`413:7431`): address, sharing metadata and unpublish.
+- Publish (`414:8373`, `414:9545`): the Publish button opens the checklist as a popover with an issue count, each issue opens its editor, and the button shows the first publish, ready, publishing, published and failed states.
+- Account menu (`414:9669`): sign out, settings and account deletion.
+- [ ] Complete when a custom color renders the same in the preview and on the published page, every checklist issue lands on its control, and `editor`, `publication` and `renderer` pass.
+
+### Phase 51.5. Rebuild the setup guide on Setup v2
+
+- Dependencies: 51.1. It can run alongside 51.2 to 51.4.
+- Replace the guide layout in `setup-guide.tsx` and `setup-handoff.tsx` with the Setup v2 frames for desktop and mobile in both schemes. Each step is one centered card under a title with no subtitle. The top bar shows segmented progress, and once the address is held, the address with a Private pill. Back, Skip and Skip to review sit in one fixed row, and Continue stays in the same place on every step. Review keeps the real renderer with the device and scheme switch.
+- Address has an inline `.hasaweb.site` suffix and an availability pill. On Profile the profile card is the form (banner, avatar, name, bio) and uses the shared crop dialogs. Links uses platform rows, Skills a token input with suggestions, Projects a project card, and GitHub a username lookup, a graph preview and a Public or Public + private choice.
+- Setup v2 has no frames yet for a taken address, provider suggestions, cropping, a public email, private GitHub authorization or a failed save. Build these from the v2 kit (`471:11455`) and the hidden earlier states (`460:10192`) until v2 versions exist.
+- The owner decides these before the phase, and [onboarding.md](onboarding.md) changes in the same PR:
+  - The doc asks the guide to explain in words that the address is reserved, when an email becomes public, and that Review has not published anything. The design shows these as the Private pill, a link-row state and the address bar instead.
+  - The design shows a 102 / 160 bio counter. The doc rules out Linktree's 160-character limit and the schema has no limit.
+  - The design offers address suggestion chips, which the doc does not cover.
+  - "Skip" and "Skip to review" replace "Skip this step" and "Skip remaining steps".
+- [ ] Complete when ON-01 to ON-19 pass on the new screens, required steps still offer no skip or bypass, and the guide matches the frames on desktop and mobile in both schemes.
+
 Phases 51A to 51C test whether a beta of about 15 portfolios (5 editing sessions and 5 publishes a day) can launch on Workers Free instead of Paid. Every Free quota fits that load. The open question is the 10 ms CPU limit: October's native runs measured publication batches at about 30 ms p95, and the generated sharing card has never been measured. Free terminates a Worker only once it goes over the limit "consistently", so only a native run settles it.
 
 ### Phase 51A. Split the cron and bound each trigger
@@ -128,7 +178,7 @@ Phases 51A to 51C test whether a beta of about 15 portfolios (5 editing sessions
 
 ### Phase 52. Prepare production delivery and recovery
 
-- Dependencies: every feature and lifecycle phase through 51.
+- Dependencies: every feature and lifecycle phase through 51, including 51.1 to 51.5.
 - Production Wrangler configs, secrets and bindings; backward-compatible migrations; GitHub Environment approval and `jobs` → `site` → `web` deploy order. Include both provider callbacks, the recovery callbacks, the activity OAuth app, cache purge, abuse email, logs, quota/CPU alerts, restore/rollback and renderer retention/rerender.
 - Launch preparation: upgrade to Workers Paid, confirm account settings, then measure the final dispatcher and owner handlers natively, reconcile monthly operations, D1 size and R2 retention, verify S-9 withdrawal, callbacks/TLS and rollback. Open the owner-entry gate.
 - [ ] Complete when CI and release config cover these checks, the full guide is live before routing depends on it, and rollback preserves drafts and milestones.
