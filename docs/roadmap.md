@@ -98,6 +98,34 @@ Known work left by completed phases. Fold each into the phase that touches it, o
 - [x] Complete when suspension blocks serving, lookup audits exclude email and are removed with accounts, and cleanup can neither delete active setup assets nor retain a deleted account's data.
   - `pnpm ops` operator scripts (suspend reuses the Unpublish withdrawal), cron garbage collection in `apps/jobs/src/maintenance.ts` with upload collection through `PublicationAssets`, migration `0023` and the hourly 350 MB D1 size log. Wiring that log to an alert and running the scripts against production are part of 52.
 
+Phases 51A to 51C test whether a beta of about 15 portfolios (5 editing sessions and 5 publishes a day) can launch on Workers Free instead of Paid. Every Free quota fits that load. The open question is the 10 ms CPU limit: October's native runs measured publication batches at about 30 ms p95, and the generated sharing card has never been measured. Free terminates a Worker only once it goes over the limit "consistently", so only a native run settles it.
+
+### Phase 51A. Split the cron and bound each trigger
+
+- Dependencies: 51.
+- Replace the single every-minute trigger with separate Cron Triggers that `scheduled()` dispatches on `event.cron` (Free allows five per account): publication, withdrawal, unpublish and deletion sweeps plus GitHub grant cleanup every minute; the contact outbox every two minutes; maintenance every five minutes; the private GitHub refresh and the D1 size check hourly. Each sweep gets its own error handling, so one failure no longer skips the rest.
+- Lower the per-tick batches to suit the beta: contact `SWEEP_MESSAGES` from 10 to 3 and `PRIVATE_SWEEP_BATCH` from 25 to 10. Read the publication batch from `PUBLICATION_TASK_BATCH` (default 16) instead of the literal in `apps/jobs/src/publication-routes.ts`.
+- Add a local test that counts D1 queries per scheduled invocation with every sweep's work due. Update the per-tick numbers and schedules in [architecture](architecture.md) §6 and §9.
+- [ ] Complete when every trigger stays at or under 50 D1 queries with all sweeps loaded (a `batch()` counts as one), a failing sweep leaves the others running, and `publication` and `api` pass in full.
+
+### Phase 51B. Measure the Free plan natively
+
+- Dependencies: 51A. Needs the owner's approval to deploy temporary Workers to the Cloudflare account.
+- Bring back the native measurement harness from the archive tag (`scripts/cloudflare-analytics.py`, `deployed-runtime-tail.mjs`, `publication-dispatch-tail.mjs`) as a current script; 52 reuses it for its own native measurements. Deploy `main` as isolated workers.dev Workers with a dedicated D1 database and buckets, synthetic owners and no zone routes, and delete them afterwards.
+- Cases: the owner API (the 22 draft cases and every route added since), warm and after 15 idle minutes; OpenNext auth routes and pages, warm and cold; `site` pages, `/_/github.json` and `/_/contact`; a 5 MiB image and a 10 MiB PDF upload; a realistic beta portfolio, the maximum draft and the dense draft, published five times each at batch 16 and batch 6, with and without an owner sharing image; and a loaded tick of every cron trigger.
+- Record each invocation's outcome and CPU, plus Queue operations and D1 rows, in the PR description. Gates: G1 owner API, G2 publication batches (a dense publish within about 1,700 Queue operations), G3 the card stage, G4 OpenNext, G5 cron, G6 `site`, uploads and the other consumers. Each passes with no `exceededCpu` outcome; HTTP entry points also need p95 below 10 ms.
+- If G2 fails at every batch size, stop the Free path and launch on Paid as 52 describes.
+- [ ] Complete when every case has run, each gate has a recorded result, and the PR states the plan decision. If the decision is Free, the same PR updates [architecture](architecture.md) §2, 52 and 54.
+
+### Phase 51C. Fix the paths that failed on Free
+
+- Dependencies: 51B with a Free decision. Do only the items whose gate failed, then measure those paths again.
+- G3: without an owner sharing image, publish the banner, then the avatar, then a static platform card, behind a variable that restores the generated card after an upgrade. This is visible to owners, so the owner confirms the order. Bump the renderer version.
+- G2 passing only at a smaller batch: set `PUBLICATION_TASK_BATCH` in the production config.
+- G4: handle `/api/auth/*` in `apps/web/worker.ts` before OpenNext (run `auth` and `api` in full), and serve the pages OpenNext already prerenders as Static Assets with their headers in `_headers`.
+- G5: spread the triggers further or lower the batches again.
+- [ ] Complete when every failed gate passes on a second native run and the docs that state the changed contracts are updated.
+
 ### Phase 52. Prepare production delivery and recovery
 
 - Dependencies: every feature and lifecycle phase through 51.
