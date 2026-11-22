@@ -28,6 +28,10 @@ You may use subagents, parallel worktrees and reviews whenever they help. Keep e
 
 Ask the owner only for real product decisions: scope changes, new user-visible behavior not covered by the docs, or spending money or using external accounts.
 
+## Writing
+
+Load the `unslop` skill (`.agents/skills/unslop/SKILL.md`) before writing anything a person reads: replies, PR descriptions, commit bodies, docs and UI copy.
+
 ## Docs
 
 Docs describe the current system only. When a change alters a contract, update the doc that states it in the same PR, and delete text it makes wrong. Do not add dated history, approval notes or "superseded" paragraphs; git history keeps those. Do not create per-phase record files.
