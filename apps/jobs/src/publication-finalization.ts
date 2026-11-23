@@ -13,6 +13,7 @@ import {
   type SeoPage,
   seoPageTitle,
 } from "@hasaweb/schema";
+import { customPaletteCss } from "@hasaweb/theme/palette";
 import { z } from "zod";
 import {
   renderCandidateCard,
@@ -292,7 +293,36 @@ export async function finalizePublication(
         contentType: file.contentType,
       });
       cursor = { stage: "platform", index: cursor.index + 1 };
-    } else cursor = { stage: "snapshot", index: 0 };
+    } else {
+      // A custom color is retained as generated CSS named by its content
+      // hash, so the version keeps its colors when the generator changes.
+      const selected = await env.DB.prepare(
+        "SELECT json_extract(source,'$.appearance.customColor') AS seed FROM publication_candidate WHERE id=?",
+      )
+        .bind(row.id)
+        .first<{ seed: string | null }>();
+      if (selected?.seed) {
+        const css = new TextEncoder().encode(customPaletteCss(selected.seed));
+        const sha256 = hex(await crypto.subtle.digest("SHA-256", css));
+        const path = `/platform/${sha256.slice(0, 16)}-palette.css`;
+        const key = `${root}${path.slice(1)}`;
+        await env.PUBLIC_ASSETS_BUCKET.put(key, css, {
+          httpMetadata: {
+            contentType: "text/css; charset=utf-8",
+            cacheControl: "private, no-store",
+          },
+        });
+        await recordObject(
+          env,
+          row,
+          "assets",
+          key,
+          path,
+          "text/css; charset=utf-8",
+        );
+      }
+      cursor = { stage: "snapshot", index: 0 };
+    }
   } else if (
     cursor.stage === "snapshot" ||
     cursor.stage === "manifest" ||
@@ -442,7 +472,8 @@ export async function finalizePublication(
       // Search metadata reads bounded prefixes of the sealed source, so a
       // 1 MiB bio never enters this Worker. Clipping happens in resolveSeo.
       const packed = await env.DB.prepare(
-        `SELECT json_extract(x.value,'$.platform') AS pack,json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')) AS appearance,
+        `SELECT json_extract(x.value,'$.platform') AS pack,json_patch(json_object('themeId',json_extract(c.source,'$.appearance.themeId'),'fontId',json_extract(c.source,'$.appearance.fontId'),'colorMode',json_extract(c.source,'$.appearance.colorMode')),json_object('customColor',lower(json_extract(c.source,'$.appearance.customColor')))) AS appearance,
+          (SELECT json_extract(r.value,'$.path') FROM json_each(x.value,'$.receipts') r WHERE json_extract(r.value,'$.path') LIKE '/platform/%-palette.css' LIMIT 1) AS palette,
           json_object(
             'address',json_extract(c.facts,'$.address.name'),
             'name',substr(json_extract(c.source,'$.profile.name'),1,${SEO_SOURCE_CHARACTERS}),
@@ -455,7 +486,12 @@ export async function finalizePublication(
          FROM publication_candidate_index x JOIN publication_candidate c ON c.id=x.candidate_id WHERE x.candidate_id=?`,
       )
         .bind(page.path, row.id)
-        .first<{ pack: string; appearance: string; seo: string }>();
+        .first<{
+          pack: string;
+          appearance: string;
+          palette: string | null;
+          seo: string;
+        }>();
       const files = packSchema.parse(JSON.parse(packed?.pack ?? "null")).files;
       const appearance = appearanceModelSchema.parse(
         JSON.parse(packed?.appearance ?? "null"),
@@ -474,7 +510,11 @@ export async function finalizePublication(
         markup: frame.open + marker + frame.close,
         title,
         context: "public",
-        assets: { cssUrl: css.path, scriptUrl: script.path },
+        assets: {
+          cssUrl: css.path,
+          scriptUrl: script.path,
+          ...(packed?.palette ? { paletteUrl: packed.palette } : {}),
+        },
         appearance,
         metadata,
       });
@@ -544,7 +584,7 @@ export async function finalizePublication(
     } else cursor = { stage: "manifest", index: 0 };
   } else {
     const complete = await env.DB.prepare(
-      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT json_type(source,'$.seo.ogImage') IS NULL FROM publication_candidate WHERE id=x.candidate_id)+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
+      `SELECT 1 AS ok FROM publication_candidate_index x WHERE candidate_id=? AND json_type(value,'$.manifest')='object' AND json_array_length(value,'$.receipts')=(SELECT count(*) FROM publication_page WHERE candidate_id=x.candidate_id AND ready=1)+4+(SELECT (json_type(source,'$.seo.ogImage') IS NULL)+(json_type(source,'$.appearance.customColor') IS NOT NULL) FROM publication_candidate WHERE id=x.candidate_id)+(SELECT count(*) FROM publication_transfer WHERE candidate_id=x.candidate_id AND complete=1)+json_array_length(value,'$.platform.files')`,
     )
       .bind(row.id)
       .first();

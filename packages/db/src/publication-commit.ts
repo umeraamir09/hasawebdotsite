@@ -148,6 +148,7 @@ export function ownerPublicationCommit(
                  AND json_array_length(x.value,'$.receipts')=
                    (SELECT count(*) FROM publication_page page WHERE page.candidate_id=c.id AND page.ready=1)+4+
                    (json_type(c.source,'$.seo.ogImage') IS NULL)+
+                   (json_type(c.source,'$.appearance.customColor') IS NOT NULL)+
                    (SELECT count(*) FROM publication_transfer transfer WHERE transfer.candidate_id=c.id AND transfer.complete=1)+
                    json_array_length(x.value,'$.platform.files')`,
             )
