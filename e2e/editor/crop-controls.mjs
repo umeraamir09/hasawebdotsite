@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { openSection } from "./shell.mjs";
 
 export async function checkCropControls({
   getPage,
@@ -301,6 +302,8 @@ export async function checkCropControls({
   await run("crop banner pointer and mobile dialog focus", async () => {
     await boot();
     await getPage().setViewportSize({ width: 390, height: 844 });
+    // On a phone the profile editor opens as a sheet over the preview.
+    await openSection(getPage(), "Profile");
     await select("banner", await original());
     const page = getPage();
     const stage = page.getByRole("button", {

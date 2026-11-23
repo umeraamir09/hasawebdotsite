@@ -9,6 +9,7 @@ import {
   resolvedMode,
   rgb,
 } from "../support/first-paint.mjs";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const PDF = Buffer.from(
@@ -66,9 +67,7 @@ export async function checkAppearanceJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -101,6 +100,7 @@ export async function checkAppearanceJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("appearance-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -110,6 +110,7 @@ export async function checkAppearanceJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolioId = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0].id;
@@ -127,10 +128,10 @@ export async function checkAppearanceJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
@@ -138,15 +139,10 @@ export async function checkAppearanceJourney({
       // One project with a case study and the resume component give all
       // three public page types.
       const sections = page.getByRole("region", {
-        name: "Portfolio sections",
+        name: "Page",
         exact: true,
       });
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Projects", exact: true })
-        .click();
+      await addSection(page, "Projects");
       await page
         .getByRole("button", { name: "Add project", exact: true })
         .click();
@@ -164,12 +160,7 @@ export async function checkAppearanceJourney({
         .getByRole("textbox", { name: "Case study body", exact: true })
         .focus();
       await page.keyboard.type("The same words in every theme.");
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Resume download", exact: true })
-        .click();
+      await addSection(page, "Resume download");
       await sections
         .getByRole("button", { name: "Resume download", exact: true })
         .click();
@@ -187,9 +178,7 @@ export async function checkAppearanceJourney({
         .waitFor({ timeout: 60000 });
 
       // Owner controls: exactly six presets, three fonts and three modes.
-      await page
-        .getByRole("button", { name: "Customization", exact: true })
-        .click();
+      await page.getByRole("button", { name: "Style", exact: true }).click();
       const panel = page.getByRole("region", {
         name: "Customization",
         exact: true,
@@ -305,7 +294,7 @@ export async function checkAppearanceJourney({
         fontId: "lora",
         colorMode: "dark",
       });
-      await page.getByRole("button", { name: "Content", exact: true }).click();
+      await page.getByRole("button", { name: "Build", exact: true }).click();
       await publish();
 
       const site = "https://appearance-site.hasaweb.site";
@@ -443,13 +432,9 @@ export async function checkAppearanceJourney({
 
         // Change to System with another preset and font; the next Publish
         // applies it to every page and leaves content and order unchanged.
-        await page
-          .getByRole("button", { name: "Customization", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Style", exact: true }).click();
         await choose("coffee", "manrope", "system");
-        await page
-          .getByRole("button", { name: "Content", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Build", exact: true }).click();
         await publish();
         // Owner asset URLs name their publication candidate; everything else
         // in the body must be byte-identical across the two appearances.

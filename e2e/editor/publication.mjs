@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { openChecklist, openPanel, openSection } from "./shell.mjs";
 
 export async function checkPublicationControls({
   getPage,
@@ -35,13 +36,12 @@ export async function checkPublicationControls({
     await boot(draft);
     return draft;
   }
-  const checklist = () =>
-    getPage().getByRole("region", { name: "Publication checklist" });
+  const checklist = () => openChecklist(getPage());
   async function check() {
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: "Check publication readiness" })
       .click();
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: "Complete your name", exact: true })
       .waitFor();
   }
@@ -76,7 +76,7 @@ export async function checkPublicationControls({
       ];
       await boot(draft);
       await check();
-      await checklist()
+      await (await checklist())
         .getByRole("button", {
           name: "Complete your projects title",
           exact: true,
@@ -123,7 +123,9 @@ export async function checkPublicationControls({
             '[data-publication-field="address"] input',
           ],
         ]) {
-          await checklist().getByRole("button", { name, exact: true }).click();
+          await (await checklist())
+            .getByRole("button", { name, exact: true })
+            .click();
           await getPage().waitForFunction((selector) => {
             const root = document.querySelector(selector.split(" ")[0]);
             return root?.contains(document.activeElement);
@@ -135,10 +137,11 @@ export async function checkPublicationControls({
         fullPage: true,
       });
       await getPage().setViewportSize({ width: 1440, height: 900 });
+      await openPanel(getPage(), "Build");
       await getPage()
         .getByLabel("Name", { exact: true })
         .fill("Edited after check");
-      await checklist()
+      await (await checklist())
         .getByText("Your draft changed. Check it again before publishing.")
         .waitFor();
       await getPage().waitForFunction(
@@ -173,23 +176,22 @@ export async function checkPublicationControls({
       await boot(draft);
       await check();
       assert.equal(
-        await checklist()
+        await (await checklist())
           .getByRole("button", { name: /resume download resume PDF/ })
           .count(),
         0,
       );
-      await checklist()
+      await (await checklist())
         .getByRole("button", {
           name: "Choose an approved theme",
         })
         .click();
       await getPage().getByLabel("Approved option").selectOption("violet");
       await getPage().getByRole("button", { name: "Close correction" }).click();
-      await getPage()
-        .getByRole("region", { name: "Publication checklist" })
+      await (await openChecklist(getPage()))
         .getByRole("button", { name: "Check publication readiness" })
         .click();
-      await checklist()
+      await (await checklist())
         .getByRole("button", {
           name: "Complete your text section title",
           exact: true,
@@ -243,7 +245,7 @@ export async function checkPublicationControls({
       await boot(draft);
       await check();
       assert.equal(
-        await checklist()
+        await (await checklist())
           .getByRole("button", {
             name: "Complete your text section text",
             exact: true,
@@ -251,17 +253,12 @@ export async function checkPublicationControls({
           .count(),
         0,
       );
-      await getPage()
-        .locator(
-          '[data-order-id="optional-sample"] .ordered-item-heading button',
-        )
-        .nth(1)
-        .click();
+      await openSection(getPage(), "Example");
       await getPage().getByLabel("Section title").fill("My section");
-      await checklist()
+      await (await checklist())
         .getByRole("button", { name: "Check publication readiness" })
         .click();
-      await checklist()
+      await (await checklist())
         .getByRole("button", {
           name: "Complete your text section text",
           exact: true,
@@ -270,14 +267,14 @@ export async function checkPublicationControls({
       await getPage()
         .getByLabel("Section text", { exact: true })
         .fill("My own text");
-      await checklist()
+      await (await checklist())
         .getByRole("button", { name: "Check publication readiness" })
         .click();
-      await checklist()
+      await (await checklist())
         .getByRole("button", { name: "Complete your name", exact: true })
         .waitFor();
       assert.equal(
-        await checklist()
+        await (await checklist())
           .getByRole("button", {
             name: "Complete your text section text",
             exact: true,
@@ -328,13 +325,16 @@ export async function checkPublicationControls({
         )
       )[0];
       await check();
-      await checklist()
+      await (await checklist())
         .getByRole("button", {
           name: "Complete your work experience end date",
           exact: true,
         })
         .click();
       await getPage().getByLabel("Required value").fill("2026-");
+      // The correction stays above the panel while the address is edited in
+      // Share.
+      await openPanel(getPage(), "Share");
       await getPage().getByLabel("Address name").fill("unfinished-");
       await getPage()
         .getByRole("button", { name: "Remove this section", exact: true })
@@ -362,7 +362,7 @@ export async function checkPublicationControls({
         "unfinished-",
       );
       assert.equal(
-        await checklist()
+        await (await checklist())
           .getByRole("button", {
             name: "Finish unsaved section details",
             exact: true,
@@ -381,7 +381,7 @@ export async function checkPublicationControls({
         .waitFor();
       await check();
       assert.equal(
-        await checklist()
+        await (await checklist())
           .getByRole("button", {
             name: "Reserve or restore your address",
             exact: true,

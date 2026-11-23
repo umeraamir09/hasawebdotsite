@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createGroupRunner } from "../support/groups.mjs";
 import { freePort } from "../support/ports.mjs";
+import { openPanel } from "./shell.mjs";
 
 // Serves the editor, guide and owner-entry fixtures through a local proxy in
 // front of the owner runtime and opens one Chromium context. `core()` runs the
@@ -52,6 +53,9 @@ export async function createEditorHarness({
     format: "esm",
     jsx: "automatic",
     external: ["/fonts/*", "/portfolio-platform/*"],
+    // The Workbench CSS self-hosts Geist; the bundle emits the font files.
+    loader: { ".ttf": "file" },
+    assetNames: "[name]-[hash]",
     outdir: directory,
     define: { "process.env.NODE_ENV": '"production"', "process.env": "{}" },
   });
@@ -249,6 +253,11 @@ export async function createEditorHarness({
           "Content-Type",
           url.pathname.endsWith(".js") ? "text/javascript" : "text/css",
         );
+        res.end(await readFile(join(directory, url.pathname.slice(1))));
+        return;
+      }
+      if (/^\/geist(?:-mono)?-variable-[A-Z0-9]+\.ttf$/.test(url.pathname)) {
+        res.setHeader("Content-Type", "font/ttf");
         res.end(await readFile(join(directory, url.pathname.slice(1))));
         return;
       }
@@ -480,6 +489,7 @@ export async function createEditorHarness({
       "address local typing, explicit reservation, reload, keyboard and mobile",
       async () => {
         await boot();
+        await openPanel(page, "Share");
         const control = page.getByRole("form", { name: "Portfolio address" });
         const input = control.getByRole("textbox", { name: "Address name" });
         await input.fill("raw INVALID");
@@ -514,6 +524,7 @@ export async function createEditorHarness({
         });
         await page.reload();
         await page.waitForFunction(() => window.editorFixture?.ready);
+        await openPanel(page, "Share");
         await page
           .getByRole("form", { name: "Portfolio address" })
           .getByRole("status")
@@ -550,6 +561,7 @@ export async function createEditorHarness({
           ),
           true,
         );
+        await openPanel(page, "Share");
         await page
           .getByRole("textbox", { name: "Address name" })
           .fill("editor-replacement");
@@ -657,7 +669,7 @@ export async function createEditorHarness({
       },
     );
     await run(
-      "valid edits reach both viewport widths before autosave",
+      "valid edits reach both preview widths across the viewport matrix before autosave",
       async () => {
         await boot();
         let release;
@@ -678,19 +690,20 @@ export async function createEditorHarness({
           )[0].draft,
         );
         assert.equal(saved.profile.name, fixture.profile.name);
-        for (const parentWidth of [1500, 520]) {
+        // The confirmed viewport matrix: desktop, tablet and phone.
+        for (const parentWidth of [1280, 768, 360]) {
           await page.setViewportSize({ width: parentWidth, height: 1000 });
-          if (parentWidth === 520)
-            await page
-              .getByRole("button", { name: "View preview", exact: true })
-              .click();
+          assert.equal(
+            await page.evaluate(
+              () => document.documentElement.scrollWidth <= innerWidth,
+            ),
+            true,
+          );
           for (const [label, width] of [
             ["Desktop", 1120],
             ["Mobile", 390],
           ]) {
-            await page
-              .getByRole("button", { name: label, exact: true })
-              .click();
+            await page.getByRole("radio", { name: label, exact: true }).click();
             assert.equal(await frame().evaluate(() => innerWidth), width);
             assert.equal(
               await frame().locator("h1").innerText(),
@@ -742,8 +755,7 @@ export async function createEditorHarness({
           "unfinished@",
         );
         await page
-          .locator('[data-order-id="text-1"] .ordered-item-heading button')
-          .nth(1)
+          .locator('.page-outline-sections [data-order-id="text-1"] button')
           .click();
         await page.getByLabel("Section title").fill("Accepted section");
         await frame().waitForFunction(
@@ -785,9 +797,7 @@ export async function createEditorHarness({
             .getAttribute("aria-current"),
           "true",
         );
-        await page
-          .getByRole("button", { name: "Customization", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Style", exact: true }).click();
         // This fixture draft stores non-catalog IDs, so the panel lists the
         // six approved presets and asks the owner to choose.
         const customization = page.getByRole("region", {
@@ -1130,7 +1140,7 @@ export async function createEditorHarness({
         );
         assert.equal(
           await page
-            .getByRole("button", { name: "Profile", exact: true })
+            .getByRole("button", { name: /^Profile\b/ })
             .getAttribute("aria-current"),
           "true",
         );

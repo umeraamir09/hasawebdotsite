@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { openPanel } from "./shell.mjs";
 
 // Phase 49. Uses its own owner, `draft-closer`, because deletion is
 // permanent; `closer-other` is the same account's session on another device.
@@ -107,6 +108,7 @@ export async function checkAccountDeletionJourney({
         { owner, portfolioId },
       );
       // Unfinished input is mirrored locally before any save.
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("Not A Name");
       const keys = (target) =>
         target.evaluate(
@@ -150,7 +152,6 @@ export async function checkAccountDeletionJourney({
           JSON.stringify(["draft-alice", "alice-portfolio", "kept"]),
         ),
       );
-      await page.getByRole("button", { name: "Sharing", exact: true }).click();
       const section = page.getByRole("region", { name: "Delete account" });
       await section
         .getByRole("button", { name: "Delete account", exact: true })

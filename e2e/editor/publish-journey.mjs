@@ -4,6 +4,7 @@ import {
   assertPublishedProjects,
   preparePublishedProjects,
 } from "./project-controls.mjs";
+import { openChecklist, openPanel } from "./shell.mjs";
 import {
   assertPublishedSkills,
   preparePublishedSkills,
@@ -61,9 +62,7 @@ export async function checkPublishJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -102,6 +101,7 @@ export async function checkPublishJourney({
       }
       await upload("avatar");
       await upload("banner");
+      await openPanel(page, "Share");
       const address = page.getByLabel("Address name");
       await address.fill("publication-first");
       await page
@@ -157,10 +157,10 @@ export async function checkPublishJourney({
       );
 
       await address.fill("unfinished-");
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "unsaved input" })
         .waitFor();
@@ -182,6 +182,7 @@ export async function checkPublishJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
 
       const meta = (
         await sql("SELECT draft_rev FROM portfolio WHERE id=?", [portfolio.id])
@@ -253,10 +254,10 @@ export async function checkPublishJourney({
         assert.equal(response.status(), 200);
         await route.abort("connectionreset");
       });
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "Could not finish publication" })
         .waitFor();
@@ -267,13 +268,13 @@ export async function checkPublishJourney({
       )[0].id;
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .waitFor();
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       assert.equal(
@@ -296,7 +297,7 @@ export async function checkPublishJourney({
       );
       const publicUrl = "https://publication-final.hasaweb.site";
       assert.equal(
-        await checklist
+        await (await checklist())
           .getByRole("link", { name: "Open published portfolio" })
           .getAttribute("href"),
         publicUrl,
@@ -304,10 +305,10 @@ export async function checkPublishJourney({
       await context.grantPermissions(["clipboard-read", "clipboard-write"], {
         origin: browserOrigin,
       });
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Copy public URL", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Copied", exact: true })
         .waitFor();
       assert.equal(
@@ -331,7 +332,7 @@ export async function checkPublishJourney({
         });
       });
       const popup = page.waitForEvent("popup");
-      await checklist
+      await (await checklist())
         .getByRole("link", { name: "Open published portfolio" })
         .click();
       const visitor = await popup;
@@ -399,10 +400,10 @@ export async function checkPublishJourney({
         assert.equal(response.status(), 200);
         await route.abort("connectionreset");
       });
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "Could not finish publication" })
         .waitFor({ timeout: 120000 });
@@ -413,23 +414,23 @@ export async function checkPublishJourney({
       await sql(
         "INSERT OR REPLACE INTO runtime_probe(key,value) VALUES('publication-withdrawal-failure','true')",
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "Could not finish publication" })
         .waitFor({ timeout: 120000 });
       await page.unroute("**/api/owner/publication/commit");
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "withdrawn-file cleanup is pending" })
         .waitFor({ timeout: 120000 });
       assert.equal(
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .count(),
         0,
@@ -454,7 +455,7 @@ export async function checkPublishJourney({
       await hold();
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .waitFor();
       // An attempt admitted before the hold may have failed afterwards and
@@ -471,10 +472,10 @@ export async function checkPublishJourney({
       await sql(
         "DELETE FROM runtime_probe WHERE key='publication-withdrawal-failure'",
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       const saved = (
@@ -566,7 +567,7 @@ export async function checkPublishJourney({
       );
       assert.equal((await object.json()).exists, false);
       await page
-        .getByRole("region", { name: "Portfolio sections", exact: true })
+        .getByRole("region", { name: "Page", exact: true })
         .getByRole("button", { name: "Projects", exact: true })
         .click();
       const fullProject = page.locator("[data-project-id]").filter({
@@ -584,10 +585,10 @@ export async function checkPublishJourney({
         window.editorFixture.recovery.store.getState().controller.flushValid(),
       );
       await assertPublishedProjects(page, await (await publicRead()).text());
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       const removedHtml = await (await publicRead()).text();

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 function parse(page, html) {
   return page.evaluate((markup) => {
@@ -69,9 +70,7 @@ export async function checkSocialLinksJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -104,6 +103,7 @@ export async function checkSocialLinksJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("links-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -113,6 +113,7 @@ export async function checkSocialLinksJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const site = "https://links-site.hasaweb.site";
       async function read(path = "/") {
         const response = await authority(
@@ -137,10 +138,10 @@ export async function checkSocialLinksJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
@@ -153,7 +154,7 @@ export async function checkSocialLinksJourney({
           )[0].links,
         );
       const sections = page.getByRole("region", {
-        name: "Portfolio sections",
+        name: "Page",
         exact: true,
       });
       const control = page.getByRole("region", {
@@ -163,12 +164,7 @@ export async function checkSocialLinksJourney({
       const entry = (id) => control.locator(`[data-link-id="${id}"]`);
 
       // Add the optional component from the picker; no link is re-entered.
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Social links", exact: true })
-        .click();
+      await addSection(page, "Social links");
       await sections
         .getByRole("button", { name: "Social links", exact: true })
         .click();
@@ -243,17 +239,17 @@ export async function checkSocialLinksJourney({
         .getByLabel("Show in social links component", { exact: true })
         .uncheck();
       await flush();
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("button", {
           name: "Complete your profile link",
           exact: true,
         })
         .waitFor({ timeout: 60000 });
       assert.equal(
-        await checklist.getByText("Publication complete.").count(),
+        await (await checklist()).getByText("Publication complete.").count(),
         0,
       );
       assert.deepEqual(
@@ -263,8 +259,8 @@ export async function checkSocialLinksJourney({
 
       // Confirmed removal keeps the shared links and removes the section.
       await sections
-        .getByRole("button", { name: "Remove Social links", exact: true })
-        .click();
+        .getByRole("button", { name: "Social links", exact: true })
+        .press("Delete");
       await page
         .getByRole("button", { name: "Remove section", exact: true })
         .click();

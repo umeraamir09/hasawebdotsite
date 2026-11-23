@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { openChecklist, openPanel } from "./shell.mjs";
 
 // Phase 37: the owner controls for the approved Ginger cat and Hands
 // decorations and the optional Face Reveal second photo, from the editor
@@ -93,9 +94,7 @@ export async function checkAvatarExtrasJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -128,6 +127,7 @@ export async function checkAvatarExtrasJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("avatar-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -137,6 +137,7 @@ export async function checkAvatarExtrasJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolioId = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0].id;
@@ -166,10 +167,10 @@ export async function checkAvatarExtrasJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
@@ -268,15 +269,15 @@ export async function checkAvatarExtrasJourney({
         /publicly accessible, even before anyone reveals it/,
       );
       await flush();
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      const faceIssue = checklist.getByRole("button", {
+      const faceIssue = (await checklist()).getByRole("button", {
         name: /Complete your Face Reveal image/,
       });
       await faceIssue.waitFor({ timeout: 60000 });
       assert.equal(
-        await checklist.getByText("Publication complete.").count(),
+        await (await checklist()).getByText("Publication complete.").count(),
         0,
       );
       assert.equal(

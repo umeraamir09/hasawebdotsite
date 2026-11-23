@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { openSection } from "./shell.mjs";
 
 export async function checkProfileControls({
   getPage,
@@ -363,6 +364,7 @@ export async function checkProfileControls({
         0,
       );
       await getPage().setViewportSize({ width: 390, height: 844 });
+      await openSection(getPage(), "Profile");
       await getPage().screenshot({
         path: join(evidence, "profile-mobile.png"),
         fullPage: true,

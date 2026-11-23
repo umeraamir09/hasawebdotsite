@@ -308,7 +308,8 @@ export async function checkGuideReview({
         .filter({ hasText: "Preserved setup input" })
         .waitFor({ timeout: 30000 });
       assert.deepEqual(await stored(), savedBefore);
-      // The activated editor offers sign-out.
+      // The activated editor offers sign-out from the account menu.
+      await page.getByRole("button", { name: "Account", exact: true }).click();
       await page.getByRole("button", { name: "Sign out" }).click();
       assert.equal(await page.evaluate(() => window.editorFixture.signOuts), 1);
 

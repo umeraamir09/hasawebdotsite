@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 const RESUME_BYTES = 10_485_760;
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -84,9 +85,7 @@ export async function checkResumeJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -119,6 +118,7 @@ export async function checkResumeJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("resume-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -128,6 +128,7 @@ export async function checkResumeJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolioId = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0].id;
@@ -167,25 +168,25 @@ export async function checkResumeJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
-      const missingIssue = checklist.getByRole("button", {
+      const missingIssue = (await checklist()).getByRole("button", {
         name: "Complete your resume download resume PDF",
         exact: true,
       });
       async function expectBlocked() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: "Publish", exact: true })
           .click();
         await missingIssue.waitFor({ timeout: 60000 });
         assert.equal(
-          await checklist.getByText("Publication complete.").count(),
+          await (await checklist()).getByText("Publication complete.").count(),
           0,
         );
       }
@@ -198,17 +199,11 @@ export async function checkResumeJourney({
 
       // The control is optional and ordered among the components.
       const sections = page.getByRole("region", {
-        name: "Portfolio sections",
+        name: "Page",
         exact: true,
       });
-      for (const title of ["Resume download", "Social links"]) {
-        await sections
-          .getByRole("button", { name: "Add component", exact: true })
-          .click();
-        await page
-          .getByRole("button", { name: `Add ${title}`, exact: true })
-          .click();
-      }
+      for (const title of ["Resume download", "Social links"])
+        await addSection(page, title);
       await sections
         .getByRole("button", { name: "Resume download", exact: true })
         .click();
@@ -470,8 +465,8 @@ export async function checkResumeJourney({
 
       // Removing the control withdraws the page and its file after Publish.
       await sections
-        .getByRole("button", { name: "Remove Resume download", exact: true })
-        .click();
+        .getByRole("button", { name: "Resume download", exact: true })
+        .press("Delete");
       await page
         .getByRole("button", { name: "Remove section", exact: true })
         .click();

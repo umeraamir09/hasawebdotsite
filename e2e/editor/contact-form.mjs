@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { openChecklist, openPanel } from "./shell.mjs";
 
 // Phase 44: an owner publishes a contact form, and a visitor's browser sends
 // through the published page's platform script to `/_/contact`. Turnstile's
@@ -43,8 +44,7 @@ export async function checkContactFormJourney({
     sql("SELECT payload,status FROM contact_outbox WHERE portfolio_id=?", [
       await portfolioId(),
     ]);
-  const checklist = () =>
-    getPage().getByRole("region", { name: "Publication checklist" });
+  const checklist = () => openChecklist(getPage());
 
   await run("an owner publishes a working contact form", async () => {
     await boot();
@@ -117,6 +117,7 @@ export async function checkContactFormJourney({
         .getByText("Upload complete. Your draft image is ready.")
         .waitFor();
     }
+    await openPanel(page, "Share");
     await page.getByLabel("Address name").fill(address);
     await page
       .getByRole("button", { name: "Save address", exact: true })
@@ -126,13 +127,14 @@ export async function checkContactFormJourney({
         exact: true,
       })
       .waitFor();
+    await openPanel(page, "Build");
     await page.evaluate(() =>
       window.editorFixture.recovery.store.getState().controller.flushValid(),
     );
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: /^(Retry )?Publish$/ })
       .click();
-    await checklist()
+    await (await checklist())
       .getByText("Publication complete.", { exact: true })
       .waitFor({ timeout: 120000 });
 
