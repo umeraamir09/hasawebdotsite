@@ -8,18 +8,21 @@ import {
   sharingCardPalette,
   sharingCardText,
 } from "@hasaweb/components/sharing-card";
-import platformFiles from "@hasaweb/components/static/manifest.json";
 import {
   type DraftDoc,
   resolveSeo,
   SEO_DESCRIPTION_MAX,
   SEO_TITLE_MAX,
 } from "@hasaweb/schema";
-import { appearanceCatalog } from "@hasaweb/theme";
 import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { privateImageUrl } from "../lib/assets/browser";
 import type { DraftController } from "../lib/draft/controller";
+import {
+  catalogFontFamily,
+  findCatalogFont,
+  loadCatalogFont,
+} from "../lib/editor/catalog-fonts";
 import { editEditorField, readEditorField } from "../lib/editor/fields";
 import { ImageUpload } from "./image-upload";
 
@@ -96,10 +99,7 @@ function OverrideField({
 function CardPreview({ draft }: { draft: DraftDoc }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
-  const font = appearanceCatalog.fonts.find(
-    (entry) => entry.id === draft.appearance.fontId,
-  );
-  const family = font ? `hasaweb-card-${font.id}` : "";
+  const font = findCatalogFont(draft.appearance.fontId);
   useEffect(() => {
     const element = box.current;
     if (!element) return;
@@ -110,16 +110,8 @@ function CardPreview({ draft }: { draft: DraftDoc }) {
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    const file = font?.asset.split("/").at(-1) ?? "";
-    const path = (platformFiles as Record<string, string>)[file];
-    if (!font || !path || [...document.fonts].some((f) => f.family === family))
-      return;
-    const face = new FontFace(family, `url(${path})`, {
-      weight: `${font.weight[0]} ${font.weight[1]}`,
-    });
-    document.fonts.add(face);
-    void face.load().catch(() => {});
-  }, [font, family]);
+    if (font) loadCatalogFont(font);
+  }, [font]);
   const { profile } = draft;
   const decoration =
     profile.decorationId === "cat" || profile.decorationId === "hands"
@@ -132,8 +124,9 @@ function CardPreview({ draft }: { draft: DraftDoc }) {
           palette={sharingCardPalette(
             draft.appearance.themeId,
             draft.appearance.colorMode,
+            draft.appearance.customColor,
           )}
-          fontFamily={`"${family}", ${font?.fallback ?? "sans-serif"}`}
+          fontFamily={font ? catalogFontFamily(font) : "sans-serif"}
           {...sharingCardText({
             name: profile.name,
             bio: profile.bio,

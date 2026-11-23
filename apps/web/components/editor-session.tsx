@@ -555,43 +555,33 @@ function Scope({
           )
         ) : (
           <>
-            {compact && (
-              <div className="editor-panel-header">
-                <h2 className="editor-panel-title">{panelLabels[panel]}</h2>
-                {sheetClose}
-              </div>
-            )}
-            <div className="editor-legacy">
-              {panel === "style" ? (
-                <AppearanceControls
+            <div className="editor-panel-header">
+              <h2 className="editor-panel-title">{panelLabels[panel]}</h2>
+              {sheetClose}
+            </div>
+            {panel === "style" ? (
+              <AppearanceControls controller={controller} disabled={disabled} />
+            ) : (
+              <div className="editor-legacy">
+                <AddressControl
                   controller={controller}
                   disabled={disabled}
+                  key={publicationKey}
                 />
-              ) : (
-                <>
-                  <AddressControl
-                    controller={controller}
-                    disabled={disabled}
-                    key={publicationKey}
-                  />
-                  <SharingControls
-                    controller={controller}
-                    disabled={disabled}
-                  />
-                  <SignInMethods
-                    controller={controller}
-                    disabled={disabled}
-                    initialNotice={linkNotice}
-                  />
-                  <AccountDeletion
-                    controller={controller}
-                    recovery={recovery}
-                    disabled={disabled}
-                    onDeleted={onDeleted}
-                  />
-                </>
-              )}
-            </div>
+                <SharingControls controller={controller} disabled={disabled} />
+                <SignInMethods
+                  controller={controller}
+                  disabled={disabled}
+                  initialNotice={linkNotice}
+                />
+                <AccountDeletion
+                  controller={controller}
+                  recovery={recovery}
+                  disabled={disabled}
+                  onDeleted={onDeleted}
+                />
+              </div>
+            )}
           </>
         )}
         {!compact && (

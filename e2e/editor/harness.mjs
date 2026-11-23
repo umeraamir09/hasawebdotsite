@@ -798,16 +798,21 @@ export async function createEditorHarness({
         );
         await page.getByRole("button", { name: "Style", exact: true }).click();
         // This fixture draft stores non-catalog IDs, so the panel lists the
-        // six approved presets and asks the owner to choose.
+        // six approved presets and asks the owner to choose. Custom needs a
+        // preset to start from.
         const customization = page.getByRole("region", {
-          name: "Customization",
+          name: "Style",
+          exact: true,
         });
+        const themes = customization
+          .getByRole("group", { name: "Theme", exact: true })
+          .getByRole("radio");
+        assert.equal(await themes.count(), 7);
         assert.equal(
           await customization
-            .getByRole("group", { name: "Theme", exact: true })
-            .getByRole("radio")
-            .count(),
-          6,
+            .getByRole("radio", { name: "Custom" })
+            .isDisabled(),
+          true,
         );
         assert.match(
           await customization.innerText(),

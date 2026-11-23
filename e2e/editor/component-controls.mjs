@@ -411,7 +411,7 @@ export async function checkComponentControls({
         .getByRole("button", { name: "Style", exact: true })
         .click();
       const style = page.getByRole("region", { name: "Style", exact: true });
-      await style.getByRole("region", { name: "Customization" }).waitFor();
+      await style.getByRole("group", { name: "Theme", exact: true }).waitFor();
       await style.getByRole("button", { name: "Close", exact: true }).click();
       await resize(page, { width: 1500, height: 1000 });
     },

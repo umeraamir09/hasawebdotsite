@@ -173,18 +173,16 @@ export async function checkAppearanceJourney({
         .getByText("Upload complete. Your draft resume is ready.")
         .waitFor({ timeout: 60000 });
 
-      // Owner controls: exactly six presets, three fonts and three modes.
-      await page.getByRole("button", { name: "Style", exact: true }).click();
-      const panel = page.getByRole("region", {
-        name: "Customization",
-        exact: true,
-      });
+      // Owner controls: exactly six presets and Custom, three fonts and
+      // three modes.
+      const panel = await openPanel(page, "Style");
       const group = (name) => panel.getByRole("group", { name, exact: true });
+      const modes = panel.getByRole("radiogroup", { name: "Mode" });
       assert.deepEqual(
         await group("Theme")
           .getByRole("radio")
           .evaluateAll((inputs) => inputs.map((input) => input.value)),
-        ["leaf", "violet", "clay", "matcha", "strawberry", "coffee"],
+        ["leaf", "violet", "clay", "matcha", "strawberry", "coffee", "custom"],
       );
       assert.deepEqual(
         await group("Font")
@@ -192,7 +190,7 @@ export async function checkAppearanceJourney({
           .evaluateAll((inputs) => inputs.map((input) => input.value)),
         ["dm-sans", "manrope", "lora"],
       );
-      assert.equal(await group("Starting mode").getByRole("radio").count(), 3);
+      assert.equal(await modes.getByRole("radio").count(), 3);
       assert.equal(
         await group("Theme").getByRole("radio", { name: "Leaf" }).isChecked(),
         true,
@@ -221,9 +219,9 @@ export async function checkAppearanceJourney({
         await group("Font")
           .getByRole("radio", { name: font(fontId).name })
           .check();
-        await group("Starting mode")
+        await modes
           .getByRole("radio", { name: new RegExp(`^${mode}`, "i") })
-          .check();
+          .click();
         await preview().waitForFunction(
           ({ themeId, fontId, mode }) =>
             document.documentElement.dataset.theme === themeId &&
@@ -232,8 +230,8 @@ export async function checkAppearanceJourney({
           { themeId, fontId, mode },
         );
       }
-      // The controls are native radio groups: keyboard selection works and
-      // axe finds no WCAG 2.2 AA violations in the panel.
+      // Theme and font are native radio groups, so keyboard selection works,
+      // and axe finds no WCAG 2.2 AA violations in the panel.
       await group("Font").getByRole("radio", { name: "DM Sans" }).focus();
       await page.keyboard.press("ArrowDown");
       assert.equal(
@@ -253,7 +251,7 @@ export async function checkAppearanceJourney({
         await page.evaluate(async () =>
           (
             await window.axe.run(
-              { include: [['[aria-label="Customization"]']] },
+              { include: [[".style-panel"]] },
               {
                 runOnly: {
                   type: "tag",
@@ -428,7 +426,7 @@ export async function checkAppearanceJourney({
 
         // Change to System with another preset and font; the next Publish
         // applies it to every page and leaves content and order unchanged.
-        await page.getByRole("button", { name: "Style", exact: true }).click();
+        await openPanel(page, "Style");
         await choose("coffee", "manrope", "system");
         await page.getByRole("button", { name: "Build", exact: true }).click();
         await publish();
@@ -469,6 +467,122 @@ export async function checkAppearanceJourney({
             await tab.evaluate(() => localStorage.clear());
           }
         }
+        // A custom color: the preview applies the generated pair at once,
+        // and Publish retains the same values as a stylesheet that every
+        // page links, so visitors see them from the first frame.
+        await openPanel(page, "Style");
+        await group("Theme").getByRole("radio", { name: "Custom" }).check();
+        const hex = panel.getByLabel("Hex color", { exact: true });
+        assert.equal(
+          await hex.inputValue(),
+          theme("coffee").light.accent.toUpperCase(),
+        );
+        await hex.fill("#285ACB");
+        await preview().waitForFunction(
+          () => document.documentElement.dataset.customColor === "#285acb",
+        );
+        const customPreview = await preview().evaluate(() => {
+          const root = document.documentElement;
+          const properties = Object.fromEntries(
+            [...root.style]
+              .filter((name) => name.startsWith("--pf-custom-"))
+              .map((name) => [name, root.style.getPropertyValue(name)]),
+          );
+          const painted = {};
+          for (const mode of ["light", "dark"]) {
+            root.dataset.colorMode = mode;
+            painted[mode] = getComputedStyle(root).backgroundColor;
+          }
+          delete root.dataset.colorMode;
+          return { properties, painted };
+        });
+        assert.equal(Object.keys(customPreview.properties).length, 20);
+        assert.equal(
+          customPreview.painted.light,
+          rgb(customPreview.properties["--pf-custom-light-page"]),
+        );
+        assert.equal(
+          customPreview.painted.dark,
+          rgb(customPreview.properties["--pf-custom-dark-page"]),
+        );
+        assert.notEqual(
+          customPreview.painted.light,
+          rgb(theme("coffee").light.page),
+        );
+        await panel
+          .getByRole("list", { name: "Automatic adjustments" })
+          .waitFor();
+        await flush();
+        assert.deepEqual((await saved()).appearance, {
+          themeId: "coffee",
+          fontId: "manrope",
+          colorMode: "system",
+          customColor: "#285acb",
+        });
+        await publish();
+        const palettes = new Set();
+        for (const path of PAGES) {
+          const response = await publicRead(`${site}${path}`);
+          strict(response.headers.get("Content-Security-Policy"));
+          const html = await response.text();
+          assert.match(
+            html,
+            /^<!doctype html><html lang="en" data-theme="coffee" data-font="manrope" data-initial-mode="system" data-custom-color="#285acb"><head>/,
+          );
+          assert.doesNotMatch(html, /\bstyle=|<style/);
+          const links = [
+            ...html.matchAll(/<link rel="stylesheet" href="([^"]+)">/g),
+          ].map((match) => match[1]);
+          assert.equal(links.length, 2, path);
+          assert.match(links[1], /^\/platform\/[a-f0-9]{16}-palette\.css$/);
+          palettes.add(links[1]);
+        }
+        assert.equal(palettes.size, 1);
+        const sheet = await publicRead(`${site}${[...palettes][0]}`);
+        assert.equal(sheet.status, 200);
+        assert.equal(
+          sheet.headers.get("content-type"),
+          "text/css; charset=utf-8",
+        );
+        assert.equal(
+          await sheet.text(),
+          `:root{${Object.entries(customPreview.properties)
+            .map(([name, value]) => `${name}:${value};`)
+            .join("")}}\n`,
+        );
+        for (const system of ["light", "dark"]) {
+          await tab.emulateMedia({ colorScheme: system });
+          await tab.evaluate(() => localStorage.clear());
+          await tab.goto(`${site}/`);
+          await tab.waitForURL(`${site}/`);
+          const frames = await paintedFrames(tab);
+          assert.deepEqual(
+            frames.filter(
+              (frame) => frame.background !== customPreview.painted[system],
+            ),
+            [],
+            `custom ${system} paints the previewed color from the first frame`,
+          );
+        }
+        await tab.screenshot({
+          path: join(evidence, "appearance-custom-dark.png"),
+        });
+        // Reset restores the preset palette in the preview at once.
+        await openPanel(page, "Style");
+        await panel
+          .getByRole("button", { name: "Reset to Coffee", exact: true })
+          .click();
+        await preview().waitForFunction(
+          () => !document.documentElement.hasAttribute("data-custom-color"),
+        );
+        assert.equal(
+          await group("Theme")
+            .getByRole("radio", { name: "Coffee" })
+            .isChecked(),
+          true,
+        );
+        await flush();
+        assert.equal((await saved()).appearance.customColor, undefined);
         assert.deepEqual(errors, []);
         const manrope = fonts.filter((entry) =>
           entry.url.endsWith("manrope-variable.ttf"),
