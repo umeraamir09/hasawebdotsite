@@ -38,7 +38,7 @@ Matcha, Strawberry and Coffee copy their semantic values exactly from the Figma 
 
 System mode follows the visitor's preference. An explicit visitor choice (stored in localStorage) overrides the owner's initial mode on every page of that portfolio.
 
-**Custom colors.** The [OKLCH generator](../packages/theme/README.md#custom-palette-contract) builds paired palettes from a seed, adjusts them to WCAG 2.2 AA and explains each adjustment; without a seed the resolver returns the exact preset. Owner controls and CSP-safe delivery of generated tokens are still open (see the [roadmap](roadmap.md#open-follow-ups)).
+**Custom colors.** The [OKLCH generator](../packages/theme/README.md#custom-palette-contract) builds paired palettes from a seed, adjusts them to WCAG 2.2 AA and explains each adjustment; without a seed the resolver returns the exact preset. The Style panel's Custom tile starts from the selected preset's accent, shows the generated light and dark pair and lists each adjustment in one line. Choosing a preset, or Reset, removes the seed. The [architecture](architecture.md#7-components-rendering-and-appearance) describes how the generated palette reaches the preview and published pages.
 
 ## Fonts
 
