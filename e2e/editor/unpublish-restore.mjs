@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { openChecklist, openPanel } from "./shell.mjs";
 
 // Phase 48: Unpublish withdraws the public site but keeps the draft and the
 // claimed address, which no other account can take; Publish restores it.
@@ -46,9 +47,7 @@ export async function checkUnpublishJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -88,6 +87,7 @@ export async function checkUnpublishJourney({
       // A retried run finds its earlier name permanently claimed.
       const name = `unpublish-${Date.now().toString(36)}`;
       const publicUrl = `https://${name}.hasaweb.site`;
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill(name);
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -97,6 +97,7 @@ export async function checkUnpublishJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolio = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0];
@@ -127,10 +128,10 @@ export async function checkUnpublishJourney({
           withdrawal: null,
         },
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       async function publicRead(url = `${publicUrl}/`) {
@@ -203,7 +204,7 @@ export async function checkUnpublishJourney({
       assert.equal((await publicRead()).status, 200);
 
       // Cancelling keeps the site live.
-      const unpublish = checklist.getByRole("button", {
+      const unpublish = (await checklist()).getByRole("button", {
         name: "Unpublish website",
         exact: true,
       });
@@ -231,11 +232,11 @@ export async function checkUnpublishJourney({
         .getByRole("button", { name: "Confirm unpublish", exact: true })
         .click();
       await dialog.waitFor({ state: "detached" });
-      await checklist
+      await (await checklist())
         .getByText(/^Unpublished\. Your site is offline\./)
         .waitFor();
       assert.equal(
-        await checklist
+        await (await checklist())
           .getByRole("link", { name: "Open published portfolio" })
           .count(),
         0,
@@ -342,21 +343,21 @@ export async function checkUnpublishJourney({
       // The state survives a reload, and Publish restores the same address.
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await checklist
+      await (await checklist())
         .getByText(/^Unpublished\. Your site is offline\./)
         .waitFor();
       await page.getByLabel("Name", { exact: true }).fill("Restored owner");
       await page.evaluate(() =>
         window.editorFixture.recovery.store.getState().controller.flushValid(),
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       assert.equal(
-        await checklist
+        await (await checklist())
           .getByRole("link", { name: "Open published portfolio" })
           .getAttribute("href"),
         publicUrl,

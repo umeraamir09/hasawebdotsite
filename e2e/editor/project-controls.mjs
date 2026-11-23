@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 export async function checkProjectControls({
   getPage,
@@ -25,17 +26,8 @@ export async function checkProjectControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
-      const sections = page.getByRole("region", {
-        name: "Portfolio sections",
-        exact: true,
-      });
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Projects", exact: true })
-        .click();
+      await resize(page, { width: 390, height: 844 });
+      await addSection(page, "Projects");
       assert.equal(await page.locator("[data-project-id]").count(), 0);
       await page
         .getByRole("button", { name: "Add project", exact: true })
@@ -68,9 +60,7 @@ export async function checkProjectControls({
       await page
         .getByRole("button", { name: "Continue preserved edits", exact: true })
         .click();
-      await sections
-        .getByRole("button", { name: "Projects", exact: true })
-        .click();
+      await openSection(page, "Projects");
       await page.waitForFunction(() =>
         Array.from(document.querySelectorAll("label")).some(
           (label) =>
@@ -144,30 +134,27 @@ export async function checkProjectControls({
         path: join(evidence, "project-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }
 
 export async function preparePublishedProjects(page, image) {
-  const sections = page.getByRole("region", {
-    name: "Portfolio sections",
-    exact: true,
-  });
-  await sections
-    .getByRole("button", { name: "Add component", exact: true })
-    .click();
-  await page.getByRole("button", { name: "Add Projects", exact: true }).click();
+  await addSection(page, "Projects");
   await page.getByRole("button", { name: "Add project", exact: true }).click();
-  const checklist = page.getByRole("region", { name: "Publication checklist" });
-  await checklist.getByRole("button", { name: "Publish", exact: true }).click();
-  await checklist
+  const checklist = () => openChecklist(page);
+  await (await checklist())
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
+  await (await checklist())
     .getByText(/projects title/i)
     .first()
     .waitFor();
   await page.getByLabel("Project title", { exact: true }).fill("Owner project");
-  await checklist.getByRole("button", { name: "Publish", exact: true }).click();
-  await checklist
+  await (await checklist())
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
+  await (await checklist())
     .getByText(/projects summary/i)
     .first()
     .waitFor();
@@ -254,7 +241,7 @@ export async function preparePublishedProjects(page, image) {
   await page.evaluate(() =>
     window.editorFixture.recovery.store.getState().controller.flushValid(),
   );
-  await sections.getByRole("button", { name: "Profile", exact: true }).click();
+  await openSection(page, "Profile");
 }
 
 export async function assertPublishedProjects(page, html) {

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 const TITLE = 'Sharing owner · "Designer" <&>';
 const DESCRIPTION = "Product design notes & experiments.";
@@ -49,9 +50,7 @@ export async function checkSharingJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -89,6 +88,7 @@ export async function checkSharingJourney({
         "Adjust banner",
         "Banner image",
       );
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("sharing-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -98,18 +98,10 @@ export async function checkSharingJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
 
       // A project with a case study gives a page-specific title to check.
-      const sections = page.getByRole("region", {
-        name: "Portfolio sections",
-        exact: true,
-      });
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Projects", exact: true })
-        .click();
+      await addSection(page, "Projects");
       await page
         .getByRole("button", { name: "Add project", exact: true })
         .click();
@@ -147,7 +139,7 @@ export async function checkSharingJourney({
 
       // Defaults: the card shows the name and bio, and the image is the
       // generated profile card, drawn from private owner-only image URLs.
-      await page.getByRole("button", { name: "Sharing", exact: true }).click();
+      await page.getByRole("button", { name: "Share", exact: true }).click();
       const panel = page.getByRole("region", {
         name: "Search and sharing",
         exact: true,
@@ -273,19 +265,15 @@ export async function checkSharingJourney({
       }
 
       async function publish() {
-        await page
-          .getByRole("button", { name: "Content", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Build", exact: true }).click();
         await saved();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
-        await page
-          .getByRole("button", { name: "Sharing", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Share", exact: true }).click();
       }
       // Published pages carry the saved values, escaped, allow indexing and
       // share one image, which is returned for checking.

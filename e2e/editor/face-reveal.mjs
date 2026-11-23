@@ -7,6 +7,7 @@ import {
   exercise,
   snapshot,
 } from "../support/face-reveal-renderer.mjs";
+import { openChecklist, openPanel } from "./shell.mjs";
 
 // Phase 38: Face Reveal and visitor playback from the editor preview to a
 // real published page, then withdrawal of the second photo. Disabling Face
@@ -100,9 +101,7 @@ export async function checkFaceRevealJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       for (const [purpose, color] of [
         ["avatar", "#6b8f2a"],
         ["banner", "#222222"],
@@ -126,6 +125,7 @@ export async function checkFaceRevealJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("reveal-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -135,6 +135,7 @@ export async function checkFaceRevealJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolioId = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0].id;
@@ -165,10 +166,10 @@ export async function checkFaceRevealJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }

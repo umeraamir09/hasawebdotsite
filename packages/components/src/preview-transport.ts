@@ -22,6 +22,25 @@ const selectionSchema = z.discriminatedUnion("kind", [
 ]);
 export type PreviewSelection = z.infer<typeof selectionSchema>;
 export type PreviewIdentity = { ownerId: string; portfolioId: string };
+const actionSchema = z.enum(["up", "down", "remove"]);
+// A section action chosen on the preview canvas. The parent checks the ID
+// against its draft before acting.
+export type PreviewAction = z.infer<typeof actionSchema>;
+const schemeSchema = z.enum(["light", "dark"]);
+export type PreviewScheme = z.infer<typeof schemeSchema>;
+// The editor's canvas outline. The receiver creates it and calls it with the
+// selection and after each displayed model; Review never selects, so it never
+// shows.
+export type PreviewOverlay = {
+  // `actions` is false while the editor shows them in its mobile dock.
+  select(selection: PreviewSelection, actions: boolean): void;
+  refresh(): void;
+  dispose(): void;
+};
+export type PreviewOverlayFactory = (port: {
+  root: HTMLElement;
+  act(action: PreviewAction, id: string): void;
+}) => PreviewOverlay;
 const common = { protocol: z.literal(1), channel: channelSchema };
 const wireSchema = z.discriminatedUnion("kind", [
   z.strictObject({ ...common, kind: z.literal("hello") }),
@@ -79,7 +98,15 @@ const wireSchema = z.discriminatedUnion("kind", [
     ...common,
     kind: z.literal("select"),
     selection: selectionSchema,
+    actions: z.boolean().optional(),
   }),
+  z.strictObject({
+    ...common,
+    kind: z.literal("action"),
+    action: actionSchema,
+    id: z.string().min(1).max(128),
+  }),
+  z.strictObject({ ...common, kind: z.literal("scheme"), mode: schemeSchema }),
 ]);
 type Wire = z.infer<typeof wireSchema>;
 export type PreviewState =
@@ -206,6 +233,7 @@ export function attachPreviewReceiver(options: {
   parentOrigin: string;
   channel: string;
   identity: PreviewIdentity;
+  overlay?: PreviewOverlayFactory | undefined;
 }) {
   const { parentWindow, parentOrigin, channel } = options;
   configuration(parentOrigin, channel);
@@ -294,6 +322,8 @@ export function attachPreviewReceiver(options: {
           "[data-component-id], [data-component=profile]",
         ))
           section.tabIndex = 0;
+        overlay?.refresh();
+        reportScheme();
         clear();
         send({
           protocol: 1,
@@ -309,9 +339,34 @@ export function attachPreviewReceiver(options: {
       displayed &&
       selected(displayed, message.selection)
     )
-      markSelection(message.selection);
+      markSelection(message.selection, message.actions ?? true);
+    else if (message.kind === "scheme") {
+      const toggle = options.root.querySelector<HTMLButtonElement>(
+        "[data-theme-toggle]",
+      );
+      if (document.documentElement.dataset.colorMode !== message.mode)
+        toggle?.click();
+    }
   };
-  function markSelection(selection: PreviewSelection) {
+  // The parent's scheme toggle mirrors the preview, including the visitor
+  // toggle inside it.
+  let reported: string | undefined;
+  function reportScheme() {
+    const mode = schemeSchema.safeParse(
+      document.documentElement.dataset.colorMode,
+    );
+    if (!mode.success || mode.data === reported) return;
+    reported = mode.data;
+    send({ protocol: 1, channel, kind: "scheme", mode: mode.data });
+  }
+  const schemeObserver = new MutationObserver(reportScheme);
+  schemeObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-color-mode"],
+  });
+  let actions = true;
+  function markSelection(selection: PreviewSelection, showActions = actions) {
+    actions = showActions;
     for (const element of options.root.querySelectorAll<HTMLElement>(
       "[data-component], [data-component-id]",
     )) {
@@ -321,7 +376,15 @@ export function attachPreviewReceiver(options: {
           : element.dataset.componentId === selection.id;
       element.toggleAttribute("data-editor-selected", active);
     }
+    overlay?.select(selection, actions);
   }
+  const overlay = options.overlay?.({
+    root: options.root,
+    act(action, id) {
+      if (displayed?.components.some((component) => component.id === id))
+        send({ protocol: 1, channel, kind: "action", action, id });
+    },
+  });
   const choose = (event: Event) => {
     if (event instanceof KeyboardEvent && !["Enter", " "].includes(event.key))
       return;
@@ -347,6 +410,8 @@ export function attachPreviewReceiver(options: {
   return () => {
     clear();
     displayed = null;
+    overlay?.dispose();
+    schemeObserver.disconnect();
     window.removeEventListener("message", receive);
     options.root.removeEventListener("click", choose);
     options.root.removeEventListener("keydown", choose);
@@ -360,6 +425,8 @@ export function connectPreviewBridge(options: {
   identity: PreviewIdentity;
   onState(state: PreviewState): void;
   onSelect(selection: PreviewSelection): void;
+  onAction?(action: PreviewAction, id: string): void;
+  onScheme?(mode: PreviewScheme): void;
 }) {
   configuration(options.origin, options.channel);
   const { iframe, origin, channel } = options;
@@ -499,6 +566,9 @@ export function connectPreviewBridge(options: {
         if (preparation) void render(sequence, preparation, abort.signal);
       }
     } else if (message.kind === "select") options.onSelect(message.selection);
+    else if (message.kind === "action")
+      options.onAction?.(message.action, message.id);
+    else if (message.kind === "scheme") options.onScheme?.(message.mode);
     else if ("sequence" in message && message.sequence === pending?.sequence) {
       if (message.kind === "rejected") settle(false);
       else if (message.kind === "applied" && pending.offset === "applied")
@@ -539,8 +609,12 @@ export function connectPreviewBridge(options: {
       state(ready ? "preparing" : "connecting");
       if (ready) void render(sequence, prepare, abort.signal);
     },
-    select(selection: PreviewSelection) {
-      if (!closed) send({ protocol: 1, channel, kind: "select", selection });
+    select(selection: PreviewSelection, actions = true) {
+      if (!closed)
+        send({ protocol: 1, channel, kind: "select", selection, actions });
+    },
+    scheme(mode: PreviewScheme) {
+      if (!closed) send({ protocol: 1, channel, kind: "scheme", mode });
     },
     dispose() {
       if (closed) return;

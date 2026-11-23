@@ -60,7 +60,7 @@ Source: [onboarding.md](onboarding.md). Apply the existing browser/viewport, pri
 Source: [Edit, arrange, and preview the portfolio](product.md#3-edit-arrange-and-preview-the-portfolio).
 
 1. The editor provides a content and customization panel and live preview. Selecting a component opens fields and settings for that component.
-2. The component picker explains the content, upload, link, or connected account each component needs. Adding a component places it in the draft and preview.
+2. The Add section gallery shows a render of each component type and marks a single-instance type as added once it is on the page. Adding a component places it in the draft and preview.
 3. A second instance of any optional component type except general text is prevented. Multiple text sections and multiple entries within projects, skills, work experience, and social links are accepted.
 4. Drag and drop and Move up/Move down change optional component order. The profile remains first. Entry ordering controls change the order inside entry-based components.
 5. Removing a component with entered content requires confirmation. Cancelling preserves it; confirming removes it from the draft. The public component changes only after Publish, with the existing immediate-private-access exception for confirmed GitHub graph removal/disconnect. There is no independent hide/show setting.

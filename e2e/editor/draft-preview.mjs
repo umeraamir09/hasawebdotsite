@@ -7,6 +7,7 @@ import {
   comparable,
   exercise,
 } from "../support/face-reveal-renderer.mjs";
+import { openChecklist, openPanel } from "./shell.mjs";
 
 // Phase 39: the full-page draft preview. A real owner publishes a portfolio
 // with a case study and a resume, then opens /preview, /preview/projects/{slug}
@@ -92,9 +93,7 @@ export async function checkDraftPreviewJourney({
     async () => {
       await boot();
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const browser = page.context().browser();
       const draft = await page.evaluate(() =>
         structuredClone(
@@ -264,6 +263,7 @@ export async function checkDraftPreviewJourney({
       });
       await page.goto(browserOrigin);
       await page.waitForFunction(() => window.editorFixture?.ready);
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("check-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -273,10 +273,9 @@ export async function checkDraftPreviewJourney({
           exact: true,
         })
         .waitFor();
-      // The editor links to the full-page preview of the saved draft.
-      const link = page.getByRole("link", {
-        name: "Open full-page preview (saved draft)",
-      });
+      await openPanel(page, "Build");
+      // The top bar's Preview opens the full-page preview of the saved draft.
+      const link = page.getByRole("link", { name: "Preview", exact: true });
       assert.equal(await link.getAttribute("href"), "/preview");
       assert.equal(await link.getAttribute("target"), "_blank");
       assert.match(await link.getAttribute("rel"), /noopener/);
@@ -295,10 +294,10 @@ export async function checkDraftPreviewJourney({
       await page.evaluate(() =>
         window.editorFixture.recovery.store.getState().controller.flushValid(),
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: /^(Retry )?Publish$/ })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       for (const path of ["/", "/projects/build-pipeline", "/resume"])

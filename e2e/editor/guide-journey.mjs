@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink } from "./links.mjs";
+import { openChecklist } from "./shell.mjs";
 
 // Phase 42F: the Phase 15 callback continuation and the complete new-user
 // journey through the production guide, Review, handoff, editor and Publish.
@@ -369,9 +370,7 @@ export async function checkGuideJourney({
     return response.text();
   };
   async function publish(page) {
-    const checklist = page.getByRole("region", {
-      name: "Publication checklist",
-    });
+    const checklist = await openChecklist(page);
     await checklist
       .getByRole("button", { name: "Publish", exact: true })
       .click();
@@ -828,9 +827,7 @@ export async function checkGuideJourney({
       // Onboarding is not rerun; Publish is blocked on the saved issues.
       const before = await issuesFor(page);
       assert.ok(before.length >= 2, JSON.stringify(before));
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = await openChecklist(page);
       await checklist
         .getByRole("button", { name: "Publish", exact: true })
         .click();

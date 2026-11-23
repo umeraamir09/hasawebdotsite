@@ -10,8 +10,8 @@ import {
   withdrawGraphAccess,
 } from "../lib/editor/github-graph";
 import { acceptGraph, findGraph } from "../lib/guide/github";
-import { ComponentRemovalDialog } from "./component-controls";
 import { GitHubSetupPanel } from "./github-controls";
+import { ComponentRemovalDialog } from "./section-removal-dialog";
 
 // The optional GitHub screen. Nothing is added until the owner chooses Add
 // graph and the server accepts a username; the editor's setup panel then does

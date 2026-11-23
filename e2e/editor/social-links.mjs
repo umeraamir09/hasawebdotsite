@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink } from "./links.mjs";
+import { openSection, resize } from "./shell.mjs";
 
 export async function checkSocialLinks({
   getPage,
@@ -218,7 +219,7 @@ export async function checkSocialLinks({
             .length === 2,
       );
       await page
-        .getByRole("region", { name: "Portfolio sections", exact: true })
+        .getByRole("region", { name: "Page", exact: true })
         .getByRole("button", { name: "Social links", exact: true })
         .click();
       assert.equal(await entries().count(), 2);
@@ -313,13 +314,14 @@ export async function checkSocialLinks({
         components.some((component) => component.type === "social-links"),
         false,
       );
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
         ),
         true,
       );
+      await openSection(page, "Profile");
       const label = row.getByLabel("Link label", { exact: true });
       await label.focus();
       await label.press("Tab");
@@ -346,7 +348,7 @@ export async function checkSocialLinks({
         .click();
       await flush();
       assert.deepEqual(await storedLinks(), []);
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
   await run(

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 const day = (offset) =>
   new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
@@ -37,8 +38,7 @@ export async function checkGitHubGraphJourney({
       },
       "none",
     );
-  const checklist = () =>
-    getPage().getByRole("region", { name: "Publication checklist" });
+  const checklist = () => openChecklist(getPage());
   const flush = () =>
     getPage().evaluate(() =>
       window.editorFixture.recovery.store.getState().controller.flushValid(),
@@ -127,6 +127,7 @@ export async function checkGitHubGraphJourney({
         .getByText("Upload complete. Your draft image is ready.")
         .waitFor();
     }
+    await openPanel(page, "Share");
     await page.getByLabel("Address name").fill(address);
     await page
       .getByRole("button", { name: "Save address", exact: true })
@@ -136,19 +137,15 @@ export async function checkGitHubGraphJourney({
         exact: true,
       })
       .waitFor();
+    await openPanel(page, "Build");
     return page;
   }
   async function addGraph(page) {
     const sections = page.getByRole("region", {
-      name: "Portfolio sections",
+      name: "Page",
       exact: true,
     });
-    await sections
-      .getByRole("button", { name: "Add component", exact: true })
-      .click();
-    await page
-      .getByRole("button", { name: "Add GitHub activity", exact: true })
-      .click();
+    await addSection(page, "GitHub activity");
     await sections
       .getByRole("button", { name: "GitHub activity", exact: true })
       .click();
@@ -170,23 +167,23 @@ export async function checkGitHubGraphJourney({
   }
   async function publish() {
     await flush();
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: /^(Retry )?Publish$/ })
       .click();
-    await checklist()
+    await (await checklist())
       .getByText("Publication complete.", { exact: true })
       .waitFor({ timeout: 120000 });
   }
   async function expectBlocked() {
     await flush();
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: "Publish", exact: true })
       .click();
-    await checklist()
+    await (await checklist())
       .getByRole("button", { name: "Connect GitHub and fetch activity" })
       .waitFor({ timeout: 60000 });
     assert.equal(
-      await checklist().getByText("Publication complete.").count(),
+      await (await checklist()).getByText("Publication complete.").count(),
       0,
     );
   }
@@ -330,7 +327,7 @@ export async function checkGitHubGraphJourney({
         "zero-owner",
         /No public contributions in the last year/,
       );
-      await checklist()
+      await (await checklist())
         .getByText("Publication complete.")
         .waitFor({ state: "detached", timeout: 1000 })
         .catch(() => {});
@@ -491,12 +488,12 @@ export async function checkGitHubGraphJourney({
 
         // Removing the graph lets the portfolio publish without it.
         const sections = page.getByRole("region", {
-          name: "Portfolio sections",
+          name: "Page",
           exact: true,
         });
         await sections
-          .getByRole("button", { name: /^Remove GitHub activity/ })
-          .click();
+          .getByRole("button", { name: "GitHub activity", exact: true })
+          .press("Delete");
         await page
           .getByRole("button", { name: "Remove section", exact: true })
           .click();
@@ -773,12 +770,12 @@ export async function checkGitHubGraphJourney({
         .waitFor({ timeout: 30000 });
       assert.equal(total(await liveGraph()), 10);
       const sections = page.getByRole("region", {
-        name: "Portfolio sections",
+        name: "Page",
         exact: true,
       });
       await sections
-        .getByRole("button", { name: /^Remove GitHub activity/ })
-        .click();
+        .getByRole("button", { name: "GitHub activity", exact: true })
+        .press("Delete");
       await page
         .getByRole("dialog")
         .getByText(
@@ -1064,9 +1061,7 @@ export async function checkGitHubGraphJourney({
         github.state.calls.length = 0;
 
         // Both methods are listed; either can be disconnected.
-        await page
-          .getByRole("button", { name: "Sharing", exact: true })
-          .click();
+        await page.getByRole("button", { name: "Share", exact: true }).click();
         const methods = page.getByRole("region", {
           name: "Connected sign-in methods",
           exact: true,
@@ -1181,11 +1176,9 @@ export async function checkGitHubGraphJourney({
           .waitFor();
         await row("github").getByText("Connected", { exact: true }).waitFor();
         assert.equal(new URL(page.url()).search, "");
+        await page.getByRole("button", { name: "Build", exact: true }).click();
         await page
-          .getByRole("button", { name: "Content", exact: true })
-          .click();
-        await page
-          .getByRole("region", { name: "Portfolio sections", exact: true })
+          .getByRole("region", { name: "Page", exact: true })
           .getByRole("button", { name: "GitHub activity", exact: true })
           .click();
         controls = page.getByRole("region", {

@@ -202,7 +202,11 @@ export function mountPreviewPage(
   );
 }
 export type {
+  PreviewAction,
   PreviewIdentity,
+  PreviewOverlay,
+  PreviewOverlayFactory,
+  PreviewScheme,
   PreviewSelection,
   PreviewState,
 } from "./preview-transport";

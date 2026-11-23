@@ -86,7 +86,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 ### 3. Edit, arrange, and preview the portfolio
 
 - The builder has a content and customization panel alongside a live portfolio preview. Selecting a component opens its relevant content fields and settings.
-- Owners add optional components through a component picker. Each component explains the content, upload, link, or connected account it requires.
+- Owners add optional components from the Add section gallery, which shows a render of each component type. A single-instance type shows as added once it is on the page.
 - Owners can add one instance of each optional component type, except general text sections, which can have multiple instances. Projects, skills, work experience, and social links support multiple entries within their component.
 - The profile stays at the top. Owners reorder the optional components through drag and drop or Move up and Move down controls. Entry-based components also provide ordering controls for their entries.
 - Owners can remove optional components. Deleting entered content requires confirmation. There is no separate hide/show setting; removal affects the draft until Publish. Removing a GitHub graph also immediately withdraws its separate private-activity access after confirmation, as described in section 9.

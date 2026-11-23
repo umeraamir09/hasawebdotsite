@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 const readGroups = (root) =>
   [...root.querySelectorAll(".pf-entry")].map((entry) => ({
@@ -9,15 +10,10 @@ const readGroups = (root) =>
 
 async function openSkillsSection(page) {
   const sections = page.getByRole("region", {
-    name: "Portfolio sections",
+    name: "Page",
     exact: true,
   });
-  await sections
-    .getByRole("button", { name: "Add component", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Add Skills and technologies", exact: true })
-    .click();
+  await addSection(page, "Skills and technologies");
   return sections;
 }
 
@@ -75,7 +71,7 @@ export async function checkSkillsControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       await openSkillsSection(page);
       assert.equal(await page.locator("[data-skill-id]").count(), 0);
       assert.equal(
@@ -177,18 +173,20 @@ export async function checkSkillsControls({
         path: join(evidence, "skills-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }
 
 // Builds a published-journey fixture: saved order differs from category order.
 export async function preparePublishedSkills(page) {
-  const sections = await openSkillsSection(page);
-  const checklist = page.getByRole("region", { name: "Publication checklist" });
+  await openSkillsSection(page);
+  const checklist = () => openChecklist(page);
   await page.getByRole("button", { name: "Add skill", exact: true }).click();
-  await checklist.getByRole("button", { name: "Publish", exact: true }).click();
-  await checklist
+  await (await checklist())
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
+  await (await checklist())
     .getByText(/skills and technologies name/i)
     .first()
     .waitFor();
@@ -208,7 +206,7 @@ export async function preparePublishedSkills(page) {
   await page.evaluate(() =>
     window.editorFixture.recovery.store.getState().controller.flushValid(),
   );
-  await sections.getByRole("button", { name: "Profile", exact: true }).click();
+  await openSection(page, "Profile");
 }
 
 export async function assertPublishedSkills(page, html) {

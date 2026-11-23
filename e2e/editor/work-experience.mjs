@@ -1,17 +1,13 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 async function addWorkComponent(page) {
   const sections = page.getByRole("region", {
-    name: "Portfolio sections",
+    name: "Page",
     exact: true,
   });
-  await sections
-    .getByRole("button", { name: "Add component", exact: true })
-    .click();
-  await page
-    .getByRole("button", { name: "Add Work experience", exact: true })
-    .click();
+  await addSection(page, "Work experience");
   return sections;
 }
 const flush = (page) =>
@@ -43,8 +39,8 @@ export async function checkWorkExperienceControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
-      const sections = await addWorkComponent(page);
+      await resize(page, { width: 390, height: 844 });
+      await addWorkComponent(page);
       assert.equal(await page.locator("[data-work-id]").count(), 0);
       await page.getByRole("button", { name: "Add role", exact: true }).click();
       const first = page.locator("[data-work-id]").first();
@@ -67,20 +63,22 @@ export async function checkWorkExperienceControls({
       );
       assert.equal((await flush(page)).hasLocalOnlyInput, true);
       // Reversed dates block Publish and are reported as the end date.
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
-      await checklist
+      const checklist = () => openChecklist(page);
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText(/Finish unsaved.*end date/i)
         .first()
         .waitFor();
       assert.equal(
-        await checklist.getByText("Publication complete.").count(),
+        await (await checklist()).getByText("Publication complete.").count(),
         0,
       );
+      // On a phone the issue reopens the editor sheet at that field.
+      await (await checklist())
+        .getByRole("button", { name: /Finish unsaved.*end date/i })
+        .click();
       await first.getByLabel("End date", { exact: true }).fill("2024-09");
       assert.equal((await flush(page)).hasLocalOnlyInput, false);
       // Ongoing role: no end date is stored or required.
@@ -118,9 +116,7 @@ export async function checkWorkExperienceControls({
       await page
         .getByRole("button", { name: "Continue preserved edits", exact: true })
         .click();
-      await sections
-        .getByRole("button", { name: "Work experience", exact: true })
-        .click();
+      await openSection(page, "Work experience");
       await page.waitForFunction(() =>
         Array.from(document.querySelectorAll("label")).some(
           (label) =>
@@ -175,17 +171,19 @@ export async function checkWorkExperienceControls({
         path: join(evidence, "work-experience-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }
 
 export async function preparePublishedWork(page) {
-  const sections = await addWorkComponent(page);
+  await addWorkComponent(page);
   await page.getByRole("button", { name: "Add role", exact: true }).click();
-  const checklist = page.getByRole("region", { name: "Publication checklist" });
-  await checklist.getByRole("button", { name: "Publish", exact: true }).click();
-  await checklist
+  const checklist = () => openChecklist(page);
+  await (await checklist())
+    .getByRole("button", { name: "Publish", exact: true })
+    .click();
+  await (await checklist())
     .getByText(/work experience role/i)
     .first()
     .waitFor();
@@ -213,7 +211,7 @@ export async function preparePublishedWork(page) {
     .getByRole("button", { name: "Move Intern up", exact: true })
     .click();
   await flush(page);
-  await sections.getByRole("button", { name: "Profile", exact: true }).click();
+  await openSection(page, "Profile");
 }
 
 export async function assertPublishedWork(page, html) {

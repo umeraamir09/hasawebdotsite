@@ -116,7 +116,8 @@ Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design 
 - The canvas shows the real renderer with hover and selected outlines, a section tag and move up, move down and remove actions (frames `407:1232` and `411:3276`). Canvas, panel and keyboard share the existing `PreviewSelection`, so selecting in one place selects in all of them.
 - The Build panel lists the profile card, the section rows with drag and keyboard reordering, and Add section. Add section opens a gallery whose tiles are scaled renders of each component type, with single-instance types marked once added (`411:4431`). Removal keeps the existing confirmation.
 - On mobile the preview comes first (`417:11033`). Tapping a section shows a dock of that section's actions, and the outline and editors open as bottom sheets (`417:11661`). This replaces the "Edit content" and "View preview" toggle.
-- [ ] Complete when every `editor` journey passes on the new shell, selection stays in sync across canvas, outline and keyboard, and the shell works across the confirmed viewport matrix.
+- [x] Complete when every `editor` journey passes on the new shell, selection stays in sync across canvas, outline and keyboard, and the shell works across the confirmed viewport matrix.
+  - #85: shell, canvas outline with section actions, page outline and Add section gallery in `editor-session.tsx`, `page-outline.tsx` and `section-gallery.tsx`; the preview bridge gained `action` and `scheme` messages; below 1024 px the preview comes first with a dock and bottom sheets.
 
 ### Phase 51.3. Move the content editors into the panel
 

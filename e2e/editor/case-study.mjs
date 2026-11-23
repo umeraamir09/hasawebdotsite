@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
+import { addSection, openChecklist, openPanel } from "./shell.mjs";
 
 const allowed =
   '<h2>The problem</h2><p>We needed <a href="https://example.com/case">a faster build</a>.</p><ul><li><p>Measure first</p></li></ul>';
@@ -112,9 +113,7 @@ export async function checkCaseStudyJourney({
       };
       await boot(draft);
       const page = getPage();
-      const checklist = page.getByRole("region", {
-        name: "Publication checklist",
-      });
+      const checklist = () => openChecklist(page);
       const image = Buffer.from(
         await page.evaluate(async () => {
           const canvas = document.createElement("canvas");
@@ -149,6 +148,7 @@ export async function checkCaseStudyJourney({
           .getByText("Upload complete. Your draft image is ready.")
           .waitFor();
       }
+      await openPanel(page, "Share");
       await page.getByLabel("Address name").fill("case-study-site");
       await page
         .getByRole("button", { name: "Save address", exact: true })
@@ -158,6 +158,7 @@ export async function checkCaseStudyJourney({
           exact: true,
         })
         .waitFor();
+      await openPanel(page, "Build");
       const portfolioId = (
         await sql("SELECT id FROM portfolio WHERE user_id='draft-alice'")
       )[0].id;
@@ -188,23 +189,18 @@ export async function checkCaseStudyJourney({
         );
       async function publish() {
         await flush();
-        await checklist
+        await (await checklist())
           .getByRole("button", { name: /^(Retry )?Publish$/ })
           .click();
-        await checklist
+        await (await checklist())
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
       const sections = page.getByRole("region", {
-        name: "Portfolio sections",
+        name: "Page",
         exact: true,
       });
-      await sections
-        .getByRole("button", { name: "Add component", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Add Projects", exact: true })
-        .click();
+      await addSection(page, "Projects");
       const project = (index) => page.locator("[data-project-id]").nth(index);
       const casePath = (index) =>
         project(index)
@@ -389,10 +385,10 @@ export async function checkCaseStudyJourney({
             })
           : route.continue(),
       );
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByRole("alert")
         .filter({ hasText: "Could not finish publication" })
         .waitFor({ timeout: 120000 });
@@ -403,10 +399,10 @@ export async function checkCaseStudyJourney({
       assert.doesNotMatch(caseStudy.text, /Atomic body/);
       blocked = false;
       await page.unroute("**/api/owner/publication/commit");
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Retry Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText("Publication complete.", { exact: true })
         .waitFor({ timeout: 120000 });
       home = await read("/");
@@ -444,10 +440,10 @@ export async function checkCaseStudyJourney({
         controller.update(working);
       });
       await flush();
-      await checklist
+      await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })
         .click();
-      await checklist
+      await (await checklist())
         .getByText(
           "Reload the editor to restore this case study's published address",
         )
