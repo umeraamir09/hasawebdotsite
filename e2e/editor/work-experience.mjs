@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openSection } from "./shell.mjs";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 async function addWorkComponent(page) {
   const sections = page.getByRole("region", {
@@ -39,7 +39,7 @@ export async function checkWorkExperienceControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       await addWorkComponent(page);
       assert.equal(await page.locator("[data-work-id]").count(), 0);
       await page.getByRole("button", { name: "Add role", exact: true }).click();
@@ -171,7 +171,7 @@ export async function checkWorkExperienceControls({
         path: join(evidence, "work-experience-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }

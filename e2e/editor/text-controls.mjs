@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openSection } from "./shell.mjs";
+import { addSection, openSection, resize } from "./shell.mjs";
 
 const markup =
   '<h2>How I work</h2><p>A careful process <a href="https://example.com/process">Read more</a>.</p><ul><li><p>Listen first</p></li></ul><ol start="3"><li><p>Ship carefully</p></li></ol>';
@@ -207,12 +207,12 @@ export async function checkTextControls({
         await page.evaluate(() => window.richTextExecuted),
         undefined,
       );
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       await page.screenshot({
         path: join(evidence, "text-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
       const sections = page.getByRole("region", {
         name: "Page",
         exact: true,

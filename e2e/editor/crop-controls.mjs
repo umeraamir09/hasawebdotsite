@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { openSection } from "./shell.mjs";
+import { openSection, resize } from "./shell.mjs";
 
 export async function checkCropControls({
   getPage,
@@ -301,7 +301,7 @@ export async function checkCropControls({
   );
   await run("crop banner pointer and mobile dialog focus", async () => {
     await boot();
-    await getPage().setViewportSize({ width: 390, height: 844 });
+    await resize(getPage(), { width: 390, height: 844 });
     // On a phone the profile editor opens as a sheet over the preview.
     await openSection(getPage(), "Profile");
     await select("banner", await original());
@@ -345,7 +345,7 @@ export async function checkCropControls({
       saved.left[0] > 200 && saved.center[1] > 140 && saved.right[2] > 200,
       "saved banner preserves the selected full-width crop",
     );
-    await page.setViewportSize({ width: 1500, height: 1000 });
+    await resize(page, { width: 1500, height: 1000 });
   });
   await run(
     "crop failed replacement retries and cancellation preserves ready bytes",

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink } from "./links.mjs";
-import { openSection } from "./shell.mjs";
+import { openSection, resize } from "./shell.mjs";
 
 export async function checkSocialLinks({
   getPage,
@@ -314,7 +314,7 @@ export async function checkSocialLinks({
         components.some((component) => component.type === "social-links"),
         false,
       );
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
@@ -348,7 +348,7 @@ export async function checkSocialLinks({
         .click();
       await flush();
       assert.deepEqual(await storedLinks(), []);
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
   await run(

@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createGroupRunner } from "../support/groups.mjs";
 import { freePort } from "../support/ports.mjs";
-import { openPanel } from "./shell.mjs";
+import { openPanel, resize } from "./shell.mjs";
 
 // Serves the editor, guide and owner-entry fixtures through a local proxy in
 // front of the owner runtime and opens one Chromium context. `core()` runs the
@@ -554,7 +554,7 @@ export async function createEditorHarness({
           await control.innerText(),
           /Current reservation: editor-reservation\.hasaweb\.site/,
         );
-        await page.setViewportSize({ width: 390, height: 844 });
+        await resize(page, { width: 390, height: 844 });
         assert.equal(
           await page.evaluate(
             () => document.documentElement.scrollWidth <= innerWidth,
@@ -585,7 +585,7 @@ export async function createEditorHarness({
           path: join(evidence, "address-mobile.png"),
           fullPage: true,
         });
-        await page.setViewportSize({ width: 1500, height: 1000 });
+        await resize(page, { width: 1500, height: 1000 });
       },
     );
     await run(
@@ -692,7 +692,7 @@ export async function createEditorHarness({
         assert.equal(saved.profile.name, fixture.profile.name);
         // The confirmed viewport matrix: desktop, tablet and phone.
         for (const parentWidth of [1280, 768, 360]) {
-          await page.setViewportSize({ width: parentWidth, height: 1000 });
+          await resize(page, { width: parentWidth, height: 1000 });
           assert.equal(
             await page.evaluate(
               () => document.documentElement.scrollWidth <= innerWidth,
@@ -719,7 +719,7 @@ export async function createEditorHarness({
         }
         release();
         await page.unrouteAll({ behavior: "wait" });
-        await page.setViewportSize({ width: 1500, height: 1000 });
+        await resize(page, { width: 1500, height: 1000 });
       },
     );
     await run(

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openSection } from "./shell.mjs";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 const readGroups = (root) =>
   [...root.querySelectorAll(".pf-entry")].map((entry) => ({
@@ -71,7 +71,7 @@ export async function checkSkillsControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       await openSkillsSection(page);
       assert.equal(await page.locator("[data-skill-id]").count(), 0);
       assert.equal(
@@ -173,7 +173,7 @@ export async function checkSkillsControls({
         path: join(evidence, "skills-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }

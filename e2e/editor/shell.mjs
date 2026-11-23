@@ -7,6 +7,17 @@ const compact = (page) =>
     .locator("main.owner-editor")
     .evaluate((main) => main.dataset.layout === "compact");
 
+// Resizes the page and waits for the shell to switch layout: below 1024 px
+// React swaps the rail and panel for the dock and sheets after the resize.
+export async function resize(page, size) {
+  await page.setViewportSize(size);
+  await page.waitForFunction(
+    (layout) =>
+      document.querySelector("main.owner-editor")?.dataset.layout === layout,
+    size.width < 1024 ? "compact" : "wide",
+  );
+}
+
 // Opens the Publish panel (it stays open until closed) and returns the
 // checklist inside it.
 export async function openChecklist(page) {

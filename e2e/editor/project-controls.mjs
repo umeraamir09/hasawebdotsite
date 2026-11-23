@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openSection } from "./shell.mjs";
+import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 export async function checkProjectControls({
   getPage,
@@ -26,7 +26,7 @@ export async function checkProjectControls({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      await page.setViewportSize({ width: 390, height: 844 });
+      await resize(page, { width: 390, height: 844 });
       await addSection(page, "Projects");
       assert.equal(await page.locator("[data-project-id]").count(), 0);
       await page
@@ -134,7 +134,7 @@ export async function checkProjectControls({
         path: join(evidence, "project-controls-mobile.png"),
         fullPage: true,
       });
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
 }

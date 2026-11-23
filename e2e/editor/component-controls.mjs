@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, outline, outlineOrder, removeSection } from "./shell.mjs";
+import {
+  addSection,
+  outline,
+  outlineOrder,
+  removeSection,
+  resize,
+} from "./shell.mjs";
 
 // The editor shell's page outline, canvas and Add section gallery
 // (Phase 51.2): one selection shared by the canvas, the outline and the
@@ -315,7 +321,7 @@ export async function checkComponentControls({
       await addSection(page, "Projects");
       const before = await outlineOrder(page);
       for (const width of [360, 768]) {
-        await page.setViewportSize({ width, height: 844 });
+        await resize(page, { width, height: 844 });
         await page.waitForFunction(
           () =>
             document.querySelector("main.owner-editor")?.dataset.layout ===
@@ -401,7 +407,7 @@ export async function checkComponentControls({
       const style = page.getByRole("region", { name: "Style", exact: true });
       await style.getByRole("region", { name: "Customization" }).waitFor();
       await style.getByRole("button", { name: "Close", exact: true }).click();
-      await page.setViewportSize({ width: 1500, height: 1000 });
+      await resize(page, { width: 1500, height: 1000 });
     },
   );
   await run(

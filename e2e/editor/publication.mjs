@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { openChecklist, openPanel, openSection } from "./shell.mjs";
+import { openChecklist, openPanel, openSection, resize } from "./shell.mjs";
 
 export async function checkPublicationControls({
   getPage,
@@ -107,7 +107,7 @@ export async function checkPublicationControls({
     async () => {
       await clean();
       for (const width of [1440, 390]) {
-        await getPage().setViewportSize({ width, height: 900 });
+        await resize(getPage(), { width, height: 900 });
         await check();
         for (const [name, selector] of [
           ["Complete your name", '[data-publication-field="name"] input'],
@@ -136,7 +136,7 @@ export async function checkPublicationControls({
         path: join(evidence, "publication-mobile.png"),
         fullPage: true,
       });
-      await getPage().setViewportSize({ width: 1440, height: 900 });
+      await resize(getPage(), { width: 1440, height: 900 });
       await openPanel(getPage(), "Build");
       await getPage()
         .getByLabel("Name", { exact: true })
