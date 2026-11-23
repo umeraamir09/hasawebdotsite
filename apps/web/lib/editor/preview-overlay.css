@@ -1,0 +1,106 @@
+/* The editor canvas outline inside the preview iframe (Figma 407:1232 and
+   411:3276). Colors are the Workbench signal, raised and danger values; the
+   outline follows the operating system scheme like the editor around it.
+   Published portfolios never load this file. */
+.hw-outline {
+  --hw-signal: #3557ff;
+  --hw-wash: #3557ff0f;
+  --hw-raised: #ffffff;
+  --hw-icon: #63625e;
+  --hw-hover: #ededea;
+  --hw-danger: #ce2a33;
+  --hw-inverse: #ffffff;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  z-index: 2147483000;
+  font-family: "Geist", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  .hw-outline {
+    --hw-signal: #7188ff;
+    --hw-wash: #7188ff1f;
+    --hw-raised: #202024;
+    --hw-icon: #a4a39e;
+    --hw-hover: #2a2a2f;
+    --hw-danger: #ff6b70;
+    --hw-inverse: #121212;
+  }
+}
+.hw-outline-box,
+.hw-outline-tag,
+.hw-outline-actions {
+  position: absolute;
+}
+.hw-outline-box,
+.hw-outline-tag {
+  pointer-events: none;
+}
+.hw-outline-box {
+  box-sizing: border-box;
+  border-radius: 14px;
+}
+.hw-outline-box[data-state="hover"] {
+  border: 1.5px dashed var(--hw-signal);
+}
+.hw-outline-box[data-state="selected"] {
+  border: 2px solid var(--hw-signal);
+  background: var(--hw-wash);
+}
+.hw-outline-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 8px 0 7px;
+  border-radius: 6px;
+  background: var(--hw-signal);
+  color: var(--hw-inverse);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 14px;
+  letter-spacing: 0.11px;
+  white-space: nowrap;
+}
+.hw-outline-actions {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--hw-raised);
+  box-shadow:
+    0 1px 2px rgb(13 13 15 / 6%),
+    0 10px 24px rgb(13 13 15 / 10%);
+}
+.hw-outline-actions[hidden],
+.hw-outline [hidden] {
+  display: none;
+}
+.hw-outline-actions button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--hw-icon);
+  cursor: pointer;
+}
+.hw-outline-actions button:hover:not(:disabled) {
+  background: var(--hw-hover);
+}
+.hw-outline-actions button[data-action="remove"] {
+  color: var(--hw-danger);
+}
+.hw-outline-actions button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.hw-outline-actions button:focus-visible {
+  outline: 2px solid var(--hw-signal);
+  outline-offset: 1px;
+}

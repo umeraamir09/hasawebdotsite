@@ -4,6 +4,7 @@ import {
   type PreviewIdentity,
 } from "@hasaweb/components/browser";
 import { readOwner } from "../auth-client";
+import { createEditorOverlay } from "./preview-overlay";
 
 export async function openEditorPreview(root: HTMLElement) {
   const requestedChannel = new URLSearchParams(location.hash.slice(1)).get(
@@ -100,6 +101,7 @@ export async function openEditorPreview(root: HTMLElement) {
         parentOrigin: location.origin,
         channel,
         identity,
+        overlay: createEditorOverlay,
       });
       stopMount = () => {
         detach();

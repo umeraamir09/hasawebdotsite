@@ -29,9 +29,9 @@ import {
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
 import { removeEditorComponent } from "../lib/editor/components";
 import { withdrawGraphAccess } from "../lib/editor/github-graph";
-import { ComponentRemovalDialog } from "./component-controls";
 import { DraftTextField } from "./draft-text-field";
 import { ResumeUpload } from "./resume-controls";
+import { ComponentRemovalDialog } from "./section-removal-dialog";
 import { UnpublishControl } from "./unpublish-control";
 
 export function PublicationChecklist({
@@ -39,11 +39,14 @@ export function PublicationChecklist({
   disabled,
   onOpen,
   onPublished,
+  onSite,
 }: {
   controller: DraftController;
   disabled: boolean;
   onOpen(issue: PublicationIssue): void;
   onPublished?(): void;
+  // The editor's top bar shows whether the portfolio is live.
+  onSite?(site: PublicationSite | null): void;
 }) {
   const state = useStore(controller.store);
   const [result, setResult] = useState<Awaited<
@@ -56,6 +59,9 @@ export function PublicationChecklist({
   const [site, setSite] = useState<PublicationSite | null>(null);
   const publishing = useRef<AbortController | null>(null);
   const alive = useRef(true);
+  const reportSite = useRef(onSite);
+  reportSite.current = onSite;
+  useEffect(() => reportSite.current?.(site), [site]);
   const refreshSite = () =>
     siteRequest(controller, "site")
       .then((next) => {

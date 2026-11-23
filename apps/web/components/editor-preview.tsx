@@ -2,7 +2,9 @@
 
 import {
   connectPreviewBridge,
+  type PreviewAction,
   type PreviewIdentity,
+  type PreviewScheme,
   type PreviewSelection,
   type PreviewState,
 } from "@hasaweb/components/browser";
@@ -22,6 +24,9 @@ import {
   subscribeGraphRevision,
 } from "../lib/editor/github-graph";
 
+export type PreviewDevice = "desktop" | "mobile";
+const FRAME_WIDTH = { desktop: 1120, mobile: 390 } as const;
+
 export function EditorPreview({
   owner,
   draft,
@@ -29,6 +34,11 @@ export function EditorPreview({
   selection = null,
   onSelect,
   label = "Private live preview",
+  device,
+  scheme,
+  onScheme,
+  onAction,
+  canvasActions = true,
 }: {
   owner: PreviewIdentity;
   draft: DraftDoc;
@@ -37,9 +47,20 @@ export function EditorPreview({
   selection?: PreviewSelection | null;
   onSelect?(selection: PreviewSelection): void;
   label?: string;
+  // The editor shell owns the device and scheme controls in its top bar and
+  // fits the frame to the canvas. Without `device`, the preview shows its
+  // own toolbar, as setup Review does.
+  device?: PreviewDevice | undefined;
+  scheme?: PreviewScheme | null | undefined;
+  onScheme?(mode: PreviewScheme): void;
+  onAction?(action: PreviewAction, id: string): void;
+  // False while the mobile dock holds the section actions.
+  canvasActions?: boolean;
 }) {
   const [channel] = useState(() => crypto.randomUUID());
-  const [width, setWidth] = useState<"desktop" | "mobile">("desktop");
+  const [ownWidth, setWidth] = useState<PreviewDevice>("desktop");
+  const width = device ?? ownWidth;
+  const shell = device !== undefined;
   const [state, setState] = useState<PreviewState>({
     kind: "connecting",
     requested: 0,
@@ -66,6 +87,11 @@ export function EditorPreview({
   latestDraft.current = draft;
   const select = useRef(onSelect);
   select.current = onSelect;
+  const events = useRef({ onScheme, onAction });
+  events.current = { onScheme, onAction };
+  const showActions = useRef(canvasActions);
+  showActions.current = canvasActions;
+  const reported = useRef<PreviewScheme | null>(null);
   useEffect(() => {
     if (!frame.current) return;
     const bridge = connectPreviewBridge({
@@ -76,9 +102,17 @@ export function EditorPreview({
       onState: (next) => {
         setState(next);
         if (next.kind === "displayed" && currentSelection.current)
-          connection.current?.select(currentSelection.current);
+          connection.current?.select(
+            currentSelection.current,
+            showActions.current,
+          );
       },
       onSelect: (value) => select.current?.(value),
+      onAction: (action, id) => events.current.onAction?.(action, id),
+      onScheme: (mode) => {
+        reported.current = mode;
+        events.current.onScheme?.(mode);
+      },
     });
     connection.current = bridge;
     bridge.request(async (signal) => {
@@ -113,8 +147,84 @@ export function EditorPreview({
     });
   }, [draft, ownerId, images, graph]);
   useEffect(() => {
-    if (selection) connection.current?.select(selection);
-  }, [selection]);
+    if (selection) connection.current?.select(selection, canvasActions);
+  }, [selection, canvasActions]);
+  useEffect(() => {
+    if (scheme && scheme !== reported.current)
+      connection.current?.scheme(scheme);
+  }, [scheme]);
+  // The shell fits the real 1120 px or 390 px viewport to the canvas.
+  const stage = useRef<HTMLElement>(null);
+  const [fit, setFit] = useState({ scale: 1, height: 0 });
+  useLayoutEffect(() => {
+    const element = stage.current;
+    if (!shell || !element) return;
+    const measure = () => {
+      const style = getComputedStyle(element);
+      const inner =
+        element.clientWidth -
+        Number.parseFloat(style.paddingLeft) -
+        Number.parseFloat(style.paddingRight);
+      const height =
+        element.clientHeight -
+        Number.parseFloat(style.paddingTop) -
+        Number.parseFloat(style.paddingBottom);
+      const scale = Math.min(1, inner / FRAME_WIDTH[width]);
+      setFit({ scale, height: Math.max(0, height / scale) });
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [shell, width]);
+  const status = (
+    <span
+      role="status"
+      className={shell ? "wb-visually-hidden" : undefined}
+      data-preview-state={state.kind}
+      data-preview-sequence={state.requested}
+      data-preview-displayed={state.displayed ?? ""}
+    >
+      {state.kind === "displayed"
+        ? "Preview up to date"
+        : state.kind === "rejected"
+          ? state.displayed === null
+            ? "Preview unavailable. Reopen the editor to try again."
+            : "Preview could not refresh. Your last displayed version remains."
+          : "Updating preview..."}
+    </span>
+  );
+  if (shell)
+    return (
+      <section
+        className="editor-canvas"
+        aria-label={label}
+        data-device={width}
+        ref={stage}
+      >
+        {status}
+        <div
+          className="editor-canvas-fit"
+          style={{
+            width: FRAME_WIDTH[width] * fit.scale,
+            height: fit.height * fit.scale || undefined,
+          }}
+        >
+          <iframe
+            ref={frame}
+            title="Your private portfolio preview"
+            src={`${documentUrl}#channel=${encodeURIComponent(channel)}`}
+            className="editor-canvas-frame"
+            style={{
+              width: FRAME_WIDTH[width],
+              height: fit.height || undefined,
+              transform: fit.scale < 1 ? `scale(${fit.scale})` : undefined,
+            }}
+            sandbox="allow-scripts allow-same-origin"
+          />
+        </div>
+      </section>
+    );
   return (
     <section className="editor-preview" aria-label={label}>
       <div className="editor-preview-toolbar">
@@ -142,20 +252,7 @@ export function EditorPreview({
         >
           Open full-page preview (saved draft)
         </a>
-        <span
-          role="status"
-          data-preview-state={state.kind}
-          data-preview-sequence={state.requested}
-          data-preview-displayed={state.displayed ?? ""}
-        >
-          {state.kind === "displayed"
-            ? "Preview up to date"
-            : state.kind === "rejected"
-              ? state.displayed === null
-                ? "Preview unavailable. Reopen the editor to try again."
-                : "Preview could not refresh. Your last displayed version remains."
-              : "Updating preview..."}
-        </span>
+        {status}
       </div>
       {/* The stage scrolls a child wider or taller than the space, so it is
           keyboard reachable for scrolling. */}

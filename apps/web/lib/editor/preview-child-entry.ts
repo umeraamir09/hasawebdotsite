@@ -2,6 +2,7 @@
 // `/editor/preview` and built to `/preview-assets/editor.*`.
 import { openEditorPreview } from "./preview-child";
 import "@hasaweb/components/styles.css";
+import "./preview-overlay.css";
 
 const root = document.getElementById("preview-root");
 if (!root) throw new Error("Preview root is missing");
