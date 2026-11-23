@@ -894,14 +894,14 @@ describe("saved preset appearance", () => {
       appearance,
     });
 
-  it("projects the saved preset, font and mode without custom color", () => {
+  it("projects the saved preset, font, mode and custom color", () => {
     const saved = {
       ...draft(),
       appearance: {
         themeId: "strawberry",
         fontId: "lora",
         colorMode: "dark" as const,
-        customColor: "#4285fa",
+        customColor: "#4285FA",
       },
     };
     const model = projectPortfolio(saved, options);
@@ -909,6 +909,7 @@ describe("saved preset appearance", () => {
       themeId: "strawberry",
       fontId: "lora",
       colorMode: "dark",
+      customColor: "#4285fa",
     });
     expect(parsePortfolioModel(model)?.appearance).toEqual(model.appearance);
     // Content, order and template are independent of appearance.
@@ -935,9 +936,56 @@ describe("saved preset appearance", () => {
     expect(
       parsePortfolioModel({
         ...projectPortfolio(draft(), options),
-        appearance: { ...DEFAULT_APPEARANCE, customColor: "#000000" },
+        appearance: { ...DEFAULT_APPEARANCE, customColor: "#00000g" },
       }),
     ).toBeUndefined();
+  });
+
+  it("links the retained palette stylesheet only with a custom color", () => {
+    const custom = { ...DEFAULT_APPEARANCE, customColor: "#4285fa" };
+    const html = documentShell({
+      markup: "<main></main>",
+      title: "Portfolio",
+      context: "public",
+      assets: {
+        ...assets,
+        paletteUrl: "/platform/0123456789abcdef-palette.css",
+      },
+      appearance: custom,
+    });
+    expect(html).toMatch(
+      /^<!doctype html><html lang="en" data-theme="leaf" data-font="[a-z-]+" data-initial-mode="[a-z]+" data-custom-color="#4285fa"><head>/,
+    );
+    const head = html.slice(html.indexOf("<head>"), html.indexOf("</head>"));
+    const links = [...head.matchAll(/<link rel="stylesheet" href="([^"]+)">/g)];
+    expect(links.map((match) => match[1])).toEqual([
+      assets.cssUrl,
+      "/platform/0123456789abcdef-palette.css",
+    ]);
+    expect(head.indexOf("-palette.css")).toBeLessThan(head.indexOf("<script"));
+    expect(html).not.toMatch(/\b(style=|<style)/);
+    expect(() => shellFor(custom)).toThrow();
+    expect(() =>
+      documentShell({
+        markup: "<main></main>",
+        title: "Portfolio",
+        context: "public",
+        assets: {
+          ...assets,
+          paletteUrl: "/platform/0123456789abcdef-palette.css",
+        },
+        appearance: DEFAULT_APPEARANCE,
+      }),
+    ).toThrow();
+    expect(() =>
+      documentShell({
+        markup: "<main></main>",
+        title: "Portfolio",
+        context: "public",
+        assets: { ...assets, paletteUrl: "https://elsewhere.example/p.css" },
+        appearance: custom,
+      }),
+    ).toThrow();
   });
 
   it("puts every catalog choice on <html> before the platform files", () => {

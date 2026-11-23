@@ -103,20 +103,23 @@ for (const font of catalog.fonts) {
   );
 }
 
+// Keep equal to PORTFOLIO_TOKENS in packages/theme/src/palette.ts; the
+// renderer assets test checks both.
+const portfolioTokens = {
+  page: "page",
+  surface: "surface",
+  raised: "raised",
+  ink: "text",
+  muted: "muted",
+  border: "border",
+  control: "control",
+  accent: "accent",
+  link: "link",
+  focus: "focus",
+};
 const tokens = (palette) =>
-  Object.entries({
-    "pf-page": "page",
-    "pf-surface": "surface",
-    "pf-raised": "raised",
-    "pf-ink": "text",
-    "pf-muted": "muted",
-    "pf-border": "border",
-    "pf-control": "control",
-    "pf-accent": "accent",
-    "pf-link": "link",
-    "pf-focus": "focus",
-  })
-    .map(([name, key]) => `--${name}:${palette[key]};`)
+  Object.entries(portfolioTokens)
+    .map(([name, key]) => `--pf-${name}:${palette[key]};`)
     .join("");
 // Attributes on <html>: data-theme and data-font select the saved preset and
 // font, data-initial-mode is the owner's saved mode and data-color-mode is
@@ -147,6 +150,22 @@ const themeRules = catalog.themes
     ].join("\n");
   })
   .join("\n");
+// A custom color keeps its preset's data-theme and adds data-custom-color.
+// Its generated values arrive as --pf-custom-{mode}-* properties: a retained
+// stylesheet on published pages, the CSSOM in the preview. The extra
+// attribute makes each rule outrank the preset rule for the same mode.
+const customRoot = ":root[data-theme][data-custom-color]";
+const customTokens = (mode) =>
+  Object.keys(portfolioTokens)
+    .map((name) => `--pf-${name}:var(--pf-custom-${mode}-${name});`)
+    .join("");
+const customDark = `color-scheme:dark;${customTokens("dark")}`;
+const customRules = [
+  `${customRoot} { color-scheme:light;${customTokens("light")} }`,
+  `@media (prefers-color-scheme:dark) { ${customRoot}:not([data-color-mode="light"]):not([data-initial-mode="light"]) { ${customDark} } }`,
+  `${customRoot}[data-initial-mode="dark"]:not([data-color-mode="light"]) { ${customDark} }`,
+  `${customRoot}[data-color-mode="dark"] { ${customDark} }`,
+].join("\n");
 // Each face downloads only when its family is used, so a page fetches just
 // the saved font. The platform package retains all three.
 const fontRules = catalog.fonts
@@ -157,7 +176,7 @@ const fontRules = catalog.fonts
   .join("\n");
 writeFileSync(
   "packages/components/static/themes.css",
-  `${fontRules}\n${themeRules}\n`,
+  `${fontRules}\n${themeRules}\n${customRules}\n`,
 );
 execFileSync(
   "node_modules/.bin/biome",

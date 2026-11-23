@@ -45,6 +45,9 @@ const imagePartSchema = z.strictObject({
 export type PlatformAssets = {
   cssUrl: string;
   scriptUrl: string;
+  // The retained stylesheet of a custom palette (`customPaletteCss`). It is
+  // required exactly when the appearance has a custom color.
+  paletteUrl?: string;
   origin?: string;
 };
 export const FRAGMENT_BOUNDS = {
@@ -230,7 +233,12 @@ export function documentShell({
   const attributes = Object.entries(appearanceAttributes(appearance))
     .map(([name, value]) => ` ${name}="${escapeText(value)}"`)
     .join("");
-  return `<!doctype html><html lang="en"${attributes}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title>${metadata ? metadataTags(title, metadata) : ""}<link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}"><script src="${platformUrl(assets.scriptUrl, assets.origin)}"></script></head><body>${markup}</body></html>`;
+  if (Boolean(appearance.customColor) !== Boolean(assets.paletteUrl))
+    throw new Error("A custom color needs exactly its palette stylesheet");
+  const palette = assets.paletteUrl
+    ? `<link rel="stylesheet" href="${platformUrl(assets.paletteUrl, assets.origin)}">`
+    : "";
+  return `<!doctype html><html lang="en"${attributes}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${context === "preview" ? '<meta name="robots" content="noindex,nofollow,noarchive">' : ""}<title>${escapeText(title)}</title>${metadata ? metadataTags(title, metadata) : ""}<link rel="stylesheet" href="${platformUrl(assets.cssUrl, assets.origin)}">${palette}<script src="${platformUrl(assets.scriptUrl, assets.origin)}"></script></head><body>${markup}</body></html>`;
 }
 export function portfolioDocumentFrame() {
   const marker = "HASA_CONTROLLED_PAGE_FRAME";

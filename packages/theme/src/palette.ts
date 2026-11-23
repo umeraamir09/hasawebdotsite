@@ -238,3 +238,41 @@ export function resolvePalette({
     adjustments: [],
   };
 }
+
+// The portfolio custom properties and the palette token behind each. The
+// generated `themes.css` sets these for presets; a custom palette sets the
+// `--pf-custom-{mode}-*` values that its rules read.
+export const PORTFOLIO_TOKENS = {
+  page: "page",
+  surface: "surface",
+  raised: "raised",
+  ink: "text",
+  muted: "muted",
+  border: "border",
+  control: "control",
+  accent: "accent",
+  link: "link",
+  focus: "focus",
+} as const satisfies Record<string, PaletteToken>;
+
+/**
+ * The custom properties a custom color sets on the document element, in a
+ * fixed order. The preview sets them through the CSSOM; publication retains
+ * them as a stylesheet from `customPaletteCss`.
+ */
+export function customPaletteProperties(seed: string): [string, string][] {
+  const palette = generatePalette(seed);
+  return (["light", "dark"] as const).flatMap((mode) =>
+    Object.entries(PORTFOLIO_TOKENS).map(([name, token]): [string, string] => [
+      `--pf-custom-${mode}-${name}`,
+      palette[mode][token],
+    ]),
+  );
+}
+
+/** The retained stylesheet that delivers a custom palette to a published page. */
+export function customPaletteCss(seed: string): string {
+  return `:root{${customPaletteProperties(seed)
+    .map(([name, value]) => `${name}:${value};`)
+    .join("")}}\n`;
+}

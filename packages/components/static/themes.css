@@ -387,3 +387,61 @@
   --pf-link: #efc793;
   --pf-focus: #efc793;
 }
+:root[data-theme][data-custom-color] {
+  color-scheme: light;
+  --pf-page: var(--pf-custom-light-page);
+  --pf-surface: var(--pf-custom-light-surface);
+  --pf-raised: var(--pf-custom-light-raised);
+  --pf-ink: var(--pf-custom-light-ink);
+  --pf-muted: var(--pf-custom-light-muted);
+  --pf-border: var(--pf-custom-light-border);
+  --pf-control: var(--pf-custom-light-control);
+  --pf-accent: var(--pf-custom-light-accent);
+  --pf-link: var(--pf-custom-light-link);
+  --pf-focus: var(--pf-custom-light-focus);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme][data-custom-color]:not([data-color-mode="light"]):not(
+    [data-initial-mode="light"]
+  ) {
+    color-scheme: dark;
+    --pf-page: var(--pf-custom-dark-page);
+    --pf-surface: var(--pf-custom-dark-surface);
+    --pf-raised: var(--pf-custom-dark-raised);
+    --pf-ink: var(--pf-custom-dark-ink);
+    --pf-muted: var(--pf-custom-dark-muted);
+    --pf-border: var(--pf-custom-dark-border);
+    --pf-control: var(--pf-custom-dark-control);
+    --pf-accent: var(--pf-custom-dark-accent);
+    --pf-link: var(--pf-custom-dark-link);
+    --pf-focus: var(--pf-custom-dark-focus);
+  }
+}
+:root[data-theme][data-custom-color][data-initial-mode="dark"]:not(
+  [data-color-mode="light"]
+) {
+  color-scheme: dark;
+  --pf-page: var(--pf-custom-dark-page);
+  --pf-surface: var(--pf-custom-dark-surface);
+  --pf-raised: var(--pf-custom-dark-raised);
+  --pf-ink: var(--pf-custom-dark-ink);
+  --pf-muted: var(--pf-custom-dark-muted);
+  --pf-border: var(--pf-custom-dark-border);
+  --pf-control: var(--pf-custom-dark-control);
+  --pf-accent: var(--pf-custom-dark-accent);
+  --pf-link: var(--pf-custom-dark-link);
+  --pf-focus: var(--pf-custom-dark-focus);
+}
+:root[data-theme][data-custom-color][data-color-mode="dark"] {
+  color-scheme: dark;
+  --pf-page: var(--pf-custom-dark-page);
+  --pf-surface: var(--pf-custom-dark-surface);
+  --pf-raised: var(--pf-custom-dark-raised);
+  --pf-ink: var(--pf-custom-dark-ink);
+  --pf-muted: var(--pf-custom-dark-muted);
+  --pf-border: var(--pf-custom-dark-border);
+  --pf-control: var(--pf-custom-dark-control);
+  --pf-accent: var(--pf-custom-dark-accent);
+  --pf-link: var(--pf-custom-dark-link);
+  --pf-focus: var(--pf-custom-dark-focus);
+}
