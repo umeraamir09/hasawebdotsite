@@ -13,6 +13,7 @@ import {
   readSignInMethods,
   type SignInMethod,
 } from "../lib/sign-in-methods";
+import { Button, Icon, IconButton } from "./workbench";
 
 type Notice = { kind: "success" | "error"; text: string };
 
@@ -31,7 +32,7 @@ const failures = {
   failed: "We couldn't disconnect it. Check your connection and try again.",
 } as const;
 
-// "Connected sign-in methods" in the editor's settings panel (Phase 47).
+// The account menu's sign-in list (Figma 414:9669).
 export function SignInMethods({
   controller,
   disabled,
@@ -101,95 +102,102 @@ export function SignInMethods({
   }
 
   return (
-    <section aria-label="Connected sign-in methods" className="sign-in-methods">
-      <h2>Connected sign-in methods</h2>
+    <section aria-label="Connected sign-in methods" className="account-methods">
+      <h3 className="account-label">Sign-in</h3>
       {notice && (
         <p
-          className={
-            notice.kind === "error" ? "editor-input-note" : "editor-muted"
-          }
+          className="account-notice"
+          data-kind={notice.kind}
           role={notice.kind === "error" ? "alert" : "status"}
         >
           {notice.text}
         </p>
       )}
       {loadFailed && (
-        <p className="editor-input-note" role="alert">
+        <p className="account-notice" data-kind="error" role="alert">
           We couldn't load your sign-in methods.{" "}
-          <button type="button" onClick={() => void load()}>
+          <Button size="s" kind="ghost" onClick={() => void load()}>
             Retry
-          </button>
+          </Button>
         </p>
       )}
-      {methods === null && !loadFailed && (
-        <p className="editor-muted">Loading sign-in methods...</p>
-      )}
       {methods && (
-        <ul>
+        <ul className="account-method-list">
           {methods.map(({ provider, connected }) => (
             <li key={provider} data-sign-in-method={provider}>
-              <div className="sign-in-method-row">
-                <span>
-                  <strong>{providerNames[provider]}</strong>
-                  <span className="editor-muted">
-                    {connected
-                      ? "Connected"
-                      : provider === "google"
-                        ? "Add another way to sign in with your account's email"
-                        : "Add another way to sign in"}
+              <div className="account-method">
+                <span className="account-method-icon" aria-hidden="true">
+                  {provider === "github" ? (
+                    <Icon name="github" size={16} />
+                  ) : (
+                    "G"
+                  )}
+                </span>
+                <span className="account-method-text">
+                  <span className="account-method-name">
+                    {providerNames[provider]}
                   </span>
+                  {connected && (
+                    <span className="account-method-state">Connected</span>
+                  )}
                 </span>
                 {connected ? (
                   connectedCount > 1 &&
                   confirming !== provider && (
-                    <button
-                      type="button"
+                    <IconButton
+                      icon="more"
+                      label={`Disconnect ${providerNames[provider]}`}
                       disabled={disabled || busy}
                       onClick={() => setConfirming(provider)}
-                    >
-                      Disconnect {providerNames[provider]}
-                    </button>
+                    />
                   )
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    size="s"
+                    aria-label={`Connect ${providerNames[provider]}`}
                     disabled={disabled || busy}
                     onClick={() => void connect(provider)}
                   >
-                    Connect {providerNames[provider]}
-                  </button>
+                    Connect
+                  </Button>
                 )}
               </div>
               {confirming === provider && (
                 <fieldset
+                  className="account-confirm"
                   aria-label={`Confirm disconnecting ${providerNames[provider]}`}
                 >
                   <p>{disconnectNotes[provider]}</p>
-                  <button
-                    type="button"
-                    disabled={disabled || busy}
-                    onClick={() => void disconnect(provider)}
-                  >
-                    {busy
-                      ? "Disconnecting..."
-                      : `Disconnect ${providerNames[provider]} now`}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => setConfirming(null)}
-                  >
-                    Cancel
-                  </button>
+                  <div className="account-confirm-actions">
+                    <Button
+                      size="s"
+                      disabled={busy}
+                      onClick={() => setConfirming(null)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size="s"
+                      kind="danger"
+                      disabled={disabled || busy}
+                      onClick={() => void disconnect(provider)}
+                    >
+                      {busy
+                        ? "Disconnecting..."
+                        : `Disconnect ${providerNames[provider]} now`}
+                    </Button>
+                  </div>
                 </fieldset>
               )}
             </li>
           ))}
         </ul>
       )}
-      <p className="editor-muted">
-        Keep at least one sign-in method connected.
-      </p>
+      {methods && connectedCount === 1 && (
+        <p className="account-method-state">
+          Keep at least one sign-in method connected.
+        </p>
+      )}
     </section>
   );
 }

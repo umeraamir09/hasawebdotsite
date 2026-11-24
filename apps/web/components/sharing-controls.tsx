@@ -14,7 +14,7 @@ import {
   SEO_DESCRIPTION_MAX,
   SEO_TITLE_MAX,
 } from "@hasaweb/schema";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { privateImageUrl } from "../lib/assets/browser";
 import type { DraftController } from "../lib/draft/controller";
@@ -24,7 +24,13 @@ import {
   loadCatalogFont,
 } from "../lib/editor/catalog-fonts";
 import { editEditorField, readEditorField } from "../lib/editor/fields";
+import type { PublicationSiteState } from "../lib/editor/use-publication-site";
+import { AddressControl } from "./address-control";
 import { ImageUpload } from "./image-upload";
+import { SitePill } from "./publication-checklist";
+import { UnpublishControl } from "./unpublish-control";
+import { Area, Button, Field, Icon } from "./workbench";
+import "./share-panel.css";
 
 type Seo = DraftDoc["seo"];
 type SeoText = "title" | "description";
@@ -46,7 +52,6 @@ function OverrideField({
   label,
   max,
   placeholder,
-  note,
 }: {
   controller: DraftController;
   disabled: boolean;
@@ -54,42 +59,38 @@ function OverrideField({
   label: string;
   max: number;
   placeholder: string;
-  note: string;
 }) {
-  const id = useId();
   const state = useStore(controller.store);
   const value = readEditorField(state, ["seo", field]);
-  const props = {
-    id,
-    value,
-    placeholder,
-    maxLength: max,
-    disabled,
-    "aria-describedby": `${id}-note ${id}-count`,
-    onChange: (
-      event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    ) => {
-      const next = event.target.value;
-      if (next === "") clearOverride(controller, field);
-      else editEditorField(controller, ["seo", field], next);
-    },
+  const onChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const next = event.target.value;
+    if (next === "") clearOverride(controller, field);
+    else editEditorField(controller, ["seo", field], next);
   };
   return (
-    <div className="editor-field" data-publication-field={`seo-${field}`}>
-      <label htmlFor={id}>{label}</label>
+    <div data-publication-field={`seo-${field}`}>
       {field === "description" ? (
-        <textarea {...props} rows={4} />
+        <Area
+          label={label}
+          value={value}
+          placeholder={placeholder}
+          maxLength={max}
+          rows={2}
+          disabled={disabled}
+          onChange={onChange}
+        />
       ) : (
-        <input {...props} />
+        <Field
+          label={label}
+          value={value}
+          placeholder={placeholder}
+          maxLength={max}
+          disabled={disabled}
+          onChange={onChange}
+        />
       )}
-      <span className="sharing-field-meta">
-        <span className="editor-muted" id={`${id}-note`}>
-          {note}
-        </span>
-        <span className="editor-muted" id={`${id}-count`}>
-          {Array.from(value).length}/{max}
-        </span>
-      </span>
     </div>
   );
 }
@@ -155,108 +156,148 @@ function CardPreview({ draft }: { draft: DraftDoc }) {
   );
 }
 
+/** Share (Figma 413:7431): address, link preview and Unpublish. */
 export function SharingControls({
   controller,
   disabled,
+  site,
 }: {
   controller: DraftController;
   disabled: boolean;
+  site: PublicationSiteState;
 }) {
   const state = useStore(controller.store);
   const [unavailable, setUnavailable] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const draft = state.working;
   if (!draft) return null;
   // The card shows the same resolved values that Publish writes into pages.
   const resolved = resolveSeo(draft);
   const address = `${draft.requestedSubdomain ?? "your-address"}.hasaweb.site`;
   const image = resolved.image;
+  const current = site.site;
+  const url = current?.url ?? null;
   return (
-    <section aria-label="Search and sharing" className="sharing-controls">
-      <h2>Search &amp; sharing</h2>
-      <p className="editor-muted">
-        Choose what people see when your link is shared or appears in search.
-        Case studies and your resume page add their own name to this title.
-      </p>
-      <OverrideField
-        controller={controller}
-        disabled={disabled}
-        field="title"
-        label="Page title"
-        max={SEO_TITLE_MAX}
-        placeholder={draft.profile.name.trim() || "Your name"}
-        note="Leave empty to use your name."
-      />
-      <OverrideField
-        controller={controller}
-        disabled={disabled}
-        field="description"
-        label="Description"
-        max={SEO_DESCRIPTION_MAX}
-        placeholder={
-          resolved.overridden.description ? "" : resolved.description
-        }
-        note="Leave empty to use the start of your bio."
-      />
-      <figure className="sharing-card" aria-label="Sharing preview">
-        <div className="sharing-card-image">
-          {image.kind === "card" ? (
-            <CardPreview draft={draft} />
-          ) : unavailable !== image.assetId ? (
-            // biome-ignore lint/performance/noImgElement: Private owner assets are same-origin, authorized and no-store; image optimization is disabled.
-            <img
-              src={privateImageUrl(image.assetId, "og")}
-              alt=""
-              onError={() => setUnavailable(image.assetId)}
-            />
-          ) : (
-            <span>Image unavailable</span>
+    <div className="share-panel">
+      {url && current ? (
+        <div className="share-address">
+          <div className="share-address-row">
+            <Icon name="globe" size={18} />
+            <span className="share-address-host">{new URL(url).host}</span>
+            <SitePill status={current.status} />
+          </div>
+          {current.status === "published" && (
+            <div className="share-address-actions">
+              <Button
+                size="s"
+                icon="copy"
+                onClick={() => {
+                  void navigator.clipboard
+                    .writeText(url)
+                    .then(() => setCopied(true))
+                    .catch(() => {});
+                }}
+              >
+                {copied ? "Copied" : "Copy"}
+              </Button>
+              <a
+                className="wb-button"
+                data-kind="secondary"
+                data-size="s"
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Icon name="arrow-up-right" size={14} />
+                Open
+              </a>
+            </div>
           )}
         </div>
-        <figcaption>
-          <span className="sharing-card-address">{address}</span>
-          <strong className="sharing-card-title">{resolved.title}</strong>
-          {resolved.description && (
-            <span className="sharing-card-description">
-              {resolved.description}
-            </span>
-          )}
-        </figcaption>
-      </figure>
-      <div data-publication-field="seo-ogImage">
-        <ImageUpload
-          key={`${controller.scopeKey}:og`}
-          label="Sharing image"
-          purpose="og"
-          noun="sharing image"
-          value={draft.seo.ogImage}
-          description="Your sharing image"
-          describe={false}
-          ownerId={controller.identity.ownerId}
+      ) : (
+        <div className="share-address">
+          <AddressControl controller={controller} disabled={disabled} />
+        </div>
+      )}
+      <section aria-label="Search and sharing" className="sharing-controls">
+        <h3 className="share-label">Link preview</h3>
+        <figure className="sharing-card" aria-label="Sharing preview">
+          <div className="sharing-card-image">
+            {image.kind === "card" ? (
+              <CardPreview draft={draft} />
+            ) : unavailable !== image.assetId ? (
+              // biome-ignore lint/performance/noImgElement: Private owner assets are same-origin, authorized and no-store; image optimization is disabled.
+              <img
+                src={privateImageUrl(image.assetId, "og")}
+                alt=""
+                onError={() => setUnavailable(image.assetId)}
+              />
+            ) : (
+              <span>Image unavailable</span>
+            )}
+          </div>
+          <figcaption>
+            <span className="sharing-card-address">{address}</span>
+            <strong className="sharing-card-title">{resolved.title}</strong>
+            {resolved.description && (
+              <span className="sharing-card-description">
+                {resolved.description}
+              </span>
+            )}
+          </figcaption>
+        </figure>
+        <OverrideField
+          controller={controller}
           disabled={disabled}
-          onPendingChange={(pending) =>
-            controller.store.setState((current) => ({
-              pendingImages: { ...current.pendingImages, og: pending },
-            }))
-          }
-          onReady={(assetId) => {
-            if (!controller.edit(["seo", "ogImage"], { assetId }))
-              throw new Error(
-                "The crop is ready but the draft could not accept it. Retry after resolving unfinished input.",
-              );
-          }}
-          onRemove={() => clearOverride(controller, "ogImage")}
-          onDescription={() => {}}
+          field="title"
+          label="Title"
+          max={SEO_TITLE_MAX}
+          placeholder={draft.profile.name.trim() || "Your name"}
         />
-        <p className="editor-muted">
-          {resolved.overridden.image
-            ? "Remove it to use your generated profile card again."
-            : "Until you add one, links show a card of your profile in your theme: banner, avatar, bio and links. Sharing cards show a 1.91:1 image."}
-        </p>
-      </div>
-      <p className="editor-muted">
-        Changes go live when you publish. Search engines and apps that already
-        fetched your page may show older details for a while.
-      </p>
-    </section>
+        <OverrideField
+          controller={controller}
+          disabled={disabled}
+          field="description"
+          label="Description"
+          max={SEO_DESCRIPTION_MAX}
+          placeholder={
+            resolved.overridden.description ? "" : resolved.description
+          }
+        />
+        <div className="editor-legacy" data-publication-field="seo-ogImage">
+          <ImageUpload
+            key={`${controller.scopeKey}:og`}
+            label="Sharing image"
+            purpose="og"
+            noun="sharing image"
+            value={draft.seo.ogImage}
+            description="Your sharing image"
+            describe={false}
+            ownerId={controller.identity.ownerId}
+            disabled={disabled}
+            onPendingChange={(pending) =>
+              controller.store.setState((current) => ({
+                pendingImages: { ...current.pendingImages, og: pending },
+              }))
+            }
+            onReady={(assetId) => {
+              if (!controller.edit(["seo", "ogImage"], { assetId }))
+                throw new Error(
+                  "The crop is ready but the draft could not accept it. Retry after resolving unfinished input.",
+                );
+            }}
+            onRemove={() => clearOverride(controller, "ogImage")}
+            onDescription={() => {}}
+          />
+        </div>
+      </section>
+      {current && (
+        <UnpublishControl
+          site={current}
+          disabled={disabled}
+          onUnpublish={site.unpublish}
+        />
+      )}
+    </div>
   );
 }

@@ -61,7 +61,7 @@ export function AppearanceControls({
   const custom = appearance.customColor;
   return (
     <div className="style-panel">
-      <fieldset className="style-group">
+      <fieldset className="style-group" data-publication-field="themeId">
         <legend className="style-label">Theme</legend>
         {!preset && (
           <p className="style-note" role="status">
@@ -158,7 +158,7 @@ export function AppearanceControls({
           ]}
         />
       </div>
-      <fieldset className="style-group">
+      <fieldset className="style-group" data-publication-field="fontId">
         <legend className="style-label">Font</legend>
         {!appearanceCatalog.fonts.some(
           (font) => font.id === appearance.fontId,
