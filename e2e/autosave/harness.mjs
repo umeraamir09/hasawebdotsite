@@ -33,6 +33,9 @@ export async function checkAutosave({
     format: "esm",
     jsx: "automatic",
     external: ["/fonts/*"],
+    // The Workbench CSS self-hosts Geist; the bundle emits the font files.
+    loader: { ".ttf": "file" },
+    assetNames: "[name]-[hash]",
     outdir: directory,
     define: { "process.env.NODE_ENV": '"production"' },
   });
@@ -63,6 +66,11 @@ export async function checkAutosave({
         res.end(
           path.endsWith(".js") ? bundle : path.endsWith(".css") ? css : font,
         );
+        return;
+      }
+      if (/^\/geist(?:-mono)?-variable-[A-Z0-9]+\.ttf$/.test(path)) {
+        res.setHeader("Content-Type", "font/ttf");
+        res.end(await readFile(join(directory, path.slice(1))));
         return;
       }
       if (!path.startsWith("/api/")) {
@@ -207,14 +215,24 @@ export async function checkAutosave({
         await boot(page, "?handoff&recovery");
         const geometry = await page
           .getByRole("button", { name: "Open editor", exact: true })
-          .evaluate((button) => ({
-            height: button.getBoundingClientRect().height,
-            width: button.getBoundingClientRect().width,
-            color: getComputedStyle(button).backgroundColor,
-          }));
-        assert.equal(geometry.height, 48);
+          .evaluate((button) => {
+            // The Workbench primary button fills with the ink token.
+            const probe = document.createElement("span");
+            probe.style.background = "var(--wb-ink-fill)";
+            button.parentElement.append(probe);
+            const ink = getComputedStyle(probe).backgroundColor;
+            probe.remove();
+            return {
+              height: button.getBoundingClientRect().height,
+              width: button.getBoundingClientRect().width,
+              color: getComputedStyle(button).backgroundColor,
+              ink,
+            };
+          });
+        assert.equal(geometry.height, 36);
         assert.ok(geometry.width <= 520);
-        assert.equal(geometry.color, "rgb(189, 235, 112)");
+        assert.equal(geometry.color, geometry.ink);
+        assert.notEqual(geometry.ink, "rgba(0, 0, 0, 0)");
         await page
           .getByRole("button", { name: "Open editor", exact: true })
           .click();
@@ -332,7 +350,7 @@ export async function checkAutosave({
           mobile &&
             mobile.x >= 0 &&
             mobile.x + mobile.width <= 390 &&
-            mobile.height === 48,
+            mobile.height === 36,
         );
         await page.screenshot({
           path: join(evidence, "setup-handoff-mobile.png"),
