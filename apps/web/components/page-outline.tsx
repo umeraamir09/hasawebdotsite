@@ -34,6 +34,7 @@ import {
   sectionLabel,
   sectionMeta,
 } from "../lib/editor/sections";
+import { linkIcon } from "./links-editor";
 import { SectionGallery } from "./section-gallery";
 import { Icon, IconButton, type IconName, SectionRow } from "./workbench";
 
@@ -202,11 +203,6 @@ export function PageOutline({
   );
 }
 
-const linkIcons: Record<string, IconName> = {
-  github: "github",
-  linkedin: "linkedin",
-  email: "mail",
-};
 function ProfileCard({
   draft,
   selected,
@@ -249,11 +245,7 @@ function ProfileCard({
       {links.length > 0 && (
         <span className="page-outline-links" aria-hidden="true">
           {links.slice(0, 6).map((link) => (
-            <Icon
-              key={link.id}
-              name={linkIcons[link.kind] ?? "link"}
-              size={14}
-            />
+            <Icon key={link.id} name={linkIcon(link.kind)} size={14} />
           ))}
         </span>
       )}

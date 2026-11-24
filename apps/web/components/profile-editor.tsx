@@ -18,7 +18,7 @@ import { profileSuggestions } from "../lib/editor/provider-suggestions";
 import { DecorationGallery } from "./decoration-gallery";
 import { DraftField } from "./draft-field";
 import { ImageSlot } from "./image-slot";
-import { SocialLinksControl } from "./social-links-control";
+import { LinksEditor } from "./links-editor";
 import { Button, Icon, Toggle } from "./workbench";
 import "./profile-editor.css";
 
@@ -335,9 +335,11 @@ function Editor({
           does not count.
         </p>
       )}
-      <div className="editor-legacy">
-        <SocialLinksControl controller={controller} disabled={inactive} />
-      </div>
+      <LinksEditor
+        controller={controller}
+        disabled={inactive}
+        placement="showInProfile"
+      />
       <DecorationGallery
         open={gallery}
         draft={draft}

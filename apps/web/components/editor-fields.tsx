@@ -5,11 +5,11 @@ import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { ContactControls } from "./contact-controls";
 import { GitHubControls } from "./github-controls";
+import { LinksEditor } from "./links-editor";
 import { ProfileEditor } from "./profile-editor";
 import { ProjectControls } from "./project-controls";
 import { ResumeControls } from "./resume-controls";
 import { SkillsControls } from "./skills-controls";
-import { SocialLinksControl } from "./social-links-control";
 import { TextControls } from "./text-controls";
 import { WorkExperienceControls } from "./work-experience-controls";
 
@@ -21,6 +21,16 @@ export function EditorFields(props: Parameters<typeof SectionFields>[0]) {
     return (
       <ProfileEditor controller={props.controller} disabled={props.disabled} />
     );
+  // Sections on Workbench controls render without the earlier styles.
+  const selected = props.selection;
+  const modern =
+    selected.kind === "component" &&
+    props.controller.store
+      .getState()
+      .working?.components.some(
+        (item) => item.id === selected.id && item.type === "social-links",
+      );
+  if (modern) return <SectionFields {...props} />;
   return (
     <div className="editor-legacy">
       <SectionFields {...props} />
@@ -46,7 +56,13 @@ function SectionFields({
   const component = draft.components.find((item) => item.id === selection.id);
   if (!component) return null;
   if (component.type === "social-links")
-    return <SocialLinksControl controller={controller} disabled={disabled} />;
+    return (
+      <LinksEditor
+        controller={controller}
+        disabled={disabled}
+        placement="showInSocialComponent"
+      />
+    );
   if (component.type === "projects")
     return (
       <ProjectControls

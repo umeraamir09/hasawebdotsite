@@ -9,10 +9,15 @@ import { createDraftController } from "../draft/controller";
 import { fixtureTransport, memoryStorage } from "../draft/test-fixtures";
 import { readEditorField } from "./fields";
 import {
+  addLinkTo,
   addSocialLink,
+  editLinkDestination,
   editSocialDestination,
   hasQualifyingProfileLink,
+  linkDisplay,
+  linkFromText,
   moveSocialLink,
+  moveSocialLinkTo,
   readSocialPlacement,
   removeSocialLink,
 } from "./social-links";
@@ -246,5 +251,101 @@ describe("social and contact identity", () => {
     expect(Object.keys(controller.store.getState().inputs)).toEqual([
       '["profile","name"]',
     ]);
+  });
+});
+
+describe("pasted links", () => {
+  it("reads emails, known profiles and websites, adding https:// when missing", () => {
+    expect(linkFromText(" mailto:me@example.com ")).toEqual({
+      kind: "email",
+      value: "me@example.com",
+      label: "Email",
+    });
+    expect(linkFromText("github.com/me")).toEqual({
+      kind: "github",
+      value: "https://github.com/me",
+      label: "GitHub",
+    });
+    expect(linkFromText("https://www.linkedin.com/in/me")?.kind).toBe(
+      "linkedin",
+    );
+    expect(linkFromText("https://twitter.com/me")?.label).toBe("X");
+    expect(linkFromText("https://notgithub.com/me")).toEqual({
+      kind: "website",
+      value: "https://notgithub.com/me",
+      label: "Website",
+    });
+    expect(linkFromText("hello")).toBeNull();
+    expect(linkFromText("javascript:alert(1)")).toBeNull();
+    expect(linkFromText("")).toBeNull();
+  });
+  it("shows a destination without its scheme, www. or trailing slash", () => {
+    expect(linkDisplay("github", "https://www.github.com/me/")).toBe(
+      "github.com/me",
+    );
+    expect(linkDisplay("email", "me@example.com")).toBe("me@example.com");
+  });
+  it("adds a link to one placement and reuses an existing destination", async () => {
+    const { controller } = await setup();
+    const pasted = linkFromText("github.com/me");
+    if (!pasted) throw new Error("Expected a link");
+    const id = addLinkTo(controller, pasted, "showInSocialComponent");
+    const added = controller.store
+      .getState()
+      .working?.links.find((link) => link.id === id);
+    expect(added).toMatchObject({
+      kind: "github",
+      label: "GitHub",
+      showInProfile: false,
+      showInSocialComponent: true,
+    });
+    const count = controller.store.getState().working?.links.length;
+    expect(addLinkTo(controller, pasted, "showInProfile")).toBe(id);
+    const links = controller.store.getState().working?.links ?? [];
+    expect(links).toHaveLength(count ?? 0);
+    expect(links.find((link) => link.id === id)?.showInProfile).toBe(true);
+  });
+  it("follows a recognised destination's kind and default label", async () => {
+    const { controller } = await setup();
+    const pasted = linkFromText("https://example.com");
+    if (!pasted) throw new Error("Expected a link");
+    const id = addLinkTo(controller, pasted, "showInProfile");
+    if (!id) throw new Error("Expected an id");
+    const read = () =>
+      controller.store.getState().working?.links.find((link) => link.id === id);
+    expect(editLinkDestination(controller, id, "github.com/me")).toBe(false);
+    expect(read()?.value).toBe("https://example.com");
+    expect(
+      editLinkDestination(controller, id, "github.com/me", { complete: true }),
+    ).toBe(true);
+    expect(read()).toMatchObject({
+      kind: "github",
+      label: "GitHub",
+      value: "https://github.com/me",
+    });
+    controller.edit(["links", { id }, "label"], "Code");
+    editLinkDestination(controller, id, "me@example.com");
+    expect(read()).toMatchObject({
+      kind: "email",
+      label: "Code",
+      value: "me@example.com",
+    });
+  });
+  it("moves a link to another link's position", async () => {
+    const { controller } = await setup();
+    const first = addLinkTo(
+      controller,
+      { kind: "website", value: "https://a.example", label: "A" },
+      "showInProfile",
+    );
+    const second = addLinkTo(
+      controller,
+      { kind: "website", value: "https://b.example", label: "B" },
+      "showInProfile",
+    );
+    if (!first || !second) throw new Error("Expected ids");
+    moveSocialLinkTo(controller, second, first);
+    const ids = controller.store.getState().working?.links.map((l) => l.id);
+    expect(ids?.indexOf(second)).toBeLessThan(ids?.indexOf(first) ?? -1);
   });
 });
