@@ -135,7 +135,8 @@ Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design 
 - Share (`413:7431`): address, sharing metadata and unpublish.
 - Publish (`414:8373`, `414:9545`): the Publish button opens the checklist as a popover with an issue count, each issue opens its editor, and the button shows the first publish, ready, publishing, published and failed states.
 - Account menu (`414:9669`): sign out, settings and account deletion.
-- [ ] Complete when a custom color renders the same in the preview and on the published page, every checklist issue lands on its control, and `editor`, `publication` and `renderer` pass.
+- [x] Complete when a custom color renders the same in the preview and on the published page, every checklist issue lands on its control, and `editor`, `publication` and `renderer` pass.
+  - #86 and this PR: custom color reaches previews through CSSOM properties and published pages through a retained palette stylesheet; the Style panel, Share panel, Publish popover and account menu use Workbench controls.
 
 ### Phase 51.5. Rebuild the setup guide on Setup v2
 
