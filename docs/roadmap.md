@@ -144,12 +144,9 @@ Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design 
 - Replace the guide layout in `setup-guide.tsx` and `setup-handoff.tsx` with the Setup v2 frames for desktop and mobile in both schemes. Each step is one centered card under a title with no subtitle. The top bar shows segmented progress, and once the address is held, the address with a Private pill. Back, Skip and Skip to review sit in one fixed row, and Continue stays in the same place on every step. Review keeps the real renderer with the device and scheme switch.
 - Address has an inline `.hasaweb.site` suffix and an availability pill. On Profile the profile card is the form (banner, avatar, name, bio) and uses the shared crop dialogs. Links uses platform rows, Skills a token input with suggestions, Projects a project card, and GitHub a username lookup, a graph preview and a Public or Public + private choice.
 - Setup v2 has no frames yet for a taken address, provider suggestions, cropping, a public email, private GitHub authorization or a failed save. Build these from the v2 kit (`471:11455`) and the hidden earlier states (`460:10192`) until v2 versions exist.
-- The owner decides these before the phase, and [onboarding.md](onboarding.md) changes in the same PR:
-  - The doc asks the guide to explain in words that the address is reserved, when an email becomes public, and that Review has not published anything. The design shows these as the Private pill, a link-row state and the address bar instead.
-  - The design shows a 102 / 160 bio counter. The doc rules out Linktree's 160-character limit and the schema has no limit.
-  - The design offers address suggestion chips, which the doc does not cover.
-  - "Skip" and "Skip to review" replace "Skip this step" and "Skip remaining steps".
-- [ ] Complete when ON-01 to ON-19 pass on the new screens, required steps still offer no skip or bypass, and the guide matches the frames on desktop and mobile in both schemes.
+- The owner's decisions, recorded in [onboarding.md](onboarding.md): the design's pills and address bar replace the explanatory sentences; a bio holds at most 160 characters for setup and Publish; the Address step offers available names from the account name as chips; "Skip" and "Skip to review" are the optional steps' labels.
+- [x] Complete when ON-01 to ON-19 pass on the new screens, required steps still offer no skip or bypass, and the guide matches the frames on desktop and mobile in both schemes.
+  - This PR: Setup v2 shell and step cards in `setup-guide.tsx` and the `guide-*-step.tsx` files, `BIO_MAX` in the setup and publication check, and the guide journeys moved to the new controls.
 
 Phases 51A to 51C test whether a beta of about 15 portfolios (5 editing sessions and 5 publishes a day) can launch on Workers Free instead of Paid. Every Free quota fits that load. The open question is the 10 ms CPU limit: October's native runs measured publication batches at about 30 ms p95, and the generated sharing card has never been measured. Free terminates a Worker only once it goes over the limit "consistently", so only a native run settles it.
 

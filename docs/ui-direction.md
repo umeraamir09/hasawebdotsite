@@ -15,6 +15,9 @@ File key `rjvDSCHPajF3Lpe8qNxX5U`. The editor and the setup guide follow page "E
 | `404:226` | Portfolio kit used inside editor previews |
 | `325:2` | Onboarding page; the setup guide is its Setup v2 sections |
 | `471:11455` | Setup v2 kit |
+| `471:11501`, `477:13531` | Setup v2 desktop frames, light and dark |
+| `476:12712`, `477:14158` | Setup v2 phone frames, light and dark |
+| `460:10192` | Hidden earlier states the guide follows where Setup v2 has no frame: taken address, provider suggestions, cropping, public email, private GitHub authorization and save states |
 | `330:252`, `330:271`, `330:533` | Avatar, banner and mobile crop dialogs |
 | `330:371` | Public email confirmation |
 
@@ -37,11 +40,11 @@ The editor shell (top bar, rail, panel, canvas outline, Add section gallery and 
 - **Share** shows the address card (the field before the first Publish; the host, status, Copy and Open after it), the link preview with Title and Description, the sharing image and Unpublish.
 - **The account menu** opens from the avatar with the owner's name and address, the sign-in methods, Sign out and Delete account.
 
-The sharing image upload and the content editors keep their earlier bordered buttons and lime selection, in Geist, until phase 51.3 moves them. The setup guide keeps the earlier DM Sans and lime styling until 51.5.
+The sharing image upload and the content editors keep their earlier bordered buttons and lime selection, in Geist, until phase 51.3 moves them.
 
 ## Initial setup
 
-See [onboarding.md](onboarding.md) for the guide's behavior. The Profile step shows avatar and banner previews and uses the shared crop dialogs (reposition, zoom, Reset, Apply crop, Cancel). Optional Skip actions appear only after required setup. Review uses the real shared renderer with desktop/mobile switching.
+See [onboarding.md](onboarding.md) for the guide's behavior and layout. The guide uses the Workbench tokens and controls in both schemes. Its own pieces are in `setup-guide.css`: the 64 px answer field with its pill or key cap, the Setup v2 pills (selected ones take the signal wash), the white cards and the action row. The Profile card reuses the editor's image slots and crop dialogs (reposition, zoom, Reset, Apply crop, Cancel). Review uses the real shared renderer with the same device and scheme switch as the editor's top bar.
 
 ## Figma access
 
