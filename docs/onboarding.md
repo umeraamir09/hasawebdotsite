@@ -42,7 +42,7 @@ The default appearance comes from the single template and the [approved catalog]
 
 Prefill the signup provider's name for review. Offer Use this photo only when a provider photo is available; it requires explicit acceptance, the shared crop experience, and a successful private upload. Do not treat a remote provider URL as an owned draft asset. A missing or failed provider photo can be replaced by an uploaded image.
 
-The guide reuses the editor's `ProfileControls` (with location hidden) and the private provider-photo import path. Use this name and Apply crop are the only ways to accept a provider suggestion.
+The guide's Profile step (`ProfileControls`, with location hidden) uses the same private provider-photo import path and crop dialog as the editor's profile editor. Use this name and Apply crop are the only ways to accept a provider suggestion.
 
 Owners enter their own bio and select a banner. Account email is only a suggestion for a public link, never silently copied to public identity. Adding it explains public visibility. An email link and a private contact-form recipient remain separate concepts.
 

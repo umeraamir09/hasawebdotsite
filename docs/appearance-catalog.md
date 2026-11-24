@@ -57,6 +57,8 @@ Fonts apply to the whole portfolio, case studies and resume page, independent of
 | Ginger cat, `cat` | Cleaned animated WebP (212 × 220, 32 frames, 3,920 ms loop) and a still |
 | Hands, `hands` | Inline SVG and CSS: curled, palm and nails poses, hearts and sparkles over six seconds |
 
+The editor chooses a decoration from a gallery that reads this list: "None" first, then each entry in catalog order, every tile showing the owner's banner and avatar wearing that decoration as a still (`PortfolioAvatar` with `still`). An entry may name a `category`. Once the catalog has more than eight entries the gallery adds a search field and one filter chip per category.
+
 Both sit above the portrait and ignore pointer events. Portraits are 124 px on desktop and 104 px at widths up to 760 px. Decorative art is hidden from assistive technology.
 
 **Motion policy.** The selected decoration autoplays, independent of Face Reveal. A separate keyboard-accessible Pause/Play control works with Face Reveal on or off; pausing shows the cat still or stationary hands without switching the portrait, and Play restarts the sequence. Reduced motion shows the stills, hides the control, stops shimmer and skips the reveal wipe, and preference changes apply immediately.
