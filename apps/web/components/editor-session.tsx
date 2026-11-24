@@ -156,9 +156,12 @@ function Scope({
     history.replaceState(history.state, "", url);
   }, [linkNotice]);
   const [panel, setPanel] = useState<Panel>(linkNotice ? "share" : "build");
+  // Build shows the page outline or one section's editor under a back
+  // header (Figma 409:2175). The editor opens on the profile.
+  const [view, setView] = useState<BuildView>("edit");
   // On a phone or tablet the preview comes first; the outline, editors and
   // the Style and Share panels open as a bottom sheet over it.
-  const [sheet, setSheet] = useState<Sheet | null>(linkNotice ? "panel" : null);
+  const [sheet, setSheet] = useState(Boolean(linkNotice));
   const [docked, setDocked] = useState(false);
   const [deviceChoice, setDevice] = useState<PreviewDevice | null>(null);
   const device = deviceChoice ?? (compact ? "mobile" : "desktop");
@@ -175,7 +178,6 @@ function Scope({
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
   const panelRef = useRef<HTMLElement>(null);
-  const editorRef = useRef<HTMLDivElement>(null);
   async function signOut() {
     if (!onSignOut || signingOut) return;
     setSigningOut(true);
@@ -202,13 +204,27 @@ function Scope({
     recoveryState.busy ||
     !draft ||
     state.error === "owner_changed";
-  const sheetOpen = compact && sheet !== null;
-  function openPanel(next: Panel, nextSheet: Sheet = "panel") {
+  const sheetOpen = compact && sheet;
+  function openPanel(next: Panel, nextView?: BuildView) {
     setPanel(next);
+    if (nextView) setView(nextView);
     if (compact) {
-      setSheet(nextSheet);
+      setSheet(true);
       setPublishOpen(false);
     }
+  }
+  // Moves focus to the new view's first control: the back button of an
+  // editor, or the selected outline row.
+  function focusView(next: BuildView) {
+    requestAnimationFrame(() =>
+      panelRef.current
+        ?.querySelector<HTMLElement>(
+          next === "edit"
+            ? ".editor-section-editor .editor-panel-header button"
+            : '.page-outline [aria-current="true"]',
+        )
+        ?.focus(),
+    );
   }
   const choose = (value: PreviewSelection, from: SelectSource) => {
     if (
@@ -220,13 +236,15 @@ function Scope({
       return;
     setSelection(value);
     setPanel("build");
-    if (compact) {
-      if (from === "canvas") setDocked(true);
-      else if (from !== "keyboard") openPanel("build", "edit");
-    } else if (from === "canvas")
-      requestAnimationFrame(() =>
-        editorRef.current?.scrollIntoView({ block: "start" }),
-      );
+    if (from === "keyboard") return;
+    if (compact && from === "canvas") {
+      setDocked(true);
+      return;
+    }
+    openPanel("build", "edit");
+    if (from === "outline") focusView("edit");
+    else if (from === "canvas")
+      requestAnimationFrame(() => panelRef.current?.scrollTo({ top: 0 }));
   };
   function act(action: PreviewAction, id: string) {
     const current = controller.store.getState().working;
@@ -273,14 +291,14 @@ function Scope({
           "button:not(:disabled), [href], input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex]:not([tabindex='-1'])",
         ) ?? element
       ).focus();
-  }, [sheetOpen, sheet, panel]);
+  }, [sheetOpen, view, panel]);
   useEffect(() => {
     if (sheetOpen) return;
     const previous = opener.current;
     opener.current = null;
     if (previous?.isConnected) previous.focus();
   }, [sheetOpen]);
-  const closeSheet = () => setSheet(null);
+  const closeSheet = () => setSheet(false);
   const sheetClose = compact ? (
     <IconButton icon="x" label="Close" onClick={closeSheet} />
   ) : null;
@@ -385,7 +403,7 @@ function Scope({
                 issue.path[0] === "requestedSubdomain"
                   ? "share"
                   : "build";
-              openPanel(target, target === "build" ? "edit" : "panel");
+              openPanel(target, target === "build" ? "edit" : undefined);
               const index =
                 issue.path[0] === "components" &&
                 typeof issue.path[1] === "number"
@@ -451,7 +469,7 @@ function Scope({
       )}
       {!compact && (
         <nav className="editor-rail" aria-label="Editor">
-          <RailItems panel={panel} onPanel={(next) => setPanel(next)} />
+          <RailItems panel={panel} onPanel={setPanel} />
           <Account
             draft={draft}
             onSignOut={onSignOut ? () => void signOut() : undefined}
@@ -501,44 +519,40 @@ function Scope({
           </div>
         )}
         {panel === "build" ? (
-          <>
-            {(!compact || sheet === "page") && (
-              <PageOutline
+          view === "page" ? (
+            <PageOutline
+              controller={controller}
+              selection={active}
+              disabled={disabled}
+              actions={sheetClose}
+              onSelect={(value, from) =>
+                choose(value, from === "keyboard" ? "keyboard" : "outline")
+              }
+              onRemove={setRemoving}
+              onAdded={(id) => choose({ kind: "component", id }, "outline")}
+            />
+          ) : (
+            <div className="editor-section-editor">
+              <div className="editor-panel-header">
+                <IconButton
+                  icon="chevron-left"
+                  label="Back to page"
+                  onClick={() => {
+                    setView("page");
+                    focusView("page");
+                  }}
+                />
+                <h2 className="editor-panel-title">{activeLabel}</h2>
+                {sheetClose}
+              </div>
+              <EditorFields
                 controller={controller}
                 selection={active}
                 disabled={disabled}
-                actions={sheetClose}
-                onSelect={(value, from) =>
-                  choose(value, from === "keyboard" ? "keyboard" : "outline")
-                }
-                onRemove={setRemoving}
-                onAdded={(id) => choose({ kind: "component", id }, "outline")}
+                publicationKey={publicationKey}
               />
-            )}
-            {(!compact || sheet === "edit") && (
-              <div className="editor-section-editor" ref={editorRef}>
-                {compact && (
-                  <div className="editor-panel-header">
-                    <IconButton
-                      icon="chevron-left"
-                      label="Back to page"
-                      onClick={() => setSheet("page")}
-                    />
-                    <h2 className="editor-panel-title">{activeLabel}</h2>
-                    {sheetClose}
-                  </div>
-                )}
-                <div className="editor-legacy">
-                  <EditorFields
-                    controller={controller}
-                    selection={active}
-                    disabled={disabled}
-                    publicationKey={publicationKey}
-                  />
-                </div>
-              </div>
-            )}
-          </>
+            </div>
+          )
         ) : (
           <>
             {compact && (
@@ -653,7 +667,7 @@ function Scope({
               <RailItems
                 panel={sheet ? panel : null}
                 onPanel={(next) =>
-                  openPanel(next, next === "build" ? "page" : "panel")
+                  openPanel(next, next === "build" ? "page" : undefined)
                 }
               />
               <a
@@ -704,7 +718,7 @@ function Scope({
 }
 
 type Panel = "build" | "style" | "share";
-type Sheet = "page" | "edit" | "panel";
+type BuildView = "page" | "edit";
 type SelectSource = "canvas" | "outline" | "keyboard" | "checklist";
 const panelLabels: Record<Panel, string> = {
   build: "Build",

@@ -1,7 +1,14 @@
 "use client";
 
 import type { ImageReference } from "@hasaweb/schema";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   privateImageUrl,
   readPrivateImage,
@@ -25,45 +32,35 @@ type UploadState =
   | { kind: "error"; message: string }
   | { kind: "complete" };
 
-export function ImageUpload({
-  label,
+export type UploadPurpose = CropPurpose | "project" | "case_study";
+
+// Selection, cropping, upload, retry and cancellation for one image slot.
+// `ImageUpload` and the editor's image slots present it differently.
+export function useImageUpload({
   purpose,
-  noun = purpose,
   value,
-  description,
-  describe = true,
-  descriptionInvalid = false,
   ownerId,
   providerPortfolioId,
   disabled,
   onReady,
-  onRemove,
-  onDescription,
   onPendingChange,
+  returnFocus,
 }: {
-  label: string;
-  purpose: CropPurpose | "project" | "case_study";
-  noun?: string;
+  purpose: UploadPurpose;
   value: ImageReference | undefined;
-  description: string;
-  // Off for images whose surface has no description field (sharing image).
-  describe?: boolean;
-  descriptionInvalid?: boolean;
   ownerId: string;
-  providerPortfolioId?: string;
+  providerPortfolioId?: string | undefined;
   disabled: boolean;
   onReady(assetId: string): void;
-  onRemove(): void;
-  onDescription(value: string): void;
-  onPendingChange?(pending: boolean): void;
+  onPendingChange?: ((pending: boolean) => void) | undefined;
+  // Where focus goes when the owner cancels, when not the invoking control.
+  returnFocus?: (() => HTMLElement | null | undefined) | undefined;
 }) {
-  const id = useId();
   const file = useRef<HTMLInputElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const attempt = useRef<AbortController | null>(null);
   const generation = useRef(0);
   const [state, setState] = useState<UploadState>({ kind: "idle" });
-  const [unavailable, setUnavailable] = useState<string | null>(null);
   const current = useRef({ disabled, onReady, onPendingChange });
   current.current = { disabled, onReady, onPendingChange };
   const pending =
@@ -95,9 +92,16 @@ export function ImageUpload({
     attempt.current?.abort();
     setState({ kind: "idle" });
     requestAnimationFrame(() => {
-      if (trigger.current?.isConnected) trigger.current.focus();
+      const target = returnFocus?.() ?? trigger.current;
+      if (target?.isConnected) target.focus();
       else file.current?.focus();
     });
+  }
+  function rememberTrigger() {
+    trigger.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
   }
   async function select(blob: Blob) {
     const expected = ++generation.current;
@@ -121,10 +125,7 @@ export function ImageUpload({
   }
   async function cropExisting() {
     if (!value) return;
-    trigger.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+    rememberTrigger();
     const expected = ++generation.current;
     const request = new AbortController();
     attempt.current = request;
@@ -150,10 +151,7 @@ export function ImageUpload({
   }
   async function importPhoto() {
     if (!providerPortfolioId) return;
-    trigger.current =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
+    rememberTrigger();
     const expected = ++generation.current;
     const request = new AbortController();
     attempt.current = request;
@@ -208,6 +206,89 @@ export function ImageUpload({
     }
   }
   const busy = state.kind === "loading" || state.kind === "uploading";
+  return {
+    state,
+    busy,
+    file,
+    cancel,
+    cropExisting,
+    importPhoto,
+    upload,
+    // The file input's change handler.
+    choose(event: ChangeEvent<HTMLInputElement>) {
+      trigger.current = event.currentTarget;
+      const selected = event.target.files?.[0];
+      event.target.value = "";
+      if (selected) void select(selected);
+    },
+    cropDialog:
+      state.kind === "cropping" &&
+      purpose !== "project" &&
+      purpose !== "case_study" ? (
+        <ImageCropDialog
+          image={state.image}
+          purpose={purpose}
+          onCancel={cancel}
+          onApply={(blob) => void upload(blob)}
+        />
+      ) : null,
+  };
+}
+
+export function ImageUpload({
+  label,
+  purpose,
+  noun = purpose,
+  value,
+  description,
+  describe = true,
+  descriptionInvalid = false,
+  ownerId,
+  providerPortfolioId,
+  disabled,
+  onReady,
+  onRemove,
+  onDescription,
+  onPendingChange,
+}: {
+  label: string;
+  purpose: UploadPurpose;
+  noun?: string;
+  value: ImageReference | undefined;
+  description: string;
+  // Off for images whose surface has no description field (sharing image).
+  describe?: boolean;
+  descriptionInvalid?: boolean;
+  ownerId: string;
+  providerPortfolioId?: string;
+  disabled: boolean;
+  onReady(assetId: string): void;
+  onRemove(): void;
+  onDescription(value: string): void;
+  onPendingChange?(pending: boolean): void;
+}) {
+  const id = useId();
+  const [unavailable, setUnavailable] = useState<string | null>(null);
+  const {
+    state,
+    busy,
+    file,
+    cancel,
+    cropExisting,
+    importPhoto,
+    upload,
+    choose,
+    cropDialog,
+  } = useImageUpload({
+    purpose,
+    value,
+    ownerId,
+    providerPortfolioId,
+    disabled,
+    onReady,
+    onPendingChange,
+  });
+
   // Project and case-study images keep the validated, re-encoded upload as
   // supplied. Avatar, banner, Face Reveal and sharing images have fixed
   // crop shapes.
@@ -262,12 +343,7 @@ export function ImageUpload({
           accept="image/jpeg,image/png,image/webp"
           disabled={disabled || busy}
           aria-describedby={`${id}-formats`}
-          onChange={(event) => {
-            trigger.current = event.currentTarget;
-            const selected = event.target.files?.[0];
-            event.target.value = "";
-            if (selected) void select(selected);
-          }}
+          onChange={choose}
         />
         {value && (
           <>
@@ -374,16 +450,7 @@ export function ImageUpload({
           )}
         </div>
       )}
-      {state.kind === "cropping" &&
-        purpose !== "project" &&
-        purpose !== "case_study" && (
-          <ImageCropDialog
-            image={state.image}
-            purpose={purpose}
-            onCancel={cancel}
-            onApply={(blob) => void upload(blob)}
-          />
-        )}
+      {cropDialog}
     </section>
   );
 }
