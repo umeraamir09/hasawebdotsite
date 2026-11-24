@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { checkGuideGitHub } from "./guide-github.mjs";
 import { checkGuideJourney } from "./guide-journey.mjs";
 import { checkGuideReview } from "./guide-review.mjs";
-import { addLink } from "./links.mjs";
+import { addLink, addSkill, editLink } from "./links.mjs";
 
 // Phase 42A: the guide shell, progress, resume and required Address screen,
 // mounted by the direct `/guide` fixture. Phase 42E's groups (Review, handoff
@@ -158,8 +158,8 @@ export async function checkSetupGuide({
       .getByRole("textbox", { name: "Your address" });
   const addressStatus = (page) =>
     page.getByRole("form", { name: "Portfolio address" }).getByRole("status");
-  const proceed = (page) =>
-    page.getByRole("button", { name: "Continue", exact: true }).click();
+  // The primary action: Continue, or Review on the GitHub step.
+  const proceed = (page) => page.locator("button.guide-continue").click();
   async function noBypass(page) {
     for (const name of [/skip/i, /open editor/i, /review/i])
       assert.equal(await page.getByRole("button", { name }).count(), 0);
@@ -175,12 +175,12 @@ export async function checkSetupGuide({
       await open(page);
       assert.equal(
         await page.getByRole("heading", { level: 1 }).innerText(),
-        "Choose your address",
+        "Pick your address",
       );
       const progress = page.getByRole("list", { name: "Setup progress" });
-      assert.equal(await progress.getByRole("listitem").count(), 7);
+      assert.equal(await progress.locator("li[data-state]").count(), 6);
       assert.equal(
-        await progress.locator('[aria-current="step"]').innerText(),
+        await progress.locator('[aria-current="step"]').textContent(),
         "Address, current step",
       );
       assert.equal(
@@ -194,9 +194,7 @@ export async function checkSetupGuide({
 
       // Invalid input never reserves and cannot advance.
       await field(page).fill("Bad Name");
-      await addressStatus(page)
-        .filter({ hasText: "Enter a valid address name." })
-        .waitFor();
+      await addressStatus(page).filter({ hasText: "Invalid" }).waitFor();
       await proceed(page);
       assert.equal(
         await page.evaluate(() => document.activeElement?.id),
@@ -212,9 +210,7 @@ export async function checkSetupGuide({
       const name = `guide-${suffix()}`;
       await field(page).fill(name);
       await field(page).press("Tab");
-      await addressStatus(page)
-        .filter({ hasText: "Available now. Continue to reserve it." })
-        .waitFor();
+      await addressStatus(page).filter({ hasText: "Available" }).waitFor();
       await page.screenshot({
         path: join(evidence, "guide-address-available.png"),
       });
@@ -237,9 +233,14 @@ export async function checkSetupGuide({
         "H1",
       );
       assert.equal(
-        await progress.locator('[aria-current="step"]').innerText(),
+        await progress.locator('[aria-current="step"]').textContent(),
         "Profile, current step",
       );
+      // Once held, the top bar shows the address with the Private pill.
+      await page
+        .locator(`[data-guide-address="${name}"]`)
+        .filter({ hasText: "Private" })
+        .waitFor();
       await noBypass(page);
       await page.screenshot({ path: join(evidence, "guide-profile.png") });
 
@@ -264,9 +265,7 @@ export async function checkSetupGuide({
       await page.getByRole("button", { name: "Back" }).click();
       await waitStep(page, "address");
       assert.equal(await field(page).inputValue(), name);
-      await addressStatus(page)
-        .filter({ hasText: "Reserved for your portfolio" })
-        .waitFor();
+      await addressStatus(page).filter({ hasText: "Yours" }).waitFor();
       await page.screenshot({
         path: join(evidence, "guide-address-reserved.png"),
       });
@@ -364,10 +363,8 @@ export async function checkSetupGuide({
       assert.equal(await field(page).getAttribute("aria-invalid"), "true");
       assert.deepEqual(await claims(), [{ name, state: "held" }]);
       assert.equal((await portfolio()).requested, name);
-      assert.match(
-        await page.getByRole("form", { name: "Portfolio address" }).innerText(),
-        new RegExp(`Current reservation: ${name}\\.hasaweb\\.site`),
-      );
+      // The top bar keeps showing the held reservation, not the local edit.
+      await page.locator(`[data-guide-address="${name}"]`).waitFor();
     },
   );
 
@@ -394,9 +391,10 @@ export async function checkSetupGuide({
             () =>
               document.querySelector("[data-guide-step]")?.dataset.guideStep ===
                 "profile" ||
-              /unavailable/.test(
-                document.querySelector(".guide-address-status")?.textContent ??
-                  "",
+              /Taken/.test(
+                document.querySelector(
+                  'form[aria-label="Portfolio address"] [role="status"]',
+                )?.textContent ?? "",
               ),
             null,
             { timeout: 30000 },
@@ -416,10 +414,7 @@ export async function checkSetupGuide({
           1,
         );
         const loser = results[0] === "address" ? alice : bob;
-        assert.match(
-          await addressStatus(loser).innerText(),
-          /That address is unavailable\. Choose another name\./,
-        );
+        assert.match(await addressStatus(loser).innerText(), /Taken/);
         await loser.screenshot({
           path: join(evidence, "guide-address-unavailable.png"),
         });
@@ -507,17 +502,25 @@ export async function checkSetupGuide({
         );
       }
       assert.ok(reached, "Tab reaches the address field");
-      const outline = await page.evaluate(
-        () =>
-          getComputedStyle(document.querySelector(".guide-address-input"))
-            .outlineStyle,
+      // The focused field shows the signal border.
+      assert.equal(
+        await page.evaluate(() => {
+          const box = document.querySelector(".guide-address-field");
+          const probe = document.createElement("i");
+          probe.style.color = "var(--wb-signal-base)";
+          box.append(probe);
+          const signal = getComputedStyle(probe).color;
+          probe.remove();
+          return getComputedStyle(box).borderTopColor === signal;
+        }),
+        true,
       );
-      assert.equal(outline, "solid");
       assert.equal(
         await page.evaluate(
           () =>
-            getComputedStyle(document.querySelector(".guide-progress li"))
-              .transitionDuration,
+            getComputedStyle(
+              document.querySelector(".guide-progress li[data-state]"),
+            ).transitionDuration,
         ),
         "0s",
       );
@@ -547,7 +550,7 @@ export async function checkSetupGuide({
       await page.setViewportSize({ width: 390, height: 844 });
       await field(page).fill(`mobile-${suffix()}`);
       await field(page).press("Tab");
-      await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+      await addressStatus(page).filter({ hasText: "Available" }).waitFor();
       assert.equal(
         await page.evaluate(
           () => document.documentElement.scrollWidth <= innerWidth,
@@ -584,7 +587,7 @@ export async function checkSetupGuide({
     await open(page);
     await field(page).fill(`profile-${suffix()}`);
     await field(page).press("Tab");
-    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
     const stored = async () =>
@@ -617,6 +620,8 @@ export async function checkSetupGuide({
     );
     await page.getByLabel("Name", { exact: true }).fill("Guide Owner");
     await page.getByLabel("Bio", { exact: true }).fill("I build things.");
+    // The bio shows its count against the 160-character limit.
+    await page.getByText("15/160", { exact: true }).waitFor();
     for (const purpose of ["avatar", "banner"]) {
       await page
         .getByLabel(new RegExp(`^(Upload|Replace) ${purpose}$`), {
@@ -647,16 +652,26 @@ export async function checkSetupGuide({
     await proceed(page);
     await alert.filter({ hasText: "Add at least one valid link" }).waitFor();
     assert.equal((await portfolio()).step, "links");
-    await addLink(page);
-    await page.getByLabel("Link label").fill("My site");
-    await page.getByLabel("Destination URL").fill("nope");
+    // Text that is neither a web address nor an email is not added.
+    await page.getByLabel("Add a link", { exact: true }).fill("nope");
+    await page.getByLabel("Add a link", { exact: true }).press("Enter");
+    await page.getByText("Enter a web address or an email address.").waitFor();
+    // A platform pill starts the field with that platform's address.
+    await page.getByRole("button", { name: "GitHub", exact: true }).click();
+    assert.equal(
+      await page.getByLabel("Add a link", { exact: true }).inputValue(),
+      "github.com/",
+    );
+    const row = await addLink(page, "https://example.com", "My site");
+    // An invalid destination edited in the row keeps the owner on Links.
+    await editLink(page, row, { value: "nope" });
     await proceed(page);
     await page
       .getByRole("alert")
       .filter({ hasText: /isn't valid|Add at least one valid/ })
       .waitFor();
     assert.equal((await portfolio()).step, "links");
-    await page.getByLabel("Destination URL").fill("https://example.com");
+    await editLink(page, row, { value: "https://example.com" });
     await page.screenshot({ path: join(evidence, "guide-links.png") });
     await proceed(page);
     await waitStep(page, "skills");
@@ -682,7 +697,11 @@ export async function checkSetupGuide({
     const skip = (name) =>
       page.getByRole("button", { name, exact: true }).click();
     assert.equal(
-      await page.getByRole("button", { name: "Skip this step" }).count(),
+      await page.getByRole("button", { name: "Skip", exact: true }).count(),
+      1,
+    );
+    assert.equal(
+      await page.getByRole("button", { name: "Skip to review" }).count(),
       1,
     );
     await proceed(page);
@@ -691,11 +710,21 @@ export async function checkSetupGuide({
     await page.getByRole("button", { name: "Back" }).click();
     await waitStep(page, "skills");
 
-    // A blank extra skill is dropped; the entered one keeps its id.
-    const addSkill = page.getByRole("button", { name: "Add skill" });
-    await addSkill.click();
-    await page.getByLabel("Skill name").fill("TypeScript");
-    await addSkill.click();
+    // Typing offers matching names; Enter adds the highlighted one.
+    const skillField = page.getByRole("combobox", { name: "Add a skill" });
+    await skillField.fill("typesc");
+    await page
+      .getByRole("listbox", { name: "Suggested skills" })
+      .getByRole("option", { name: "TypeScript" })
+      .waitFor();
+    await skillField.press("Enter");
+    await page
+      .locator("[data-skill-id]")
+      .filter({ hasText: "TypeScript" })
+      .waitFor();
+    // The same name is not added twice.
+    await addSkill(page, "typescript");
+    assert.equal(await page.locator("[data-skill-id]").count(), 1);
     await proceed(page);
     await waitStep(page, "projects");
     const [skills] = await components("skills");
@@ -714,7 +743,7 @@ export async function checkSetupGuide({
 
     // Projects: an untouched project is dropped and creates no component.
     await page.getByRole("button", { name: "Add project" }).click();
-    await skip("Skip this step");
+    await skip("Skip");
     await waitStep(page, "github");
     assert.equal((await components("projects")).length, 0);
     await page.getByRole("button", { name: "Back" }).click();
@@ -726,7 +755,7 @@ export async function checkSetupGuide({
     await proceed(page);
     await alert.filter({ hasText: "Each project needs a title" }).waitFor();
     assert.equal((await portfolio()).step, "projects");
-    await skip("Skip this step");
+    await skip("Skip");
     await waitStep(page, "github");
     const [kept] = await components("projects");
     assert.equal(kept.data.entries.length, 1);
@@ -743,10 +772,10 @@ export async function checkSetupGuide({
     assert.equal(done.data.entries[0].id, projectId);
     assert.equal(done.data.entries[0].summary, "Now complete.");
 
-    // Skip remaining steps targets Review and keeps what was entered.
+    // Skip to review targets Review and keeps what was entered.
     await page.getByRole("button", { name: "Back" }).click();
     await waitStep(page, "projects");
-    await skip("Skip remaining steps");
+    await skip("Skip to review");
     await waitStep(page, "review");
     for (let attempt = 0; attempt < 50; attempt++) {
       if ((await portfolio()).step === "review") break;

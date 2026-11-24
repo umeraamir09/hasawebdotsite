@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addLink } from "./links.mjs";
+import { addLink, addSkill, editLink } from "./links.mjs";
 import { openChecklist, openSection } from "./shell.mjs";
 
 // Phase 42F: the Phase 15 callback continuation and the complete new-user
@@ -108,7 +108,7 @@ export async function checkGuideJourney({
     await open(page);
     await field(page).fill(name);
     await field(page).press("Tab");
-    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
     await page.locator('.guide-save[data-save-status="saved"]').waitFor();
@@ -333,7 +333,7 @@ export async function checkGuideJourney({
     await waitStep(page, "address");
     await field(page).fill(name);
     await field(page).press("Tab");
-    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
   }
@@ -408,7 +408,7 @@ export async function checkGuideJourney({
       await waitStep(page, "address");
       assert.equal(await field(page).inputValue(), name);
       await addressStatus(page)
-        .filter({ hasText: "Available now" })
+        .filter({ hasText: "Available" })
         .waitFor({ timeout: 30000 });
       assert.deepEqual(await claims(), []);
       assert.equal((await portfolio()).requested, null);
@@ -441,7 +441,7 @@ export async function checkGuideJourney({
       await field(page).fill("journey-taken");
       await page.keyboard.press("Enter");
       await addressStatus(page)
-        .filter({ hasText: /reserved|unavailable/i })
+        .filter({ hasText: /not available|taken/i })
         .waitFor({ timeout: 30000 });
       assert.deepEqual(await claims(), [{ name, state: "held" }]);
       const replacement = `journey-${suffix()}`;
@@ -457,7 +457,7 @@ export async function checkGuideJourney({
         await page.getByLabel("Name", { exact: true }).inputValue(),
         "",
       );
-      await click(page, "Check my account suggestions");
+      await page.getByRole("button", { name: "Use this name" }).waitFor();
       assert.equal(
         await page.getByLabel("Name", { exact: true }).inputValue(),
         "",
@@ -470,6 +470,8 @@ export async function checkGuideJourney({
       await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
         "https://avatars.githubusercontent.com/fixture/missing",
       ]);
+      // The account photo is offered in the avatar's options.
+      await click(page, "Edit avatar");
       await click(page, "Use my account photo");
       await page
         .getByRole("region", { name: "Avatar image", exact: true })
@@ -479,6 +481,7 @@ export async function checkGuideJourney({
       await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
         "https://avatars.githubusercontent.com/fixture/valid",
       ]);
+      await click(page, "Edit avatar");
       await click(page, "Use my account photo");
       await page.getByRole("dialog", { name: "Adjust avatar" }).waitFor();
       await click(page, "Apply crop");
@@ -494,9 +497,7 @@ export async function checkGuideJourney({
 
       // Links: one website link; no account email is added by itself.
       await waitStep(page, "links");
-      await addLink(page);
-      await page.getByLabel("Link label").fill("My site");
-      await page.getByLabel("Destination URL").fill("https://example.com/me");
+      await addLink(page, "https://example.com/me", "My site");
       await proceed(page);
       await waitStep(page, "skills");
       assert.equal(
@@ -505,37 +506,36 @@ export async function checkGuideJourney({
       );
 
       // Skills and Projects, entered in order.
-      for (const [index, skill] of ["TypeScript", "Rust"].entries()) {
-        await click(page, "Add skill");
-        await page.getByLabel("Skill name").nth(index).fill(skill);
-      }
+      for (const skill of ["TypeScript", "Rust"]) await addSkill(page, skill);
       await proceed(page);
       await waitStep(page, "projects");
-      for (const [index, project] of [
+      // One project card at a time; each project has its own tab.
+      for (const [title, summary] of [
         ["Alpha", "The first project."],
         ["Beta", "The second project."],
-      ].entries()) {
+      ]) {
         await click(page, "Add project");
-        await page.getByLabel("Project title").nth(index).fill(project[0]);
-        await page
-          .getByLabel("Summary", { exact: true })
-          .nth(index)
-          .fill(project[1]);
+        await page.getByLabel("Project title").fill(title);
+        await page.getByLabel("Summary", { exact: true }).fill(summary);
       }
       await page
-        .getByLabel("Code URL (optional)")
-        .first()
+        .getByRole("list", { name: "Your projects" })
+        .getByRole("button", { name: "Alpha" })
+        .click();
+      await click(page, "Links");
+      await page
+        .getByLabel("Code URL", { exact: true })
         .fill("https://example.com/alpha");
+      await page.getByLabel("Code URL", { exact: true }).press("Escape");
       await proceed(page);
 
-      // GitHub: explicit Add graph with the detected username, public only.
+      // GitHub: the detected username, looked up explicitly, public only.
       github.addUser({
         login: "Journey-Hub",
         databaseId: 7399,
         counts: { [recentDay]: 2 },
       });
       await waitStep(page, "github");
-      await click(page, "Add graph");
       await page.getByRole("button", { name: "Use @Journey-Hub" }).click();
       await page.getByRole("button", { name: "Fetch activity" }).click();
       await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
@@ -566,7 +566,7 @@ export async function checkGuideJourney({
       ]);
       await page
         .locator('[data-review-status="checked"]')
-        .waitFor({ timeout: 30000 });
+        .waitFor({ state: "attached", timeout: 30000 });
       assert.equal(await page.locator("[data-review-issue]").count(), 0);
       assert.equal(await page.locator("[data-review-local-input]").count(), 0);
       await page.screenshot({
@@ -649,9 +649,7 @@ export async function checkGuideJourney({
     await upload(page, "banner", await pngFile(page, "#2448e8"));
     await proceed(page);
     await waitStep(page, "links");
-    await addLink(page);
-    await page.getByLabel("Link label").fill("My site");
-    await page.getByLabel("Destination URL").fill(link);
+    await addLink(page, link, "My site");
     await proceed(page);
     await waitStep(page, "skills");
   }
@@ -681,8 +679,8 @@ export async function checkGuideJourney({
       const page = await signedUp("google");
       const name = `skipped-${suffix()}`;
       await enterAddress(page, name);
-      await click(page, "Check my account suggestions");
       await click(page, "Use this name");
+      await click(page, "Edit avatar");
       await click(page, "Use my account photo");
       await page.getByRole("dialog", { name: "Adjust avatar" }).waitFor();
       await click(page, "Apply crop");
@@ -695,24 +693,26 @@ export async function checkGuideJourney({
       await proceed(page);
       await waitStep(page, "links");
 
-      // The account email is public only after a deliberate acceptance.
-      await click(page, "Suggest account email");
-      await page.getByText(/public profile link/).waitFor();
+      // The account email is offered as a pill and becomes a link only when
+      // picked; its row then shows it as Public.
+      const email = page.getByRole("button", {
+        name: "Add alice@draft.example.test as a public link",
+      });
+      await email.waitFor();
       assert.equal(
         JSON.stringify(await stored()).includes("alice@draft"),
         false,
       );
-      await click(page, "Dismiss suggestion");
-      assert.equal(
-        JSON.stringify(await stored()).includes("alice@draft"),
-        false,
-      );
-      await click(page, "Suggest account email");
-      await click(page, "Use email as public link");
+      await email.click();
+      await page
+        .locator("[data-link-id]")
+        .filter({ hasText: "alice@draft.example.test" })
+        .filter({ hasText: "Public" })
+        .waitFor();
       await proceed(page);
       await waitStep(page, "skills");
 
-      await click(page, "Skip remaining steps");
+      await click(page, "Skip to review");
       await waitStep(page, "review");
       await page.locator('.guide-save[data-save-status="saved"]').waitFor();
       const saved = await stored();
@@ -734,7 +734,7 @@ export async function checkGuideJourney({
       assert.deepEqual(await sectionTypes(frame), []);
       await page
         .locator('[data-review-status="checked"]')
-        .waitFor({ timeout: 30000 });
+        .waitFor({ state: "attached", timeout: 30000 });
       assert.equal(await page.locator("[data-review-issue]").count(), 0);
 
       await click(page, "Open editor");
@@ -773,13 +773,12 @@ export async function checkGuideJourney({
       github.state.consent = { as: null, cancel: false, hold: false };
       const page = await signedUp("google");
       await required(page, `partial-${suffix()}`);
-      await click(page, "Skip this step");
+      await click(page, "Skip");
       await waitStep(page, "projects");
       await click(page, "Add project");
       await page.getByLabel("Project title").fill("Half done");
-      await click(page, "Skip this step");
+      await click(page, "Skip");
       await waitStep(page, "github");
-      await click(page, "Add graph");
       const panel = page.getByRole("region", {
         name: "GitHub activity controls",
         exact: true,
@@ -787,9 +786,22 @@ export async function checkGuideJourney({
       await panel.getByLabel("GitHub username").fill("Journey-Private");
       await panel.getByRole("button", { name: "Fetch activity" }).click();
       await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
+      // Public + private, then GitHub authorization is cancelled: the
+      // request stays in the draft, unfinished.
+      github.state.consent = { as: null, cancel: true, hold: false };
+      await panel.getByRole("radio", { name: "Public + private" }).click();
+      await page
+        .getByRole("dialog", { name: "Include private contributions?" })
+        .getByRole("button", { name: "Continue to GitHub" })
+        .click();
+      await page.waitForURL(/\/auth\/entry$/, { timeout: 60000 });
+      await page.waitForFunction(() => window.guideFixture?.ready);
+      await waitStep(page, "github");
       await panel
-        .getByRole("switch", { name: /Include private activity/ })
-        .check();
+        .locator("[data-github-private-status]")
+        .getByText(/Authorization was cancelled/)
+        .waitFor({ timeout: 30000 });
+      github.state.consent = { as: null, cancel: false, hold: false };
       await click(page, "Finish later in the editor");
       await waitStep(page, "review");
       await page.locator('.guide-save[data-save-status="saved"]').waitFor();
@@ -797,7 +809,7 @@ export async function checkGuideJourney({
       // Review reports both unfinished pieces and claims no readiness.
       await page
         .locator('[data-review-status="checked"]')
-        .waitFor({ timeout: 30000 });
+        .waitFor({ state: "attached", timeout: 30000 });
       const status = page.locator("[data-review-status]");
       await status
         .locator("[data-review-issue]")
@@ -880,14 +892,15 @@ export async function checkGuideJourney({
       await routeProviders();
       try {
         await required(page, `editor-${suffix()}`);
-        await click(page, "Add skill");
-        await page.getByLabel("Skill name").fill("TypeScript");
+        await addSkill(page, "TypeScript");
         await proceed(page);
         await waitStep(page, "projects");
         await click(page, "Add project");
         await page.getByLabel("Project title").fill("Half done");
-        await page.getByLabel("Code URL (optional)").fill("htt");
-        await click(page, "Skip remaining steps");
+        await click(page, "Links");
+        await page.getByLabel("Code URL", { exact: true }).fill("htt");
+        await page.getByLabel("Code URL", { exact: true }).press("Escape");
+        await click(page, "Skip to review");
         await waitStep(page, "review");
         await until(
           async () => (await portfolio()).step === "review",
@@ -979,7 +992,7 @@ export async function checkGuideJourney({
 
   await guarded(
     "setup guide changed base: expiry during selected review keeps the selection through sign-in and saves against the newer draft",
-    async () => {
+    async (mark) => {
       await reset();
       await routeProviders();
       try {
@@ -994,32 +1007,47 @@ export async function checkGuideJourney({
         await upload(first, "banner", await pngFile(first, "#2448e8"));
         await proceed(first);
         await waitStep(first, "links");
-        await addLink(first);
-        await first.getByLabel("Link label").fill("Original");
-        await first.getByLabel("Destination URL").fill("https://example.com/a");
+        const firstRow = await addLink(
+          first,
+          "https://example.com/a",
+          "Original",
+        );
         await first.locator('.guide-save[data-save-status="saved"]').waitFor();
         const linkLabel = async () => (await stored()).links[0]?.label;
         await until(
           async () => (await linkLabel()) === "Original",
           "link not saved",
         );
+        mark("stale tab");
         const stale = await guidePage();
         await open(stale, "links");
-        await stale.getByLabel("Link label").waitFor();
+        await stale.locator("[data-link-id] .guide-link-open").first().click();
+        const stalePopover = stale.locator(".wb-popover");
+        await stalePopover.getByLabel("Link label", { exact: true }).waitFor();
 
-        // Unfinished input in the stale tab blocks its base refresh, so its
-        // valid label edit meets the changed base.
-        await stale.getByLabel("Destination URL").fill("htt");
-        await first.getByLabel("Link label").fill("Newer label");
+        // Unfinished input in the stale tab blocks its base refresh, so it
+        // meets the changed base with its edits kept in this browser.
+        await stalePopover.getByLabel("Web address").fill("htt");
+        await editLink(first, firstRow, { label: "Newer label" });
         await until(
           async () => (await linkLabel()) === "Newer label",
           "newer label not saved",
         );
-        await stale.getByLabel("Link label").fill("Stale label");
         const resolve = stale.getByRole("region", {
           name: "Resolve saved version",
         });
         await resolve.waitFor({ timeout: 30000 });
+        // The recovery choices take focus, which closes the popover. A label
+        // edit made now joins the preserved edits.
+        await stalePopover.waitFor({ state: "detached" });
+        await stale.locator("[data-link-id] .guide-link-open").first().click();
+        await stalePopover
+          .getByLabel("Link label", { exact: true })
+          .fill("Stale label");
+        await stalePopover
+          .getByLabel("Link label", { exact: true })
+          .press("Escape");
+        mark("resolve");
         await resolve
           .getByRole("button", { name: "Keep my edits for review" })
           .click();
@@ -1036,6 +1064,7 @@ export async function checkGuideJourney({
           .first()
           .waitFor({ timeout: 30000 });
 
+        mark("expiry");
         // The session ends while the selection is open.
         await cookie("expired");
         await stale
@@ -1056,6 +1085,7 @@ export async function checkGuideJourney({
           fullPage: true,
         });
         assert.equal(await linkLabel(), "Newer label");
+        mark("reopen");
         await stale.getByRole("button", { name: "Reopen review" }).click();
         await stale
           .locator("input[type=checkbox]:checked")
