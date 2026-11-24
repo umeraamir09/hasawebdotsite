@@ -129,10 +129,10 @@ export async function checkUnpublishJourney({
         },
       );
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
-        .getByText("Publication complete.", { exact: true })
+        .getByText("You're live", { exact: true })
         .waitFor({ timeout: 120000 });
       async function publicRead(url = `${publicUrl}/`) {
         return authority(
@@ -204,8 +204,10 @@ export async function checkUnpublishJourney({
       assert.equal((await publicRead()).status, 200);
 
       // Cancelling keeps the site live.
-      const unpublish = (await checklist()).getByRole("button", {
-        name: "Unpublish website",
+      // Unpublish sits at the foot of the Share panel.
+      const share = await openPanel(page, "Share");
+      const unpublish = share.getByRole("button", {
+        name: "Unpublish",
         exact: true,
       });
       await unpublish.click();
@@ -232,13 +234,9 @@ export async function checkUnpublishJourney({
         .getByRole("button", { name: "Confirm unpublish", exact: true })
         .click();
       await dialog.waitFor({ state: "detached" });
-      await (await checklist())
-        .getByText(/^Unpublished\. Your site is offline\./)
-        .waitFor();
+      await share.getByText(/^Unpublished\. Your site is offline\./).waitFor();
       assert.equal(
-        await (await checklist())
-          .getByRole("link", { name: "Open published portfolio" })
-          .count(),
+        await share.getByRole("link", { name: "Open", exact: true }).count(),
         0,
       );
       assert.equal(await unpublish.count(), 0);
@@ -343,25 +341,27 @@ export async function checkUnpublishJourney({
       // The state survives a reload, and Publish restores the same address.
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await (await checklist())
+      await (await openPanel(page, "Share"))
         .getByText(/^Unpublished\. Your site is offline\./)
         .waitFor();
+      await openPanel(page, "Build");
       await page.getByLabel("Name", { exact: true }).fill("Restored owner");
       await page.evaluate(() =>
         window.editorFixture.recovery.store.getState().controller.flushValid(),
       );
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
-        .getByText("Publication complete.", { exact: true })
+        .getByText("You're live", { exact: true })
         .waitFor({ timeout: 120000 });
       assert.equal(
         await (await checklist())
-          .getByRole("link", { name: "Open published portfolio" })
+          .getByRole("link", { name: "Open", exact: true })
           .getAttribute("href"),
         publicUrl,
       );
+      await openPanel(page, "Share");
       await unpublish.waitFor();
       const restored = await publicRead();
       assert.equal(restored.status, 200);

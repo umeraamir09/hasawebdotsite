@@ -38,9 +38,8 @@ export async function checkPublicationControls({
   }
   const checklist = () => openChecklist(getPage());
   async function check() {
-    await (await checklist())
-      .getByRole("button", { name: "Check publication readiness" })
-      .click();
+    // Opening the popover checks the saved draft.
+    await checklist();
     await (await checklist())
       .getByRole("button", { name: "Complete your name", exact: true })
       .waitFor();
@@ -141,9 +140,13 @@ export async function checkPublicationControls({
       await getPage()
         .getByLabel("Name", { exact: true })
         .fill("Edited after check");
+      // The open popover checks the new saved revision by itself.
       await (await checklist())
-        .getByText("Your draft changed. Check it again before publishing.")
+        .getByRole("button", { name: "Complete your bio", exact: true })
         .waitFor();
+      await (await checklist())
+        .getByRole("button", { name: "Complete your name", exact: true })
+        .waitFor({ state: "detached" });
       await getPage().waitForFunction(
         () =>
           !window.editorFixture.recovery.store
@@ -186,11 +189,18 @@ export async function checkPublicationControls({
           name: "Choose an approved theme",
         })
         .click();
-      await getPage().getByLabel("Approved option").selectOption("violet");
-      await getPage().getByRole("button", { name: "Close correction" }).click();
-      await (await openChecklist(getPage()))
-        .getByRole("button", { name: "Check publication readiness" })
-        .click();
+      // The issue lands on the Style panel's theme tiles.
+      await getPage().waitForFunction(
+        () =>
+          document.activeElement?.closest("[data-publication-field]")?.dataset
+            .publicationField === "themeId",
+      );
+      await getPage()
+        .getByRole("region", { name: "Style", exact: true })
+        .getByRole("radio", { name: "Violet" })
+        .check();
+      // Opening the popover checks the saved draft.
+      await checklist();
       await (await checklist())
         .getByRole("button", {
           name: "Complete your text section title",
@@ -255,9 +265,8 @@ export async function checkPublicationControls({
       );
       await openSection(getPage(), "Example");
       await getPage().getByLabel("Section title").fill("My section");
-      await (await checklist())
-        .getByRole("button", { name: "Check publication readiness" })
-        .click();
+      // Opening the popover checks the saved draft.
+      await checklist();
       await (await checklist())
         .getByRole("button", {
           name: "Complete your text section text",
@@ -267,9 +276,8 @@ export async function checkPublicationControls({
       await getPage()
         .getByLabel("Section text", { exact: true })
         .fill("My own text");
-      await (await checklist())
-        .getByRole("button", { name: "Check publication readiness" })
-        .click();
+      // Opening the popover checks the saved draft.
+      await checklist();
       await (await checklist())
         .getByRole("button", { name: "Complete your name", exact: true })
         .waitFor();

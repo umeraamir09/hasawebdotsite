@@ -179,7 +179,7 @@ export async function preparePublishedSkills(page) {
   const checklist = () => openChecklist(page);
   await page.getByRole("button", { name: "Add skill", exact: true }).click();
   await (await checklist())
-    .getByRole("button", { name: "Publish", exact: true })
+    .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
     .click();
   await (await checklist())
     .getByText(/skills and technologies name/i)

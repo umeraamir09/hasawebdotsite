@@ -132,10 +132,10 @@ export async function checkContactFormJourney({
       window.editorFixture.recovery.store.getState().controller.flushValid(),
     );
     await (await checklist())
-      .getByRole("button", { name: /^(Retry )?Publish$/ })
+      .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
       .click();
     await (await checklist())
-      .getByText("Publication complete.", { exact: true })
+      .getByText("You're live", { exact: true })
       .waitFor({ timeout: 120000 });
 
     const response = await visitorRequest(`${site}/`);

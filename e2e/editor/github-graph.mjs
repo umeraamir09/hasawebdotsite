@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
+import {
+  addSection,
+  openAccount,
+  openChecklist,
+  openPanel,
+  outline,
+} from "./shell.mjs";
 
 const day = (offset) =>
   new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
@@ -164,24 +170,21 @@ export async function checkGitHubGraphJourney({
   async function publish() {
     await flush();
     await (await checklist())
-      .getByRole("button", { name: /^(Retry )?Publish$/ })
+      .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
       .click();
     await (await checklist())
-      .getByText("Publication complete.", { exact: true })
+      .getByText("You're live", { exact: true })
       .waitFor({ timeout: 120000 });
   }
   async function expectBlocked() {
     await flush();
     await (await checklist())
-      .getByRole("button", { name: "Publish", exact: true })
+      .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
       .click();
     await (await checklist())
       .getByRole("button", { name: "Connect GitHub and fetch activity" })
       .waitFor({ timeout: 60000 });
-    assert.equal(
-      await (await checklist()).getByText("Publication complete.").count(),
-      0,
-    );
+    assert.equal(await (await checklist()).getByText("You're live").count(), 0);
   }
   async function graphJson() {
     const response = await publicRead(`${site}/_/github.json`);
@@ -324,7 +327,7 @@ export async function checkGitHubGraphJourney({
         /No public contributions in the last year/,
       );
       await (await checklist())
-        .getByText("Publication complete.")
+        .getByText("You're live")
         .waitFor({ state: "detached", timeout: 1000 })
         .catch(() => {});
       await getPage().screenshot({
@@ -1049,7 +1052,7 @@ export async function checkGitHubGraphJourney({
         github.state.calls.length = 0;
 
         // Both methods are listed; either can be disconnected.
-        await page.getByRole("button", { name: "Share", exact: true }).click();
+        await openAccount(page);
         const methods = page.getByRole("region", {
           name: "Connected sign-in methods",
           exact: true,

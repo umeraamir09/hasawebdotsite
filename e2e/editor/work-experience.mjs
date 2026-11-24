@@ -60,14 +60,14 @@ export async function checkWorkExperienceControls({
       // Reversed dates block Publish and are reported as the end date.
       const checklist = () => openChecklist(page);
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
         .getByText(/Finish unsaved.*end date/i)
         .first()
         .waitFor();
       assert.equal(
-        await (await checklist()).getByText("Publication complete.").count(),
+        await (await checklist()).getByText("You're live").count(),
         0,
       );
       // On a phone the issue reopens the editor sheet at that field.
@@ -176,7 +176,7 @@ export async function preparePublishedWork(page) {
   await page.getByRole("button", { name: "Add role", exact: true }).click();
   const checklist = () => openChecklist(page);
   await (await checklist())
-    .getByRole("button", { name: "Publish", exact: true })
+    .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
     .click();
   await (await checklist())
     .getByText(/work experience role/i)
