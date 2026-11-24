@@ -169,10 +169,12 @@ export async function checkResumeJourney({
       async function publish() {
         await flush();
         await (await checklist())
-          .getByRole("button", { name: /^(Retry )?Publish$/ })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await (await checklist())
-          .getByText("Publication complete.", { exact: true })
+          .getByText("You're live", { exact: true })
           .waitFor({ timeout: 120000 });
       }
       const missingIssue = (await checklist()).getByRole("button", {
@@ -182,11 +184,13 @@ export async function checkResumeJourney({
       async function expectBlocked() {
         await flush();
         await (await checklist())
-          .getByRole("button", { name: "Publish", exact: true })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await missingIssue.waitFor({ timeout: 60000 });
         assert.equal(
-          await (await checklist()).getByText("Publication complete.").count(),
+          await (await checklist()).getByText("You're live").count(),
           0,
         );
       }

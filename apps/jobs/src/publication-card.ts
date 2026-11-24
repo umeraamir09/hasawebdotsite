@@ -35,6 +35,7 @@ export async function renderCandidateCard(
       json_extract(c.source,'$.appearance.themeId') AS theme,
       json_extract(c.source,'$.appearance.fontId') AS font,
       json_extract(c.source,'$.appearance.colorMode') AS mode,
+      json_extract(c.source,'$.appearance.customColor') AS custom,
       (SELECT json_group_array(json_object('label',label,'showInProfile',json('true'))) FROM (SELECT substr(json_extract(j.value,'$.label'),1,200) AS label FROM json_each(c.source,'$.links') j WHERE json_extract(j.value,'$.showInProfile')=1 ORDER BY j.key LIMIT 5)) AS links,
       EXISTS(SELECT 1 FROM json_each(x.value,'$.receipts') r WHERE json_extract(r.value,'$.path')=?) AS recorded
      FROM publication_candidate c JOIN publication_candidate_index x ON x.candidate_id=c.id WHERE c.id=?`,
@@ -51,6 +52,7 @@ export async function renderCandidateCard(
       theme: string;
       font: string;
       mode: string;
+      custom: string | null;
       links: string;
       recorded: number;
     }>();
@@ -87,7 +89,7 @@ export async function renderCandidateCard(
   if (!family) throw new Error("Candidate font is not in the catalog");
   const png = await renderSharingCard(
     {
-      palette: sharingCardPalette(source.theme, source.mode),
+      palette: sharingCardPalette(source.theme, source.mode, source.custom),
       fontFamily: family,
       ...sharingCardText({
         name: source.name ?? "",

@@ -23,52 +23,34 @@ const failures: Record<Exclude<DeletionResult, "deleted">, string> = {
     "We couldn't delete your account. Nothing was deleted. Check your connection and try again.",
 };
 
-// Phase 49, Figma "25 / Recovery & destructive actions" → "Delete your account
-// permanently?": a settings block whose confirmation explains the loss. Keep
-// my account is the primary, focused choice; cancelling changes nothing.
-export function AccountDeletion({
+// The account menu's Delete account opens this confirmation. Keep my account
+// is the primary, focused choice; cancelling changes nothing.
+export function AccountDeletionDialog({
   controller,
   recovery,
-  disabled,
+  onCancel,
   onDeleted,
 }: {
   controller: DraftController;
   recovery: { dispose(): Promise<void> };
-  disabled: boolean;
+  onCancel(): void;
   onDeleted(): void;
 }) {
-  const [confirming, setConfirming] = useState(false);
   return (
-    <section aria-labelledby="delete-account" className="account-deletion">
-      <h2 id="delete-account">Delete account</h2>
-      <p className="editor-muted">
-        Permanently deletes your portfolio, draft, files and connected access.
-      </p>
-      <button
-        type="button"
-        className="account-deletion-open"
-        disabled={disabled}
-        onClick={() => setConfirming(true)}
-      >
-        Delete account
-      </button>
-      {confirming && (
-        <DeletionDialog
-          controller={controller}
-          onCancel={() => setConfirming(false)}
-          onConfirm={async () => {
-            const ownerId = controller.identity.ownerId;
-            const result = await requestAccountDeletion(ownerId);
-            if (result !== "deleted") return failures[result];
-            // The account is gone on the server. A local cleanup that cannot
-            // finish here resumes from its marker on the next owner page.
-            await finishAccountDeletion(ownerId, recovery).catch(() => {});
-            onDeleted();
-            return null;
-          }}
-        />
-      )}
-    </section>
+    <DeletionDialog
+      controller={controller}
+      onCancel={onCancel}
+      onConfirm={async () => {
+        const ownerId = controller.identity.ownerId;
+        const result = await requestAccountDeletion(ownerId);
+        if (result !== "deleted") return failures[result];
+        // The account is gone on the server. A local cleanup that cannot
+        // finish here resumes from its marker on the next owner page.
+        await finishAccountDeletion(ownerId, recovery).catch(() => {});
+        onDeleted();
+        return null;
+      }}
+    />
   );
 }
 

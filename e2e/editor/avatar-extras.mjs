@@ -175,10 +175,12 @@ export async function checkAvatarExtrasJourney({
       async function publish() {
         await flush();
         await (await checklist())
-          .getByRole("button", { name: /^(Retry )?Publish$/ })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await (await checklist())
-          .getByText("Publication complete.", { exact: true })
+          .getByText("You're live", { exact: true })
           .waitFor({ timeout: 120000 });
       }
       const preview = () =>
@@ -316,14 +318,14 @@ export async function checkAvatarExtrasJourney({
       );
       await flush();
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       const faceIssue = (await checklist()).getByRole("button", {
         name: /Complete your Face Reveal image/,
       });
       await faceIssue.waitFor({ timeout: 60000 });
       assert.equal(
-        await (await checklist()).getByText("Publication complete.").count(),
+        await (await checklist()).getByText("You're live").count(),
         0,
       );
       assert.equal(

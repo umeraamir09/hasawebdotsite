@@ -2,6 +2,7 @@
 
 import {
   appearanceAttributes,
+  applyAppearance,
   componentRegistry,
   displayAppearance,
   PortfolioSection,
@@ -163,11 +164,16 @@ function SectionThumbnail({
         tabIndex={-1}
         srcDoc={shell}
         sandbox="allow-same-origin"
-        onLoad={(event) =>
-          setTarget(
-            event.currentTarget.contentDocument?.querySelector("main") ?? null,
-          )
-        }
+        onLoad={(event) => {
+          const frame = event.currentTarget.contentDocument;
+          // A custom palette reaches the frame through the CSSOM.
+          if (frame)
+            applyAppearance(
+              frame.documentElement,
+              displayAppearance(appearance),
+            );
+          setTarget(frame?.querySelector("main") ?? null);
+        }}
       />
       {target?.isConnected &&
         component &&

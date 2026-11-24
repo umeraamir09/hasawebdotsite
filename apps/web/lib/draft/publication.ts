@@ -104,7 +104,8 @@ export async function withPublication<T>(
 
 // The owner's publication blockers for one confirmed revision. This is a
 // read: it saves nothing, pauses nothing and prepares no candidate. Setup
-// Review uses it on its own; Publish reaches it through `withPublication`.
+// Review and the Publish popover's automatic check use it on its own;
+// Publish reaches it through `withPublication`.
 export async function readPublicationIssues(
   identity: { ownerId: string; portfolioId: string },
   revision: number,

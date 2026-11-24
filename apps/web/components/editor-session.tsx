@@ -6,16 +6,15 @@ import type {
   PreviewScheme,
   PreviewSelection,
 } from "@hasaweb/components/browser";
-import type {
-  DraftDoc,
-  PublicationIssue,
-  PublicationSite,
-} from "@hasaweb/schema";
+import type { DraftDoc, PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useStore } from "zustand";
 import { watchAccountDeletion } from "../lib/account-deletion";
 import { privateImageUrl } from "../lib/assets/browser";
-import { createDraftController } from "../lib/draft/controller";
+import {
+  createDraftController,
+  type DraftController,
+} from "../lib/draft/controller";
 import { getAt } from "../lib/draft/planner";
 import {
   createRecoveryCoordinator,
@@ -33,9 +32,12 @@ import {
   sectionLabel,
   sectionTitle,
 } from "../lib/editor/sections";
+import {
+  siteHost,
+  usePublicationSite,
+} from "../lib/editor/use-publication-site";
 import { LINK_RETURN_PARAM, linkReturnNotice } from "../lib/sign-in-methods";
-import { AccountDeleted, AccountDeletion } from "./account-deletion";
-import { AddressControl } from "./address-control";
+import { AccountDeleted, AccountDeletionDialog } from "./account-deletion";
 import { AppearanceControls } from "./appearance-controls";
 import { DraftRecovery } from "./draft-recovery";
 import { EditorFields } from "./editor-fields";
@@ -44,6 +46,7 @@ import { PageOutline } from "./page-outline";
 import {
   PublicationChecklist,
   PublicationCorrection,
+  SitePill,
 } from "./publication-checklist";
 import { ComponentRemovalDialog } from "./section-removal-dialog";
 import { SharingControls } from "./sharing-controls";
@@ -55,8 +58,8 @@ import {
   type IconName,
   Popover,
   SegmentedControl,
-  StatusPill,
 } from "./workbench";
+import "./account-menu.css";
 import "./editor.css";
 import "./editor-shell.css";
 
@@ -143,7 +146,7 @@ function Scope({
     kind: "profile",
   });
   // Connecting a sign-in method returns to `/editor?account=…`. Show its
-  // outcome in the Share panel and drop the parameters from the URL.
+  // outcome in the account menu and drop the parameters from the URL.
   const [linkNotice] = useState(() =>
     typeof location === "undefined" ? null : linkReturnNotice(location.search),
   );
@@ -155,19 +158,20 @@ function Scope({
     url.searchParams.delete("error_description");
     history.replaceState(history.state, "", url);
   }, [linkNotice]);
-  const [panel, setPanel] = useState<Panel>(linkNotice ? "share" : "build");
+  const [panel, setPanel] = useState<Panel>("build");
   // Build shows the page outline or one section's editor under a back
   // header (Figma 409:2175). The editor opens on the profile.
   const [view, setView] = useState<BuildView>("edit");
   // On a phone or tablet the preview comes first; the outline, editors and
   // the Style and Share panels open as a bottom sheet over it.
-  const [sheet, setSheet] = useState(Boolean(linkNotice));
+  const [sheet, setSheet] = useState(false);
   const [docked, setDocked] = useState(false);
   const [deviceChoice, setDevice] = useState<PreviewDevice | null>(null);
   const device = deviceChoice ?? (compact ? "mobile" : "desktop");
   const [scheme, setScheme] = useState<PreviewScheme | null>(null);
   const [publishOpen, setPublishOpen] = useState(false);
-  const [site, setSite] = useState<PublicationSite | null>(null);
+  const [issueCount, setIssueCount] = useState(0);
+  const site = usePublicationSite(controller);
   const [removing, setRemoving] = useState<string | null>(null);
   const [correction, setCorrection] = useState<{
     issue: PublicationIssue;
@@ -178,6 +182,26 @@ function Scope({
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState("");
   const panelRef = useRef<HTMLElement>(null);
+  const publishRef = useRef<HTMLElement>(null);
+  const publishTrigger = () =>
+    document.querySelector<HTMLElement>('[aria-controls="editor-publish"]');
+  // The Publish popover closes on a click outside it. Dialogs it opens, such
+  // as the crop dialog, count as inside.
+  useEffect(() => {
+    if (!publishOpen) return;
+    publishRef.current?.focus({ preventScroll: true });
+    const close = (event: PointerEvent) => {
+      if (
+        event.target instanceof Element &&
+        !event.target.closest(
+          "#editor-publish, [aria-controls='editor-publish'], [role=dialog], dialog",
+        )
+      )
+        setPublishOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [publishOpen]);
   async function signOut() {
     if (!onSignOut || signingOut) return;
     setSigningOut(true);
@@ -321,19 +345,9 @@ function Scope({
             onClick={() => openPanel("share")}
           >
             <span className="editor-address-name">
-              {site?.status === "published" && site.url
-                ? new URL(site.url).host
-                : draft?.requestedSubdomain
-                  ? `${draft.requestedSubdomain}.hasaweb.site`
-                  : "hasaweb.site"}
+              {siteHost(site.site, draft?.requestedSubdomain) ?? "hasaweb.site"}
             </span>
-            {site?.status === "published" ? (
-              <StatusPill status="live">Live</StatusPill>
-            ) : site?.status === "suspended" ? (
-              <StatusPill status="issue">Suspended</StatusPill>
-            ) : (
-              <StatusPill status="draft">Private</StatusPill>
-            )}
+            <SitePill status={site.site?.status} />
             <Icon name="chevron-down" size={14} />
           </button>
         </div>
@@ -372,37 +386,54 @@ function Scope({
           <Button
             kind="primary"
             size={compact ? "s" : "m"}
+            className="editor-publish-trigger"
             aria-expanded={publishOpen}
             aria-controls="editor-publish"
+            aria-describedby={issueCount ? "editor-issue-count" : undefined}
             onClick={() => setPublishOpen(!publishOpen)}
           >
             Publish
+            {issueCount > 0 && (
+              <span className="editor-issue-count" id="editor-issue-count">
+                {issueCount}
+                <span className="wb-visually-hidden">
+                  {issueCount === 1 ? " issue" : " issues"} to fix
+                </span>
+              </span>
+            )}
           </Button>
         </div>
+        {/* Stays mounted while closed so a running publication keeps
+            reporting; it closes like a popover. */}
         <section
           id="editor-publish"
-          className="editor-publish editor-legacy"
+          ref={publishRef}
+          tabIndex={-1}
+          className="editor-publish"
           aria-label="Publish"
           hidden={!publishOpen}
           onKeyDown={(event) => {
             if (event.key !== "Escape" || event.defaultPrevented) return;
             setPublishOpen(false);
-            event.currentTarget.parentElement
-              ?.querySelector<HTMLElement>('[aria-controls="editor-publish"]')
-              ?.focus();
+            publishTrigger()?.focus();
           }}
         >
           <PublicationChecklist
             controller={controller}
             disabled={disabled}
-            onSite={setSite}
+            open={publishOpen}
+            site={site}
+            onIssues={setIssueCount}
             onPublished={() => setPublicationKey(crypto.randomUUID())}
             onOpen={(issue) => {
+              setPublishOpen(false);
               const target =
                 issue.path[0] === "seo" ||
                 issue.path[0] === "requestedSubdomain"
                   ? "share"
-                  : "build";
+                  : issue.path[0] === "appearance"
+                    ? "style"
+                    : "build";
               openPanel(target, target === "build" ? "edit" : undefined);
               const index =
                 issue.path[0] === "components" &&
@@ -417,7 +448,7 @@ function Scope({
                   : { kind: "profile" },
               );
               if (
-                issue.code === "catalog" ||
+                (issue.code === "catalog" && issue.path[0] !== "appearance") ||
                 component ||
                 issue.path[1] === "faceReveal" ||
                 issue.path[0] === "seo"
@@ -472,6 +503,11 @@ function Scope({
           <RailItems panel={panel} onPanel={setPanel} />
           <Account
             draft={draft}
+            controller={controller}
+            recovery={recovery}
+            disabled={disabled}
+            linkNotice={linkNotice}
+            onDeleted={onDeleted}
             onSignOut={onSignOut ? () => void signOut() : undefined}
             signingOut={signingOut}
           />
@@ -555,43 +591,20 @@ function Scope({
           )
         ) : (
           <>
-            {compact && (
-              <div className="editor-panel-header">
-                <h2 className="editor-panel-title">{panelLabels[panel]}</h2>
-                {sheetClose}
-              </div>
-            )}
-            <div className="editor-legacy">
-              {panel === "style" ? (
-                <AppearanceControls
-                  controller={controller}
-                  disabled={disabled}
-                />
-              ) : (
-                <>
-                  <AddressControl
-                    controller={controller}
-                    disabled={disabled}
-                    key={publicationKey}
-                  />
-                  <SharingControls
-                    controller={controller}
-                    disabled={disabled}
-                  />
-                  <SignInMethods
-                    controller={controller}
-                    disabled={disabled}
-                    initialNotice={linkNotice}
-                  />
-                  <AccountDeletion
-                    controller={controller}
-                    recovery={recovery}
-                    disabled={disabled}
-                    onDeleted={onDeleted}
-                  />
-                </>
-              )}
+            <div className="editor-panel-header">
+              <h2 className="editor-panel-title">{panelLabels[panel]}</h2>
+              {sheetClose}
             </div>
+            {panel === "style" ? (
+              <AppearanceControls controller={controller} disabled={disabled} />
+            ) : (
+              <SharingControls
+                key={publicationKey}
+                controller={controller}
+                disabled={disabled}
+                site={site}
+              />
+            )}
           </>
         )}
         {!compact && (
@@ -681,8 +694,14 @@ function Scope({
               </a>
               <Account
                 draft={draft}
+                controller={controller}
+                recovery={recovery}
+                disabled={disabled}
+                linkNotice={linkNotice}
+                onDeleted={onDeleted}
                 onSignOut={onSignOut ? () => void signOut() : undefined}
                 signingOut={signingOut}
+                compact
               />
             </nav>
           )}
@@ -770,15 +789,35 @@ function RailItems({
 
 function Account({
   draft,
+  controller,
+  recovery,
+  disabled,
+  linkNotice,
+  onDeleted,
   onSignOut,
   signingOut,
+  compact = false,
 }: {
   draft: DraftDoc | null | undefined;
+  controller: DraftController;
+  recovery: RecoveryCoordinator;
+  disabled: boolean;
+  linkNotice: ReturnType<typeof linkReturnNotice>;
+  onDeleted(): void;
   onSignOut: (() => void) | undefined;
   signingOut: boolean;
+  compact?: boolean;
 }) {
   const avatar = draft?.profile.avatar;
   const src = avatar ? privateImageUrl(avatar.assetId, "avatar") : null;
+  const [open, setOpen] = useState(false);
+  // A link return opens the menu with its outcome. Opening after mount lets
+  // the editor's initial focus land first, so the menu keeps focus and stays
+  // open.
+  useEffect(() => {
+    if (linkNotice) setOpen(true);
+  }, [linkNotice]);
+  const [deleting, setDeleting] = useState(false);
   // An image that fails to load leaves the empty square, not a broken icon.
   const [failed, setFailed] = useState<string | null>(null);
   const image = (
@@ -789,12 +828,14 @@ function Account({
       )}
     </span>
   );
-  if (!onSignOut) return <span className="editor-account">{image}</span>;
+  const name = draft?.profile.name.trim();
   return (
-    <span className="editor-account">
+    <span className="editor-account" data-compact={compact ? "" : undefined}>
       <Popover
         label="Account"
         align="start"
+        open={open}
+        onOpenChange={setOpen}
         trigger={(props) => (
           <button
             {...props}
@@ -806,15 +847,59 @@ function Account({
           </button>
         )}
       >
-        <Button
-          kind="ghost"
-          icon="log-out"
-          onClick={onSignOut}
-          disabled={signingOut}
-        >
-          {signingOut ? "Signing out..." : "Sign out"}
-        </Button>
+        <div className="account-menu">
+          <div className="account-who">
+            {image}
+            <span className="account-who-text">
+              <span className="account-who-name">{name || "Your account"}</span>
+              {draft?.requestedSubdomain && (
+                <span className="account-who-address">
+                  {draft.requestedSubdomain}.hasaweb.site
+                </span>
+              )}
+            </span>
+          </div>
+          <SignInMethods
+            controller={controller}
+            disabled={disabled}
+            initialNotice={linkNotice}
+          />
+          <div className="account-actions">
+            {onSignOut && (
+              <button
+                type="button"
+                className="account-action"
+                disabled={signingOut}
+                onClick={onSignOut}
+              >
+                <Icon name="log-out" size={16} />
+                {signingOut ? "Signing out..." : "Sign out"}
+              </button>
+            )}
+            <button
+              type="button"
+              className="account-action"
+              data-danger=""
+              disabled={disabled}
+              onClick={() => {
+                setOpen(false);
+                setDeleting(true);
+              }}
+            >
+              <Icon name="trash" size={16} />
+              Delete account
+            </button>
+          </div>
+        </div>
       </Popover>
+      {deleting && (
+        <AccountDeletionDialog
+          controller={controller}
+          recovery={recovery}
+          onCancel={() => setDeleting(false)}
+          onDeleted={onDeleted}
+        />
+      )}
     </span>
   );
 }

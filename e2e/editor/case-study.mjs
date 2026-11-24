@@ -190,10 +190,12 @@ export async function checkCaseStudyJourney({
       async function publish() {
         await flush();
         await (await checklist())
-          .getByRole("button", { name: /^(Retry )?Publish$/ })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await (await checklist())
-          .getByText("Publication complete.", { exact: true })
+          .getByText("You're live", { exact: true })
           .waitFor({ timeout: 120000 });
       }
       await addSection(page, "Projects");
@@ -382,7 +384,7 @@ export async function checkCaseStudyJourney({
           : route.continue(),
       );
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
         .getByRole("alert")
@@ -396,10 +398,10 @@ export async function checkCaseStudyJourney({
       blocked = false;
       await page.unroute("**/api/owner/publication/commit");
       await (await checklist())
-        .getByRole("button", { name: "Retry Publish", exact: true })
+        .getByRole("button", { name: "Try again", exact: true })
         .click();
       await (await checklist())
-        .getByText("Publication complete.", { exact: true })
+        .getByText("You're live", { exact: true })
         .waitFor({ timeout: 120000 });
       home = await read("/");
       caseStudy = await read("/projects/build-pipeline");
@@ -437,7 +439,7 @@ export async function checkCaseStudyJourney({
       });
       await flush();
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
         .getByText(

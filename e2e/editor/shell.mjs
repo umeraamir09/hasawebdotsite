@@ -187,3 +187,13 @@ export async function setLinkShown(page, id, on) {
     { id, on },
   );
 }
+
+// Opens the account menu from the rail's or the dock's avatar and returns it.
+export async function openAccount(page) {
+  const menu = page.getByRole("dialog", { name: "Account", exact: true });
+  if (await menu.isVisible()) return menu;
+  if (await compact(page)) await closeSheet(page);
+  await page.getByRole("button", { name: "Account", exact: true }).click();
+  await menu.waitFor();
+  return menu;
+}

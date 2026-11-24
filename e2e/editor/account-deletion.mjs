@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { openPanel } from "./shell.mjs";
+import { openAccount, openPanel } from "./shell.mjs";
 
 // Phase 49. Uses its own owner, `draft-closer`, because deletion is
 // permanent; `closer-other` is the same account's session on another device.
@@ -152,10 +152,12 @@ export async function checkAccountDeletionJourney({
           JSON.stringify(["draft-alice", "alice-portfolio", "kept"]),
         ),
       );
-      const section = page.getByRole("region", { name: "Delete account" });
-      await section
-        .getByRole("button", { name: "Delete account", exact: true })
-        .click();
+      // Delete account is the last item of the account menu.
+      const deleteAccount = async () =>
+        (await openAccount(page))
+          .getByRole("button", { name: "Delete account", exact: true })
+          .click();
+      await deleteAccount();
       const dialog = page.getByRole("dialog", { name: "Delete this account?" });
       await dialog.waitFor();
       for (const text of [
@@ -185,17 +187,13 @@ export async function checkAccountDeletionJourney({
         [{ deleting_at: null, status: "draft", state: "held" }],
       );
       // Escape cancels too.
-      await section
-        .getByRole("button", { name: "Delete account", exact: true })
-        .click();
+      await deleteAccount();
       await dialog.waitFor();
       await page.keyboard.press("Escape");
       await dialog.waitFor({ state: "detached" });
       assert.equal((await authority("/api/owner", {}, "closer")).status, 200);
 
-      await section
-        .getByRole("button", { name: "Delete account", exact: true })
-        .click();
+      await deleteAccount();
       await dialog
         .getByRole("button", { name: "Delete permanently", exact: true })
         .click();

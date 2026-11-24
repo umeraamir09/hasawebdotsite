@@ -1,0 +1,166 @@
+/* Account menu (Figma 414:9669). On the rail it opens beside the avatar,
+   rising from its foot; the dock's opens upward (editor-shell.css). */
+.editor-account .wb-popover {
+  width: 320px;
+}
+.editor-rail .editor-account .wb-popover {
+  top: auto;
+  bottom: 0;
+  left: calc(100% + 12px);
+}
+.account-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.account-who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--wb-line-hairline);
+}
+.account-who .editor-account-image {
+  width: 40px;
+  height: 40px;
+}
+.account-who-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.account-who-name {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+}
+.account-who-address {
+  overflow: hidden;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.account-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.account-label {
+  margin: 0;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.account-method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.account-method {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.account-method-icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--wb-bg-sunken);
+  font-size: 14px;
+  font-weight: 700;
+}
+.account-method-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.account-method-name {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+}
+.account-method-state {
+  margin: 0;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+.account-notice {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.account-notice[data-kind="error"] {
+  color: var(--wb-danger-base);
+}
+.account-notice[data-kind="success"] {
+  color: var(--wb-success-base);
+}
+.account-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  margin: 8px 0 0;
+  padding: 10px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--wb-bg-sunken);
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+.account-confirm p {
+  margin: 0;
+}
+.account-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.account-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 10px;
+  border-top: 1px solid var(--wb-line-hairline);
+}
+.account-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--wb-text-primary);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.account-action:hover:not(:disabled) {
+  background: var(--wb-bg-hover);
+}
+.account-action:focus-visible {
+  outline: 2px solid var(--wb-signal-base);
+  outline-offset: 2px;
+}
+.account-action[data-danger] {
+  color: var(--wb-danger-base);
+}
+.account-action:disabled {
+  cursor: default;
+  opacity: 0.6;
+}

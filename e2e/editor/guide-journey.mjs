@@ -372,10 +372,10 @@ export async function checkGuideJourney({
   async function publish(page) {
     const checklist = await openChecklist(page);
     await checklist
-      .getByRole("button", { name: "Publish", exact: true })
+      .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
       .click();
     await checklist
-      .getByText("Publication complete.", { exact: true })
+      .getByText("You're live", { exact: true })
       .waitFor({ timeout: 100000 });
   }
   const text = (html) =>
@@ -829,7 +829,7 @@ export async function checkGuideJourney({
       assert.ok(before.length >= 2, JSON.stringify(before));
       const checklist = await openChecklist(page);
       await checklist
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       assert.equal(
         (

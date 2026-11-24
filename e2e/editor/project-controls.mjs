@@ -144,7 +144,7 @@ export async function preparePublishedProjects(page, image) {
   await page.getByRole("button", { name: "Add project", exact: true }).click();
   const checklist = () => openChecklist(page);
   await (await checklist())
-    .getByRole("button", { name: "Publish", exact: true })
+    .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
     .click();
   await (await checklist())
     .getByText(/projects title/i)
@@ -152,7 +152,7 @@ export async function preparePublishedProjects(page, image) {
     .waitFor();
   await page.getByLabel("Project title", { exact: true }).fill("Owner project");
   await (await checklist())
-    .getByRole("button", { name: "Publish", exact: true })
+    .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
     .click();
   await (await checklist())
     .getByText(/projects summary/i)

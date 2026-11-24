@@ -10,6 +10,7 @@ export {
   type AppearanceModel,
   appearanceAttributes,
   appearanceModelSchema,
+  applyAppearance,
   COLOR_MODES,
   type ColorMode,
   DECORATION_IDS,

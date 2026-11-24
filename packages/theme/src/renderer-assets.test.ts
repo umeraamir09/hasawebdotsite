@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import appearanceCatalog from "../catalog.json";
+import { PORTFOLIO_TOKENS } from "./palette";
 
 // Parity between the approved catalog and the generated renderer platform
 // files that both the editor preview and published pages load.
@@ -56,6 +57,37 @@ describe("renderer preset and font assets", () => {
         ),
       );
     }
+  });
+
+  it("maps every portfolio token to the custom palette in both modes", () => {
+    const css = read("packages/components/static/themes.css").toString();
+    const root = ":root[data-theme][data-custom-color]";
+    const blocks = [
+      [root, "light"],
+      [`${root}[data-color-mode="dark"]`, "dark"],
+      [
+        `${root}[data-initial-mode="dark"]:not(\n  [data-color-mode="light"]\n)`,
+        "dark",
+      ],
+      [
+        `${root}:not([data-color-mode="light"]):not(\n    [data-initial-mode="light"]\n  )`,
+        "dark",
+      ],
+    ] as const;
+    for (const [selector, mode] of blocks) {
+      const start = css.indexOf(`${selector} {`);
+      expect(start, selector).toBeGreaterThanOrEqual(0);
+      const block = css.slice(start, css.indexOf("}", start));
+      expect(block).toContain(`color-scheme: ${mode};`);
+      for (const name of Object.keys(PORTFOLIO_TOKENS))
+        expect(block).toContain(
+          `--pf-${name}: var(--pf-custom-${mode}-${name});`,
+        );
+    }
+    // The custom rules follow every preset rule they override.
+    expect(css.indexOf(`${root} {`)).toBeGreaterThan(
+      css.lastIndexOf('[data-theme="'),
+    );
   });
 
   it("self-hosts each approved font with matching platform bytes", () => {

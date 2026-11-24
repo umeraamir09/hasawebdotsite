@@ -1,5 +1,6 @@
 import { clipSeoText, normalizeSeoText } from "@hasaweb/schema";
 import { appearanceCatalog } from "@hasaweb/theme";
+import { generatePalette } from "@hasaweb/theme/palette";
 import type { CSSProperties } from "react";
 import art from "../static/sharing-card-art.json";
 
@@ -35,16 +36,21 @@ export type SharingCardProps = {
   decorationImage: string | null;
 };
 
-/** The theme tokens for the card. System mode uses the light palette. */
+/**
+ * The theme tokens for the card: the generated palette of a custom color, or
+ * the preset's. System mode uses the light palette.
+ */
 export function sharingCardPalette(
   themeId: string,
   colorMode: string,
+  customColor?: string | null,
 ): SharingCardPalette {
   const theme =
     appearanceCatalog.themes.find((entry) => entry.id === themeId) ??
     appearanceCatalog.themes[0];
   if (!theme) throw new Error("Theme catalog is empty");
-  const tokens = colorMode === "dark" ? theme.dark : theme.light;
+  const palette = customColor ? generatePalette(customColor) : theme;
+  const tokens = colorMode === "dark" ? palette.dark : palette.light;
   return {
     page: tokens.page,
     surface: tokens.surface,

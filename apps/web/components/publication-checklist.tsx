@@ -3,17 +3,21 @@
 import {
   clearSample,
   componentRegistry,
+  type DraftDoc,
   type PublicationIssue,
   type PublicationOperation,
   type PublicationSite,
   richText,
 } from "@hasaweb/schema";
 import { appearanceCatalog } from "@hasaweb/theme";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { getAt, resolveField } from "../lib/draft/planner";
-import { checkPublication } from "../lib/draft/publication";
+import {
+  type checkPublication,
+  readPublicationIssues,
+} from "../lib/draft/publication";
 import {
   publicationFieldLabel,
   publicationIssueLabel,
@@ -23,52 +27,86 @@ import {
   publicationMessages,
   publicationRequest,
   publishSavedDraft,
-  siteRequest,
-  unpublishMessages,
 } from "../lib/draft/publish";
 import { DraftFailure, type FieldPath } from "../lib/draft/types";
 import { removeEditorComponent } from "../lib/editor/components";
 import { withdrawGraphAccess } from "../lib/editor/github-graph";
+import { sectionIcons, sectionLabel } from "../lib/editor/sections";
+import {
+  type PublicationSiteState,
+  siteHost,
+} from "../lib/editor/use-publication-site";
+import { AddressControl } from "./address-control";
 import { DraftTextField } from "./draft-text-field";
 import { ResumeUpload } from "./resume-controls";
 import { ComponentRemovalDialog } from "./section-removal-dialog";
-import { UnpublishControl } from "./unpublish-control";
+import { Button, Icon, type IconName, StatusPill } from "./workbench";
+import "./publish-popover.css";
 
+type Check = Awaited<ReturnType<typeof checkPublication>>;
+type Row = { key: string; issue: PublicationIssue; label: string };
+
+// Where an issue lives, shown under its label with that section's icon.
+function issuePlace(
+  issue: PublicationIssue,
+  draft: DraftDoc | null | undefined,
+): { place: string; icon: IconName } {
+  const [root, index] = issue.path;
+  if (root === "components" && typeof index === "number") {
+    const component = draft?.components[index];
+    if (component)
+      return {
+        place: sectionLabel(component),
+        icon: sectionIcons[component.type],
+      };
+  }
+  if (root === "appearance") return { place: "Style", icon: "palette" };
+  if (root === "seo" || root === "requestedSubdomain")
+    return { place: "Share", icon: "globe" };
+  if (root === "links") return { place: "Links", icon: "link" };
+  return { place: "Profile", icon: "user" };
+}
+
+/**
+ * The Publish popover (Figma 414:8373, states 414:9545). Opening it checks
+ * the saved draft; each issue opens its control. The button shows the first
+ * publish, ready, publishing, published and failed states.
+ */
 export function PublicationChecklist({
   controller,
   disabled,
+  open,
+  site,
   onOpen,
   onPublished,
-  onSite,
+  onIssues,
 }: {
   controller: DraftController;
   disabled: boolean;
+  open: boolean;
+  site: PublicationSiteState;
   onOpen(issue: PublicationIssue): void;
   onPublished?(): void;
-  // The editor's top bar shows whether the portfolio is live.
-  onSite?(site: PublicationSite | null): void;
+  // The number shown on the Publish button.
+  onIssues?(count: number): void;
 }) {
   const state = useStore(controller.store);
-  const [result, setResult] = useState<Awaited<
-    ReturnType<typeof checkPublication>
-  > | null>(null);
-  const [busy, setBusy] = useState(false);
+  const idPrefix = useId();
+  const [result, setResult] = useState<Check | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [publishingNow, setPublishingNow] = useState(false);
   const [error, setError] = useState("");
   const [operation, setOperation] = useState<PublicationOperation | null>(null);
   const [copied, setCopied] = useState(false);
-  const [site, setSite] = useState<PublicationSite | null>(null);
+  // The revision just published. Its "You're live" view lasts until the
+  // popover closes or the draft changes.
+  const [celebrated, setCelebrated] = useState<number | null>(null);
   const publishing = useRef<AbortController | null>(null);
   const alive = useRef(true);
-  const reportSite = useRef(onSite);
-  reportSite.current = onSite;
-  useEffect(() => reportSite.current?.(site), [site]);
-  const refreshSite = () =>
-    siteRequest(controller, "site")
-      .then((next) => {
-        if (alive.current) setSite(next);
-      })
-      .catch(() => {});
-  // biome-ignore lint/correctness/useExhaustiveDependencies: refreshSite reads only controller and refs
+  const reportIssues = useRef(onIssues);
+  reportIssues.current = onIssues;
+  const { refresh: refreshSite } = site;
+  const busy = checking || publishingNow;
   useEffect(() => {
     alive.current = true;
     void publicationRequest(controller, "status", {})
@@ -76,44 +114,82 @@ export function PublicationChecklist({
         if (alive.current && !publishing.current) setOperation(current);
       })
       .catch(() => {});
-    void refreshSite();
     return () => {
       alive.current = false;
       publishing.current?.abort();
     };
   }, [controller]);
+  useEffect(() => {
+    if (!open) {
+      setCelebrated(null);
+      setCopied(false);
+    }
+  }, [open]);
+  const saved =
+    !Object.keys(state.inputs).length &&
+    !state.error &&
+    !Object.values(state.pendingImages).some(Boolean);
   const current =
     result &&
     result.revision === state.confirmed?.revision &&
     result.draft === state.working &&
-    !Object.keys(state.inputs).length &&
-    !state.error &&
-    !Object.values(state.pendingImages).some(Boolean)
+    saved
       ? result
       : null;
-  async function check() {
-    setBusy(true);
-    setResult(null);
+  // Opening the popover, or a new saved revision while it is open, reads
+  // the saved draft's issues once. The read pauses nothing, so editing
+  // continues while it runs; Publish runs the full check.
+  const attempted = useRef<number | null>(null);
+  const revision = state.confirmed?.revision ?? null;
+  const readable =
+    open &&
+    !disabled &&
+    !publishingNow &&
+    !current &&
+    saved &&
+    state.status === "saved" &&
+    revision !== null;
+  useEffect(() => {
+    if (!readable || revision === null || attempted.current === revision)
+      return;
+    attempted.current = revision;
+    const abort = new AbortController();
+    const draft = controller.store.getState().working;
+    let finished = false;
+    setChecking(true);
     setError("");
-    try {
-      const next = await checkPublication(controller);
-      if (alive.current) setResult(next);
-    } catch (cause) {
-      if (alive.current)
-        setError(
-          cause instanceof DraftFailure && cause.code === "recovery_required"
-            ? "Finish or resolve unsaved input, uploads and draft recovery, then check again."
-            : "Could not check this saved draft. Resolve any save or sign-in issue, then retry.",
-        );
-    } finally {
-      if (alive.current) setBusy(false);
-    }
-  }
+    readPublicationIssues(controller.identity, revision, fetch, abort.signal)
+      .then(({ issues, hasMoreIssues }) => {
+        finished = true;
+        if (!abort.signal.aborted)
+          setResult({ revision, issues, hasMoreIssues, draft });
+      })
+      .catch(() => {
+        finished = true;
+        if (!abort.signal.aborted)
+          setError(
+            "Could not check this saved draft. Resolve any save or sign-in issue, then retry.",
+          );
+      })
+      .finally(() => {
+        if (!abort.signal.aborted) setChecking(false);
+      });
+    return () => {
+      abort.abort();
+      setChecking(false);
+      // An interrupted read runs again when the draft is readable.
+      if (!finished) attempted.current = null;
+    };
+  }, [controller, readable, revision]);
+  const issueCount =
+    (current ? current.issues.length : 0) + Object.keys(state.inputs).length;
+  useEffect(() => reportIssues.current?.(issueCount), [issueCount]);
+
   async function publish() {
     if (publishing.current) return;
     const abort = new AbortController();
     publishing.current = abort;
-    setBusy(true);
+    setPublishingNow(true);
     setError("");
     setCopied(false);
     setOperation(null);
@@ -140,6 +216,8 @@ export function PublicationChecklist({
       if (next.kind === "blocked") setResult(next);
       else {
         setOperation(next.operation);
+        if (next.operation.stage === "published")
+          setCelebrated(next.operation.revision);
         if (!notified) onPublished?.();
         void refreshSite();
       }
@@ -156,176 +234,240 @@ export function PublicationChecklist({
         );
     } finally {
       publishing.current = null;
-      if (alive.current) setBusy(false);
+      if (alive.current) setPublishingNow(false);
     }
   }
-  async function unpublish() {
-    setError("");
-    try {
-      const next = await siteRequest(controller, "unpublish");
-      if (alive.current) {
-        setSite(next);
-        setCopied(false);
-      }
-      return null;
-    } catch (cause) {
-      return (
-        unpublishMessages[
-          cause instanceof DraftFailure || cause instanceof PublishFailure
-            ? cause.code
-            : "publication_unavailable"
-        ] ??
-        unpublishMessages.publication_unavailable ??
-        "Retry Unpublish."
-      );
-    }
-  }
-  const live =
-    site?.status === "published" ||
-    (site?.status !== "unpublished" &&
-      (operation?.stage === "published" || operation?.stage === "withdrawing"));
+
+  const status = site.site?.status;
+  const live = status === "published";
+  const host = siteHost(site.site, state.working?.requestedSubdomain);
   const liveUrl =
-    site?.status === "published" && site.url
-      ? site.url
+    live && site.site?.url
+      ? site.site.url
       : operation && "url" in operation
         ? operation.url
         : null;
-  const stageLabel = {
-    admitting: "Saving publication request...",
-    preparing: "Preparing your saved content...",
-    assembling: "Building complete pages...",
-    transferring: "Preparing images and files...",
-    ready: "Publishing your portfolio...",
-    withdrawing:
-      "Your new version is live. Finishing removal of withdrawn files...",
-    published: "Publication complete.",
-    failed: "Publication did not complete.",
-  };
-  return (
-    <section
-      className="publication-checklist"
-      aria-label="Publication checklist"
-    >
-      <h2>Before you publish</h2>
-      <p className="editor-muted">
-        Check your saved content, uploads and address. Sample sections are
-        omitted until you edit them.
-      </p>
-      <button
-        type="button"
-        disabled={disabled || busy}
-        onClick={() => void check()}
+  // Only a publication this tab is driving runs; an unfinished one found on
+  // load offers Try again, which resumes it.
+  const running = publishingNow;
+  const failed =
+    !publishingNow &&
+    (Boolean(error && !checking) || operation?.stage === "failed");
+  const firstPublish = !status || status === "draft";
+  const stages = [
+    "admitting",
+    "preparing",
+    "assembling",
+    "transferring",
+    "ready",
+    "withdrawing",
+  ];
+  const progress = operation
+    ? (stages.indexOf(operation.stage) + 1) / (stages.length + 1)
+    : 0.08;
+  const rows: Row[] = [
+    ...Object.values(state.inputs).map((input) => {
+      let path: PublicationIssue["path"];
+      try {
+        path = state.working ? resolveField(state.working, input.path) : [];
+      } catch {
+        path = [typeof input.path[0] === "string" ? input.path[0] : "profile"];
+      }
+      const issue: PublicationIssue = { code: "required", path };
+      return {
+        key: `input:${JSON.stringify(input.path)}`,
+        issue,
+        label: `Finish unsaved ${publicationFieldLabel(issue, state.working)}`,
+      };
+    }),
+    ...(current?.issues ?? []).map((issue) => ({
+      key: JSON.stringify(issue),
+      issue,
+      label: publicationIssueLabel(issue, state.working),
+    })),
+  ];
+  const ready = current !== null && rows.length === 0 && !current.hasMoreIssues;
+  const buttonLabel = running
+    ? "Publishing"
+    : failed ||
+        (operation !== null &&
+          operation.stage !== "published" &&
+          operation.stage !== "failed")
+      ? "Try again"
+      : firstPublish
+        ? "Publish"
+        : "Publish changes";
+
+  if (celebrated !== null && celebrated === revision && liveUrl)
+    return (
+      <section
+        className="publish-popover publish-done"
+        aria-label="Publication checklist"
       >
-        {busy ? "Checking saved draft..." : "Check publication readiness"}
-      </button>
-      <button
-        type="button"
-        disabled={disabled || busy}
-        onClick={() => void publish()}
-      >
-        {busy && publishing.current
-          ? "Publishing..."
-          : error ||
-              (operation &&
-                operation.stage !== "published" &&
-                operation.stage !== "failed")
-            ? "Retry Publish"
-            : "Publish"}
-      </button>
-      {error && <p role="alert">{error}</p>}
-      <div role="status" aria-live="polite">
-        {operation &&
-          !(
-            site?.status === "unpublished" && operation.stage === "published"
-          ) && <p>{stageLabel[operation.stage]}</p>}
-        {current && !current.issues.length && !current.hasMoreIssues && (
-          <p>Saved draft passed the checklist. You can publish it now.</p>
-        )}
-        {!current && result && (
-          <p>Your draft changed. Check it again before publishing.</p>
-        )}
-        {current?.hasMoreIssues && (
-          <p>More issues remain. Fix the listed items and check again.</p>
-        )}
-      </div>
-      {live && liveUrl && (
-        <div className="publication-url">
-          <p>Published portfolio</p>
-          <a href={liveUrl} target="_blank" rel="noopener noreferrer">
-            Open published portfolio
-          </a>
-          <button
-            type="button"
+        <span className="publish-done-mark" aria-hidden="true">
+          <Icon name="check" size={24} />
+        </span>
+        <p className="publish-done-title" role="status">
+          You're live
+        </p>
+        <a
+          className="publish-done-url"
+          href={liveUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {new URL(liveUrl).host}
+        </a>
+        <div className="publish-actions">
+          <Button
+            icon="copy"
             onClick={() => {
               void navigator.clipboard
                 .writeText(liveUrl)
                 .then(() => setCopied(true))
-                .catch(() =>
-                  setError(
-                    "Could not copy the URL. Select and copy the address below.",
-                  ),
-                );
+                .catch(() => setError("Could not copy the URL."));
             }}
           >
-            {copied ? "Copied" : "Copy public URL"}
-          </button>
-          <p>{liveUrl}</p>
+            {copied ? "Copied" : "Copy"}
+          </Button>
+          <a
+            className="wb-button"
+            data-kind="primary"
+            data-size="m"
+            href={liveUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <Icon name="arrow-up-right" size={16} />
+            Open
+          </a>
+        </div>
+      </section>
+    );
+
+  return (
+    <section className="publish-popover" aria-label="Publication checklist">
+      {firstPublish ? (
+        // Mounted only while open, so the Share panel's field is the only
+        // other address control on the page.
+        open && (
+          <>
+            <h2 className="publish-title">Your address</h2>
+            <AddressControl
+              controller={controller}
+              disabled={disabled}
+              compact
+            />
+          </>
+        )
+      ) : (
+        <div className="publish-site">
+          <SitePill status={status} />
+          <span className="publish-host">{host}</span>
         </div>
       )}
-      {site && (
-        <UnpublishControl
-          site={site}
-          disabled={disabled || busy}
-          onUnpublish={unpublish}
-        />
+      {running && (
+        <div className="publish-progress" aria-hidden="true">
+          <span style={{ width: `${Math.round(progress * 100)}%` }} />
+        </div>
       )}
-      {Object.values(state.inputs).length > 0 && (
-        <ul>
-          {Object.values(state.inputs).map((input) => {
-            let path: PublicationIssue["path"];
-            try {
-              path = state.working
-                ? resolveField(state.working, input.path)
-                : [];
-            } catch {
-              path = [
-                typeof input.path[0] === "string" ? input.path[0] : "profile",
-              ];
-            }
-            return (
-              <li key={JSON.stringify(input.path)}>
-                <button
-                  type="button"
-                  disabled={disabled || busy}
-                  onClick={() => onOpen({ code: "required", path })}
-                >
-                  Finish unsaved{" "}
-                  {publicationFieldLabel(
-                    { code: "required", path },
-                    state.working,
-                  )}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
+      {failed && (
+        <p className="publish-failed" role="alert">
+          <Icon name="alert" size={18} />
+          {error || "Couldn't publish. Your live site hasn't changed."}
+        </p>
       )}
-      {current && (
-        <ul>
-          {current.issues.map((issue) => (
-            <li key={JSON.stringify(issue)}>
-              <button
-                type="button"
-                disabled={disabled || busy}
-                onClick={() => onOpen(issue)}
-              >
-                {publicationIssueLabel(issue, state.working)}
-              </button>
-            </li>
-          ))}
-        </ul>
+      {rows.length > 0 && (
+        <div className="publish-issues">
+          <div className="publish-issues-head">
+            <h2 className="publish-title">Before you publish</h2>
+            <StatusPill status="issue">
+              {rows.length}
+              {current?.hasMoreIssues ? "+" : ""} to fix
+            </StatusPill>
+          </div>
+          <ul>
+            {rows.map((row, index) => {
+              const { place, icon } = issuePlace(row.issue, state.working);
+              const rowId = `${idPrefix}-${index}`;
+              return (
+                <li key={row.key}>
+                  <button
+                    type="button"
+                    className="publish-issue"
+                    disabled={disabled || publishingNow}
+                    aria-labelledby={`${rowId}-label`}
+                    aria-describedby={`${rowId}-place`}
+                    onClick={() => onOpen(row.issue)}
+                  >
+                    <span className="publish-issue-icon" aria-hidden="true">
+                      <Icon name={icon} size={16} />
+                    </span>
+                    <span className="publish-issue-text">
+                      <span
+                        className="publish-issue-label"
+                        id={`${rowId}-label`}
+                      >
+                        {row.label}
+                      </span>
+                      <span
+                        className="publish-issue-place"
+                        id={`${rowId}-place`}
+                      >
+                        {place}
+                      </span>
+                    </span>
+                    <Icon name="chevron-right" size={16} />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       )}
+      <div role="status" aria-live="polite" className="publish-state">
+        {checking ? (
+          <span className="publish-checking">
+            <Icon name="loader" size={18} />
+            Checking
+          </span>
+        ) : ready ? (
+          <span className="publish-passed">
+            <Icon name="check-circle" size={18} />
+            All checks passed
+          </span>
+        ) : null}
+      </div>
+      {/* With issues listed the button turns grey (Figma 414:9543) but
+          stays usable: Publish checks the saved draft again on the server
+          and lists what blocks it. */}
+      <Button
+        kind={rows.length > 0 ? "secondary" : "primary"}
+        className="publish-button"
+        data-running={running || undefined}
+        icon={running ? "loader" : failed ? "refresh" : undefined}
+        disabled={disabled || busy || running}
+        onClick={() => void publish()}
+      >
+        {buttonLabel}
+      </Button>
     </section>
+  );
+}
+
+export function SitePill({
+  status,
+}: {
+  status: PublicationSite["status"] | undefined;
+}) {
+  return status === "published" ? (
+    <StatusPill status="live">Live</StatusPill>
+  ) : status === "suspended" ? (
+    <StatusPill status="issue">Suspended</StatusPill>
+  ) : status === "unpublished" ? (
+    <StatusPill status="pending">Offline</StatusPill>
+  ) : (
+    <StatusPill status="draft">Private</StatusPill>
   );
 }
 

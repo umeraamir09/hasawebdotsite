@@ -146,7 +146,7 @@ export async function checkSharingJourney({
       });
       const card = panel.getByRole("figure", { name: "Sharing preview" });
       const generated = card.locator(".sharing-card-generated");
-      const titleInput = panel.getByLabel("Page title", { exact: true });
+      const titleInput = panel.getByLabel("Title", { exact: true });
       const descriptionInput = panel.getByLabel("Description", { exact: true });
       const cardText = async () => ({
         address: await card.locator(".sharing-card-address").textContent(),
@@ -268,10 +268,12 @@ export async function checkSharingJourney({
         await page.getByRole("button", { name: "Build", exact: true }).click();
         await saved();
         await (await checklist())
-          .getByRole("button", { name: /^(Retry )?Publish$/ })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await (await checklist())
-          .getByText("Publication complete.", { exact: true })
+          .getByText("You're live", { exact: true })
           .waitFor({ timeout: 120000 });
         await page.getByRole("button", { name: "Share", exact: true }).click();
       }

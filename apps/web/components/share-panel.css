@@ -1,0 +1,113 @@
+/* Share panel (Figma 413:7431). */
+.share-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.share-address {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--wb-line-hairline);
+  border-radius: 14px;
+}
+.share-address-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.share-address-host {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font: 500 13px / 18px var(--wb-font-mono);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.share-address-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.share-label {
+  margin: 0;
+  padding-top: 4px;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+.share-panel .sharing-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.share-panel .sharing-card {
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--wb-line-hairline);
+  border-radius: 14px;
+  background: var(--wb-bg-sunken);
+}
+.share-panel .sharing-card figcaption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 12px;
+}
+.share-panel .sharing-card-address {
+  color: var(--wb-text-tertiary);
+  font: 12px / 16px var(--wb-font-mono);
+}
+.share-panel .sharing-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+}
+.share-panel .sharing-card-description {
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+.share-unpublish {
+  padding-top: 12px;
+  border-top: 1px solid var(--wb-line-hairline);
+}
+.share-unpublish-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--wb-text-secondary);
+  font-size: 14px;
+  line-height: 20px;
+}
+.share-unpublish-dialog p {
+  margin: 0;
+}
+.share-unpublish-failure {
+  color: var(--wb-danger-base);
+}
+.share-unpublish-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.share-panel .sharing-card-image {
+  background: var(--wb-bg-hover);
+  color: var(--wb-text-secondary);
+}
+.share-unpublished {
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--wb-bg-sunken);
+  color: var(--wb-text-secondary);
+  font-size: 13px;
+  line-height: 18px;
+}
+.share-unpublished p {
+  margin: 0;
+}
+.share-unpublished p + p {
+  margin-top: 6px;
+}

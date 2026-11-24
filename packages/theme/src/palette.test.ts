@@ -1,7 +1,14 @@
 import { converter, formatHex } from "culori";
 import { describe, expect, it } from "vitest";
 import { appearanceCatalog as catalog } from "./index";
-import { generatePalette, type Palette, resolvePalette } from "./palette";
+import {
+  customPaletteCss,
+  customPaletteProperties,
+  generatePalette,
+  type Palette,
+  PORTFOLIO_TOKENS,
+  resolvePalette,
+} from "./palette";
 
 function luminance(hex: string) {
   const channel = (offset: number) => {
@@ -194,5 +201,25 @@ describe("coordinated custom palettes", () => {
     expect(() => resolvePalette({ themeId: "leaf", customColor: "" })).toThrow(
       TypeError,
     );
+  });
+
+  it("delivers both generated modes as custom properties and a stylesheet", () => {
+    const palette = generatePalette("#4285FA");
+    const properties = customPaletteProperties("#4285FA");
+    expect(properties).toHaveLength(Object.keys(PORTFOLIO_TOKENS).length * 2);
+    for (const mode of ["light", "dark"] as const)
+      for (const [name, token] of Object.entries(PORTFOLIO_TOKENS))
+        expect(properties).toContainEqual([
+          `--pf-custom-${mode}-${name}`,
+          palette[mode][token],
+        ]);
+    const css = customPaletteCss("#4285fa");
+    expect(css).toBe(
+      `:root{${properties.map(([name, value]) => `${name}:${value};`).join("")}}\n`,
+    );
+    expect(css).toMatch(
+      /^:root\{(--pf-custom-(light|dark)-[a-z]+:#[0-9a-f]{6};)+\}\n$/,
+    );
+    expect(() => customPaletteCss("red;}body{")).toThrow(TypeError);
   });
 });

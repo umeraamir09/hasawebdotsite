@@ -397,19 +397,6 @@
   cursor: not-allowed;
   opacity: 0.6;
 }
-.appearance-swatches {
-  display: inline-flex;
-}
-.appearance-swatch {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1px solid #7a856e;
-  margin-left: -4px;
-}
-.appearance-swatch:first-child {
-  margin-left: 0;
-}
 .editor-full-preview-link {
   color: inherit;
   text-underline-offset: 3px;

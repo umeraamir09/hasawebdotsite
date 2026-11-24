@@ -148,10 +148,12 @@ export async function checkSocialLinksJourney({
       async function publish() {
         await flush();
         await (await checklist())
-          .getByRole("button", { name: /^(Retry )?Publish$/ })
+          .getByRole("button", {
+            name: /^(Publish|Publish changes|Try again)$/,
+          })
           .click();
         await (await checklist())
-          .getByText("Publication complete.", { exact: true })
+          .getByText("You're live", { exact: true })
           .waitFor({ timeout: 120000 });
       }
       const storedLinks = async () =>
@@ -235,7 +237,7 @@ export async function checkSocialLinksJourney({
       await setLinkShown(page, "profile-only", false);
       await flush();
       await (await checklist())
-        .getByRole("button", { name: "Publish", exact: true })
+        .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
         .click();
       await (await checklist())
         .getByRole("button", {
@@ -244,7 +246,7 @@ export async function checkSocialLinksJourney({
         })
         .waitFor({ timeout: 60000 });
       assert.equal(
-        await (await checklist()).getByText("Publication complete.").count(),
+        await (await checklist()).getByText("You're live").count(),
         0,
       );
       assert.deepEqual(
