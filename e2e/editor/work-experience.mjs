@@ -3,12 +3,7 @@ import { join } from "node:path";
 import { addSection, openChecklist, openSection, resize } from "./shell.mjs";
 
 async function addWorkComponent(page) {
-  const sections = page.getByRole("region", {
-    name: "Page",
-    exact: true,
-  });
   await addSection(page, "Work experience");
-  return sections;
 }
 const flush = (page) =>
   page.evaluate(() =>

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink } from "./links.mjs";
-import { openSection, resize } from "./shell.mjs";
+import { openSection, outline, resize } from "./shell.mjs";
 
 export async function checkSocialLinks({
   getPage,
@@ -218,8 +218,7 @@ export async function checkSocialLinks({
           [...document.querySelectorAll('a[href="mailto:work@example.com"]')]
             .length === 2,
       );
-      await page
-        .getByRole("region", { name: "Page", exact: true })
+      await (await outline(page))
         .getByRole("button", { name: "Social links", exact: true })
         .click();
       assert.equal(await entries().count(), 2);

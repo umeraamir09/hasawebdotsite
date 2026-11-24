@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel } from "./shell.mjs";
+import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
 
 function parse(page, html) {
   return page.evaluate((markup) => {
@@ -153,10 +153,6 @@ export async function checkSocialLinksJourney({
             )
           )[0].links,
         );
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       const control = page.getByRole("region", {
         name: "Social and contact links",
         exact: true,
@@ -165,7 +161,7 @@ export async function checkSocialLinksJourney({
 
       // Add the optional component from the picker; no link is re-entered.
       await addSection(page, "Social links");
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Social links", exact: true })
         .click();
       await control.waitFor();
@@ -258,7 +254,7 @@ export async function checkSocialLinksJourney({
       );
 
       // Confirmed removal keeps the shared links and removes the section.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Social links", exact: true })
         .press("Delete");
       await page

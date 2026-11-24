@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel } from "./shell.mjs";
+import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
 
 const allowed =
   '<h2>The problem</h2><p>We needed <a href="https://example.com/case">a faster build</a>.</p><ul><li><p>Measure first</p></li></ul>';
@@ -196,10 +196,6 @@ export async function checkCaseStudyJourney({
           .getByText("Publication complete.", { exact: true })
           .waitFor({ timeout: 120000 });
       }
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       await addSection(page, "Projects");
       const project = (index) => page.locator("[data-project-id]").nth(index);
       const casePath = (index) =>
@@ -455,7 +451,7 @@ export async function checkCaseStudyJourney({
       );
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Projects", exact: true })
         .click();
       await page

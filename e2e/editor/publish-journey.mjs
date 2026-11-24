@@ -4,7 +4,7 @@ import {
   assertPublishedProjects,
   preparePublishedProjects,
 } from "./project-controls.mjs";
-import { openChecklist, openPanel } from "./shell.mjs";
+import { openChecklist, openPanel, outline } from "./shell.mjs";
 import {
   assertPublishedSkills,
   preparePublishedSkills,
@@ -566,8 +566,7 @@ export async function checkPublishJourney({
         `/__fixture/public-object?key=${encodeURIComponent(new URL(oldAvatarUrl).pathname.slice(1))}`,
       );
       assert.equal((await object.json()).exists, false);
-      await page
-        .getByRole("region", { name: "Page", exact: true })
+      await (await outline(page))
         .getByRole("button", { name: "Projects", exact: true })
         .click();
       const fullProject = page.locator("[data-project-id]").filter({

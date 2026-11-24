@@ -9,12 +9,7 @@ const readGroups = (root) =>
   }));
 
 async function openSkillsSection(page) {
-  const sections = page.getByRole("region", {
-    name: "Page",
-    exact: true,
-  });
   await addSection(page, "Skills and technologies");
-  return sections;
 }
 
 // Adds skills in the order given, then categories, via the real controls.

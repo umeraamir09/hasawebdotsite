@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel } from "./shell.mjs";
+import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
 
 const RESUME_BYTES = 10_485_760;
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
@@ -198,13 +198,9 @@ export async function checkResumeJourney({
         ).components.find((item) => item.type === "resume")?.data.file;
 
       // The control is optional and ordered among the components.
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       for (const title of ["Resume download", "Social links"])
         await addSection(page, title);
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Resume download", exact: true })
         .click();
       const controls = page.getByRole("region", {
@@ -422,7 +418,7 @@ export async function checkResumeJourney({
       }
 
       // Replacing the PDF changes only the draft until Publish.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Resume download", exact: true })
         .click();
       const second = pdf("second resume");
@@ -464,7 +460,7 @@ export async function checkResumeJourney({
       assert.equal((await bytes(replaced)).status, 200);
 
       // Removing the control withdraws the page and its file after Publish.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Resume download", exact: true })
         .press("Delete");
       await page

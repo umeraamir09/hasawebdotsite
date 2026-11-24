@@ -7,7 +7,13 @@ import {
   exercise,
   snapshot,
 } from "../support/face-reveal-renderer.mjs";
-import { openChecklist, openPanel } from "./shell.mjs";
+import {
+  chooseDecoration,
+  imageOptions,
+  openChecklist,
+  openPanel,
+  setFaceReveal,
+} from "./shell.mjs";
 
 // Phase 38: Face Reveal and visitor playback from the editor preview to a
 // real published page, then withdrawal of the second photo. Disabling Face
@@ -179,19 +185,8 @@ export async function checkFaceRevealJourney({
           .find((frame) => frame.url().includes("/private/editor-preview"));
 
       // Hands with Face Reveal on and a described, cropped second photo.
-      const extras = page.getByRole("region", {
-        name: "Avatar decoration and Face Reveal",
-        exact: true,
-      });
-      await extras
-        .getByRole("group", { name: "Avatar decoration", exact: true })
-        .getByRole("radio", { name: "Hands" })
-        .check();
-      const face = extras.getByRole("group", {
-        name: "Face Reveal",
-        exact: true,
-      });
-      await face.getByRole("checkbox").check();
+      await chooseDecoration(page, "Hands");
+      await setFaceReveal(page, true);
       await page.getByLabel("Upload Face Reveal photo").setInputFiles({
         name: "face.png",
         mimeType: "image/png",
@@ -210,6 +205,7 @@ export async function checkFaceRevealJourney({
       await upload
         .getByText("Upload complete. Your draft image is ready.")
         .waitFor({ timeout: 60000 });
+      await imageOptions(page, "Face Reveal photo");
       await upload
         .getByLabel("Face Reveal photo description")
         .fill("My real face");
@@ -314,8 +310,7 @@ export async function checkFaceRevealJourney({
         }
 
         // Disable Face Reveal and republish: the hands keep playing.
-        await face.getByRole("checkbox").uncheck();
-        await face.getByText(/saved privately in this draft/).waitFor();
+        await setFaceReveal(page, false);
         await preview().waitForFunction(
           () => !document.querySelector("button[data-face-reveal]"),
         );
@@ -463,8 +458,8 @@ export async function checkFaceRevealJourney({
           200,
           `${session} cannot read the retained draft photo`,
         );
-      await face.getByRole("checkbox").check();
-      await upload
+      await setFaceReveal(page, true);
+      await (await imageOptions(page, "Face Reveal photo"))
         .getByRole("button", { name: "Remove Face Reveal photo" })
         .waitFor();
       assert.equal((await saved()).profile.faceReveal.image.assetId, faceAsset);

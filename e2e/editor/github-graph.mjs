@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel } from "./shell.mjs";
+import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
 
 const day = (offset) =>
   new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
@@ -141,12 +141,8 @@ export async function checkGitHubGraphJourney({
     return page;
   }
   async function addGraph(page) {
-    const sections = page.getByRole("region", {
-      name: "Page",
-      exact: true,
-    });
     await addSection(page, "GitHub activity");
-    await sections
+    await (await outline(page))
       .getByRole("button", { name: "GitHub activity", exact: true })
       .click();
     const controls = page.getByRole("region", {
@@ -487,11 +483,7 @@ export async function checkGitHubGraphJourney({
         assert.equal(live.body.available, true);
 
         // Removing the graph lets the portfolio publish without it.
-        const sections = page.getByRole("region", {
-          name: "Page",
-          exact: true,
-        });
-        await sections
+        await (await outline(page))
           .getByRole("button", { name: "GitHub activity", exact: true })
           .press("Delete");
         await page
@@ -769,11 +761,7 @@ export async function checkGitHubGraphJourney({
         .getByText(/Private activity authorized/)
         .waitFor({ timeout: 30000 });
       assert.equal(total(await liveGraph()), 10);
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "GitHub activity", exact: true })
         .press("Delete");
       await page
@@ -1177,8 +1165,7 @@ export async function checkGitHubGraphJourney({
         await row("github").getByText("Connected", { exact: true }).waitFor();
         assert.equal(new URL(page.url()).search, "");
         await page.getByRole("button", { name: "Build", exact: true }).click();
-        await page
-          .getByRole("region", { name: "Page", exact: true })
+        await (await outline(page))
           .getByRole("button", { name: "GitHub activity", exact: true })
           .click();
         controls = page.getByRole("region", {

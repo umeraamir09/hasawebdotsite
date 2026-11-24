@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openSection, resize } from "./shell.mjs";
+import { addSection, openSection, outline, resize } from "./shell.mjs";
 
 const markup =
   '<h2>How I work</h2><p>A careful process <a href="https://example.com/process">Read more</a>.</p><ul><li><p>Listen first</p></li></ul><ol start="3"><li><p>Ship carefully</p></li></ol>';
@@ -106,8 +106,7 @@ export async function checkTextControls({
       );
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
-      await page
-        .getByRole("region", { name: "Page", exact: true })
+      await (await outline(page))
         .getByRole("button", { name: "My approach", exact: true })
         .click();
       const input = page.getByRole("textbox", {
@@ -127,8 +126,7 @@ export async function checkTextControls({
       await page
         .getByRole("button", { name: "Continue preserved edits", exact: true })
         .click();
-      await page
-        .getByRole("region", { name: "Page", exact: true })
+      await (await outline(page))
         .getByRole("button", { name: "My approach", exact: true })
         .click();
       await page.waitForFunction(
@@ -213,29 +211,26 @@ export async function checkTextControls({
         fullPage: true,
       });
       await resize(page, { width: 1500, height: 1000 });
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       await addSection(page, "Text section");
       await page
         .getByLabel("Section title", { exact: true })
         .fill("Second note");
       await input.fill("An independent body");
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Second note", exact: true })
         .press("Alt+ArrowUp");
       await openSection(page, "My approach");
       assert.match(await input.innerText(), /Linked words/);
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "My approach", exact: true })
         .press("Delete");
       await page
         .getByRole("dialog")
         .getByRole("button", { name: "Cancel", exact: true })
         .click();
+      await openSection(page, "My approach");
       assert.match(await input.innerText(), /Linked words/);
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "My approach", exact: true })
         .press("Delete");
       await page

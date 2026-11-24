@@ -9,7 +9,7 @@ import {
   resolvedMode,
   rgb,
 } from "../support/first-paint.mjs";
-import { addSection, openChecklist, openPanel } from "./shell.mjs";
+import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
 
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 const PDF = Buffer.from(
@@ -138,10 +138,6 @@ export async function checkAppearanceJourney({
 
       // One project with a case study and the resume component give all
       // three public page types.
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       await addSection(page, "Projects");
       await page
         .getByRole("button", { name: "Add project", exact: true })
@@ -161,7 +157,7 @@ export async function checkAppearanceJourney({
         .focus();
       await page.keyboard.type("The same words in every theme.");
       await addSection(page, "Resume download");
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Resume download", exact: true })
         .click();
       const resume = page.getByRole("region", {
