@@ -125,7 +125,7 @@ Phases 51.1 to 51.5 move the editor and the setup guide to the Workbench design 
 - Profile (`409:2175`, mobile `417:12355`): banner and avatar with camera actions, then the Decoration and Face reveal rows, then name, bio, location and links with drag handles and visibility toggles.
 - The Decoration row shows the current decoration and opens a gallery (`431:15145`, mobile sheet `433:17711`). Each tile shows the owner's avatar wearing one catalog decoration as a still, using the renderer's avatar markup, and choosing a tile updates the preview at once. The gallery reads the catalog, so a new decoration needs no editor change. Search and filter chips (`431:15358`) appear only once the catalog has more than eight entries. The concept decorations in Figma are not catalog entries.
 - Section editors open in the panel under a back header (project `411:3276`). Case studies get the writing mode with an outline and a format toolbar (`415:10624`).
-- The owner decides before this phase whether to add the Role field the design shows. It is not in `profile.ts` or [product.md](product.md).
+- Leave out the Role field the design shows. The profile keeps name, bio and location.
 - [ ] Complete when every content type is editable in the panel on desktop and mobile, every `PublicationCorrection` path opens the right editor, the decoration gallery works with pointer and keyboard, and `editor` and `uploads` pass.
 
 ### Phase 51.4. Rebuild Style, Share, Publish and account

@@ -1,0 +1,348 @@
+/* Profile editor (Figma 409:2175, mobile 417:12355) */
+.profile-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* The banner with the avatar over its lower edge. */
+.profile-editor-card {
+  display: flex;
+  flex-direction: column;
+}
+.profile-editor-card > [data-publication-field="avatar"] {
+  margin-top: -44px;
+  padding-left: 16px;
+}
+
+/* Image slot */
+.image-slot {
+  position: relative;
+  min-width: 0;
+}
+.image-slot-picture {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--wb-bg-sunken);
+  color: var(--wb-text-tertiary);
+}
+.image-slot-picture img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.image-slot[data-variant="banner"] .image-slot-picture {
+  aspect-ratio: 352 / 116;
+  border-radius: 14px;
+}
+.image-slot[data-variant="tile"] .image-slot-picture {
+  aspect-ratio: 352 / 200;
+  border-radius: 14px;
+}
+.image-slot[data-variant="avatar"] {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.image-slot[data-variant="avatar"] .image-slot-picture {
+  flex: none;
+  width: 80px;
+  height: 80px;
+  overflow: visible;
+  border: 3px solid var(--wb-bg-panel);
+  border-radius: 20px;
+}
+.image-slot[data-variant="avatar"] .image-slot-picture img {
+  border-radius: 17px;
+}
+/* The popover sits outside the picture's clipping. */
+.image-slot-picture .wb-popover-anchor {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.image-slot-picture > .image-slot-camera {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.image-slot[data-variant="avatar"] .image-slot-picture .wb-popover-anchor,
+.image-slot[data-variant="avatar"] .image-slot-picture > .image-slot-camera {
+  top: auto;
+  right: -14px;
+  bottom: -6px;
+}
+.image-slot-camera.wb-icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+}
+.image-slot[data-variant="avatar"] .image-slot-camera.wb-icon-button {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+.image-slot-retry {
+  position: relative;
+  z-index: 1;
+}
+.image-slot-options {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 260px;
+}
+.image-slot-options .wb-button {
+  justify-content: flex-start;
+}
+.image-slot-options .wb-field {
+  margin: 6px 0;
+}
+.image-slot-status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
+.image-slot-status:not(:has(p)) {
+  display: none;
+}
+.image-slot[data-variant="banner"] .image-slot-status,
+.image-slot[data-variant="tile"] .image-slot-status {
+  padding-top: 8px;
+}
+/* Beside the avatar, the status starts below the banner. */
+.image-slot[data-variant="avatar"] .image-slot-status {
+  flex: 1;
+  padding-bottom: 4px;
+}
+.image-slot-status > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.image-slot-status p {
+  margin: 0;
+}
+.image-slot-status [role="alert"] p {
+  flex-basis: 100%;
+  color: var(--wb-danger-base);
+}
+.image-slot-status progress {
+  width: 96px;
+  accent-color: var(--wb-signal-base);
+}
+
+/* Decoration and Face Reveal rows */
+.profile-editor-rows {
+  overflow: hidden;
+  border: 1px solid var(--wb-line-hairline);
+  border-radius: 14px;
+}
+.profile-editor-rows > * + * {
+  border-top: 1px solid var(--wb-line-hairline);
+}
+.profile-editor-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--wb-text-primary);
+  font: inherit;
+  text-align: left;
+}
+button.profile-editor-row {
+  cursor: pointer;
+}
+button.profile-editor-row:hover:not(:disabled) {
+  background: var(--wb-bg-hover);
+}
+button.profile-editor-row:focus-visible {
+  outline: 2px solid var(--wb-signal-base);
+  outline-offset: -2px;
+}
+.profile-editor-row > .wb-icon {
+  flex: none;
+  color: var(--wb-text-secondary);
+}
+.profile-editor-row-name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 500;
+}
+.profile-editor-row-value {
+  overflow: hidden;
+  color: var(--wb-text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.profile-editor-face {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+.profile-editor-note,
+.profile-editor-issue {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.profile-editor-note {
+  color: var(--wb-text-secondary);
+}
+.profile-editor-note:empty {
+  display: none;
+}
+.profile-editor-issue {
+  color: var(--wb-danger-base);
+}
+
+/* Account suggestions under the name */
+.profile-editor-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: -8px;
+}
+.profile-editor-suggested {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 4px 4px 10px;
+  border-radius: 10px;
+  background: var(--wb-bg-sunken);
+}
+.profile-editor-suggested strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Decoration gallery (431:15145, 431:15358, 433:17711) */
+.decoration-gallery-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.decoration-gallery-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+.decoration-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.decoration-gallery[data-columns="4"] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.decoration-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--wb-text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  cursor: pointer;
+}
+/* The radio covers the tile, so the whole tile takes the pointer. */
+.decoration-tile-input {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  appearance: none;
+  cursor: pointer;
+}
+.decoration-tile-input:disabled {
+  cursor: default;
+}
+.decoration-tile-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 166 / 130;
+  overflow: hidden;
+  border: 1px solid var(--wb-line-hairline);
+  border-radius: 12px;
+  background: var(--wb-bg-sunken);
+}
+.decoration-tile-thumb iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  border: 0;
+  transform: scale(0.5);
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+.decoration-tile:hover .decoration-tile-thumb {
+  border-color: var(--wb-line-strong);
+}
+.decoration-tile:has(input:checked) .decoration-tile-thumb {
+  outline: 2px solid var(--wb-signal-base);
+  outline-offset: -2px;
+}
+.decoration-tile:has(input:focus-visible) .decoration-tile-thumb {
+  outline: 2px solid var(--wb-signal-base);
+  outline-offset: 2px;
+}
+.decoration-tile-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--wb-signal-base);
+  color: var(--wb-text-inverse);
+}
+.decoration-gallery-empty {
+  margin: 0;
+  color: var(--wb-text-tertiary);
+  text-align: center;
+}
+@media (max-width: 640px) {
+  .decoration-gallery,
+  .decoration-gallery[data-columns="4"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+
+/* A phone keeps 16 px text so focusing a field does not zoom the page. */
+.owner-editor[data-layout="compact"] .profile-editor .wb-field-input {
+  font-size: 16px;
+}

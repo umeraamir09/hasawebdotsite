@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { openSection, resize } from "./shell.mjs";
+import { imageOptions, openSection, resize } from "./shell.mjs";
 
 export async function checkCropControls({
   getPage,
@@ -105,12 +105,12 @@ export async function checkCropControls({
         name: "Avatar image",
         exact: true,
       });
-      await control.getByText(/Image unavailable/).waitFor();
-      await page.unroute("**/api/assets/*?purpose=avatar", failImages);
       const retry = control.getByRole("button", {
         name: "Retry avatar preview",
         exact: true,
       });
+      await retry.waitFor();
+      await page.unroute("**/api/assets/*?purpose=avatar", failImages);
       assert.equal(
         await retry.count(),
         1,
@@ -119,7 +119,7 @@ export async function checkCropControls({
       await retry.click();
       await page.waitForFunction(() => {
         const image = document.querySelector(
-          ".profile-image-preview-avatar img",
+          '.image-slot[data-variant="avatar"] img',
         );
         return image?.complete && image.naturalWidth > 0;
       });
@@ -224,7 +224,7 @@ export async function checkCropControls({
         saved.left[1] > 140 && saved.left[0] < 70,
         "left crop edge contains the original green region",
       );
-      await page
+      await (await imageOptions(page, "Avatar"))
         .getByLabel("Avatar description", { exact: true })
         .fill("Blue and green portrait test");
       await flush();
@@ -269,7 +269,7 @@ export async function checkCropControls({
       await page.waitForFunction(() => window.editorFixture?.ready);
       await displayed();
       assert.equal((await current("avatar")).assetId, reference.assetId);
-      await page
+      await (await imageOptions(page, "Avatar"))
         .getByRole("button", { name: "Crop avatar", exact: true })
         .click();
       await page.getByRole("dialog").waitFor();
@@ -287,15 +287,16 @@ export async function checkCropControls({
       );
       await page.keyboard.press("Escape");
       await page.waitForFunction(
-        () => document.activeElement?.textContent?.trim() === "Crop avatar",
+        () =>
+          document.activeElement?.getAttribute("aria-label") === "Edit avatar",
       );
       assert.equal((await current("avatar")).assetId, reference.assetId);
       assert.equal(
         await page
-          .getByRole("button", { name: "Crop avatar", exact: true })
+          .getByRole("button", { name: "Edit avatar", exact: true })
           .evaluate((el) => el === document.activeElement),
         true,
-        "cancel returns focus to the invoking control",
+        "cancel returns focus to the image's camera button",
       );
     },
   );
@@ -411,7 +412,7 @@ export async function checkCropControls({
         await route.abort().catch(() => {});
         finishedRead();
       });
-      await page
+      await (await imageOptions(page, "Avatar"))
         .getByRole("button", { name: "Crop avatar", exact: true })
         .click();
       await reading;
@@ -474,7 +475,7 @@ export async function checkCropControls({
         before,
         "draft replacements never mutate prior immutable bytes",
       );
-      await page
+      await (await imageOptions(page, "Avatar"))
         .getByRole("button", { name: "Remove avatar", exact: true })
         .click();
       await flush();

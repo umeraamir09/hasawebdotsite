@@ -95,14 +95,18 @@ function DecorationHand({ side }: { side: "left" | "right" }) {
 // both owner images and the product labels; the shared platform script
 // (site.ts) toggles it. A selected decoration adds the visitor pause/play
 // control, which the script reveals unless reduced motion is requested.
+// `still` draws the paused decoration with no control and no script, as the
+// editor's decoration gallery shows it.
 export function PortfolioAvatar({
   asset,
   decoration = "none",
   faceReveal,
+  still = false,
 }: {
   asset: DisplayAsset;
   decoration?: "none" | "cat" | "hands";
   faceReveal?: DisplayAsset | undefined;
+  still?: boolean;
 }) {
   return (
     <div className="pf-avatar-envelope">
@@ -110,7 +114,9 @@ export function PortfolioAvatar({
         <div
           className="pf-avatar-frame"
           data-decoration={decoration}
-          data-playback={decoration === "none" ? undefined : "playing"}
+          data-playback={
+            decoration === "none" ? undefined : still ? "paused" : "playing"
+          }
         >
           {faceReveal ? (
             <button
@@ -156,7 +162,7 @@ export function PortfolioAvatar({
               hidden={decoration !== "cat"}
             >
               <source
-                media="(prefers-reduced-motion: reduce)"
+                media={still ? "all" : "(prefers-reduced-motion: reduce)"}
                 srcSet="/portfolio-platform/e19f65588e6b2684-avatar-ginger-cat-clean-still.webp"
               />
               <img
@@ -215,7 +221,7 @@ export function PortfolioAvatar({
               )}
             </div>
           )}
-          {decoration !== "none" && (
+          {decoration !== "none" && !still && (
             <button
               type="button"
               className="pf-avatar-playback"

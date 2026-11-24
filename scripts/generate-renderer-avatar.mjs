@@ -47,7 +47,12 @@ const art = source
     "<div\n        className={styles.decoration}",
     '{decoration === "hands" && <div\n        className={styles.decoration}',
   )
-  .replace(/<\/div>\s*$/, "</div>}");
+  .replace(/<\/div>\s*$/, "</div>}")
+  // A still cat uses its still at every medium, as a paused one does.
+  .replace(
+    'media="(prefers-reduced-motion: reduce)"',
+    'media={still ? "all" : "(prefers-reduced-motion: reduce)"}',
+  );
 const output = `/* biome-ignore-all lint/a11y/noSvgWithoutTitle: Source artwork is decorative and hidden from assistive technology. */
 import { AssetImage } from "./asset";
 import type { DisplayAsset } from "./model";
@@ -56,15 +61,17 @@ ${classNames(helpers)}
 // both owner images and the product labels; the shared platform script
 // (site.ts) toggles it. A selected decoration adds the visitor pause/play
 // control, which the script reveals unless reduced motion is requested.
-export function PortfolioAvatar({ asset, decoration = "none", faceReveal }: { asset: DisplayAsset; decoration?: "none" | "cat" | "hands"; faceReveal?: DisplayAsset | undefined }) {
-return <div className="pf-avatar-envelope"><div className="pf-avatar-slot"><div className="pf-avatar-frame" data-decoration={decoration} data-playback={decoration === "none" ? undefined : "playing"}>
+// \`still\` draws the paused decoration with no control and no script, as the
+// editor's decoration gallery shows it.
+export function PortfolioAvatar({ asset, decoration = "none", faceReveal, still = false }: { asset: DisplayAsset; decoration?: "none" | "cat" | "hands"; faceReveal?: DisplayAsset | undefined; still?: boolean }) {
+return <div className="pf-avatar-envelope"><div className="pf-avatar-slot"><div className="pf-avatar-frame" data-decoration={decoration} data-playback={decoration === "none" ? undefined : still ? "paused" : "playing"}>
 {faceReveal ? <button type="button" className="pf-avatar-portraitButton" data-face-reveal="" data-photo="false" data-erasing="false" aria-label="Reveal face">
 <AssetImage asset={asset} kind="avatar" className="pf-avatar-portrait pf-avatar-illustration" />
 <AssetImage asset={faceReveal} kind="face" className="pf-avatar-portrait pf-avatar-photo" />
 </button> : <div className="pf-avatar-portraitButton"><AssetImage asset={asset} kind="avatar" /></div>}
 {faceReveal && <span className="pf-avatar-revealCue" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" focusable="false"><path d="M4 7.5h11l-3-3M16 12.5H5l3 3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg></span>}
 ${Object.entries(platformAssets).reduce((text, [name, url]) => text.replaceAll(`/assets/${name}`, url), classNames(art))}
-{decoration !== "none" && <button type="button" className="pf-avatar-playback" data-avatar-playback="" hidden><span className="pf-avatar-whenPlaying">Pause animation</span><span className="pf-avatar-whenPaused">Play animation</span></button>}
+{decoration !== "none" && !still && <button type="button" className="pf-avatar-playback" data-avatar-playback="" hidden><span className="pf-avatar-whenPlaying">Pause animation</span><span className="pf-avatar-whenPaused">Play animation</span></button>}
 </div></div></div>;
 }
 `;

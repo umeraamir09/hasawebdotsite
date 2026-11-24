@@ -268,13 +268,27 @@
   line-height: 24px;
   letter-spacing: -0.17px;
 }
+/* A section's editor under its back header (409:2175, 411:3276). */
 .editor-section-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   min-width: 0;
-  padding-top: 8px;
-  scroll-margin-top: 8px;
 }
-.owner-editor[data-layout="wide"] .editor-section-editor {
-  border-top: 1px solid var(--wb-line-hairline);
+/* The back header stays at the top while the editor scrolls. */
+.editor-section-editor > .editor-panel-header {
+  position: sticky;
+  z-index: 2;
+  top: 0;
+  margin: -12px -20px 0;
+  padding: 12px 20px 8px;
+  background: var(--wb-bg-panel);
+}
+.owner-editor[data-layout="compact"]
+  .editor-section-editor
+  > .editor-panel-header {
+  margin-inline: -16px;
+  padding-inline: 16px;
 }
 /* The top bar shows the save state; the panel's live status keeps
    announcing it. */

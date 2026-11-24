@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createGroupRunner } from "../support/groups.mjs";
 import { freePort } from "../support/ports.mjs";
-import { openPanel, resize } from "./shell.mjs";
+import { linkFields, openPanel, outline, resize } from "./shell.mjs";
 
 // Serves the editor, guide and owner-entry fixtures through a local proxy in
 // front of the owner runtime and opens one Chromium context. `core()` runs the
@@ -734,15 +734,12 @@ export async function createEditorHarness({
         await frame().waitForFunction(
           () => document.querySelector("h1")?.textContent === "Accepted name",
         );
-        await page
-          .getByLabel("Email address", { exact: true })
-          .fill("unfinished@");
-        assert.equal(
-          await page
-            .getByLabel("Email address", { exact: true })
-            .getAttribute("aria-invalid"),
-          "true",
+        const email = (await linkFields(page, "email-1")).getByLabel(
+          "Email address",
+          { exact: true },
         );
+        await email.fill("unfinished@");
+        assert.equal(await email.getAttribute("aria-invalid"), "true");
         assert.match(await frame().locator("main").innerText(), /Email me/);
         await page.evaluate(() => {
           const c = window.editorFixture.recovery.store.getState().controller;
@@ -751,10 +748,12 @@ export async function createEditorHarness({
           c.update(d);
         });
         assert.equal(
-          await page.getByLabel("Email address", { exact: true }).inputValue(),
+          await (await linkFields(page, "email-1"))
+            .getByLabel("Email address", { exact: true })
+            .inputValue(),
           "unfinished@",
         );
-        await page
+        await (await outline(page))
           .locator('.page-outline-sections [data-order-id="text-1"] button')
           .click();
         await page.getByLabel("Section title").fill("Accepted section");
@@ -789,7 +788,7 @@ export async function createEditorHarness({
           .waitFor({ state: "visible" });
         await frame().locator("[data-theme-toggle]").click();
         assert.equal(
-          await page
+          await (await outline(page))
             .getByRole("button", {
               name: "Skills and technologies",
               exact: true,
@@ -867,9 +866,8 @@ export async function createEditorHarness({
             );
             await page.waitForFunction(
               () =>
-                document.querySelector(
-                  'section[aria-label="Profile controls"] input',
-                )?.disabled,
+                document.querySelector('[data-publication-field="name"] input')
+                  ?.disabled,
             );
             assert.equal(
               await page.evaluate(() => {
@@ -903,7 +901,7 @@ export async function createEditorHarness({
               await page.waitForFunction(
                 () =>
                   document.querySelector(
-                    'section[aria-label="Profile controls"] input',
+                    '[data-publication-field="name"] input',
                   )?.value === "Restored owner",
               );
               assert.equal(
@@ -913,9 +911,8 @@ export async function createEditorHarness({
             }
             await page.waitForFunction(
               () =>
-                !document.querySelector(
-                  'section[aria-label="Profile controls"] input',
-                )?.disabled,
+                !document.querySelector('[data-publication-field="name"] input')
+                  ?.disabled,
             );
             await page
               .getByLabel("Name", { exact: true })
@@ -1101,7 +1098,9 @@ export async function createEditorHarness({
         await page
           .getByLabel("Name", { exact: true })
           .fill("Local review edit");
-        await page.getByLabel("Email address", { exact: true }).fill("raw@");
+        await (await linkFields(page, "email-1"))
+          .getByLabel("Email address", { exact: true })
+          .fill("raw@");
         const before = await page
           .locator("[data-editor-scope]")
           .getAttribute("data-editor-scope");
@@ -1139,14 +1138,16 @@ export async function createEditorHarness({
             document.querySelector("h1")?.textContent === "New controller edit",
         );
         assert.equal(
-          await page
+          await (await linkFields(page, "email-1"))
+            .getByLabel("Email address", { exact: true })
+            .inputValue(),
+          "raw@",
+        );
+        assert.equal(
+          await (await outline(page))
             .getByRole("button", { name: /^Profile\b/ })
             .getAttribute("aria-current"),
           "true",
-        );
-        assert.equal(
-          await page.getByLabel("Email address", { exact: true }).inputValue(),
-          "raw@",
         );
       },
     );

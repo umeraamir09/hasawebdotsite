@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { addSection } from "./shell.mjs";
+import { addSection, outline } from "./shell.mjs";
 
 // Phase 43: the contact form panel sets up the private recipient. The
 // account's verified email needs no link; another address is confirmed
@@ -41,10 +41,6 @@ export async function checkContactRecipientJourney({
       draft.samples = {};
       await boot(draft);
       const page = getPage();
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       await addSection(page, "Contact form");
       await panel().getByText("No recipient yet").waitFor();
       assert.equal(await state(), "none");
@@ -98,8 +94,10 @@ export async function checkContactRecipientJourney({
       });
       assert.equal(confirmed.status, 200);
       // Reopen the panel, which reads the recipient again.
-      await sections.getByRole("button", { name: /^Profile\b/ }).click();
-      await sections
+      await (await outline(page))
+        .getByRole("button", { name: /^Profile\b/ })
+        .click();
+      await (await outline(page))
         .getByRole("button", { name: "Contact form", exact: true })
         .click();
       await panel().getByText(`Messages go to ${inbox}`).waitFor();
@@ -136,10 +134,6 @@ export async function checkContactRecipientJourney({
         [portfolio, Date.now()],
       );
       const page = getPage();
-      const sections = page.getByRole("region", {
-        name: "Page",
-        exact: true,
-      });
       await addSection(page, "Contact form");
       const delivery = panel().getByRole("region", {
         name: "Message delivery",
@@ -185,8 +179,10 @@ export async function checkContactRecipientJourney({
           failedAt + 86_400_000,
         ],
       );
-      await sections.getByRole("button", { name: /^Profile\b/ }).click();
-      await sections
+      await (await outline(page))
+        .getByRole("button", { name: /^Profile\b/ })
+        .click();
+      await (await outline(page))
         .getByRole("button", { name: "Contact form", exact: true })
         .click();
       const failure = panel()

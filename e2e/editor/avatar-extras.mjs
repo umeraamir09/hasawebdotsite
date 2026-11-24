@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { openChecklist, openPanel } from "./shell.mjs";
+import {
+  chooseDecoration,
+  decorationGallery,
+  imageOptions,
+  openChecklist,
+  openPanel,
+  setFaceReveal,
+} from "./shell.mjs";
 
 // Phase 37: the owner controls for the approved Ginger cat and Hands
 // decorations and the optional Face Reveal second photo, from the editor
@@ -193,25 +200,36 @@ export async function checkAvatarExtrasJourney({
         return avatarShape(page, await response.text());
       };
 
-      // Controls live in the editor profile view, not in onboarding.
-      const extras = page.getByRole("region", {
-        name: "Avatar decoration and Face Reveal",
+      // Controls live in the editor's profile editor, not in onboarding.
+      const profile = page.getByRole("region", {
+        name: "Profile controls",
         exact: true,
       });
-      await extras.waitFor();
-      const decorations = extras.getByRole("group", {
-        name: "Avatar decoration",
-        exact: true,
-      });
-      const face = extras.getByRole("group", {
+      await profile.waitFor();
+      const faceToggle = profile.getByRole("switch", {
         name: "Face Reveal",
         exact: true,
       });
+      const faceIncomplete = () =>
+        profile
+          .getByRole("alert")
+          .getByText(/Add the second photo or turn Face Reveal off/);
 
       // A new draft has no decoration and Face Reveal off.
       let current = await saved();
       assert.equal("decorationId" in current.profile, false);
       assert.deepEqual(current.profile.faceReveal, { enabled: false });
+      assert.equal(
+        await profile
+          .getByRole("button", { name: /^Decoration\b/ })
+          .innerText(),
+        "Decoration\nNone",
+      );
+      let gallery = await decorationGallery(page);
+      const decorations = gallery.getByRole("group", {
+        name: "Avatar decoration",
+        exact: true,
+      });
       assert.deepEqual(
         await decorations
           .getByRole("radio")
@@ -219,53 +237,81 @@ export async function checkAvatarExtrasJourney({
         ["", "cat", "hands"],
       );
       assert.equal(
-        await decorations
-          .getByRole("radio", { name: "No decoration" })
-          .isChecked(),
+        await decorations.getByRole("radio", { name: "None" }).isChecked(),
         true,
       );
-      assert.equal(await face.getByRole("checkbox").isChecked(), false);
+      // Each tile is the renderer's avatar markup, drawn as a still.
+      await page.waitForFunction(() =>
+        [...document.querySelectorAll(".decoration-tile-thumb iframe")].every(
+          (frame) => frame.contentDocument?.querySelector(".pf-avatar-frame"),
+        ),
+      );
+      assert.deepEqual(
+        await gallery.locator("iframe").evaluateAll((frames) =>
+          frames.map((frame) => {
+            const avatar =
+              frame.contentDocument?.querySelector(".pf-avatar-frame");
+            return [
+              avatar?.dataset.decoration,
+              avatar?.dataset.playback ?? null,
+              Boolean(frame.contentDocument?.querySelector("button")),
+            ];
+          }),
+        ),
+        [
+          ["none", null, false],
+          ["cat", "paused", false],
+          ["hands", "paused", false],
+        ],
+      );
+      assert.equal(await faceToggle.getAttribute("aria-checked"), "false");
       assert.equal(
         await page.getByLabel("Upload Face Reveal photo").count(),
         0,
       );
       await waitForPreview("none");
 
-      // Select, change and remove. The saved value, preview and published
-      // page agree, and removal omits the key.
-      await decorations.getByRole("radio", { name: "Ginger cat" }).check();
+      // Select, change and remove with the gallery open: the preview behind
+      // it follows each choice. The saved value, preview and published page
+      // agree, and removal omits the key.
+      await decorations.getByRole("radio", { name: "Ginger cat" }).click();
       await waitForPreview("cat");
       current = await saved();
       assert.equal(current.profile.decorationId, "cat");
       const catPreview = await previewShape();
-      await decorations.getByRole("radio", { name: "Hands" }).check();
+      await decorations.getByRole("radio", { name: "Hands" }).click();
       await waitForPreview("hands");
       current = await saved();
       assert.equal(current.profile.decorationId, "hands");
       const handsPreview = await previewShape();
       assert.notEqual(catPreview.html, handsPreview.html);
-      await decorations.getByRole("radio", { name: "No decoration" }).check();
+      await decorations.getByRole("radio", { name: "None" }).click();
       await waitForPreview("none");
       const rawRemoved = await savedRow();
       assert.equal("decorationId" in JSON.parse(rawRemoved).profile, false);
       assert.equal(rawRemoved.includes("decorationId"), false);
       assert.equal(rawRemoved.includes('"decorationId":null'), false);
 
-      // Keyboard operation of the native radios.
-      await decorations.getByRole("radio", { name: "No decoration" }).focus();
-      await page.keyboard.press("ArrowDown");
+      // Keyboard: arrows move between tiles and choose; Escape closes the
+      // gallery and returns focus to the Decoration row.
+      await decorations.getByRole("radio", { name: "None" }).focus();
+      await page.keyboard.press("ArrowRight");
       await waitForPreview("cat");
       assert.equal((await saved()).profile.decorationId, "cat");
+      await page.keyboard.press("Escape");
+      await gallery.waitFor({ state: "detached" });
+      assert.equal(
+        await page.evaluate(() => document.activeElement?.textContent),
+        "DecorationGinger cat",
+      );
+      gallery = null;
 
       // Face Reveal on without a second photo: an error beside the input, and
       // publication blocked.
-      await face.getByRole("checkbox").check();
-      await face
-        .getByRole("alert")
-        .getByText(/Add the second photo or turn Face Reveal off/)
-        .waitFor();
+      await setFaceReveal(page, true);
+      await faceIncomplete().waitFor();
       assert.match(
-        await face.innerText(),
+        await profile.innerText(),
         /publicly accessible, even before anyone reveals it/,
       );
       await flush();
@@ -305,7 +351,8 @@ export async function checkAvatarExtrasJourney({
       await upload
         .getByText("Upload complete. Your draft image is ready.")
         .waitFor({ timeout: 60000 });
-      await face.getByRole("alert").waitFor({ state: "detached" });
+      await faceIncomplete().waitFor({ state: "detached" });
+      await imageOptions(page, "Face Reveal photo");
       await upload.getByLabel("Face Reveal photo description").fill("Me");
       current = await saved();
       const faceAsset = current.profile.faceReveal.image.assetId;
@@ -332,13 +379,11 @@ export async function checkAvatarExtrasJourney({
 
       // Replace keeps the earlier photo until the new one is ready, and
       // remove returns the enabled add-on to incomplete.
+      await imageOptions(page, "Face Reveal photo");
       await upload
         .getByRole("button", { name: "Remove Face Reveal photo" })
         .click();
-      await face
-        .getByRole("alert")
-        .getByText(/Add the second photo or turn Face Reveal off/)
-        .waitFor();
+      await faceIncomplete().waitFor();
       current = await saved();
       assert.equal(current.profile.faceReveal.enabled, true);
       assert.equal("image" in current.profile.faceReveal, false);
@@ -368,7 +413,7 @@ export async function checkAvatarExtrasJourney({
           (
             await window.axe.run(
               {
-                include: [['[aria-label="Avatar decoration and Face Reveal"]']],
+                include: [[".profile-editor-card"], [".profile-editor-rows"]],
               },
               {
                 runOnly: {
@@ -388,6 +433,32 @@ export async function checkAvatarExtrasJourney({
         path: `${evidence}/avatar-extras-editor.png`,
         fullPage: true,
       });
+      gallery = await decorationGallery(page);
+      assert.deepEqual(
+        await page.evaluate(async () =>
+          (
+            await window.axe.run(
+              { include: [[".wb-dialog"]] },
+              {
+                runOnly: {
+                  type: "tag",
+                  values: ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"],
+                },
+              },
+            )
+          ).violations.map(({ id, nodes }) => ({
+            id,
+            nodes: nodes.map((node) => node.target),
+          })),
+        ),
+        [],
+      );
+      await page.screenshot({
+        path: `${evidence}/avatar-extras-gallery.png`,
+        fullPage: true,
+      });
+      await page.keyboard.press("Escape");
+      await gallery.waitFor({ state: "detached" });
 
       // Publish with the cat and Face Reveal on. The published avatar equals
       // the preview, the cat art ships with the version, and the second photo
@@ -405,7 +476,7 @@ export async function checkAvatarExtrasJourney({
       assert.equal((await publicRead(`${prefix}${faceAsset}`)).status, 404);
 
       // Change to Hands and republish: the cat art leaves the version.
-      await decorations.getByRole("radio", { name: "Hands" }).check();
+      await chooseDecoration(page, "Hands");
       await waitForPreview("hands");
       const handsShape = await previewShape();
       await publish();
@@ -417,9 +488,8 @@ export async function checkAvatarExtrasJourney({
 
       // Remove the decoration and turn Face Reveal off: republishing removes
       // public access to the second photo, and the private draft keeps it.
-      await decorations.getByRole("radio", { name: "No decoration" }).check();
-      await face.getByRole("checkbox").uncheck();
-      await face.getByText(/saved privately in this draft/).waitFor();
+      await chooseDecoration(page, "None");
+      await setFaceReveal(page, false);
       assert.equal(
         await page.getByLabel(/^(Upload|Replace) Face Reveal photo$/).count(),
         0,
@@ -441,9 +511,8 @@ export async function checkAvatarExtrasJourney({
       );
 
       // Re-enabling restores the retained photo without a new upload.
-      await face.getByRole("checkbox").check();
-      await page
-        .getByRole("region", { name: "Face Reveal photo image", exact: true })
+      await setFaceReveal(page, true);
+      await (await imageOptions(page, "Face Reveal photo"))
         .getByRole("button", { name: "Remove Face Reveal photo" })
         .waitFor();
       assert.equal(

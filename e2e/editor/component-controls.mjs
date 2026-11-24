@@ -66,8 +66,7 @@ export async function checkComponentControls({
         .getByLabel("Section title", { exact: true })
         .fill("Second story");
       await addSection(page, "Skills and technologies");
-      const sections = await outline(page);
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Add section", exact: true })
         .first()
         .click();
@@ -103,7 +102,7 @@ export async function checkComponentControls({
       await page.keyboard.press("Escape");
       await gallery.waitFor({ state: "hidden" });
       assert.equal(
-        await sections
+        await (await outline(page))
           .getByRole("button", { name: "Add section", exact: true })
           .first()
           .evaluate((node) => node === document.activeElement),
@@ -137,20 +136,20 @@ export async function checkComponentControls({
           ?.hasAttribute("data-editor-selected"),
       projects,
     );
-    // Canvas to outline and panel.
+    // Canvas to panel and outline: a click opens that section's editor,
+    // and the outline marks it once the owner goes back.
     await frame()
       .locator(`[data-component-id="${story}"]`)
       .click({ position: { x: 12, y: 12 } });
-    await page.waitForFunction(
-      () =>
-        document
-          .querySelector('.page-outline [aria-current="true"]')
-          ?.getAttribute("aria-label") === "My story",
-    );
+    await page
+      .locator(".editor-section-editor .editor-panel-title")
+      .getByText("My story", { exact: true })
+      .waitFor();
     assert.equal(
       await page.getByLabel("Section title", { exact: true }).inputValue(),
       "My story",
     );
+    assert.equal(await currentRow(), "My story");
     // Outline to canvas.
     await (await outline(page))
       .getByRole("button", { name: /^Profile\b/ })
@@ -161,7 +160,14 @@ export async function checkComponentControls({
         ?.hasAttribute("data-editor-selected"),
     );
     assert.deepEqual(await selectedInFrame(), ["profile"]);
-    // Arrow keys on the outline move the selection; the canvas follows.
+    // Back from the editor focuses the selected row; arrow keys on the
+    // outline move the selection and the canvas follows.
+    await page
+      .getByRole("button", { name: "Back to page", exact: true })
+      .click();
+    await page.waitForFunction(() =>
+      document.activeElement?.matches('.page-outline [aria-current="true"]'),
+    );
     await page.keyboard.press("ArrowDown");
     assert.equal(await currentRow(), "My story");
     await frame().waitForFunction(
@@ -174,12 +180,11 @@ export async function checkComponentControls({
     // Keyboard selection on the canvas reaches the outline.
     await frame().locator(`[data-component-id="${projects}"]`).focus();
     await frame().locator(`[data-component-id="${projects}"]`).press("Enter");
-    await page.waitForFunction(
-      () =>
-        document
-          .querySelector('.page-outline [aria-current="true"]')
-          ?.getAttribute("aria-label") === "Projects",
-    );
+    await page
+      .locator(".editor-section-editor .editor-panel-title")
+      .getByText("Projects", { exact: true })
+      .waitFor();
+    assert.equal(await currentRow(), "Projects");
     // Hover shows a dashed outline and tag on another section.
     await frame()
       .locator("[data-component=profile]")
@@ -216,23 +221,22 @@ export async function checkComponentControls({
       await page.getByLabel("Section title", { exact: true }).fill("My story");
       await addSection(page, "Projects");
       const before = await outlineOrder(page);
-      const sections = await outline(page);
       // Alt with an arrow key on an outline row.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Projects", exact: true })
         .press("Alt+ArrowUp");
       assert.deepEqual(await outlineOrder(page), [before[1], before[0]]);
       assert.equal(
-        await sections
+        await (await outline(page))
           .getByRole("button", { name: "Projects", exact: true })
           .evaluate((node) => node === document.activeElement),
         true,
       );
       // Pointer drag of a row.
-      const source = await sections
+      const source = await (await outline(page))
         .getByRole("button", { name: "Projects", exact: true })
         .boundingBox();
-      const target = await sections
+      const target = await (await outline(page))
         .getByRole("button", { name: "My story", exact: true })
         .boundingBox();
       assert.ok(source && target);
@@ -244,7 +248,7 @@ export async function checkComponentControls({
       // dnd-kit briefly suppresses clicks after a pointer drag.
       await page.waitForTimeout(100);
       // The selected section's canvas actions.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "Projects", exact: true })
         .click();
       const toolbar = frame().getByRole("toolbar", {
@@ -258,6 +262,8 @@ export async function checkComponentControls({
         true,
       );
       await toolbar.getByRole("button", { name: "Move Projects up" }).click();
+      // Choosing the row opened its editor; the order shows in the outline.
+      await outline(page);
       await page.waitForFunction(
         (id) =>
           document.querySelector(".page-outline-sections [data-order-id]")
@@ -280,7 +286,7 @@ export async function checkComponentControls({
         before,
       );
       // Removal from the canvas asks first; Cancel changes nothing.
-      await sections
+      await (await outline(page))
         .getByRole("button", { name: "My story", exact: true })
         .click();
       await frame()
@@ -447,8 +453,7 @@ export async function checkComponentControls({
         },
       ];
       await boot(draft);
-      const sections = await outline(getPage());
-      await sections
+      await (await outline(getPage()))
         .getByRole("button", { name: "Skills and technologies", exact: true })
         .click();
       await getPage()

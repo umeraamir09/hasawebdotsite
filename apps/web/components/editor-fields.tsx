@@ -3,18 +3,42 @@
 import type { PreviewSelection } from "@hasaweb/components/browser";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
-import { AvatarExtrasControls } from "./avatar-extras-controls";
 import { ContactControls } from "./contact-controls";
 import { GitHubControls } from "./github-controls";
-import { ProfileControls } from "./profile-controls";
+import { LinksEditor } from "./links-editor";
+import { ProfileEditor } from "./profile-editor";
 import { ProjectControls } from "./project-controls";
 import { ResumeControls } from "./resume-controls";
 import { SkillsControls } from "./skills-controls";
-import { SocialLinksControl } from "./social-links-control";
 import { TextControls } from "./text-controls";
 import { WorkExperienceControls } from "./work-experience-controls";
 
-export function EditorFields({
+// The Build panel's editor for the selected section. The profile editor is
+// built from Workbench controls; the section editors still use the earlier
+// controls until they move over.
+export function EditorFields(props: Parameters<typeof SectionFields>[0]) {
+  if (props.selection.kind === "profile")
+    return (
+      <ProfileEditor controller={props.controller} disabled={props.disabled} />
+    );
+  // Sections on Workbench controls render without the earlier styles.
+  const selected = props.selection;
+  const modern =
+    selected.kind === "component" &&
+    props.controller.store
+      .getState()
+      .working?.components.some(
+        (item) => item.id === selected.id && item.type === "social-links",
+      );
+  if (modern) return <SectionFields {...props} />;
+  return (
+    <div className="editor-legacy">
+      <SectionFields {...props} />
+    </div>
+  );
+}
+
+function SectionFields({
   controller,
   selection,
   disabled,
@@ -28,18 +52,17 @@ export function EditorFields({
   const state = useStore(controller.store);
   const draft = state.working;
   if (!draft) return <p>Opening your draft...</p>;
-  if (selection.kind === "profile")
-    return (
-      <>
-        <ProfileControls controller={controller} disabled={disabled} />
-        <AvatarExtrasControls controller={controller} disabled={disabled} />
-        <SocialLinksControl controller={controller} disabled={disabled} />
-      </>
-    );
+  if (selection.kind === "profile") return null;
   const component = draft.components.find((item) => item.id === selection.id);
   if (!component) return null;
   if (component.type === "social-links")
-    return <SocialLinksControl controller={controller} disabled={disabled} />;
+    return (
+      <LinksEditor
+        controller={controller}
+        disabled={disabled}
+        placement="showInSocialComponent"
+      />
+    );
   if (component.type === "projects")
     return (
       <ProjectControls

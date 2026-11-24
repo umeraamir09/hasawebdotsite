@@ -1,0 +1,153 @@
+/* Links (Figma 409:2342, 409:2344, 409:2408) */
+.links-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.links-editor-title {
+  margin: 0;
+  padding-top: 4px;
+  color: var(--wb-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+}
+/* No overflow clipping, so a row's popover can open below it. */
+.links-editor-list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--wb-line-hairline);
+  border-radius: 14px;
+  list-style: none;
+}
+.links-editor-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 0 6px 0 8px;
+  background: var(--wb-bg-panel);
+}
+.links-editor-row:first-child {
+  border-radius: 13px 13px 0 0;
+}
+.links-editor-row:last-child {
+  border-radius: 0 0 13px 13px;
+}
+.links-editor-row:only-child {
+  border-radius: 13px;
+}
+.links-editor-row + .links-editor-row {
+  border-top: 1px solid var(--wb-line-hairline);
+}
+.links-editor-row:has([aria-expanded="true"]) {
+  z-index: 1;
+}
+.links-editor-grip {
+  display: grid;
+  flex: none;
+  place-items: center;
+  color: var(--wb-text-tertiary);
+  cursor: grab;
+  touch-action: none;
+}
+.links-editor-row .wb-popover-anchor {
+  flex: 1;
+  min-width: 0;
+}
+.links-editor-open {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--wb-text-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: left;
+  cursor: pointer;
+}
+.links-editor-open:focus-visible {
+  outline: 2px solid var(--wb-signal-base);
+  outline-offset: 2px;
+}
+.links-editor-open > .wb-icon {
+  flex: none;
+}
+.links-editor-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.links-editor-row[data-hidden] .links-editor-value,
+.links-editor-row[data-hidden] .links-editor-open > .wb-icon {
+  color: var(--wb-text-tertiary);
+}
+.links-editor-row[data-invalid] .links-editor-open > .wb-icon:last-child {
+  color: var(--wb-danger-base);
+}
+.links-editor-eye.wb-icon-button {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  color: var(--wb-text-secondary);
+}
+.links-editor-row[data-hidden] .links-editor-eye.wb-icon-button {
+  color: var(--wb-text-tertiary);
+}
+.links-editor-fields {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  width: 300px;
+  max-width: 100%;
+}
+.links-editor-suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: -4px;
+}
+.links-editor-suggested {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 4px 4px 10px;
+  border-radius: 10px;
+  background: var(--wb-bg-sunken);
+}
+.links-editor-suggested strong {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.links-editor-note,
+.links-editor-issue {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.links-editor-note {
+  color: var(--wb-text-secondary);
+}
+.links-editor-issue {
+  color: var(--wb-danger-base);
+}
+.owner-editor[data-layout="compact"] .links-editor .wb-field-input {
+  font-size: 16px;
+}

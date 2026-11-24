@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink } from "./links.mjs";
-import { openChecklist } from "./shell.mjs";
+import { openChecklist, openSection } from "./shell.mjs";
 
 // Phase 42F: the Phase 15 callback continuation and the complete new-user
 // journey through the production guide, Review, handoff, editor and Publish.
@@ -845,13 +845,11 @@ export async function checkGuideJourney({
       });
 
       // Repair in the editor: complete the project, use public activity only.
-      await page.getByRole("button", { name: "Projects", exact: true }).click();
+      await openSection(page, "Projects");
       await page
         .getByLabel("Summary", { exact: true })
         .fill("Finished in the editor.");
-      await page
-        .getByRole("button", { name: "GitHub activity", exact: true })
-        .click();
+      await openSection(page, "GitHub activity");
       await page
         .getByRole("region", { name: "GitHub activity controls", exact: true })
         .getByRole("button", { name: "Use public activity only" })

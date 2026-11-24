@@ -1,10 +1,10 @@
 "use client";
 
-import { emailSchema } from "@hasaweb/schema";
 import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { readEditorField } from "../lib/editor/fields";
+import { accountEmailSuggestion } from "../lib/editor/provider-suggestions";
 import {
   addSocialLink,
   editSocialDestination,
@@ -72,33 +72,11 @@ function LinksControl({ controller, disabled }: Props) {
     request.current = pending;
     setSuggestion({ kind: "loading" });
     try {
-      const response = await fetch("/api/owner?include=email-suggestion", {
-        cache: "no-store",
-        headers: { "X-Expected-Owner-Id": controller.identity.ownerId },
+      const email = await accountEmailSuggestion({
+        ...controller.identity,
         signal: pending.signal,
       });
-      if (!response.ok) throw new Error("Suggestion unavailable");
-      const result: unknown = await response.json();
-      if (
-        !result ||
-        typeof result !== "object" ||
-        !("emailSuggestion" in result) ||
-        !("user" in result) ||
-        !result.user ||
-        typeof result.user !== "object" ||
-        !("id" in result.user) ||
-        result.user.id !== controller.identity.ownerId ||
-        !("portfolio" in result) ||
-        !result.portfolio ||
-        typeof result.portfolio !== "object" ||
-        !("id" in result.portfolio) ||
-        result.portfolio.id !== controller.identity.portfolioId
-      )
-        throw new Error("Suggestion identity changed");
-      const email = emailSchema.safeParse(result.emailSuggestion);
-      if (!email.success) throw new Error("No email suggestion");
-      if (!pending.signal.aborted)
-        setSuggestion({ kind: "ready", email: email.data });
+      if (!pending.signal.aborted) setSuggestion({ kind: "ready", email });
     } catch {
       if (!pending.signal.aborted) setSuggestion({ kind: "unavailable" });
     }

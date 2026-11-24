@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { openSection, resize } from "./shell.mjs";
+import { imageOptions, openSection, resize } from "./shell.mjs";
 
 export async function checkProfileControls({
   getPage,
@@ -52,7 +52,7 @@ export async function checkProfileControls({
     await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
       `https://avatars.githubusercontent.com/fixture/${mode}`,
     ]);
-    await getPage()
+    await (await imageOptions(getPage(), "Avatar"))
       .getByRole("button", { name: "Use my account photo", exact: true })
       .click();
   }
@@ -155,11 +155,11 @@ export async function checkProfileControls({
       const fieldStyle = await profile()
         .getByLabel("Name", { exact: true })
         .evaluate((input) => ({
-          height: input.getBoundingClientRect().height,
+          height: input.closest(".wb-field-box").getBoundingClientRect().height,
           fontSize: getComputedStyle(input).fontSize,
         }));
-      assert.ok(fieldStyle.height >= 48);
-      assert.equal(fieldStyle.fontSize, "16px");
+      assert.ok(fieldStyle.height >= 40);
+      assert.equal(fieldStyle.fontSize, "14px");
       await profile()
         .getByLabel("Bio", { exact: true })
         .fill("I make useful things.\nFor people everywhere.");
@@ -227,7 +227,7 @@ export async function checkProfileControls({
       await avatar()
         .getByText("Upload complete. Your draft image is ready.")
         .waitFor();
-      await avatar()
+      await (await imageOptions(getPage(), "Avatar"))
         .getByLabel("Avatar description", { exact: true })
         .fill("Green middle of my account photo");
       await flush();
@@ -284,6 +284,7 @@ export async function checkProfileControls({
       });
       await getPage().reload();
       await getPage().waitForFunction(() => window.editorFixture?.ready);
+      await imageOptions(getPage(), "Avatar");
       assert.equal(
         await avatar()
           .getByLabel("Avatar description", { exact: true })
@@ -337,7 +338,7 @@ export async function checkProfileControls({
       await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
         "https://lh3.googleusercontent.com/fixture/valid",
       ]);
-      await getPage()
+      await (await imageOptions(getPage(), "Avatar"))
         .getByRole("button", { name: "Use my account photo", exact: true })
         .click();
       await getPage().getByRole("dialog", { name: "Adjust avatar" }).waitFor();
@@ -348,14 +349,18 @@ export async function checkProfileControls({
       await sql("UPDATE user SET image=NULL WHERE id='draft-alice'");
       await getPage()
         .getByRole("button", {
+          name: "Dismiss account suggestions",
+          exact: true,
+        })
+        .click();
+      await getPage()
+        .getByRole("button", {
           name: "Check my account suggestions",
           exact: true,
         })
         .click();
       await profile()
-        .getByText(
-          "Your account has no supported photo. Upload an avatar below.",
-        )
+        .getByText("Your account has no supported photo.")
         .waitFor();
       assert.equal(
         await getPage()
