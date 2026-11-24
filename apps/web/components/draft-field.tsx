@@ -18,6 +18,7 @@ export function DraftField({
   path,
   multiline = false,
   lead,
+  maxLength,
   publicationField,
 }: {
   controller: DraftController;
@@ -26,6 +27,9 @@ export function DraftField({
   path: FieldPath;
   multiline?: boolean;
   lead?: IconName | undefined;
+  // Shows the live count against this limit. The field still holds a longer
+  // saved value, so the owner can see and shorten it.
+  maxLength?: number | undefined;
   // The key the publication checklist focuses this field by.
   publicationField?: string | undefined;
 }) {
@@ -45,6 +49,7 @@ export function DraftField({
         <Area
           {...common}
           rows={4}
+          maxLength={maxLength}
           onChange={(event) =>
             editEditorField(controller, path, event.target.value)
           }

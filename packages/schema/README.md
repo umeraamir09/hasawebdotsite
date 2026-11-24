@@ -24,7 +24,7 @@ Version 2 adds optional `requestedSubdomain` with the existing 3–30 lowercase 
 
 ## Document and component rules
 
-The fixed `profile` contains name, bio, optional location, optional avatar/banner references, a decoration catalog ID and Face Reveal settings. Avatar acceptance is an explicit boolean. `faceReveal.image` remains in the private draft when `enabled` is false. Images refer to an opaque `assetId` and optional `alt`; crops are represented by the uploaded cropped asset. No storage URL or upload body is stored here.
+The fixed `profile` contains name, bio, optional location, optional avatar/banner references, a decoration catalog ID and Face Reveal settings. Avatar acceptance is an explicit boolean. `BIO_MAX` (160) is the bio limit for setup and Publish; the schema itself accepts a longer bio so older drafts still load. `faceReveal.image` remains in the private draft when `enabled` is false. Images refer to an opaque `assetId` and optional `alt`; crops are represented by the uploaded cropped asset. No storage URL or upload body is stored here.
 
 `links` is the single ordered list of social/contact entries. Each has an ID, label, kind, value, `showInProfile` and `showInSocialComponent`. Email values are plain addresses. Other values are HTTP(S) URLs. The social-links component has no duplicate entry collection. Its order follows `links`.
 
