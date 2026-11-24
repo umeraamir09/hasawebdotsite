@@ -1,6 +1,15 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addSection, openChecklist, openPanel, outline } from "./shell.mjs";
+import {
+  addSection,
+  linkFields,
+  linkRow,
+  linksRegion,
+  openChecklist,
+  openPanel,
+  outline,
+  setLinkShown,
+} from "./shell.mjs";
 
 function parse(page, html) {
   return page.evaluate((markup) => {
@@ -153,11 +162,7 @@ export async function checkSocialLinksJourney({
             )
           )[0].links,
         );
-      const control = page.getByRole("region", {
-        name: "Social and contact links",
-        exact: true,
-      });
-      const entry = (id) => control.locator(`[data-link-id="${id}"]`);
+      const control = linksRegion(page);
 
       // Add the optional component from the picker; no link is re-entered.
       await addSection(page, "Social links");
@@ -180,8 +185,8 @@ export async function checkSocialLinksJourney({
       ]);
 
       // One edit of the shared record updates both placements after Publish.
-      await entry("website")
-        .getByLabel("Destination URL", { exact: true })
+      await (await linkFields(page, "website"))
+        .getByLabel("Web address", { exact: true })
         .fill("https://example.com/updated");
       await flush();
       const links = await storedLinks();
@@ -202,12 +207,8 @@ export async function checkSocialLinksJourney({
 
       // Placements are independent: add the second link to the component and
       // remove the first from it. Profile placement is unchanged.
-      await entry("profile-only")
-        .getByLabel("Show in social links component", { exact: true })
-        .check();
-      await entry("website")
-        .getByLabel("Show in social links component", { exact: true })
-        .uncheck();
+      await setLinkShown(page, "profile-only", true);
+      await setLinkShown(page, "website", false);
       await publish();
       home = await read();
       assert.deepEqual(
@@ -220,9 +221,9 @@ export async function checkSocialLinksJourney({
       );
 
       // Shared order drives both placements.
-      await entry("profile-only")
-        .getByRole("button", { name: "Move up", exact: true })
-        .click();
+      await linkRow(page, "profile-only")
+        .locator(".links-editor-open")
+        .press("Alt+ArrowUp");
       await publish();
       home = await read();
       assert.deepEqual(
@@ -231,9 +232,7 @@ export async function checkSocialLinksJourney({
       );
 
       // A component with no selected link blocks publication.
-      await entry("profile-only")
-        .getByLabel("Show in social links component", { exact: true })
-        .uncheck();
+      await setLinkShown(page, "profile-only", false);
       await flush();
       await (await checklist())
         .getByRole("button", { name: "Publish", exact: true })

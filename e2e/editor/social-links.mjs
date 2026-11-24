@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { addLink } from "./links.mjs";
-import { openSection, outline, resize } from "./shell.mjs";
+import {
+  linkFields,
+  linkRow,
+  linksRegion,
+  openSection,
+  pasteLink,
+  resize,
+  setLinkShown,
+} from "./shell.mjs";
 
 export async function checkSocialLinks({
   getPage,
@@ -14,8 +21,7 @@ export async function checkSocialLinks({
   evidence,
   browserOrigin,
 }) {
-  const control = () =>
-    getPage().getByRole("region", { name: "Social and contact links" });
+  const control = () => linksRegion(getPage());
   const entries = () => control().locator("[data-link-id]");
   const flush = () =>
     getPage().evaluate(() =>
@@ -101,148 +107,130 @@ export async function checkSocialLinks({
     "social links shared placements, stable ordering and raw recovery",
     async () => {
       const page = await clean({ social: true });
-      await control()
-        .getByRole("button", { name: "Add link", exact: true })
-        .click();
-      const first = entries().first();
-      assert.equal(
-        await first
-          .getByLabel("Link label", { exact: true })
-          .getAttribute("aria-invalid"),
-        "true",
-      );
-      await first
-        .getByText(
-          "Add an understandable label, such as My website or Email.",
-          { exact: true },
-        )
-        .waitFor();
-      await first.getByLabel("Link label", { exact: true }).fill("My work");
-      await first
-        .getByLabel("Destination URL", { exact: true })
-        .fill("https://example.com/work");
-      await first
-        .getByLabel("Show in social links component", { exact: true })
-        .check();
+      // A pasted address becomes a profile link with a default label.
+      await pasteLink(page, "example.com/work");
+      await entries().first().waitFor();
       await flush();
+      const [work] = await storedLinks();
+      assert.deepEqual(
+        { ...work, id: undefined },
+        {
+          id: undefined,
+          kind: "website",
+          label: "Website",
+          value: "https://example.com/work",
+          showInProfile: true,
+          showInSocialComponent: false,
+        },
+      );
       await displayed();
       await frame()
-        .getByRole("link", { name: "My work", exact: true })
-        .first()
+        .locator('.pf-profile a[href="https://example.com/work"]')
         .waitFor();
+      // The Social links section shows the same link with its own eye.
+      await openSection(page, "Social links");
+      assert.equal(await entries().count(), 1);
       assert.equal(
-        await frame()
-          .getByRole("link", { name: "My work", exact: true })
-          .count(),
-        2,
+        await linkRow(page, work.id)
+          .locator(".links-editor-eye")
+          .getAttribute("aria-pressed"),
+        "false",
       );
-      const original = await storedLinks();
-      assert.equal(original.length, 1);
-      await first
-        .getByLabel("Destination URL", { exact: true })
-        .fill("https://example.com/updated");
+      await setLinkShown(page, work.id, true);
       await frame().waitForFunction(
         () =>
-          [
-            ...document.querySelectorAll(
-              'a[href="https://example.com/updated"]',
-            ),
-          ].length === 2,
+          document.querySelectorAll('a[href="https://example.com/work"]')
+            .length === 2,
       );
-      await addLink(control());
-      const second = entries().nth(1);
-      await second.getByLabel("Link label", { exact: true }).fill("Say hello");
-      await second
-        .getByLabel("Link type", { exact: true })
-        .selectOption("email");
-      await second
-        .getByLabel("Email address", { exact: true })
-        .fill("hello@example.com");
-      await second
-        .getByRole("button", { name: "Move up", exact: true })
-        .click();
+      // One edit of the shared link updates both placements.
+      const fields = await linkFields(page, work.id);
+      await fields.getByLabel("Label", { exact: true }).fill("My work");
+      await fields
+        .getByLabel("Web address", { exact: true })
+        .fill("https://example.com/updated");
+      await frame().waitForFunction(() => {
+        const links = [
+          ...document.querySelectorAll('a[href="https://example.com/updated"]'),
+        ];
+        return (
+          links.length === 2 &&
+          links.every((link) => link.textContent === "My work")
+        );
+      });
+      await page.keyboard.press("Escape");
+      // A link pasted here starts in this placement only.
+      await pasteLink(page, "mailto:hello@example.com");
+      await entries().nth(1).waitFor();
       await flush();
-      const reordered = await storedLinks();
-      assert.equal(reordered[1].id, original[0].id);
-      assert.equal(reordered[1].value, "https://example.com/updated");
-      await frame()
-        .locator('.pf-profile a[href="mailto:hello@example.com"]')
-        .waitFor();
-      const website = entries().nth(1);
-      await website
-        .getByLabel("Link type", { exact: true })
-        .selectOption("email");
-      await website
-        .getByLabel("Email address", { exact: true })
-        .fill("unfinished@");
-      assert.equal((await flush()).hasLocalOnlyInput, true);
-      assert.equal(
-        (await storedLinks())[1].value,
-        "https://example.com/updated",
+      const [, hello] = await storedLinks();
+      assert.equal(hello.kind, "email");
+      assert.equal(hello.label, "Email");
+      assert.equal(hello.showInProfile, false);
+      assert.equal(hello.showInSocialComponent, true);
+      // Alt with an arrow key moves a row and keeps its focus.
+      const helloButton = linkRow(page, hello.id).locator(".links-editor-open");
+      await helloButton.press("Alt+ArrowUp");
+      await flush();
+      assert.deepEqual(
+        (await storedLinks()).map((link) => link.id),
+        [hello.id, work.id],
       );
+      assert.equal(
+        await helloButton.evaluate((node) => node === document.activeElement),
+        true,
+      );
+      // The grip drags a row with a pointer.
+      const grip = await linkRow(page, work.id)
+        .locator(".links-editor-grip")
+        .boundingBox();
+      const target = await linkRow(page, hello.id).boundingBox();
+      assert.ok(grip && target);
+      await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2);
+      await page.mouse.down();
+      await page.mouse.move(target.x + 20, target.y + 4, { steps: 15 });
+      await page.mouse.up();
+      await flush();
+      assert.deepEqual(
+        (await storedLinks()).map((link) => link.id),
+        [work.id, hello.id],
+      );
+      await page.waitForTimeout(100);
+      // Unfinished input stays local and survives a reload.
+      const email = (await linkFields(page, hello.id)).getByLabel(
+        "Email address",
+        { exact: true },
+      );
+      await email.fill("unfinished@");
+      assert.equal(await email.getAttribute("aria-invalid"), "true");
+      assert.equal((await flush()).hasLocalOnlyInput, true);
+      assert.equal((await storedLinks())[1].value, "hello@example.com");
       await page.reload();
       await page.waitForFunction(() => window.editorFixture?.ready);
       await page
         .getByRole("button", { name: "Continue preserved edits", exact: true })
         .click();
-      await page.getByLabel("Email address", { exact: true }).nth(1).waitFor();
+      await entries().first().waitFor();
       assert.equal(
-        await entries()
-          .nth(1)
+        await (await linkFields(page, hello.id))
           .getByLabel("Email address", { exact: true })
           .inputValue(),
         "unfinished@",
       );
-      assert.equal(
-        await entries().nth(1).getAttribute("data-link-id"),
-        original[0].id,
-      );
-      await entries()
-        .nth(1)
-        .getByRole("button", { name: "Move up", exact: true })
-        .click();
-      assert.equal(
-        await entries()
-          .first()
-          .getByLabel("Email address", { exact: true })
-          .inputValue(),
-        "unfinished@",
-      );
-      await entries()
-        .first()
+      await (await linkFields(page, hello.id))
         .getByLabel("Email address", { exact: true })
         .fill("work@example.com");
       await flush();
-      await frame().waitForFunction(
-        () =>
-          [...document.querySelectorAll('a[href="mailto:work@example.com"]')]
-            .length === 2,
-      );
-      await (await outline(page))
-        .getByRole("button", { name: "Social links", exact: true })
-        .click();
-      assert.equal(await entries().count(), 2);
-      await entries()
+      await frame()
+        .locator('a[href="mailto:work@example.com"]')
         .first()
-        .getByLabel("Link label", { exact: true })
-        .fill("Work contact");
-      await frame().waitForFunction(() => {
-        const links = [
-          ...document.querySelectorAll('a[href="mailto:work@example.com"]'),
-        ];
-        return (
-          links.length === 2 &&
-          links.every((link) => link.textContent === "Work contact")
-        );
-      });
-      await entries()
-        .first()
-        .getByLabel("Show in profile", { exact: true })
-        .uncheck();
+        .waitFor();
+      // Hiding a link in the profile leaves the stored link alone.
+      await openSection(page, "Profile");
+      await setLinkShown(page, work.id, false);
       await flush();
       await frame().waitForFunction(
         () =>
-          document.querySelectorAll('a[href="mailto:work@example.com"]')
+          document.querySelectorAll('a[href="https://example.com/updated"]')
             .length === 1,
       );
       assert.equal((await storedLinks()).length, 2);
@@ -256,31 +244,33 @@ export async function checkSocialLinks({
     "social links deliberate public email acceptance, removal and mobile keyboard",
     async () => {
       const page = await clean();
-      assert.match(await control().innerText(), /contact form alone/);
-      assert.match(await control().innerText(), /Add at least one valid link/);
-      await control()
-        .getByRole("button", { name: "Suggest account email", exact: true })
-        .click();
-      await control()
-        .getByRole("button", { name: "Use email as public link", exact: true })
-        .waitFor();
-      assert.match(await control().innerText(), /public profile link/);
-      assert.match(await control().innerText(), /private recipient/);
+      const suggest = () =>
+        control().getByRole("button", {
+          name: "Use my account email",
+          exact: true,
+        });
+      const accept = () =>
+        control().getByRole("button", {
+          name: "Add as public link",
+          exact: true,
+        });
+      await suggest().click();
+      await accept().waitFor();
+      assert.match(
+        await control().innerText(),
+        /Visitors see this address after you publish/,
+      );
       assert.deepEqual(await storedLinks(), []);
       assert.doesNotMatch(
         await frame().content(),
         /alice@draft\.example\.test/,
       );
       await control()
-        .getByRole("button", { name: "Dismiss suggestion", exact: true })
+        .getByRole("button", { name: "Dismiss account email", exact: true })
         .click();
       assert.equal(await entries().count(), 0);
-      await control()
-        .getByRole("button", { name: "Suggest account email", exact: true })
-        .click();
-      await control()
-        .getByRole("button", { name: "Use email as public link", exact: true })
-        .click();
+      await suggest().click();
+      await accept().click();
       await flush();
       const accepted = await storedLinks();
       assert.equal(accepted.length, 1);
@@ -289,30 +279,10 @@ export async function checkSocialLinks({
       await frame()
         .locator('a[href="mailto:alice@draft.example.test"]')
         .waitFor();
-      await control()
-        .getByRole("button", { name: "Suggest account email", exact: true })
-        .click();
-      await control()
-        .getByRole("button", { name: "Use email as public link", exact: true })
-        .click();
+      await suggest().click();
+      await accept().click();
       await flush();
       assert.deepEqual(await storedLinks(), accepted);
-      const row = entries().first();
-      await row
-        .getByLabel("Show in social links component", { exact: true })
-        .check();
-      assert.match(await row.innerText(), /Add a Social links component/);
-      await flush();
-      const components = await page.evaluate(
-        () =>
-          window.editorFixture.recovery.store
-            .getState()
-            .controller.store.getState().working.components,
-      );
-      assert.equal(
-        components.some((component) => component.type === "social-links"),
-        false,
-      );
       await resize(page, { width: 390, height: 844 });
       assert.equal(
         await page.evaluate(
@@ -321,12 +291,13 @@ export async function checkSocialLinks({
         true,
       );
       await openSection(page, "Profile");
-      const label = row.getByLabel("Link label", { exact: true });
+      const fields = await linkFields(page, accepted[0].id);
+      const label = fields.getByLabel("Label", { exact: true });
       await label.focus();
       await label.press("Tab");
       assert.equal(
-        await row
-          .getByLabel("Link type", { exact: true })
+        await fields
+          .getByLabel("Email address", { exact: true })
           .evaluate((element) => element === document.activeElement),
         true,
       );
@@ -334,19 +305,17 @@ export async function checkSocialLinks({
         path: join(evidence, "social-links-mobile.png"),
         fullPage: true,
       });
-      await row
+      await fields
         .getByRole("button", { name: "Remove link", exact: true })
-        .click();
-      await row.getByRole("button", { name: "Keep link", exact: true }).click();
-      assert.equal(await entries().count(), 1);
-      await row
-        .getByRole("button", { name: "Remove link", exact: true })
-        .click();
-      await row
-        .getByRole("button", { name: "Confirm remove", exact: true })
         .click();
       await flush();
       assert.deepEqual(await storedLinks(), []);
+      assert.equal(
+        await control()
+          .getByLabel("Add a link", { exact: true })
+          .evaluate((element) => element === document.activeElement),
+        true,
+      );
       await resize(page, { width: 1500, height: 1000 });
     },
   );
@@ -377,75 +346,54 @@ export async function checkSocialLinks({
       });
       await boot(full);
       const page = getPage();
+      await pasteLink(page, "https://example.com/another");
       await control()
-        .getByRole("button", { name: "Add link", exact: true })
-        .click();
-      await control()
-        .getByRole("status")
-        .filter({ hasText: "Shorten text or remove unused content" })
+        .getByText(/This draft cannot fit another link/)
         .waitFor();
       assert.equal(await entries().count(), 1);
-      const entry = entries().first();
-      const label = entry.getByLabel("Link label", { exact: true });
+      const fields = await linkFields(page, "maximum-link");
+      const label = fields.getByLabel("Label", { exact: true });
       await label.fill("My longer website label");
-      const labelHelp = entry.getByText(
-        /This label change does not fit in the draft/,
-      );
-      await labelHelp.waitFor();
       assert.equal(await label.getAttribute("aria-invalid"), "true");
-      assert.equal(
-        await label.getAttribute("aria-describedby"),
-        await labelHelp.getAttribute("id"),
-      );
       assert.equal(await label.inputValue(), "My longer website label");
-      await entry
-        .getByLabel("Link type", { exact: true })
-        .selectOption("mastodon");
-      await entry
-        .getByLabel("Destination URL", { exact: true })
-        .fill("https://example.com/a-longer-destination");
-      await entry.getByText(/This change does not fit in the draft/).waitFor();
-      assert.equal(
-        await entry
-          .getByLabel("Destination URL", { exact: true })
-          .getAttribute("aria-invalid"),
-        "true",
-      );
-      await entry.getByLabel("Show in profile", { exact: true }).uncheck();
-      assert.equal(
-        await entry.getByLabel("Show in profile", { exact: true }).isChecked(),
-        false,
-      );
-      await entry
-        .getByText(/This placement change stays in this browser/)
+      const destination = fields.getByLabel("Web address", { exact: true });
+      await destination.fill("https://example.com/a-longer-destination");
+      assert.equal(await destination.getAttribute("aria-invalid"), "true");
+      await fields
+        .getByText(/Unfinished input stays in this browser/)
+        .first()
         .waitFor();
+      await page.keyboard.press("Escape");
+      await setLinkShown(page, "maximum-link", false);
       assert.equal((await flush()).hasLocalOnlyInput, true);
       assert.deepEqual(await storedLinks(), full.links);
-      assert.equal(
-        await entry.getByLabel("Destination URL", { exact: true }).inputValue(),
-        "https://example.com/a-longer-destination",
-      );
       await page
         .getByRole("textbox", { name: "Bio", exact: true })
         .fill("Room for links again.");
-      await label.fill("My recovered website label");
-      assert.equal(await label.getAttribute("aria-invalid"), "false");
-      assert.equal(await label.getAttribute("aria-describedby"), null);
-      await entry
-        .getByLabel("Destination URL", { exact: true })
+      const recovered = await linkFields(page, "maximum-link");
+      await recovered
+        .getByLabel("Label", { exact: true })
+        .fill("My recovered website label");
+      assert.equal(
+        await recovered
+          .getByLabel("Label", { exact: true })
+          .getAttribute("aria-invalid"),
+        null,
+      );
+      await recovered
+        .getByLabel("Web address", { exact: true })
         .fill("https://example.com/recovered");
-      await entry.getByLabel("Show in profile", { exact: true }).check();
-      await entry.getByLabel("Show in profile", { exact: true }).uncheck();
+      await page.keyboard.press("Escape");
+      await setLinkShown(page, "maximum-link", true);
+      await setLinkShown(page, "maximum-link", false);
       await flush();
       const links = await storedLinks();
       assert.equal(links[0].id, "maximum-link");
       assert.equal(links[0].value, "https://example.com/recovered");
       assert.equal(links[0].label, "My recovered website label");
-      assert.equal(links[0].kind, "mastodon");
       assert.equal(links[0].showInProfile, false);
-      await control()
-        .getByRole("button", { name: "Add link", exact: true })
-        .click();
+      await pasteLink(page, "https://example.com/another");
+      await entries().nth(1).waitFor();
       assert.equal(await entries().count(), 2);
     },
   );

@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import { chromium } from "playwright";
 import { createGroupRunner } from "../support/groups.mjs";
 import { freePort } from "../support/ports.mjs";
-import { openPanel, outline, resize } from "./shell.mjs";
+import { linkFields, openPanel, outline, resize } from "./shell.mjs";
 
 // Serves the editor, guide and owner-entry fixtures through a local proxy in
 // front of the owner runtime and opens one Chromium context. `core()` runs the
@@ -734,15 +734,12 @@ export async function createEditorHarness({
         await frame().waitForFunction(
           () => document.querySelector("h1")?.textContent === "Accepted name",
         );
-        await page
-          .getByLabel("Email address", { exact: true })
-          .fill("unfinished@");
-        assert.equal(
-          await page
-            .getByLabel("Email address", { exact: true })
-            .getAttribute("aria-invalid"),
-          "true",
+        const email = (await linkFields(page, "email-1")).getByLabel(
+          "Email address",
+          { exact: true },
         );
+        await email.fill("unfinished@");
+        assert.equal(await email.getAttribute("aria-invalid"), "true");
         assert.match(await frame().locator("main").innerText(), /Email me/);
         await page.evaluate(() => {
           const c = window.editorFixture.recovery.store.getState().controller;
@@ -751,7 +748,9 @@ export async function createEditorHarness({
           c.update(d);
         });
         assert.equal(
-          await page.getByLabel("Email address", { exact: true }).inputValue(),
+          await (await linkFields(page, "email-1"))
+            .getByLabel("Email address", { exact: true })
+            .inputValue(),
           "unfinished@",
         );
         await (await outline(page))
@@ -1099,7 +1098,9 @@ export async function createEditorHarness({
         await page
           .getByLabel("Name", { exact: true })
           .fill("Local review edit");
-        await page.getByLabel("Email address", { exact: true }).fill("raw@");
+        await (await linkFields(page, "email-1"))
+          .getByLabel("Email address", { exact: true })
+          .fill("raw@");
         const before = await page
           .locator("[data-editor-scope]")
           .getAttribute("data-editor-scope");
@@ -1137,7 +1138,9 @@ export async function createEditorHarness({
             document.querySelector("h1")?.textContent === "New controller edit",
         );
         assert.equal(
-          await page.getByLabel("Email address", { exact: true }).inputValue(),
+          await (await linkFields(page, "email-1"))
+            .getByLabel("Email address", { exact: true })
+            .inputValue(),
           "raw@",
         );
         assert.equal(

@@ -147,3 +147,43 @@ export async function setFaceReveal(page, on) {
     on,
   );
 }
+
+// The links list in the profile editor or the Social links section editor
+// (Phase 51.3). Each row's label and destination sit behind the row itself.
+export function linksRegion(page) {
+  return page.getByRole("region", { name: "Links", exact: true });
+}
+export function linkRow(page, id) {
+  return linksRegion(page).locator(`[data-link-id="${id}"]`);
+}
+
+// Opens a link row's fields and returns them.
+export async function linkFields(page, id) {
+  const row = linkRow(page, id);
+  const open = row.locator(".links-editor-open");
+  if ((await open.getAttribute("aria-expanded")) !== "true") await open.click();
+  const fields = row.getByRole("dialog");
+  await fields.waitFor();
+  return fields;
+}
+
+// Adds a link by typing it into the paste field and pressing Enter.
+export async function pasteLink(page, text) {
+  const field = linksRegion(page).getByLabel("Add a link", { exact: true });
+  await field.fill(text);
+  await field.press("Enter");
+}
+
+// Sets whether a link shows in the open editor's placement.
+export async function setLinkShown(page, id, on) {
+  const eye = linkRow(page, id).locator(".links-editor-eye");
+  if (((await eye.getAttribute("aria-pressed")) === "true") !== on)
+    await eye.click();
+  await page.waitForFunction(
+    ({ id, on }) =>
+      document
+        .querySelector(`[data-link-id="${id}"] .links-editor-eye`)
+        ?.getAttribute("aria-pressed") === String(on),
+    { id, on },
+  );
+}
