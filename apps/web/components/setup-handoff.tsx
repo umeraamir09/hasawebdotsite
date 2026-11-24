@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { RecoveryCoordinator } from "../lib/draft/recovery-coordinator";
+import { Button } from "./workbench";
 import "./setup-handoff.css";
 
 export function SetupHandoff({
@@ -42,15 +43,10 @@ export function SetupHandoff({
     }
   }
   return (
-    <div className="setup-handoff">
-      <button
-        className="ghost-button"
-        type="button"
-        disabled={pending}
-        onClick={() => void open()}
-      >
+    <div className="setup-handoff workbench">
+      <Button kind="primary" disabled={pending} onClick={() => void open()}>
         {pending ? "Opening editor..." : "Open editor"}
-      </button>
+      </Button>
       {message && <p role="alert">{message}</p>}
     </div>
   );

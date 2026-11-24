@@ -20,9 +20,10 @@ export function findGraph(draft: DraftDoc | null | undefined) {
 
 /**
  * Records a username the server accepted. The graph component is created
- * only here, after the owner chose Add graph and the setup route selected the
- * account (even when its first fetch failed), so visiting or skipping the
- * screen never adds a graph and signup alone never implies one.
+ * only here, after the owner looked up a username and the setup route
+ * selected the account (even when its first fetch failed), so visiting or
+ * skipping the screen never adds a graph and signup alone never implies
+ * one.
  */
 export function acceptGraph(
   controller: DraftController,
@@ -60,8 +61,7 @@ export function graphGap(
 }
 
 export const graphGapMessage: Record<GraphGap, string> = {
-  fetch:
-    "Fetch activity for your GitHub username to add the graph, or skip this step.",
+  fetch: "Fetch activity for your GitHub username to add the graph, or skip.",
   public:
     "Your graph hasn't been fetched successfully yet. Retry, or finish it later in the editor.",
   private:

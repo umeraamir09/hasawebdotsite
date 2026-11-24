@@ -29,6 +29,20 @@ export function addressMessages(action: string) {
 
 export type AddressTone = "info" | "success" | "error";
 
+// The last known outcome for the name in the field, for controls that show
+// it as a pill. `local` is an edit nothing has checked yet.
+export type AddressResult =
+  | "local"
+  | "checking"
+  | "invalid"
+  | "available"
+  | "unavailable"
+  | "reserved"
+  | "held"
+  | "claimed"
+  | "check_failed"
+  | "save_failed";
+
 // Shared address field state for the editor control and the guide's Address
 // step. Typing is local raw input; only `reserve()` sends the explicit
 // confirmation, and only a registry read proves the hold.
@@ -43,6 +57,7 @@ export function useAddressReservation(
   const state = useStore(controller.store);
   const [registry, setRegistry] = useState<AddressState>(null);
   const [message, setMessage] = useState(idle);
+  const [outcome, setOutcome] = useState<AddressResult>("local");
   const [busy, setBusy] = useState(false);
   const input = state.inputs[JSON.stringify(addressPath)];
   const value =
@@ -77,6 +92,13 @@ export function useAddressReservation(
           ? "success"
           : "info";
   const held = registry?.state === "held" && registry.name === value && !input;
+  const result: AddressResult =
+    value && !valid
+      ? "invalid"
+      : (outcome === "held" || outcome === "claimed") &&
+          registry?.name !== value
+        ? "local"
+        : outcome;
   const revision = state.confirmed?.revision;
   useEffect(() => {
     if (revision === undefined) return;
@@ -86,8 +108,10 @@ export function useAddressReservation(
       .then((current) => {
         if (!active) return;
         setRegistry(current);
-        if (current && current.name === currentValue.current)
+        if (current && current.name === currentValue.current) {
           setMessage(messages[current.state] ?? "");
+          setOutcome(current.state);
+        }
       })
       .catch(() => {});
     return () => {
@@ -98,22 +122,28 @@ export function useAddressReservation(
     availabilityQuery.current++;
     controller.setInput(addressPath, next);
     setMessage("Your change is local until you save this address.");
+    setOutcome("local");
   }
   async function check(): Promise<AddressAvailability["status"] | null> {
     if (!valid || busy || locked) return null;
     const checked = value;
     const query = ++availabilityQuery.current;
+    setOutcome("checking");
     try {
       const result = await controller.addressAvailability(checked);
       // A newer check for the same name may own the message, but this
       // result still answers its caller while the name is unchanged.
       if (currentValue.current !== checked) return null;
-      if (availabilityQuery.current === query)
+      if (availabilityQuery.current === query) {
         setMessage(messages[result.status] ?? "");
+        setOutcome(result.status);
+      }
       return result.status;
     } catch {
-      if (availabilityQuery.current === query)
+      if (availabilityQuery.current === query) {
         setMessage("Couldn't check this address. Try again.");
+        setOutcome("check_failed");
+      }
       return null;
     }
   }
@@ -133,12 +163,20 @@ export function useAddressReservation(
           ? (messages[current.state] ?? "")
           : "Couldn't verify the reservation. Retry the interrupted save.",
       );
+      setOutcome(confirmed && current ? current.state : "save_failed");
       return confirmed;
     } catch (error) {
       setMessage(
         error instanceof DraftFailure && messages[error.code]
           ? (messages[error.code] ?? "")
           : "Address save interrupted. Use the draft recovery controls to continue.",
+      );
+      setOutcome(
+        error instanceof DraftFailure && error.code === "address_unavailable"
+          ? "unavailable"
+          : error instanceof DraftFailure && error.code === "address_reserved"
+            ? "reserved"
+            : "save_failed",
       );
       return false;
     } finally {
@@ -154,6 +192,7 @@ export function useAddressReservation(
     registry,
     status,
     tone,
+    result,
     change,
     check,
     reserve,
