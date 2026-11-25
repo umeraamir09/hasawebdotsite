@@ -1,5 +1,6 @@
 "use client";
 
+import type { PreviewScheme } from "@hasaweb/components/browser";
 import type { PublicationIssue } from "@hasaweb/schema";
 import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
@@ -7,9 +8,17 @@ import type { DraftController } from "../lib/draft/controller";
 import { readPublicationIssues } from "../lib/draft/publication";
 import { publicationIssueLabel } from "../lib/draft/publication-labels";
 import type { RecoveryCoordinator } from "../lib/draft/recovery-coordinator";
-import { EditorPreview } from "./editor-preview";
+import { EditorPreview, type PreviewDevice } from "./editor-preview";
+import {
+  Button,
+  Icon,
+  IconButton,
+  SegmentedControl,
+  StatusPill,
+} from "./workbench";
 
 export type HandoffResult = Awaited<ReturnType<RecoveryCoordinator["handoff"]>>;
+export type ReviewAction = "idle" | "opening" | "failed";
 
 type Statuses =
   | { kind: "checking" }
@@ -21,23 +30,29 @@ type Statuses =
       more: boolean;
     };
 
-// Setup Review: the saved private draft in the shared renderer, honest
-// unfinished-content statuses and Open editor. Open editor runs the Phase 22A
-// handoff under the recovery coordinator; nothing here publishes or claims.
+// Setup Review (Figma 471:11880): the saved private draft in the shared
+// renderer under its address bar, with the device and scheme switch. Items
+// the draft still needs are listed with their state; Open editor (the shell's
+// primary action, which submits this step's form) runs the handoff under the
+// recovery coordinator. Nothing here publishes or claims the address.
 export function GuideReview({
+  formId,
   recovery,
   controller,
   disabled,
   send,
   previewDocument,
+  onAction,
   onEntered,
   onRequired,
 }: {
+  formId: string;
   recovery: RecoveryCoordinator;
   controller: DraftController;
   disabled: boolean;
   send: typeof fetch;
   previewDocument: string;
+  onAction(action: ReviewAction): void;
   onEntered(result: HandoffResult): void;
   onRequired(result: HandoffResult): void;
 }) {
@@ -45,9 +60,18 @@ export function GuideReview({
   const saved = state.confirmed;
   const [statuses, setStatuses] = useState<Statuses>({ kind: "checking" });
   const [attempt, setAttempt] = useState(0);
-  const [opening, setOpening] = useState(false);
+  const [device, setDevice] = useState<PreviewDevice>(() =>
+    typeof window !== "undefined" &&
+    window.matchMedia("(max-width: 640px)").matches
+      ? "mobile"
+      : "desktop",
+  );
+  const [scheme, setScheme] = useState<PreviewScheme | null>(null);
   const [failure, setFailure] = useState(false);
   const busy = useRef(false);
+  const report = useRef(onAction);
+  report.current = onAction;
+  useEffect(() => () => report.current("idle"), []);
   const localInput =
     Object.keys(state.inputs).length > 0 ||
     Object.keys(state.validationInputs).length > 0;
@@ -92,130 +116,129 @@ export function GuideReview({
     const current = recovery.store.getState();
     if (current.busy || current.review) return;
     busy.current = true;
-    setOpening(true);
+    report.current("opening");
     setFailure(false);
+    let next: ReviewAction = "idle";
     try {
       const entered = await recovery.handoff(send);
       if (entered.result.kind === "editor") onEntered(entered);
       else if (entered.result.kind === "required") onRequired(entered);
-      else setFailure(true);
+      else next = "failed";
     } catch {
-      setFailure(true);
+      next = "failed";
     } finally {
       busy.current = false;
-      setOpening(false);
+      setFailure(next === "failed");
+      report.current(next);
     }
   }
 
   const draft = saved?.draft ?? null;
   const address = draft?.requestedSubdomain;
   const issues = statuses.kind === "checked" ? statuses.issues : [];
-  const optionalOnly = issues.every((issue) => issue.path[0] === "components");
   return (
-    <div className="guide-review" data-guide-review="">
-      <p className="guide-review-address">
-        {address ? `${address}.hasaweb.site` : "Your address"}
-        <span aria-hidden="true"> · </span>
-        <span className="sr-only">, </span>
-        Private draft
-      </p>
-      {draft && (
-        <EditorPreview
-          owner={controller.identity}
-          draft={draft}
-          documentUrl={previewDocument}
-          label="Your private portfolio review"
+    <form
+      id={formId}
+      className="guide-review"
+      aria-label="Review your portfolio"
+      data-guide-review=""
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        void open();
+      }}
+    >
+      <div className="guide-review-controls">
+        <SegmentedControl
+          label="Preview device"
+          size="s"
+          value={device}
+          onChange={setDevice}
+          options={[
+            { value: "desktop", label: "Desktop", icon: "monitor" },
+            { value: "mobile", label: "Mobile", icon: "phone" },
+          ]}
         />
-      )}
+        <span className="guide-review-divider" aria-hidden="true" />
+        <IconButton
+          icon={scheme === "dark" ? "moon" : "sun"}
+          label="Dark preview"
+          aria-pressed={scheme === "dark"}
+          onClick={() => setScheme(scheme === "dark" ? "light" : "dark")}
+        />
+      </div>
+      <div className="guide-review-frame" data-device={device}>
+        <p className="guide-review-address">
+          <Icon name="lock" size={12} />
+          {address ? `${address}.hasaweb.site` : "hasaweb.site"}
+          <span className="wb-visually-hidden">, private draft</span>
+        </p>
+        {draft && (
+          <EditorPreview
+            owner={controller.identity}
+            draft={draft}
+            documentUrl={previewDocument}
+            label="Your private portfolio review"
+            device={device}
+            scheme={scheme}
+            onScheme={setScheme}
+            canvasActions={false}
+          />
+        )}
+      </div>
       <section
         className="guide-review-status"
-        aria-labelledby="guide-review-status-title"
+        aria-label="Still to finish"
         data-review-status={statuses.kind}
       >
-        <h2 id="guide-review-status-title">Before you publish</h2>
         {statuses.kind === "checking" ? (
-          <p role="status">Checking your saved draft...</p>
+          <p role="status" className="wb-visually-hidden">
+            Checking your saved draft...
+          </p>
         ) : statuses.kind === "failed" ? (
-          <div className="guide-note" role="alert">
-            <p>We couldn't check what's left to finish</p>
-            <p>
-              You can still open the editor. It checks everything again before
-              you publish.
-            </p>
-            <button
-              type="button"
-              className="ghost-button"
+          <div className="guide-notice" role="alert">
+            <StatusPill status="issue">Couldn't check</StatusPill>
+            <Button
+              size="s"
+              kind="ghost"
+              icon="refresh"
               onClick={() => setAttempt((value) => value + 1)}
             >
               Retry check
-            </button>
+            </Button>
           </div>
         ) : issues.length === 0 && !statuses.more ? (
-          <p role="status">
-            Nothing in your saved draft is unfinished right now. The editor
-            checks everything again when you publish.
+          <p role="status" className="wb-visually-hidden">
+            Nothing in your saved draft is unfinished.
           </p>
         ) : (
-          <>
-            <ul className="guide-review-issues">
-              {issues.map((issue) => (
-                <li
-                  key={JSON.stringify(issue)}
-                  className="guide-note"
-                  data-review-issue={issue.code}
-                >
-                  <p>{publicationIssueLabel(issue, draft)}</p>
-                  <p>
-                    It stays in your draft. Finish or remove it in the editor
-                    before publishing.
-                  </p>
-                </li>
-              ))}
-            </ul>
-            {statuses.more && <p>More items need attention in the editor.</p>}
-            <p role="status">
-              {optionalOnly
-                ? "Your required profile is complete. You can open the editor and finish these sections there."
-                : "Open the editor to finish these before publishing."}
-            </p>
-          </>
+          <ul className="guide-review-issues">
+            {issues.map((issue) => (
+              <li key={JSON.stringify(issue)} data-review-issue={issue.code}>
+                <StatusPill status="issue">Unfinished</StatusPill>
+                {publicationIssueLabel(issue, draft)}
+              </li>
+            ))}
+            {statuses.more && (
+              <li data-review-issue="more">
+                <StatusPill status="issue">Unfinished</StatusPill>
+                More in the editor
+              </li>
+            )}
+          </ul>
         )}
         {localInput && (
-          <div className="guide-note" data-review-local-input="">
-            <p>Some input isn't saved</p>
-            <p>
-              It isn't valid yet, so it stays only in this browser. The editor
-              offers it for recovery after you open it.
-            </p>
-          </div>
+          <p className="guide-notice" data-review-local-input="">
+            <StatusPill status="pending">Unsaved</StatusPill>
+            Some input stays in this browser until you fix it in the editor.
+          </p>
+        )}
+        {failure && (
+          <p className="guide-error" role="alert">
+            We couldn't open the editor. Your draft is safe. Retry to continue.
+          </p>
         )}
       </section>
-      <div className="guide-review-actions">
-        {failure && (
-          <div className="guide-note guide-review-failure" role="alert">
-            <p>Your draft is safe</p>
-            <p>
-              We couldn't confirm your saved changes and open the editor. Retry
-              to continue with this same draft.
-            </p>
-          </div>
-        )}
-        <button
-          type="button"
-          className="guide-continue"
-          disabled={disabled || opening || state.status === "saving"}
-          onClick={() => void open()}
-        >
-          {opening
-            ? "Opening editor..."
-            : failure
-              ? "Retry opening editor"
-              : "Open editor"}
-        </button>
-        <p className="guide-help">
-          Your portfolio stays private until you Publish.
-        </p>
-      </div>
-    </div>
+    </form>
   );
 }

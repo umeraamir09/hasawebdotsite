@@ -99,7 +99,7 @@ GitHub activity refreshes and contact message delivery continue after publicatio
 | Profile field | MVP behavior |
 | --- | --- |
 | Name | Required owner-entered or explicitly confirmed provider name displayed prominently in the fixed profile section. Untouched sample content does not satisfy setup or publication. |
-| Bio | Required owner-written short introduction. Samples do not satisfy setup or publication. |
+| Bio | Required owner-written short introduction of at most 160 characters. Samples do not satisfy setup or publication. |
 | Avatar | Required owner-selected profile image. Owners can upload and crop an image or explicitly accept an imported provider photo. |
 | Banner | Required owner-selected banner image with upload and cropping controls. |
 | Social or contact link | At least one valid link or contact method is required. An email address, GitHub profile, another supported social profile, or website URL qualifies. A contact form alone does not replace this requirement. |

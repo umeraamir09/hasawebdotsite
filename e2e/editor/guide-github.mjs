@@ -98,7 +98,7 @@ export async function checkGuideGitHub({
     await open(page);
     await field(page).fill(`gh-${suffix()}`);
     await field(page).press("Tab");
-    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
     const png = Buffer.from(
@@ -135,14 +135,12 @@ export async function checkGuideGitHub({
     }
     await proceed(page);
     await waitStep(page, "links");
-    await addLink(page);
-    await page.getByLabel("Link label").fill("Profile");
-    await page.getByLabel("Destination URL").fill(link);
+    await addLink(page, link, "Profile");
     await proceed(page);
     await waitStep(page, "skills");
-    await click(page, "Skip this step");
+    await click(page, "Skip");
     await waitStep(page, "projects");
-    await click(page, "Skip this step");
+    await click(page, "Skip");
     await waitStep(page, "github");
     await savedStep(page, "github");
     return page;
@@ -162,9 +160,19 @@ export async function checkGuideGitHub({
       .click();
     await publicStatus(page).getByText(expected).waitFor({ timeout: 30000 });
   }
-  // Leaves for GitHub in the same tab and comes back to the saved step.
-  async function authorize(page, name = "Authorize private activity") {
-    await panel(page).getByRole("button", { name, exact: true }).click();
+  // Leaves for GitHub in the same tab and comes back to the saved step. By
+  // default it chooses Public + private and confirms the dialog.
+  async function authorize(page, name) {
+    if (name)
+      await panel(page).getByRole("button", { name, exact: true }).click();
+    else {
+      await includePrivate(page).click();
+      const dialog = page.getByRole("dialog", {
+        name: "Include private contributions?",
+      });
+      await dialog.getByText("Daily contribution counts").waitFor();
+      await dialog.getByRole("button", { name: "Continue to GitHub" }).click();
+    }
     if (github.state.consent.hold) {
       await until(page, () => github.state.held, "consent was not held");
       return;
@@ -185,10 +193,12 @@ export async function checkGuideGitHub({
     return url;
   }
   const includePrivate = (page) =>
-    panel(page).getByRole("switch", { name: /Include private activity/ });
+    panel(page).getByRole("radio", { name: "Public + private" });
+  const publicOnly = (page) =>
+    panel(page).getByRole("radio", { name: "Public", exact: true });
 
   await guarded(
-    "setup guide GitHub: explicit Add graph without sign-in linking, zero contributions, failed first fetch, Retry and Finish later",
+    "setup guide GitHub: explicit lookup without sign-in linking, zero contributions, failed first fetch, Retry and Finish later",
     async () => {
       github.addUser({ login: "Guide-Zero" });
       github.addUser({ login: "Guide-Fail", counts: { [recent]: 3 } });
@@ -197,12 +207,15 @@ export async function checkGuideGitHub({
       assert.equal(await signIns(), 0);
       assert.equal(
         await page.getByRole("heading", { level: 1 }).innerText(),
-        "Your activity, at a glance",
+        "Add your GitHub activity",
       );
-      assert.equal(await panel(page).count(), 0);
+      assert.equal(
+        await panel(page).getByLabel("GitHub username").inputValue(),
+        "",
+      );
       assert.equal(await graphOf(page), undefined);
       assert.equal(await connection(), undefined);
-      for (const name of ["Skip this step", "Skip remaining steps", "Continue"])
+      for (const name of ["Skip", "Skip to review", "Review"])
         assert.equal(
           await page.getByRole("button", { name, exact: true }).count(),
           1,
@@ -214,21 +227,15 @@ export async function checkGuideGitHub({
       assert.equal(await graphOf(page), undefined);
       await back(page);
 
-      // Add graph shows the shared panel with no detected suggestion and no
-      // selection: the owner types any public username.
-      await click(page, "Add graph");
-      await panel(page).waitFor();
+      // A Google owner gets no detected suggestion: the owner types any
+      // public username. Continue before it is looked up keeps the owner here.
       assert.equal(
         await panel(page)
-          .getByText(/We detected/)
+          .getByRole("button", { name: /^Use @/ })
           .count(),
         0,
       );
-      assert.equal(
-        await panel(page).getByLabel("GitHub username").inputValue(),
-        "",
-      );
-      // Continue before any fetch keeps the owner here.
+      await panel(page).getByLabel("GitHub username").fill("guide-zero");
       await proceed(page);
       await alert(page, "Fetch activity for your GitHub username");
       assert.equal((await portfolio()).step, "github");
@@ -325,21 +332,22 @@ export async function checkGuideGitHub({
       );
       try {
         await open(page, "github");
-        // Signup alone adds nothing.
+        // Signup alone adds nothing; the detected name is only offered.
         assert.equal(await graphOf(page), undefined);
-        assert.equal(await panel(page).count(), 0);
-        await click(page, "Add graph");
         await panel(page)
-          .getByText(/We detected @Guide-Hub from your GitHub sign-in/)
+          .getByRole("button", { name: "Use @Guide-Hub" })
           .waitFor({ timeout: 30000 });
+        assert.equal(
+          await panel(page).getByLabel("GitHub username").inputValue(),
+          "",
+        );
         assert.equal(await connection(), undefined);
         // Skipping after seeing the suggestion still adds nothing.
-        await click(page, "Skip this step");
+        await click(page, "Skip");
         await waitStep(page, "review");
         assert.equal(await graphOf(page), undefined);
         assert.equal(await connection(), undefined);
         await back(page);
-        await click(page, "Add graph");
         await panel(page)
           .getByRole("button", { name: "Use @Guide-Hub" })
           .click();
@@ -360,10 +368,8 @@ export async function checkGuideGitHub({
         });
         // No private consent is inferred from the GitHub sign-in either.
         assert.equal((await connection()).private_enabled, 0);
-        assert.equal(
-          await privateStatus(page).getAttribute("data-github-private-status"),
-          "off",
-        );
+        assert.equal(await publicOnly(page).isChecked(), true);
+        assert.equal(await privateStatus(page).count(), 0);
       } finally {
         await sql("DELETE FROM account WHERE id='guide-github-account'");
       }
@@ -380,21 +386,15 @@ export async function checkGuideGitHub({
       });
       github.addUser({ login: "Guide-Other", counts: { [recent]: 1 } });
       const page = await toGitHub();
-      await click(page, "Add graph");
       await fetchFor(page, "Guide-Private", /Connected\. Fetched/);
-      await includePrivate(page).check();
-      await privateStatus(page)
-        .getByText(/Authorize the username above/)
-        .waitFor();
-      // Requested private activity is unfinished until authorized.
-      await proceed(page);
-      await alert(page, "Private activity isn't authorized");
-      assert.equal(
-        await page
-          .getByRole("button", { name: "Finish later in the editor" })
-          .count(),
-        1,
-      );
+      // The dialog's Cancel changes nothing.
+      await includePrivate(page).click();
+      await page
+        .getByRole("dialog", { name: "Include private contributions?" })
+        .getByRole("button", { name: "Cancel", exact: true })
+        .click();
+      assert.equal(await publicOnly(page).isChecked(), true);
+      assert.equal((await graphOf(page)).data.includePrivate, false);
 
       // A different GitHub account changes nothing and reports no success.
       github.state.consent = { as: "Guide-Other", cancel: false, hold: false };
@@ -418,6 +418,15 @@ export async function checkGuideGitHub({
       await publicStatus(page)
         .getByText(/Connected\. Fetched/)
         .waitFor();
+      // Requested private activity is unfinished until authorized.
+      await proceed(page);
+      await alert(page, "Private activity isn't authorized");
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Finish later in the editor" })
+          .count(),
+        1,
+      );
 
       // Cancelled consent keeps the public graph; Public only clears it.
       github.state.consent = { as: null, cancel: true, hold: false };
@@ -431,9 +440,13 @@ export async function checkGuideGitHub({
       await panel(page)
         .getByRole("button", { name: "Use public activity only" })
         .click();
-      await privateStatus(page)
-        .getByText(/Off\. Only public contributions are shown/)
-        .waitFor();
+      await until(
+        page,
+        () => publicOnly(page).isChecked(),
+        "Public only did not select Public",
+      );
+      // The private block goes once the status is read again.
+      await privateStatus(page).waitFor({ state: "detached" });
       assert.equal((await graphOf(page)).data.includePrivate, false);
       await proceed(page);
       await waitStep(page, "review");
@@ -441,7 +454,6 @@ export async function checkGuideGitHub({
 
       // Matching consent returns to this step with private counts.
       github.state.consent = { as: null, cancel: false, hold: false };
-      await includePrivate(page).check();
       await authorize(page);
       await privateStatus(page)
         .getByText(/Private activity authorized\. Fetched .* 7 contributions/)
@@ -470,9 +482,7 @@ export async function checkGuideGitHub({
         privateCounts: { [recent]: 2 },
       });
       const page = await toGitHub();
-      await click(page, "Add graph");
       await fetchFor(page, "Guide-Session", /Connected\. Fetched/);
-      await includePrivate(page).check();
       const exchanges = () =>
         github.state.calls.filter((call) => call.kind === "exchange").length;
       const before = exchanges();
@@ -579,24 +589,23 @@ export async function checkGuideGitHub({
 
   await guarded(
     "setup guide GitHub: Skip keeps the graph and access; confirmed removal withdraws despite failed revocation; reconnect survives the old cleanup",
-    async () => {
+    async (mark) => {
       github.addUser({
         login: "Guide-Remove",
         counts: { [recent]: 4 },
         privateCounts: { [recent]: 6 },
       });
       const page = await toGitHub();
-      await click(page, "Add graph");
       await fetchFor(page, "Guide-Remove", /Connected\. Fetched/);
-      await includePrivate(page).check();
       await authorize(page);
       await privateStatus(page)
         .getByText(/Private activity authorized/)
         .waitFor({ timeout: 30000 });
       const graphId = (await graphOf(page)).id;
 
+      mark("skips keep the graph");
       // Skipping never disconnects or removes anything.
-      for (const name of ["Skip this step", "Skip remaining steps"]) {
+      for (const name of ["Skip", "Skip to review"]) {
         await click(page, name);
         await waitStep(page, "review");
         await savedStep(page, "review");
@@ -610,6 +619,7 @@ export async function checkGuideGitHub({
 
       // Confirmed removal explains and withdraws private access at once, even
       // while revocation at GitHub fails and stays queued.
+      mark("remove graph");
       github.state.revokeFailure = 500;
       await click(page, "Remove graph");
       const dialog = page.getByRole("dialog");
@@ -620,7 +630,7 @@ export async function checkGuideGitHub({
         .waitFor();
       await dialog.getByText(/Your GitHub sign-in stays connected/).waitFor();
       await click(page, "Remove section");
-      await page.getByRole("button", { name: "Add graph" }).waitFor({
+      await page.locator('[data-guide-github="none"]').waitFor({
         timeout: 30000,
       });
       assert.equal(await graphOf(page), undefined);
@@ -642,11 +652,11 @@ export async function checkGuideGitHub({
       );
       assert.ok(validToken("Guide-Remove"), "GitHub still holds the grant");
 
+      mark("re-add during cleanup");
       // Re-adding works with public activity; new private consent waits for
       // the earlier cleanup.
-      await click(page, "Add graph");
       await fetchFor(page, "Guide-Remove", /Connected\. Fetched/);
-      await includePrivate(page).check();
+      await includePrivate(page).click();
       await privateStatus(page)
         .getByText(/Earlier private access is still being removed/)
         .waitFor({ timeout: 30000 });
@@ -665,35 +675,33 @@ export async function checkGuideGitHub({
         return { status: response.status, body: await response.json() };
       });
       assert.deepEqual(busy, { status: 409, body: { error: "consent_busy" } });
+      mark("public only during cleanup");
       // Public activity only still completes the step. The click resolves
       // on event dispatch, before `choosePublicOnly()`'s request and the
-      // draft update settle, so wait for the switch to actually uncheck
-      // (same tick as the draft write) before Continue rereads it. The
-      // grant's own cleanup stays pending regardless, tested below.
+      // draft update settle, so wait for Public to be selected (same tick
+      // as the draft write) before Continue rereads it. The grant's own
+      // cleanup stays pending regardless, tested below.
       await panel(page)
         .getByRole("button", { name: "Use public activity only" })
         .click();
-      await page.waitForFunction(
-        () =>
-          document
-            .querySelector('[role="switch"]')
-            ?.getAttribute("aria-checked") === "false",
-        undefined,
-        { timeout: 10000 },
+      await until(
+        page,
+        () => publicOnly(page).isChecked(),
+        "Public only did not select Public",
       );
       await proceed(page);
       await waitStep(page, "review");
       await back(page);
 
+      mark("cleanup finishes");
       // GitHub recovers; the next due cleanup revokes the old grant.
       github.state.revokeFailure = null;
       await sql("UPDATE github_grant SET retry_at=0 WHERE github_user_id=?", [
         "node-guide-remove",
       ]);
       await age();
-      await panel(page)
-        .getByRole("button", { name: /^(Retry|Refresh activity)$/ })
-        .click();
+      // Enter in the username field fetches the selected account again.
+      await panel(page).getByLabel("GitHub username").press("Enter");
       await until(
         page,
         async () => (await grant("Guide-Remove"))?.state === "idle",
@@ -701,8 +709,12 @@ export async function checkGuideGitHub({
       );
       assert.equal(validToken("Guide-Remove"), false);
 
+      mark("reconnect");
       // Reconnect, then let an old cleanup run again: the fresh grant stays.
-      await includePrivate(page).check();
+      // The page polls the cleanup status, so wait for it to settle there.
+      await page
+        .locator('[data-github-private="cleanup"]')
+        .waitFor({ state: "detached", timeout: 10000 });
       await authorize(page);
       await privateStatus(page)
         .getByText(/Private activity authorized/)
@@ -713,9 +725,7 @@ export async function checkGuideGitHub({
         "node-guide-remove",
       ]);
       await age();
-      await panel(page)
-        .getByRole("button", { name: /^(Retry|Refresh activity)$/ })
-        .click();
+      await panel(page).getByLabel("GitHub username").press("Enter");
       await publicStatus(page)
         .getByText(/Connected\. Fetched/)
         .waitFor({ timeout: 30000 });

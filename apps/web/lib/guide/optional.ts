@@ -1,6 +1,7 @@
 import type { ComponentOf, DraftDoc } from "@hasaweb/schema";
 import type { DraftController } from "../draft/controller";
 import { removeEditorComponent } from "../editor/components";
+import { editEditorField } from "../editor/fields";
 import { addProject, removeProject } from "../editor/projects";
 import { addSkill, removeSkill } from "../editor/skills";
 import { addGuideComponent } from "./order";
@@ -57,6 +58,41 @@ export function addFirstEntry(
   // A section created for an entry that could not fit is not kept.
   if (!id && !existing) removeEditorComponent(controller, componentId);
   return id;
+}
+
+/**
+ * Adds one named skill from the Skills step's token input. A name already in
+ * the list (ignoring case) is not added twice; its id is returned instead.
+ * Returns null when the draft cannot fit the skill.
+ */
+export function addNamedSkill(
+  controller: DraftController,
+  name: string,
+): string | null {
+  const trimmed = name.trim();
+  if (!trimmed) return null;
+  const existing = findOptional(
+    controller.store.getState().working,
+    "skills",
+  )?.data.entries.find(
+    (entry) => entry.name.trim().toLowerCase() === trimmed.toLowerCase(),
+  );
+  if (existing) return existing.id;
+  const id = addFirstEntry(controller, "skills");
+  const component = findOptional(controller.store.getState().working, "skills");
+  if (!id || !component) return null;
+  const path = [
+    "components",
+    { id: component.id },
+    "data",
+    "entries",
+    { id },
+    "name",
+  ];
+  if (editEditorField(controller, path, trimmed)) return id;
+  removeSkill(controller, component.id, id);
+  settleOptional(controller, "skills");
+  return null;
 }
 
 /**

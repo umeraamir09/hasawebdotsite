@@ -6,9 +6,11 @@ import {
   isSkippable,
   nextStep,
   previousStep,
+  progressSegments,
   remainingTarget,
   requiredIssues,
   resumeStep,
+  stepActions,
   stepFields,
 } from "./steps";
 
@@ -85,7 +87,7 @@ describe("guide steps", () => {
 });
 
 describe("optional step navigation", () => {
-  it("skips only optional screens and Skip remaining lands on Review", () => {
+  it("skips only optional screens and Skip to review lands on Review", () => {
     expect(isSkippable("skills")).toBe(true);
     expect(isSkippable("projects")).toBe(true);
     expect(isSkippable("github")).toBe(true);
@@ -94,5 +96,66 @@ describe("optional step navigation", () => {
     expect(nextStep("github")).toBe("review");
     expect(remainingTarget).toBe("review");
     expect(nextStep("skills")).toBe("projects");
+  });
+});
+
+describe("step action row", () => {
+  it("never offers a skip or the editor on required steps", () => {
+    for (const step of ["address", "profile", "links"] as const) {
+      const actions = stepActions(step);
+      expect(actions.skip).toBe(false);
+      expect(actions.skipToReview).toBe(false);
+      expect(actions.primary).toBe("Continue");
+    }
+    expect(stepActions("address").back).toBe(false);
+    expect(stepActions("profile").back).toBe(true);
+    expect(stepActions("links").back).toBe(true);
+  });
+
+  it("offers Skip and Skip to review on every optional step", () => {
+    expect(stepActions("skills")).toEqual({
+      back: true,
+      skip: true,
+      skipToReview: true,
+      primary: "Continue",
+    });
+    expect(stepActions("projects").primary).toBe("Continue");
+    expect(stepActions("github")).toEqual({
+      back: true,
+      skip: true,
+      skipToReview: true,
+      primary: "Review",
+    });
+  });
+
+  it("opens the editor only from Review", () => {
+    expect(stepActions("review")).toEqual({
+      back: true,
+      skip: false,
+      skipToReview: false,
+      primary: "Open editor",
+    });
+    for (const step of guideSteps.filter((item) => item !== "review"))
+      expect(stepActions(step).primary).not.toBe("Open editor");
+  });
+});
+
+describe("segmented progress", () => {
+  it("splits the six questions into required and optional groups", () => {
+    expect(progressSegments("address")).toEqual({
+      required: ["current", "todo", "todo"],
+      optional: ["todo", "todo", "todo"],
+    });
+    expect(progressSegments("skills")).toEqual({
+      required: ["done", "done", "done"],
+      optional: ["current", "todo", "todo"],
+    });
+  });
+
+  it("shows every segment done on Review", () => {
+    expect(progressSegments("review")).toEqual({
+      required: ["done", "done", "done"],
+      optional: ["done", "done", "done"],
+    });
   });
 });

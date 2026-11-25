@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { addLink } from "./links.mjs";
+import { addLink, addSkill } from "./links.mjs";
 
 // Phase 42E: Review, the permanent first editor handoff and the activated
 // account entry. These groups go through `/auth/entry` and `/editor`, which
@@ -83,7 +83,7 @@ export async function checkGuideReview({
     await waitStep(page, "address");
     await field(page).fill(name);
     await field(page).press("Tab");
-    await addressStatus(page).filter({ hasText: "Available now" }).waitFor();
+    await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
     const image = Buffer.from(await png(page, "#2448e8"));
@@ -111,9 +111,7 @@ export async function checkGuideReview({
     }
     await proceed(page);
     await waitStep(page, "links");
-    await addLink(page);
-    await page.getByLabel("Link label").fill("My site");
-    await page.getByLabel("Destination URL").fill("https://example.com");
+    await addLink(page, "https://example.com", "My site");
     await proceed(page);
     await waitStep(page, "skills");
   }
@@ -144,7 +142,7 @@ export async function checkGuideReview({
     );
 
   await guarded(
-    "setup guide Review, Skip remaining, statuses and handoff into the editor",
+    "setup guide Review, Skip to review, statuses and handoff into the editor",
     async (mark) => {
       await reset();
       const page = await guidePage();
@@ -160,33 +158,39 @@ export async function checkGuideReview({
       await completeRequired(page, name);
 
       mark("skills and partial project");
-      // Skills, then a partial project, then Skip remaining steps.
-      await addEntry(page, "Add skill", "data-skill-id");
-      await page.getByLabel("Skill name").fill("TypeScript");
+      // Skills, then a partial project, then Skip to review.
+      await addSkill(page, "TypeScript");
       await proceed(page);
       await waitStep(page, "projects");
       await addEntry(page, "Add project", "data-project-id");
       await page.getByLabel("Project title").fill("Half done");
       // Unfinished optional input stays local for editor recovery.
-      await page.getByLabel("Code URL (optional)").fill("htt");
-      mark("Skip remaining to Review");
-      await skip(page, "Skip remaining steps");
+      await page.getByRole("button", { name: "Links", exact: true }).click();
+      await page.getByLabel("Code URL", { exact: true }).fill("htt");
+      await page.getByLabel("Code URL", { exact: true }).press("Escape");
+      mark("Skip to review");
+      await skip(page, "Skip to review");
       await waitStep(page, "review");
       await until(
         async () => (await portfolio()).step === "review",
-        "Skip remaining did not save Review",
+        "Skip to review did not save Review",
       );
 
       mark("Review heading and address");
       // Review: heading, private address line, Back, no skips, Open editor.
       assert.equal(
         await page.getByRole("heading", { level: 1 }).innerText(),
-        "Take a look around",
+        "Here's your portfolio",
       );
+      // The address bar and the top bar's Private pill show it is private.
       await page
         .locator(".guide-review-address")
         .filter({ hasText: `${name}.hasaweb.site` })
-        .filter({ hasText: "Private draft" })
+        .filter({ hasText: "private draft" })
+        .waitFor();
+      await page
+        .locator(`[data-guide-address="${name}"]`)
+        .filter({ hasText: "Private" })
         .waitFor();
       assert.equal(await page.getByRole("button", { name: "Back" }).count(), 1);
       assert.equal(
@@ -197,9 +201,7 @@ export async function checkGuideReview({
         await page.getByRole("button", { name: "Continue" }).count(),
         0,
       );
-      await page
-        .getByText("Your portfolio stays private until you Publish.")
-        .waitFor();
+      await page.getByRole("button", { name: "Open editor" }).waitFor();
 
       mark("Review preview frame");
       // The shared renderer shows the saved draft: profile, link, then the
@@ -225,7 +227,13 @@ export async function checkGuideReview({
         .locator("[data-review-issue]")
         .filter({ hasText: /projects summary/i })
         .waitFor();
-      await status.getByText(/Your required profile is complete/).waitFor();
+      assert.equal(
+        await status
+          .locator("[data-review-issue]")
+          .filter({ hasText: /\b(name|bio|avatar|banner)\b/i })
+          .count(),
+        0,
+      );
       await page.locator("[data-review-local-input]").waitFor();
       assert.equal(
         await page.getByText(/ready to publish|publish-ready/i).count(),
@@ -234,31 +242,39 @@ export async function checkGuideReview({
 
       mark("preview width switching");
       // Desktop/mobile switching uses the actual child widths.
-      const width = page.getByRole("group", { name: "Preview width" });
-      await width.getByRole("button", { name: "Mobile" }).click();
+      const width = page.getByRole("radiogroup", { name: "Preview device" });
+      await width.getByRole("radio", { name: "Mobile" }).click();
       assert.equal(
         await width
-          .getByRole("button", { name: "Mobile" })
-          .getAttribute("aria-pressed"),
+          .getByRole("radio", { name: "Mobile" })
+          .getAttribute("aria-checked"),
         "true",
       );
       assert.equal(
         await page
-          .locator("iframe.editor-preview-frame")
+          .locator("iframe.editor-canvas-frame")
           .evaluate((element) => element.getBoundingClientRect().width),
-        392,
+        390,
+      );
+      // The scheme switch shows the dark preview.
+      await page.getByRole("button", { name: "Dark preview" }).click();
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Dark preview" })
+          .getAttribute("aria-pressed"),
+        "true",
       );
       await page.screenshot({
         path: join(evidence, "guide-review-mobile-preview.png"),
         fullPage: true,
       });
-      await width.getByRole("button", { name: "Desktop" }).click();
+      await width.getByRole("radio", { name: "Desktop" }).click();
 
-      mark("Back, then Skip remaining again");
-      // Back returns to GitHub; Skip remaining from there lands on Review.
+      mark("Back, then Skip to review again");
+      // Back returns to GitHub; Skip to review from there lands on Review.
       await page.getByRole("button", { name: "Back" }).click();
       await waitStep(page, "github");
-      await skip(page, "Skip remaining steps");
+      await skip(page, "Skip to review");
       await waitStep(page, "review");
       await page.screenshot({
         path: join(evidence, "guide-review.png"),
@@ -328,12 +344,7 @@ export async function checkGuideReview({
       await stale.waitForFunction(() => window.guideFixture?.ready);
       await stale.locator("[data-guide-closed]").waitFor({ timeout: 30000 });
       // No step navigation: the guide's own Back, Continue and skips are gone.
-      for (const name of [
-        "Back",
-        "Continue",
-        "Skip this step",
-        "Skip remaining steps",
-      ])
+      for (const name of ["Back", "Continue", "Skip", "Skip to review"])
         assert.equal(
           await stale.getByRole("button", { name, exact: true }).count(),
           0,
@@ -456,7 +467,7 @@ export async function checkGuideReview({
       await entry(page);
       const name = `skipped-${suffix()}`;
       await completeRequired(page, name);
-      await skip(page, "Skip remaining steps");
+      await skip(page, "Skip to review");
       await waitStep(page, "review");
 
       // Only the real profile and link: no sections, no samples.

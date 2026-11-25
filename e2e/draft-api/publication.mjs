@@ -346,8 +346,15 @@ export async function checkPublicationApi({
     held.name,
     portfolioId,
   ]);
-  draft.profile.bio = "";
-  draft.profile.bio = "x".repeat(
+  // Publish reports a bio over the 160-character limit like a missing one.
+  draft.profile.bio = "x".repeat(161);
+  assert.deepEqual(await issues(), [
+    { code: "required", path: ["profile", "bio"] },
+  ]);
+  draft.profile.bio = "x".repeat(160);
+  assert.deepEqual(await issues(), []);
+  draft.profile.name = "";
+  draft.profile.name = "x".repeat(
     1048576 - Buffer.byteLength(JSON.stringify(draft)),
   );
   assert.equal(Buffer.byteLength(JSON.stringify(draft)), 1048576);

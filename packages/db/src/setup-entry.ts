@@ -1,8 +1,9 @@
-import type {
-  AssetPurpose,
-  SetupCommand,
-  SetupField,
-  SetupResult,
+import {
+  type AssetPurpose,
+  BIO_MAX,
+  type SetupCommand,
+  type SetupField,
+  type SetupResult,
 } from "@hasaweb/schema";
 import { SaveError } from "./bounded-save";
 import { activeSaveSession, ownerDrafts, saveSessionParams } from "./draft-api";
@@ -20,7 +21,7 @@ const readyImage = (field: "avatar" | "banner") =>
 export const setupRequirements = {
   address: `EXISTS(SELECT 1 FROM subdomain_claim c WHERE c.portfolio_id=portfolio.id AND c.name=json_extract(draft,'$.requestedSubdomain') AND c.state='held' AND NOT EXISTS(SELECT 1 FROM reserved_subdomain r WHERE r.name=c.name))`,
   name: `(${textPresent("$.profile.name")} AND ${realField("name")})`,
-  bio: `(${textPresent("$.profile.bio")} AND ${realField("bio")})`,
+  bio: `(${textPresent("$.profile.bio")} AND length(json_extract(draft,'$.profile.bio'))<=${BIO_MAX} AND ${realField("bio")})`,
   avatar: `(${realField("avatar")} AND json_extract(draft,'$.profile.avatar.accepted')=1 AND ${readyImage("avatar")})`,
   banner: `(${realField("banner")} AND ${readyImage("banner")})`,
   links: `EXISTS(SELECT 1 FROM json_each(draft,'$.links') l WHERE json_extract(l.value,'$.showInProfile')=1 AND length(trim(json_extract(l.value,'$.label'),${setupWhitespace}))>0 AND length(json_extract(l.value,'$.value'))>0)`,

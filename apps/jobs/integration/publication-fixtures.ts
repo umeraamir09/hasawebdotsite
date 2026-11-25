@@ -126,14 +126,16 @@ export function makeDraft(kind: string): DraftDoc {
       showInSocialComponent: false,
     });
   }
+  // Long text goes in the location, which has no length limit; a bio over
+  // 160 characters would block publication.
   if (kind === "unicode" || kind === "max") {
     const size = kind === "max" ? 1_048_576 : 80_000;
     const pattern = kind === "max" ? "x" : 'عمر😀\r\n\u0000<&>"\\';
-    draft.profile.bio = pattern.repeat(Math.floor(size / 20));
+    draft.profile.location = pattern.repeat(Math.floor(size / 20));
     if (kind === "max") {
-      draft.profile.bio = "";
+      draft.profile.location = "";
       const base = Buffer.byteLength(serializeDraft(draft).json);
-      draft.profile.bio = "x".repeat(size - base);
+      draft.profile.location = "x".repeat(size - base);
     }
   }
   if (kind === "assets" || kind === "assets-face") {
@@ -230,7 +232,7 @@ export function makeDraft(kind: string): DraftDoc {
   if (kind === "face" || kind === "assets-face")
     draft.profile.faceReveal.enabled = true;
   if (kind === "surrogate-boundary")
-    draft.profile.bio = `${"a".repeat(32763)}😀\ud800\r\n${"عمر<&>\u0000".repeat(5000)}`;
+    draft.profile.location = `${"a".repeat(32763)}😀\ud800\r\n${"عمر<&>\u0000".repeat(5000)}`;
   if (kind === "surrogate") draft.profile.bio = "A\ud800B\udc00Z";
   return serializeDraft(draft).draft;
 }

@@ -31,7 +31,7 @@ export function exampleContent(assets) {
   return {
     profile: {
       name: "Umer Aamir",
-      bio: "I build thoughtful web experiences, draw playful things, and make technology feel a little more human. Usually exploring the space between design, code, and self-hosting.",
+      bio: "I build thoughtful web experiences, draw playful things, and make technology feel a little more human.",
       location: "Pakistan",
       avatar: {
         assetId: assets.avatar,

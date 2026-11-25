@@ -111,8 +111,7 @@ export function AppearancePreview() {
           </ul>
           <p className="preview-bio">
             I build thoughtful web experiences, draw playful things, and make
-            technology feel a little more human. Usually exploring the space
-            between design, code, and self-hosting.
+            technology feel a little more human.
           </p>
           <p className="preview-location">Pakistan</p>
         </div>

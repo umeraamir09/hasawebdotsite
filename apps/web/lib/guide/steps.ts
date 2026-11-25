@@ -84,11 +84,57 @@ export function progressFor(step: GuideStep): SetupProgress {
   return { schemaVersion: 1, step };
 }
 
-// Optional screens carry Skip this step and Skip remaining steps. Skipping
-// the remainder always lands on Review, the final step, whatever later
-// optional screens exist.
+// Optional screens carry Skip and Skip to review. Skip to review always
+// lands on Review, the final step, whatever later optional screens exist.
 export const remainingTarget: GuideStep = "review";
 
 export function isSkippable(step: GuideStep) {
   return step === "skills" || step === "projects" || step === "github";
+}
+
+export type StepActions = {
+  back: boolean;
+  skip: boolean;
+  skipToReview: boolean;
+  primary: "Continue" | "Review" | "Open editor";
+};
+
+// The fixed action row (Setup v2 / Actions): Back on the left; Skip to
+// review, Skip and the primary action on the right. Required steps never
+// get a skip, and nothing before Review offers the editor.
+export function stepActions(step: GuideStep): StepActions {
+  const skippable = isSkippable(step);
+  return {
+    back: previousStep(step) !== null,
+    skip: skippable,
+    skipToReview: skippable,
+    primary:
+      step === "review"
+        ? "Open editor"
+        : nextStep(step) === "review"
+          ? "Review"
+          : "Continue",
+  };
+}
+
+export type SegmentState = "done" | "current" | "todo";
+
+// The top bar's segmented progress: one segment per question, in a required
+// group and an optional group. Review has no segment of its own; it shows
+// every segment done.
+export function progressSegments(step: GuideStep): {
+  required: SegmentState[];
+  optional: SegmentState[];
+} {
+  const current = stepIndex(step);
+  const states = guideSteps
+    .filter((item) => item !== "review")
+    .map((item): SegmentState => {
+      const index = stepIndex(item);
+      return index < current ? "done" : index === current ? "current" : "todo";
+    });
+  return {
+    required: states.slice(0, requiredSteps.size),
+    optional: states.slice(requiredSteps.size),
+  };
 }

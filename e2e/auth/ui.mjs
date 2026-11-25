@@ -185,7 +185,11 @@ export async function checkAuthUi({
         /<meta name="robots" content="noindex, nofollow"/,
         path,
       );
-      assert.doesNotMatch(html, /Take a look around|setup-guide/, path);
+      assert.doesNotMatch(
+        html,
+        /Here(?:'|&#x27;)s your portfolio|setup-guide/,
+        path,
+      );
     }
     assert.equal(
       (await fetch(`http://127.0.0.1:${port}/editor/preview`)).status,

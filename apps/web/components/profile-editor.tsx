@@ -1,6 +1,6 @@
 "use client";
 
-import { clearSample, type DraftDoc } from "@hasaweb/schema";
+import { BIO_MAX, clearSample, type DraftDoc } from "@hasaweb/schema";
 import { appearanceCatalog } from "@hasaweb/theme";
 import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
@@ -319,6 +319,7 @@ function Editor({
         label="Bio"
         path={["profile", "bio"]}
         multiline
+        maxLength={BIO_MAX}
         publicationField="bio"
       />
       <DraftField

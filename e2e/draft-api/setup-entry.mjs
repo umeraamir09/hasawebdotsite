@@ -136,6 +136,20 @@ export async function checkSetupEntry({
     expected = await set(empty);
     assert.ok((await check(expected)).issues.includes(field));
   }
+  // The bio limit counts characters, so 160 emoji still fit.
+  for (const [bio, over] of [
+    ["x".repeat(160), false],
+    ["\u{1f600}".repeat(160), false],
+    ["x".repeat(161), true],
+  ]) {
+    const sized = structuredClone(draft);
+    sized.profile.bio = bio;
+    expected = await set(sized);
+    assert.equal(
+      (await check(expected)).issues?.includes("bio") ?? false,
+      over,
+    );
+  }
   for (const status of ["pending", "failed"]) {
     expected = await set();
     await sql("UPDATE asset SET status=? WHERE id=?", [
@@ -259,10 +273,11 @@ export async function checkSetupEntry({
     status: 401,
   });
   await sql("UPDATE user SET deleting_at=NULL WHERE id='draft-fresh'");
+  // The name has no length limit, so it pads the draft to exactly 1 MiB.
   const large = structuredClone(draft);
-  large.profile.bio = "";
+  large.profile.name = "";
   large.components = [];
-  large.profile.bio = "x".repeat(
+  large.profile.name = "x".repeat(
     1048576 - Buffer.byteLength(JSON.stringify(large)),
   );
   assert.equal(Buffer.byteLength(JSON.stringify(large)), 1048576);

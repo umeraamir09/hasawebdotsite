@@ -199,7 +199,7 @@ export function ImageSlot({
         onChange={upload.choose}
       />
       <div className="image-slot-status">
-        <div aria-live="polite" role="status">
+        <div aria-live="polite" role="status" data-upload={state.kind}>
           {state.kind === "loading" && (
             <>
               <p>Opening image...</p>

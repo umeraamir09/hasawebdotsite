@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { BIO_MAX } from "@hasaweb/schema";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { watchAccountDeletion } from "../lib/account-deletion";
-import { takeAddressSuggestion } from "../lib/address-suggestion";
 import { signOutOwner } from "../lib/auth-client";
 import { createDraftController } from "../lib/draft/controller";
 import {
@@ -26,70 +26,45 @@ import { checkSetup } from "../lib/guide/setup-check";
 import {
   type GuideStep,
   guideSteps,
-  isSkippable,
   nextStep,
   previousStep,
   progressFor,
+  progressSegments,
   type RequiredIssues,
   remainingTarget,
   requiredIssues,
-  requiredSteps,
   resumeStep,
+  stepActions,
   stepFields,
   stepIndex,
 } from "../lib/guide/steps";
 import { AccountDeleted } from "./account-deletion";
-import { Brand } from "./brand";
 import { DraftRecovery } from "./draft-recovery";
+import { GuideAddress } from "./guide-address-step";
 import { GuideGitHub } from "./guide-github-step";
+import { GuideLinks } from "./guide-links-step";
 import { GuideProjects, GuideSkills } from "./guide-optional-steps";
-import { GuideReview, type HandoffResult } from "./guide-review-step";
-import { ProfileControls } from "./profile-controls";
-import { SocialLinksControl } from "./social-links-control";
-import { useAddressReservation } from "./use-address-reservation";
+import { GuideProfile } from "./guide-profile-step";
+import {
+  GuideReview,
+  type HandoffResult,
+  type ReviewAction,
+} from "./guide-review-step";
+import { Button, Icon, StatusPill } from "./workbench";
 import "./setup-guide.css";
 
 type Owner = { ownerId: string; portfolioId: string };
 
-const stepCopy: Record<
-  GuideStep,
-  { label: string; title: string; intro: string }
-> = {
-  address: {
-    label: "Address",
-    title: "Choose your address",
-    intro: "A place on the web for your work.",
-  },
-  profile: {
-    label: "Profile",
-    title: "Introduce yourself",
-    intro: "Your name, a short bio, a photo and a banner.",
-  },
-  links: {
-    label: "Links",
-    title: "Where can people find you?",
-    intro: "Add at least one link to show on your profile.",
-  },
-  skills: {
-    label: "Skills",
-    title: "What do you work with?",
-    intro: "Add the skills you want to share.",
-  },
-  projects: {
-    label: "Projects",
-    title: "Show your work",
-    intro: "Add the projects you want people to see.",
-  },
-  github: {
-    label: "GitHub",
-    title: "Your activity, at a glance",
-    intro: "Add a GitHub contribution graph to your portfolio.",
-  },
-  review: {
-    label: "Review",
-    title: "Take a look around",
-    intro: "Review your portfolio before opening the editor.",
-  },
+// Each step asks one question (Setup v2 / Prompt): a kicker and a title,
+// with no subtitle.
+const stepCopy: Record<GuideStep, { label: string; title: string }> = {
+  address: { label: "Address", title: "Pick your address" },
+  profile: { label: "Profile", title: "Introduce yourself" },
+  links: { label: "Links", title: "Where can people find you?" },
+  skills: { label: "Skills", title: "What do you work with?" },
+  projects: { label: "Projects", title: "Show something you made" },
+  github: { label: "GitHub", title: "Add your GitHub activity" },
+  review: { label: "Review", title: "Here's your portfolio" },
 };
 
 const formId = "setup-guide-step";
@@ -101,10 +76,10 @@ const defaultPreviewDocument = "/editor/preview";
 // content-scope controller offers any preserved setup input for review.
 const openEditor = () => window.location.replace("/editor");
 
-// The first-portfolio guide: Address, Profile, Links, optional Skills,
-// Projects and GitHub, then Review and the permanent editor handoff. The
-// account entry (`OwnerEntry`) mounts it for owners who have not entered the
-// editor, behind the Phase 42E activation gate.
+// The first-portfolio guide (Figma "Setup v2" on page 325:2): Address,
+// Profile, Links, optional Skills, Projects and GitHub, then Review and the
+// permanent editor handoff. The account entry (`OwnerEntry`) mounts it for
+// owners who have not entered the editor.
 export function SetupGuide(props: {
   owner: Owner;
   send?: typeof fetch;
@@ -155,8 +130,10 @@ function Session({
   if (deleted) return <AccountDeleted elsewhere />;
   if (!recovery)
     return (
-      <main className="setup-guide">
-        <p role="status">Opening your setup...</p>
+      <main className="setup-guide workbench">
+        <p role="status" className="guide-loading">
+          Opening your setup...
+        </p>
       </main>
     );
   return (
@@ -209,11 +186,12 @@ function Scope({
   const [handoffNotice, setHandoffNotice] = useState("");
   const heading = useRef<HTMLHeadingElement>(null);
   const revision = state.confirmed?.revision;
-  // The GitHub screen: whether Add graph was chosen before any account was
-  // accepted, the panel's latest status, and a failed status read.
+  // The GitHub screen: whether a username was typed before any account was
+  // accepted, the step's latest status, and a failed status read.
   const [addingGraph, setAddingGraph] = useState(false);
   const [graphStatus, setGraphStatus] = useState<GraphSetupStatus | null>(null);
   const [graphUnchecked, setGraphUnchecked] = useState(false);
+  const [reviewAction, setReviewAction] = useState<ReviewAction>("idle");
 
   // GitHub consent returns to `/auth/entry?github=consent`. The step comes
   // from saved progress and the outcome from the status route, so the marker
@@ -266,7 +244,6 @@ function Scope({
   const step = resumeStep(saved, checked?.issues ?? null);
   const index = stepIndex(step);
   const back = previousStep(step);
-  const required = requiredSteps.has(step);
   const loading = !state.working || (!checked && !checkError);
   const disabled =
     navigating ||
@@ -288,8 +265,8 @@ function Scope({
     if (shownStep.current === step) return;
     shownStep.current = step;
     setStepError("");
-    // Leaving the GitHub screen forgets an unfinished Add graph choice; the
-    // panel reads a fresh status when it is shown again.
+    // Leaving the GitHub screen forgets a typed username nobody looked up;
+    // the step reads a fresh status when it is shown again.
     setAddingGraph(false);
     setGraphStatus(null);
     setGraphUnchecked(false);
@@ -341,10 +318,19 @@ function Scope({
         next.issues?.includes(field),
       );
       if (missing.length > 0) {
+        // The server reports a bio over the limit as an incomplete bio.
+        const bio = controller.store.getState().working?.profile.bio ?? "";
+        const long = [...bio].length > BIO_MAX;
+        const rest = missing.filter((item) => !(long && item === "bio"));
         setStepError(
-          from === "profile"
-            ? `Still needed: ${missing.join(", ")}. Sample content does not count.`
-            : "Add at least one valid link with a label, shown in your profile.",
+          from === "links"
+            ? "Add at least one valid link with a label."
+            : [
+                rest.length > 0 ? `Still needed: ${rest.join(", ")}.` : "",
+                long ? `Shorten your bio to ${BIO_MAX} characters.` : "",
+              ]
+                .filter(Boolean)
+                .join(" "),
         );
         return;
       }
@@ -371,7 +357,7 @@ function Scope({
     try {
       if (Object.keys(controller.store.getState().inputs).length > 0) {
         setStepError(
-          "Some of your input isn't valid yet. Fix the highlighted fields, or skip this step to keep it for later.",
+          "Some of your input isn't valid yet. Fix the highlighted fields, or skip to keep it for later.",
         );
         return;
       }
@@ -383,7 +369,7 @@ function Scope({
         );
         if (projects?.data.entries.some(projectIncomplete)) {
           setStepError(
-            "Each project needs a title and summary. Add them, remove the project, or skip this step to keep it as is.",
+            "Each project needs a title and summary. Add them, remove the project, or skip to keep it as is.",
           );
           return;
         }
@@ -471,14 +457,15 @@ function Scope({
     }
   }
 
-  const saveLabel = {
-    loading: "Loading...",
-    saving: "Saving",
-    saved: "Saved",
-    unsaved: "Unsaved input",
-    failed: "Couldn't save",
-    blocked: "Couldn't save",
-  }[state.status];
+  const copy = stepCopy[step];
+  const actions = stepActions(step);
+  const segments = progressSegments(step);
+  const currentGraph = findGraph(state.working);
+  const graphUnfinished = Boolean(
+    currentGraph &&
+      (graphUnchecked ||
+        (graphStatus && graphGap(graphStatus, currentGraph) !== null)),
+  );
   const needsAttention =
     ["failed", "blocked"].includes(state.status) ||
     state.recoveries.length > 0 ||
@@ -489,450 +476,398 @@ function Scope({
     Boolean(state.batch) ||
     Boolean(state.validationJournal) ||
     Boolean(state.discardJournal);
-  const copy = stepCopy[step];
-  const currentGraph = findGraph(state.working);
-  const graphUnfinished = Boolean(
-    currentGraph &&
-      (graphUnchecked ||
-        (graphStatus && graphGap(graphStatus, currentGraph) !== null)),
-  );
+  // The top bar shows the address once the server confirms the hold.
+  const heldAddress =
+    checked && !checked.issues?.includes("address")
+      ? state.confirmed?.draft.requestedSubdomain
+      : undefined;
+  const showActions = !loading && !closed;
+  const opening = reviewAction === "opening";
+  const primaryLabel =
+    step === "review"
+      ? opening
+        ? "Opening editor..."
+        : reviewAction === "failed"
+          ? "Retry opening editor"
+          : actions.primary
+      : navigating
+        ? "Saving..."
+        : actions.primary;
+  const progressItem =
+    (offset: number) =>
+    (progress: "done" | "current" | "todo", position: number) => {
+      const item = guideSteps[offset + position] ?? "review";
+      return (
+        <li
+          key={item}
+          data-state={progress}
+          aria-current={progress === "current" ? "step" : undefined}
+        >
+          <span className="wb-visually-hidden">
+            {stepCopy[item].label}
+            {progress === "done"
+              ? ", done"
+              : progress === "current"
+                ? ", current step"
+                : ""}
+          </span>
+        </li>
+      );
+    };
 
   return (
     <div
-      className="setup-guide"
+      className="setup-guide workbench"
       data-guide-step={loading ? "loading" : step}
       data-editor-scope={controller.scopeKey}
     >
-      <header className="guide-header">
-        <Brand />
-        <span className="guide-spacer" />
-        <span className="guide-save" data-save-status={state.status}>
-          {saveLabel}
-        </span>
-        <button
-          type="button"
-          className="ghost-button"
-          onClick={() => void signOut()}
-          disabled={signingOut}
-        >
-          {signingOut ? "Signing out..." : "Sign out"}
-        </button>
-      </header>
-      <nav className="guide-nav" aria-label="Setup steps">
-        <div className="guide-nav-back">
-          {back && !loading && !closed && (
-            <button
-              type="button"
-              className="ghost-button guide-back"
-              disabled={disabled}
-              onClick={() => void go(back)}
-            >
-              <span aria-hidden="true">‹</span> Back
-            </button>
-          )}
-        </div>
-        <ol className="guide-progress" aria-label="Setup progress">
-          {guideSteps.map((item, position) => (
-            <li
-              key={item}
-              data-reached={position <= index ? "true" : "false"}
-              aria-current={position === index && !loading ? "step" : undefined}
-            >
-              <span className="sr-only">
-                {stepCopy[item].label}
-                {position < index
-                  ? ", visited"
-                  : position === index
-                    ? ", current step"
-                    : ""}
+      <header className="guide-topbar">
+        <div className="guide-topbar-start">
+          <a className="guide-mark" href="/">
+            <span aria-hidden="true">h</span>
+            <span className="wb-visually-hidden">hasaweb.site home</span>
+          </a>
+          {heldAddress && (
+            <span className="guide-held" data-guide-address={heldAddress}>
+              <span className="guide-held-name">
+                {heldAddress}.hasaweb.site
               </span>
-            </li>
-          ))}
-        </ol>
-        {/* Required steps never offer a skip or an editor bypass. */}
-        <div className="guide-nav-skip">
-          {!loading && !closed && isSkippable(step) && (
-            <>
-              <button
-                type="button"
-                className="ghost-button"
-                disabled={disabled}
-                onClick={() => void skip(step, nextStep(step))}
-              >
-                Skip this step
-              </button>
-              <button
-                type="button"
-                className="ghost-button"
-                disabled={disabled}
-                onClick={() => void skip(step, remainingTarget)}
-              >
-                Skip remaining steps
-              </button>
-            </>
+              <StatusPill status="draft">Private</StatusPill>
+            </span>
           )}
         </div>
-      </nav>
-      <main className="guide-content">
-        {closed ? (
-          <div className="guide-form" data-guide-closed="">
-            <div className="guide-heading">
+        {!loading && (
+          <div className="guide-progress-wrap">
+            <ol className="guide-progress" aria-label="Setup progress">
+              <li className="guide-progress-group">
+                <ol aria-label="Required steps">
+                  {segments.required.map(progressItem(0))}
+                </ol>
+              </li>
+              <li className="guide-progress-group">
+                <ol aria-label="Optional steps">
+                  {segments.optional.map(
+                    progressItem(segments.required.length),
+                  )}
+                </ol>
+              </li>
+            </ol>
+          </div>
+        )}
+        <div className="guide-topbar-end">
+          <SaveState status={state.status} />
+          <Button
+            size="s"
+            kind="ghost"
+            className="guide-sign-out"
+            onClick={() => void signOut()}
+            disabled={signingOut}
+          >
+            <Icon name="log-out" size={16} />
+            <span className="guide-label">
+              {signingOut ? "Signing out..." : "Sign out"}
+            </span>
+          </Button>
+        </div>
+      </header>
+      <main className="guide-stage" data-step-kind={step}>
+        <div className="guide-column">
+          {closed ? (
+            <div className="guide-prompt" data-guide-closed="">
               <h1 ref={heading} tabIndex={-1}>
                 Your portfolio is in the editor
               </h1>
-              <p className="guide-intro">
-                Setup is complete, so this page can't change your draft. Any
-                unsaved input from this tab stays available for recovery in the
-                editor.
-              </p>
+              <Button kind="primary" onClick={() => onEntered(null)}>
+                Open editor
+              </Button>
             </div>
-            <button
-              type="button"
-              className="guide-continue"
-              onClick={() => onEntered(null)}
-            >
-              Open editor
-            </button>
-          </div>
-        ) : loading ? (
-          checkError ? null : (
-            <p role="status">Opening your setup...</p>
-          )
-        ) : (
-          <div className="guide-form">
-            <div className="guide-heading">
-              <p className="caption">
-                {String(index + 1).padStart(2, "0")} /{" "}
-                {String(guideSteps.length).padStart(2, "0")}
-                {required ? "" : " · Optional"}
+          ) : loading ? (
+            checkError ? null : (
+              <p role="status" className="guide-loading">
+                Opening your setup...
               </p>
-              <h1 ref={heading} tabIndex={-1}>
-                {copy.title}
-              </h1>
-              <p className="guide-intro">{copy.intro}</p>
-            </div>
-            {step === "address" ? (
-              <AddressStep
-                controller={controller}
-                disabled={disabled}
-                onReserved={async () => {
-                  try {
-                    const next = await refresh();
-                    if (next.issues?.includes("address")) {
+            )
+          ) : (
+            <>
+              <div className="guide-prompt">
+                {step !== "review" && (
+                  <p className="guide-kicker">
+                    {String(index + 1).padStart(2, "0")}
+                    <span aria-hidden="true"> · </span>
+                    <span className="wb-visually-hidden">, </span>
+                    {copy.label}
+                  </p>
+                )}
+                <h1 ref={heading} tabIndex={-1}>
+                  {copy.title}
+                </h1>
+              </div>
+              {step === "address" ? (
+                <GuideAddress
+                  formId={formId}
+                  controller={controller}
+                  disabled={disabled}
+                  onReserved={async () => {
+                    try {
+                      const next = await refresh();
+                      if (next.issues?.includes("address")) {
+                        setStepError(
+                          "We couldn't confirm your reservation. Retry to continue.",
+                        );
+                        return;
+                      }
+                    } catch {
                       setStepError(
                         "We couldn't confirm your reservation. Retry to continue.",
                       );
                       return;
                     }
-                  } catch {
-                    setStepError(
-                      "We couldn't confirm your reservation. Retry to continue.",
-                    );
-                    return;
-                  }
-                  const target = nextStep("address");
-                  if (target) await go(target);
-                }}
-              />
-            ) : step === "profile" || step === "links" ? (
-              <form
-                id={formId}
-                className="guide-fields guide-wide"
-                aria-label={step === "profile" ? "Your profile" : "Your links"}
-                noValidate
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void continueFrom(step);
-                }}
-              >
-                {step === "profile" ? (
-                  <ProfileControls
-                    controller={controller}
-                    disabled={disabled}
-                    showLocation={false}
-                  />
-                ) : (
-                  <SocialLinksControl
-                    controller={controller}
-                    disabled={disabled}
-                  />
-                )}
-              </form>
-            ) : step === "skills" || step === "projects" ? (
-              <form
-                id={formId}
-                className="guide-fields guide-wide"
-                aria-label={step === "skills" ? "Your skills" : "Your projects"}
-                noValidate
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  void continueOptional(step);
-                }}
-              >
-                {step === "skills" ? (
-                  <GuideSkills controller={controller} disabled={disabled} />
-                ) : (
-                  <GuideProjects controller={controller} disabled={disabled} />
-                )}
-              </form>
-            ) : step === "github" ? (
-              <>
-                {/* The panel's own fields and buttons stay outside the
-                    form, so Enter in the username field never continues. */}
+                    const target = nextStep("address");
+                    if (target) await go(target);
+                  }}
+                />
+              ) : step === "profile" || step === "links" ? (
                 <form
                   id={formId}
-                  aria-label="Your GitHub activity"
+                  className="guide-answer"
+                  aria-label={
+                    step === "profile" ? "Your profile" : "Your links"
+                  }
                   noValidate
                   onSubmit={(event) => {
                     event.preventDefault();
-                    void continueGitHub();
+                    void continueFrom(step);
                   }}
-                />
-                <div className="guide-fields guide-wide">
-                  <GuideGitHub
-                    controller={controller}
-                    disabled={disabled}
-                    adding={addingGraph}
-                    onAdding={setAddingGraph}
-                    onStatus={(status) => {
-                      setGraphStatus(status);
-                      if (status) setGraphUnchecked(false);
-                    }}
-                    beforeConsent={async () => {
-                      try {
-                        // Consent returns to this saved step.
-                        controller.changeProgress(progressFor("github"));
-                        await controller.flushValid();
-                        return true;
-                      } catch {
-                        return false;
-                      }
+                >
+                  {step === "profile" ? (
+                    <GuideProfile controller={controller} disabled={disabled} />
+                  ) : (
+                    <GuideLinks controller={controller} disabled={disabled} />
+                  )}
+                </form>
+              ) : step === "skills" || step === "projects" ? (
+                <form
+                  id={formId}
+                  className="guide-answer"
+                  aria-label={
+                    step === "skills" ? "Your skills" : "Your projects"
+                  }
+                  noValidate
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void continueOptional(step);
+                  }}
+                >
+                  {step === "skills" ? (
+                    <GuideSkills controller={controller} disabled={disabled} />
+                  ) : (
+                    <GuideProjects
+                      controller={controller}
+                      disabled={disabled}
+                    />
+                  )}
+                </form>
+              ) : step === "github" ? (
+                <>
+                  {/* The lookup field and its buttons stay outside the form,
+                      so Enter in the username field looks it up instead of
+                      continuing. */}
+                  <form
+                    id={formId}
+                    aria-label="Your GitHub activity"
+                    noValidate
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      void continueGitHub();
                     }}
                   />
-                  {graphUnfinished && (
-                    <div className="guide-note" data-guide-github-unfinished="">
-                      <p>GitHub needs attention</p>
-                      <p>
-                        Your graph stays in your draft as unfinished, and
-                        publishing is blocked until you complete it or remove it
-                        in the editor. The rest of your portfolio isn't
-                        affected.
-                      </p>
-                      <button
-                        type="button"
-                        className="ghost-button"
-                        disabled={disabled}
-                        onClick={() => {
-                          const target = nextStep("github");
-                          if (target) void go(target);
-                        }}
+                  <div className="guide-answer">
+                    <GuideGitHub
+                      controller={controller}
+                      disabled={disabled}
+                      onAdding={setAddingGraph}
+                      onStatus={(status) => {
+                        setGraphStatus(status);
+                        if (status) setGraphUnchecked(false);
+                      }}
+                      beforeConsent={async () => {
+                        try {
+                          // Consent returns to this saved step.
+                          controller.changeProgress(progressFor("github"));
+                          await controller.flushValid();
+                          return true;
+                        } catch {
+                          return false;
+                        }
+                      }}
+                    />
+                    {graphUnfinished && (
+                      <div
+                        className="guide-notice"
+                        data-guide-github-unfinished=""
                       >
-                        Finish later in the editor
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </>
-            ) : (
-              <GuideReview
-                recovery={recovery}
-                controller={controller}
-                disabled={disabled}
-                send={send}
-                previewDocument={previewDocument}
-                onEntered={onEntered}
-                onRequired={(entered) => {
-                  if (entered.result.kind !== "required") return;
-                  const issues = entered.result.issues;
-                  // The shell returns to the first step the server reports.
-                  setChecked({ revision: entered.result.revision, issues });
-                  setHandoffNotice(
-                    `Required content is missing: ${issues.join(", ")}. Complete it to open the editor.`,
-                  );
+                        <StatusPill status="issue">Unfinished</StatusPill>
+                        <Button
+                          size="s"
+                          kind="ghost"
+                          disabled={disabled}
+                          onClick={() => {
+                            const target = nextStep("github");
+                            if (target) void go(target);
+                          }}
+                        >
+                          Finish later in the editor
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <GuideReview
+                  formId={formId}
+                  recovery={recovery}
+                  controller={controller}
+                  disabled={disabled}
+                  send={send}
+                  previewDocument={previewDocument}
+                  onAction={setReviewAction}
+                  onEntered={onEntered}
+                  onRequired={(entered) => {
+                    if (entered.result.kind !== "required") return;
+                    const issues = entered.result.issues;
+                    // The shell returns to the first step the server reports.
+                    setChecked({ revision: entered.result.revision, issues });
+                    setHandoffNotice(
+                      `Required content is missing: ${issues.join(", ")}. Complete it to open the editor.`,
+                    );
+                  }}
+                />
+              )}
+            </>
+          )}
+          {checkError && (
+            <div className="guide-alert" role="alert">
+              <p>We couldn't check your setup. Your answers are kept.</p>
+              <Button
+                size="s"
+                onClick={() => {
+                  setCheckError(false);
+                  setCheckAttempt((value) => value + 1);
                 }}
-              />
-            )}
-          </div>
-        )}
-        {checkError && (
-          <div className="auth-error guide-alert" role="alert">
-            <p>We couldn't check your setup.</p>
-            <p>Your answers are kept. Check your connection and retry.</p>
-            <button
-              type="button"
-              className="ghost-button"
-              onClick={() => {
-                setCheckError(false);
-                setCheckAttempt((value) => value + 1);
-              }}
-            >
-              Retry
-            </button>
-          </div>
-        )}
-        {handoffNotice && !closed && (
-          <p className="guide-error" role="alert">
-            {handoffNotice}
-          </p>
-        )}
-        {stepError && (
-          <p className="guide-error" role="alert">
-            {stepError}
-          </p>
-        )}
-        {signOutError && (
-          <p className="guide-error" role="alert">
-            {signOutError}
-          </p>
-        )}
-        {needsAttention && (
-          <div className="guide-recovery">
-            <DraftRecovery recovery={recovery} />
-          </div>
-        )}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+          {handoffNotice && !closed && (
+            <p className="guide-error" role="alert">
+              {handoffNotice}
+            </p>
+          )}
+          {stepError && (
+            <p className="guide-error" role="alert">
+              {stepError}
+            </p>
+          )}
+          {signOutError && (
+            <p className="guide-error" role="alert">
+              {signOutError}
+            </p>
+          )}
+          {needsAttention && (
+            <div className="guide-recovery">
+              <DraftRecovery recovery={recovery} />
+            </div>
+          )}
+          {showActions && (
+            // Setup v2 / Actions: Back on the left; Skip to review, Skip and
+            // the primary action on the right. Required steps never offer a
+            // skip or an editor bypass.
+            <div className="guide-actions">
+              {actions.back && back && (
+                <Button
+                  kind="ghost"
+                  icon="chevron-left"
+                  className="guide-back"
+                  disabled={disabled}
+                  onClick={() => void go(back)}
+                >
+                  <span className="guide-label">Back</span>
+                </Button>
+              )}
+              <div className="guide-forward">
+                {actions.skipToReview && (
+                  <Button
+                    kind="ghost"
+                    className="guide-skip-review"
+                    disabled={disabled}
+                    onClick={() => void skip(step, remainingTarget)}
+                  >
+                    Skip to review
+                  </Button>
+                )}
+                {actions.skip && (
+                  <Button
+                    kind="ghost"
+                    className="guide-skip"
+                    disabled={disabled}
+                    onClick={() => void skip(step, nextStep(step))}
+                  >
+                    Skip
+                  </Button>
+                )}
+                <Button
+                  kind="primary"
+                  type="submit"
+                  form={formId}
+                  className="guide-continue"
+                  disabled={
+                    disabled ||
+                    (step === "review"
+                      ? opening || state.status === "saving"
+                      : imagePending)
+                  }
+                >
+                  {primaryLabel}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
-      {!loading &&
-        !closed &&
-        (requiredSteps.has(step) || isSkippable(step)) && (
-          <footer className="guide-footer">
-            <button
-              className="guide-continue"
-              type="submit"
-              form={formId}
-              disabled={disabled || imagePending}
-            >
-              {navigating ? "Saving..." : "Continue"}
-            </button>
-          </footer>
-        )}
     </div>
   );
 }
 
-function AddressStep({
-  controller,
-  disabled,
-  onReserved,
-}: {
-  controller: ReturnType<typeof createDraftController>;
-  disabled: boolean;
-  onReserved(): Promise<void>;
-}) {
-  const id = useId();
-  const input = useRef<HTMLInputElement>(null);
-  const [working, setWorking] = useState(false);
-  const address = useAddressReservation(controller, {
-    action: "Continue",
-    idle: "Continue to reserve this address. Your site stays private.",
-  });
-  const { value, valid, busy, registry } = address;
-  const status = address.status;
-  // A name typed on the entry page fills an empty field once and is checked
-  // like any typed name; only Continue reserves it.
-  const [suggested, setSuggested] = useState<string | null>(null);
-  const change = address.change;
-  // biome-ignore lint/correctness/useExhaustiveDependencies: The suggestion is taken once, against the field as the step first shows it.
-  useEffect(() => {
-    const name = takeAddressSuggestion();
-    if (name && !value) {
-      change(name);
-      setSuggested(name);
-    }
-  }, []);
-  const check = address.check;
-  useEffect(() => {
-    if (suggested === null || suggested !== value) return;
-    setSuggested(null);
-    void check();
-  }, [suggested, value, check]);
-  async function submit() {
-    if (working || busy || disabled) return;
-    if (!valid) {
-      input.current?.focus();
-      return;
-    }
-    setWorking(true);
-    try {
-      // A confirmed hold on this exact name needs no new reservation.
-      if (!address.held) {
-        const available = await address.check();
-        if (available !== "available" && available !== "held") {
-          input.current?.focus();
-          return;
-        }
-        if (!(await address.reserve())) {
-          input.current?.focus();
-          return;
-        }
-      }
-      await onReserved();
-    } finally {
-      setWorking(false);
-    }
-  }
+const saveLabels = {
+  loading: "Loading...",
+  saving: "Saving",
+  saved: "Saved",
+  unsaved: "Unsaved",
+  failed: "Couldn't save",
+  blocked: "Couldn't save",
+} as const;
+
+// The top bar's save state (Figma 464:11845). Retry and the other recovery
+// choices sit with the step, in the shared draft recovery controls.
+function SaveState({ status }: { status: keyof typeof saveLabels }) {
   return (
-    <form
-      id={formId}
-      className="guide-fields"
-      aria-label="Portfolio address"
-      data-publication-field="address"
-      noValidate
-      onSubmit={(event) => {
-        event.preventDefault();
-        void submit();
-      }}
-    >
-      <div className="guide-field">
-        <label htmlFor={id}>Your address</label>
-        <div className="guide-address-input">
-          <input
-            ref={input}
-            id={id}
-            name="address"
-            value={value}
-            autoCapitalize="none"
-            autoComplete="off"
-            autoCorrect="off"
-            spellCheck={false}
-            aria-describedby={`${id}-status ${id}-help`}
-            aria-invalid={address.tone === "error"}
-            disabled={disabled || busy || working}
-            onChange={(event) => address.change(event.target.value)}
-            // Disabling the field during Continue blurs it; that submit
-            // already runs its own availability check.
-            onBlur={() => {
-              if (!working) void address.check();
-            }}
-          />
-          <span aria-hidden="true">.hasaweb.site</span>
-        </div>
-      </div>
-      <p
-        id={`${id}-status`}
-        className="guide-address-status"
-        data-tone={address.tone}
-        role="status"
-        aria-live="polite"
-      >
-        {address.tone === "success" && <span aria-hidden="true">✓ </span>}
-        {busy ? "Reserving your address..." : status}
-      </p>
-      <p id={`${id}-help`} className="guide-help">
-        3–30 lowercase letters, numbers or hyphens. No hyphen at either end.
-      </p>
-      {registry && registry.name !== value && (
-        <p className="guide-help">
-          Current reservation: {registry.name}.hasaweb.site
-        </p>
+    <span className="guide-save" data-save-status={status}>
+      {status === "unsaved" ? (
+        <span className="guide-save-dot" aria-hidden="true" />
+      ) : (
+        <Icon
+          name={
+            status === "saved"
+              ? "cloud-check"
+              : status === "saving" || status === "loading"
+                ? "loader"
+                : "wifi-off"
+          }
+          size={16}
+        />
       )}
-      <div className="guide-note">
-        <p>Reserved when you continue</p>
-        <p>
-          Continuing holds this address for your portfolio. Nothing is public
-          until you publish, and the address becomes permanent on your first
-          publication. You can change it until then.
-        </p>
-      </div>
-    </form>
+      {saveLabels[status]}
+    </span>
   );
 }

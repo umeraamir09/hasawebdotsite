@@ -4,7 +4,6 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import {
-  type ConsentReturn,
   choosePublicOnly,
   detectGraphUsername,
   type GraphPrivateState,
@@ -177,8 +176,9 @@ export function describeGraph(
   };
 }
 
-// Graph setup, independent of where it is shown. The editor and the Phase 42D
-// onboarding step both render this panel. A username (detected or typed) is
+// The editor's graph setup. The setup guide's GitHub step uses the same
+// service and status descriptions with its own controls. A username
+// (detected or typed) is
 // fetched through the owner-only setup route, and `onAccepted` receives the
 // canonical username only after the server accepted it, so a failed fetch
 // never leaves a draft naming an unknown account. Private activity uses the
@@ -191,8 +191,6 @@ export function GitHubSetupPanel({
   onAccepted,
   onPrivateChange,
   beforeConsent,
-  returnTo = "editor",
-  onStatus,
 }: {
   savedUsername: string;
   includePrivate: boolean;
@@ -201,10 +199,6 @@ export function GitHubSetupPanel({
   onPrivateChange(includePrivate: boolean): void;
   // Saves the draft before leaving for GitHub. False keeps the owner here.
   beforeConsent(): Promise<boolean>;
-  // The fixed context GitHub returns to (Phase 42D adds the setup guide).
-  returnTo?: ConsentReturn;
-  // Every status the panel shows, for a host that gates navigation on it.
-  onStatus?(status: GraphSetupStatus): void;
 }) {
   const id = useId();
   const [typed, setTyped] = useState<string | null>(null);
@@ -215,11 +209,6 @@ export function GitHubSetupPanel({
   const [confirmRemoval, setConfirmRemoval] = useState(false);
   const alive = useRef(true);
   const field = useRef<HTMLInputElement>(null);
-  const statusListener = useRef(onStatus);
-  statusListener.current = onStatus;
-  useEffect(() => {
-    if (status) statusListener.current?.(status);
-  }, [status]);
   useEffect(() => {
     alive.current = true;
     return () => {
@@ -330,9 +319,8 @@ export function GitHubSetupPanel({
         }
         return;
       }
-      const url = await startPrivateConsent(undefined, returnTo);
-      // Same tab: GitHub returns to the editor, which reopens this section,
-      // or to the setup guide, which resumes its saved GitHub step.
+      const url = await startPrivateConsent(undefined, "editor");
+      // Same tab: GitHub returns to the editor, which reopens this section.
       location.assign(url);
     } catch (cause) {
       if (alive.current) {
