@@ -1,6 +1,8 @@
-// Private-activity consent with the separate activity OAuth app. Sign-in uses
-// a different app and `user:email`. This app asks for `read:user` only, which
-// GitHub documents as the scope for anonymized private contribution counts.
+// Private-activity consent with the separate activity OAuth app, used for a
+// graph account other than the owner's GitHub sign-in. This app asks for
+// `read:user` only, which GitHub documents as the scope for anonymized private
+// contribution counts. The sign-in app asks for `read:user` and `user:email`,
+// so the owner's own graph can use the sign-in token.
 
 export const ACTIVITY_SCOPE = "read:user";
 /** One consent attempt stays usable for ten minutes, like GitHub's codes. */
@@ -45,14 +47,20 @@ export async function consentStateHash(state: string) {
   return [...digest].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-/** Exactly `read:user`, in any separator form GitHub reports. */
+// The sign-in token also carries `user:email`. Anything broader is refused.
+const ACCEPTED_SCOPES = new Set([ACTIVITY_SCOPE, "read:user,user:email"]);
+
+/**
+ * `read:user`, alone or with the sign-in app's `user:email`, in any separator
+ * form GitHub reports.
+ */
 export function hasActivityScope(value: string | null | undefined) {
-  return (
+  return ACCEPTED_SCOPES.has(
     String(value ?? "")
       .split(/[ ,]+/)
       .filter(Boolean)
       .sort()
-      .join(",") === ACTIVITY_SCOPE
+      .join(","),
   );
 }
 

@@ -11,8 +11,10 @@ import {
 const day = (offset) =>
   new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10);
 
-// Owner draft, preview, publication and visitor journeys for the public
-// GitHub graph. GitHub itself is a local stand-in (scripts/lib/github-fixture).
+// Owner draft, preview, publication and visitor journeys for the GitHub
+// graph: one account with public and private activity, connected from the
+// GitHub sign-in or authorized on GitHub. GitHub itself is a local stand-in
+// (e2e/support/github-fixture).
 export async function checkGitHubGraphJourney({
   getPage,
   boot,
@@ -144,7 +146,22 @@ export async function checkGitHubGraphJourney({
       })
       .waitFor();
     await openPanel(page, "Build");
+    // Authorization on GitHub returns to this browser origin.
+    github.state.callbackOrigin = new URL(page.url()).origin;
+    github.state.consent = { as: null, cancel: false, hold: false };
     return page;
+  }
+  // GitHub returns to /editor?github=consent, which reopens the section.
+  async function reopen() {
+    const page = getPage();
+    await page.waitForURL(/\/editor(\?github=consent)?$/, { timeout: 60000 });
+    await page.waitForFunction(() => window.editorFixture?.ready);
+    const controls = page.getByRole("region", {
+      name: "GitHub activity controls",
+      exact: true,
+    });
+    await controls.waitFor({ timeout: 30000 });
+    return controls;
   }
   async function addGraph(page) {
     await addSection(page, "GitHub activity");
@@ -158,14 +175,22 @@ export async function checkGitHubGraphJourney({
     await controls.waitFor();
     return controls;
   }
-  async function fetchFor(controls, username, expectText) {
+  // Another account: its username, then authorization on GitHub as it.
+  async function chooseAccount(controls, username) {
     // Changing the account shares the real retry cooldown. Age it, don't wait.
     if (await connection()) await age();
+    const other = controls.getByRole("button", { name: "Use another account" });
+    if (await other.count()) await other.click();
     await controls.getByLabel("GitHub username").fill(username);
-    await controls.getByRole("button", { name: "Fetch activity" }).click();
-    await controls.getByRole("status").getByText(expectText).waitFor({
+    await controls.getByRole("button", { name: "Continue on GitHub" }).click();
+  }
+  async function connectFor(controls, username, expectText) {
+    await chooseAccount(controls, username);
+    const reopened = await reopen();
+    await reopened.getByRole("status").getByText(expectText).waitFor({
       timeout: 60000,
     });
+    return reopened;
   }
   async function publish() {
     await flush();
@@ -182,7 +207,7 @@ export async function checkGitHubGraphJourney({
       .getByRole("button", { name: /^(Publish|Publish changes|Try again)$/ })
       .click();
     await (await checklist())
-      .getByRole("button", { name: "Connect GitHub and fetch activity" })
+      .getByRole("button", { name: "Connect your GitHub account" })
       .waitFor({ timeout: 60000 });
     assert.equal(await (await checklist()).getByText("You're live").count(), 0);
   }
@@ -196,20 +221,20 @@ export async function checkGitHubGraphJourney({
   }
 
   await run(
-    "GitHub graph setup: manual username, status, Retry and blocked publication",
+    "GitHub graph setup: another account by username, authorized on GitHub, with status, Retry and blocked publication",
     async () => {
       github.state.failure = null;
       github.state.calls.length = 0;
       const page = await start("graph-site");
-      const controls = await addGraph(page);
+      let controls = await addGraph(page);
 
-      // Google owners need no GitHub sign-in link: nothing is detected, nothing
-      // is added, and a typed username still works.
-      assert.equal(await controls.getByText(/We detected/).count(), 0);
-      await controls
-        .getByRole("status")
-        .getByText(/Not set up/)
-        .waitFor();
+      // A Google owner has no GitHub sign-in to connect: the username form
+      // shows at once, and nothing is selected or authorized yet.
+      assert.equal(
+        await controls.getByRole("button", { name: "Connect GitHub" }).count(),
+        0,
+      );
+      await controls.getByLabel("GitHub username").waitFor();
       assert.equal(await connection(), undefined);
       await expectBlocked();
 
@@ -217,14 +242,16 @@ export async function checkGitHubGraphJourney({
       await controls.getByLabel("GitHub username").fill("not a user!");
       assert.equal(
         await controls
-          .getByRole("button", { name: "Fetch activity" })
+          .getByRole("button", { name: "Continue on GitHub" })
           .isDisabled(),
         true,
       );
 
       // An unknown account is reported and changes neither draft nor server.
       await controls.getByLabel("GitHub username").fill("ghost-user");
-      await controls.getByRole("button", { name: "Fetch activity" }).click();
+      await controls
+        .getByRole("button", { name: "Continue on GitHub" })
+        .click();
       await controls
         .getByRole("alert")
         .getByText(/no account with that username/)
@@ -232,10 +259,12 @@ export async function checkGitHubGraphJourney({
       assert.equal(await connection(), undefined);
       assert.equal(await savedUsername(), "");
 
-      // A provider outage never selects an account or asks for a reconnect.
+      // A provider outage never selects an account or leaves for GitHub.
       github.state.failure = 503;
       await controls.getByLabel("GitHub username").fill("fixture-owner");
-      await controls.getByRole("button", { name: "Fetch activity" }).click();
+      await controls
+        .getByRole("button", { name: "Continue on GitHub" })
+        .click();
       await controls
         .getByRole("alert")
         .getByText(/GitHub couldn't be reached/)
@@ -243,32 +272,35 @@ export async function checkGitHubGraphJourney({
       assert.equal(await connection(), undefined);
       github.state.failure = null;
 
-      // A typed username in other capitalization resolves to the canonical one
-      // and links to that exact profile.
-      await fetchFor(controls, "fixture-owner", /Connected\. Fetched/);
+      // A typed username in other capitalization resolves to the canonical
+      // one, is authorized on GitHub as that account, and links to it.
+      controls = await connectFor(
+        controls,
+        "fixture-owner",
+        /Connected\. 5 contributions in the last year/,
+      );
+      assert.ok(
+        github.state.calls.some(
+          (call) => call.kind === "authorize" && call.login === "Fixture-Owner",
+        ),
+      );
       await flush();
       assert.equal(await savedUsername(), "Fixture-Owner");
       assert.equal(
+        (await savedDraft()).components.find((item) => item.type === "github")
+          .data.includePrivate,
+        true,
+      );
+      assert.equal(
         await controls
-          .getByRole("link", { name: "View @Fixture-Owner on GitHub" })
+          .getByRole("link", { name: "@Fixture-Owner" })
           .getAttribute("href"),
         "https://github.com/Fixture-Owner",
       );
       const stored = await connection();
       assert.equal(stored.login, "Fixture-Owner");
-      assert.equal(stored.private_enabled, 0);
-      assert.equal(stored.token_enc, null);
-      assert.equal(
-        (
-          await sql(
-            "SELECT authorized_calendar FROM github_activity WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
-          )
-        )[0].authorized_calendar,
-        null,
-      );
-      await controls
-        .getByText(/5 public contributions in the last year/)
-        .waitFor();
+      assert.equal(stored.private_enabled, 1);
+      assert.doesNotMatch(String(stored.token_enc), /gho_fixture/);
 
       // The live preview draws the fetched graph for the draft username.
       await displayed();
@@ -286,6 +318,12 @@ export async function checkGitHubGraphJourney({
       );
 
       // Retry is rate limited, then recovers after the cooldown.
+      await age();
+      await controls.getByRole("button", { name: "Refresh activity" }).click();
+      await controls
+        .getByRole("status")
+        .getByText(/Connected\./)
+        .waitFor();
       await controls.getByRole("button", { name: "Refresh activity" }).click();
       await controls
         .getByRole("alert")
@@ -296,40 +334,36 @@ export async function checkGitHubGraphJourney({
       await controls.getByRole("button", { name: "Refresh activity" }).click();
       await controls
         .getByRole("status")
-        .getByText(/Couldn't refresh GitHub\. Showing the graph from/)
+        .getByText(/Couldn't refresh GitHub\. Showing 5 contributions from/)
         .waitFor({ timeout: 30000 });
       github.state.failure = null;
       await age();
       await controls.getByRole("button", { name: "Refresh activity" }).click();
       await controls
         .getByRole("status")
-        .getByText(/Connected\. Fetched/)
+        .getByText(/Connected\. 5 contributions/)
         .waitFor();
 
-      // Private contributions shown on the profile: honest, blocking, recoverable.
-      await fetchFor(controls, "private-owner", /shows private contributions/);
+      // A profile that shows private contributions connects like any other:
+      // the authorized calendar needs no public baseline.
+      controls = await connectFor(
+        controls,
+        "private-owner",
+        /Connected\. 0 contributions in the last year/,
+      );
       await flush();
       assert.equal(await savedUsername(), "private-owner");
-      await expectBlocked();
       await displayed();
-      assert.equal(
-        await frame()
-          .locator('[data-github-graph][data-state="unavailable"]')
-          .count(),
-        1,
-      );
-      // The rest of the portfolio is untouched while the graph is blocked.
+      await frame()
+        .locator('[data-github-graph][data-state="ready"]')
+        .waitFor({ timeout: 30000 });
       assert.match(await frame().locator("body").innerText(), /Graph owner/);
       // Zero contributions is a valid, successful result.
-      await fetchFor(
+      await connectFor(
         controls,
         "zero-owner",
-        /No public contributions in the last year/,
+        /Connected\. 0 contributions in the last year/,
       );
-      await (await checklist())
-        .getByText("You're live")
-        .waitFor({ state: "detached", timeout: 1000 })
-        .catch(() => {});
       await getPage().screenshot({
         path: join(evidence, "github-graph-editor.png"),
         fullPage: true,
@@ -342,8 +376,11 @@ export async function checkGitHubGraphJourney({
     async () => {
       github.state.failure = null;
       const page = await start("graph-site");
-      const controls = await addGraph(page);
-      await fetchFor(controls, "Fixture-Owner", /Connected\. Fetched/);
+      let controls = await connectFor(
+        await addGraph(page),
+        "Fixture-Owner",
+        /Connected\. 5 contributions/,
+      );
       await publish();
 
       // The published page is a placeholder. No counts are baked in.
@@ -441,7 +478,11 @@ export async function checkGitHubGraphJourney({
         // Editing the draft to another account never changes the live graph's
         // configuration. Until the next Publish the live graph keeps the
         // published account's public counts (Phase 42), never the draft's.
-        await fetchFor(controls, "zero-owner", /No public contributions/);
+        controls = await connectFor(
+          controls,
+          "zero-owner",
+          /Connected\. 0 contributions/,
+        );
         await flush();
         live = await graphJson();
         assert.equal(live.body.username, "Fixture-Owner");
@@ -512,9 +553,15 @@ export async function checkGitHubGraphJourney({
   );
 
   await run(
-    "GitHub graph detects a sign-in username as a suggestion only",
+    "GitHub sign-in connects its own graph with private activity and no second authorization; a revoked sign-in token authorizes on GitHub",
     async () => {
       github.state.failure = null;
+      github.addUser({
+        login: "Signup-Owner",
+        databaseId: 4343,
+        counts: { [recent]: 1 },
+        privateCounts: { [recent]: 2 },
+      });
       await boot();
       const empty = await getPage().evaluate(() => {
         const draft = structuredClone(
@@ -524,46 +571,100 @@ export async function checkGitHubGraphJourney({
         );
         return { ...draft, components: [], samples: {} };
       });
+      const signInToken = github.issueSignInToken("Signup-Owner");
       await sql("DELETE FROM account WHERE user_id='draft-alice'");
       await sql(
-        "INSERT INTO account(id,account_id,provider_id,user_id,created_at,updated_at) VALUES('fixture-github-account','4242','github','draft-alice',?,?)",
-        [Date.now(), Date.now()],
+        "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES('fixture-github-account','4343','github','draft-alice',?,?,?)",
+        [signInToken, Date.now(), Date.now()],
       );
       github.state.calls.length = 0;
       try {
         await boot(empty);
         const page = getPage();
-        const controls = await addGraph(page);
-        await controls.getByText(/We detected/).waitFor({ timeout: 30000 });
-        await controls
-          .getByRole("button", { name: "Use @Fixture-Owner" })
-          .waitFor();
-        // Detection selects nothing and fetches no calendar.
-        assert.equal(await connection(), undefined);
-        assert.equal(
-          await controls.getByLabel("GitHub username").inputValue(),
-          "",
-        );
-        assert.equal(
-          github.state.calls.filter((call) => call.kind === "activity").length,
-          0,
-        );
-        await controls
-          .getByRole("button", { name: "Use @Fixture-Owner" })
-          .click();
-        assert.equal(
-          await controls.getByLabel("GitHub username").inputValue(),
-          "Fixture-Owner",
-        );
-        assert.equal(await connection(), undefined);
-        await controls.getByRole("button", { name: "Fetch activity" }).click();
+        github.state.callbackOrigin = new URL(page.url()).origin;
+        github.state.consent = { as: null, cancel: false, hold: false };
+        let controls = await addGraph(page);
+        // Adding the section connects the sign-in account: public and
+        // private counts, with no GitHub page in between.
         await controls
           .getByRole("status")
-          .getByText(/Connected\. Fetched/)
-          .waitFor({
-            timeout: 60000,
-          });
-        assert.equal((await connection()).login, "Fixture-Owner");
+          .getByText(/Connected\. 3 contributions in the last year/)
+          .waitFor({ timeout: 60000 });
+        assert.equal(
+          github.state.calls.some((call) => call.kind === "authorize"),
+          false,
+        );
+        await flush();
+        assert.deepEqual(
+          (await savedDraft()).components.find((item) => item.type === "github")
+            .data,
+          { username: "Signup-Owner", includePrivate: true },
+        );
+        const stored = await connection();
+        assert.equal(stored.private_enabled, 1);
+        // Only the encrypted envelope is stored, never the token.
+        assert.ok(!String(stored.token_enc).includes(signInToken));
+        assert.equal(
+          (
+            await sql(
+              "SELECT state FROM github_grant WHERE app_id='fixture' AND github_user_id='node-signup-owner'",
+            )
+          )[0]?.state,
+          "active",
+        );
+        await displayed();
+        await frame()
+          .locator(
+            `[data-github-graph][data-state="ready"] [title="3 contributions on ${recent}"]`,
+          )
+          .waitFor({ timeout: 30000 });
+
+        // Removing the graph revokes the sign-in app's grant at GitHub.
+        await (await outline(page))
+          .getByRole("button", { name: "GitHub activity", exact: true })
+          .press("Delete");
+        await page
+          .getByRole("button", { name: "Remove section", exact: true })
+          .click();
+        await page
+          .locator("dialog.component-removal")
+          .waitFor({ state: "detached", timeout: 30000 });
+        for (let attempt = 0; attempt < 100; attempt++) {
+          if (!github.tokens.get(signInToken).valid) break;
+          await page.waitForTimeout(100);
+        }
+        assert.equal(github.tokens.get(signInToken).valid, false);
+        assert.ok(
+          github.state.calls.some(
+            (call) => call.kind === "delete-grant" && call.app === "fixture",
+          ),
+        );
+
+        // Adding it again cannot reuse the revoked token. Connect GitHub
+        // then authorizes the sign-in account on GitHub.
+        await age();
+        controls = await addGraph(page);
+        const connect = controls.getByRole("button", {
+          name: "Connect GitHub",
+        });
+        await connect.waitFor({ timeout: 60000 });
+        await controls
+          .getByRole("status")
+          .getByText("Not connected.")
+          .waitFor();
+        await connect.click();
+        controls = await reopen();
+        await controls
+          .getByRole("status")
+          .getByText(/Connected\. 3 contributions/)
+          .waitFor({ timeout: 60000 });
+        assert.ok(
+          github.state.calls.some(
+            (call) =>
+              call.kind === "authorize" && call.login === "Signup-Owner",
+          ),
+        );
+        assert.equal((await connection()).private_enabled, 1);
       } finally {
         await sql("DELETE FROM account WHERE id='fixture-github-account'");
       }
@@ -571,10 +672,9 @@ export async function checkGitHubGraphJourney({
   );
 
   await run(
-    "GitHub private activity: consent recovery, Publish boundary and withdrawal without Publish",
+    "GitHub authorization for another account: consent recovery, Publish boundary and withdrawal without Publish",
     async () => {
       github.state.failure = null;
-      github.state.consent = { as: null, cancel: false };
       github.addUser({
         login: "Private-Owner",
         counts: { [recent]: 2 },
@@ -603,44 +703,15 @@ export async function checkGitHubGraphJourney({
         throw new Error("grant cleanup did not finish");
       };
       let page = await start("private-graph");
-      github.state.callbackOrigin = new URL(page.url()).origin;
       let controls = await addGraph(page);
-      await fetchFor(controls, "Private-Owner", /Connected\. Fetched/);
-      const privateStatus = () =>
-        controls.locator("[data-github-private-status]");
-      const reopen = async () => {
-        // GitHub returns to /editor?github=consent; the editor reopens the section.
-        await page.waitForURL(/\/editor(\?github=consent)?$/, {
-          timeout: 60000,
-        });
-        await page.waitForFunction(() => window.editorFixture?.ready);
-        controls = page.getByRole("region", {
-          name: "GitHub activity controls",
-          exact: true,
-        });
-        await controls.waitFor({ timeout: 30000 });
-      };
+      const status = () => controls.locator("[data-github-status]");
 
-      // Explicit opt-in explains public visibility and blocks Publish until
-      // the matching account is authorized.
-      await controls
-        .getByText(/Visitors will see anonymized contribution counts/)
-        .waitFor();
-      await controls
-        .getByRole("switch", { name: /Include private activity/ })
-        .check();
-      await privateStatus()
-        .getByText(/Authorize the username above/)
-        .waitFor();
-      await expectBlocked();
-
-      // A different GitHub account changes nothing and offers recovery.
+      // GitHub authorizes a different account: nothing is enabled, the
+      // selected account stays, and Publish is blocked until it is fixed.
       github.state.consent = { as: "Other-Account", cancel: false };
-      await controls
-        .getByRole("button", { name: "Authorize private activity" })
-        .click();
-      await reopen();
-      await privateStatus()
+      await chooseAccount(controls, "Private-Owner");
+      controls = await reopen();
+      await status()
         .getByText(/GitHub authorized a different account, so nothing changed/)
         .waitFor({ timeout: 30000 });
       assert.equal(new URL(page.url()).search, "");
@@ -648,6 +719,9 @@ export async function checkGitHubGraphJourney({
       assert.equal(stored.login, "Private-Owner");
       assert.equal(stored.private_enabled, 0);
       assert.equal(stored.token_enc, null);
+      await flush();
+      assert.equal(await savedUsername(), "Private-Owner");
+      await expectBlocked();
       // Only that token is revoked; the reservation then frees for Retry.
       assert.equal(await settled(), "idle");
       assert.ok(
@@ -658,43 +732,21 @@ export async function checkGitHubGraphJourney({
         false,
       );
 
-      // Cancelled consent keeps the public graph; Public only clears it.
+      // A cancelled authorization keeps the selection and offers it again.
       github.state.consent = { as: null, cancel: true };
       await controls.getByRole("button", { name: "Authorize again" }).click();
-      await reopen();
-      await privateStatus()
+      controls = await reopen();
+      await status()
         .getByText(/Authorization was cancelled/)
         .waitFor({ timeout: 30000 });
-      await controls
-        .getByRole("status")
-        .getByText(/Connected\. Fetched/)
-        .waitFor();
-      await controls
-        .getByRole("button", { name: "Use public activity only" })
-        .click();
-      await privateStatus()
-        .getByText(/Off\. Only public contributions are shown/)
-        .waitFor();
-      assert.equal(
-        await controls
-          .getByRole("switch", { name: /Include private activity/ })
-          .isChecked(),
-        false,
-      );
 
-      // Matching consent shows private counts in the owner preview only.
+      // Matching consent shows public and private counts in the owner
+      // preview only.
       github.state.consent = { as: null, cancel: false };
-      await controls
-        .getByRole("switch", { name: /Include private activity/ })
-        .check();
-      await controls
-        .getByRole("button", { name: "Authorize private activity" })
-        .click();
-      await reopen();
-      await privateStatus()
-        .getByText(
-          /Private activity authorized\. Fetched .* 10 contributions in the last year, including private ones/,
-        )
+      await controls.getByRole("button", { name: "Authorize again" }).click();
+      controls = await reopen();
+      await status()
+        .getByText(/Connected\. 10 contributions in the last year/)
         .waitFor({ timeout: 30000 });
       stored = await connection();
       assert.equal(stored.private_enabled, 1);
@@ -708,8 +760,8 @@ export async function checkGitHubGraphJourney({
       // Nothing is public before Publish.
       assert.equal(await liveGraph(), null);
 
-      // Publish freezes the private choice: the live graph serves the
-      // authorized calendar, as an allowlist of dates and counts.
+      // Publish serves the authorized calendar, as an allowlist of dates
+      // and counts.
       await publish();
       const published = await liveGraph();
       assert.equal(total(published), 10);
@@ -725,45 +777,9 @@ export async function checkGitHubGraphJourney({
         "date",
       ]);
 
-      // Removing private access withdraws it at once, without Publish.
-      await controls
-        .getByRole("button", { name: "Remove private access" })
-        .click();
-      await controls
-        .getByRole("button", { name: "Remove private access now" })
-        .click();
-      // Revocation at GitHub may still be running when the status is read.
-      await privateStatus()
-        .getByText(
-          /Off\. Only public contributions are shown|Earlier private access is still being removed/,
-        )
-        .waitFor({ timeout: 30000 });
-      assert.equal(total(await liveGraph()), 2);
-      assert.equal((await connection()).token_enc, null);
-      assert.equal(await settled(), "idle");
-      assert.ok(
-        github.state.calls.some((call) => call.kind === "delete-grant"),
-      );
-      assert.equal(
-        [...github.tokens.values()].some(
-          (item) => item.login === "private-owner" && item.valid,
-        ),
-        false,
-      );
-
-      // Authorize again, then remove the whole graph: the dialog explains the
-      // withdrawal, private counts leave the live site, sign-in is untouched.
-      await controls
-        .getByRole("switch", { name: /Include private activity/ })
-        .check();
-      await controls
-        .getByRole("button", { name: "Authorize private activity" })
-        .click();
-      await reopen();
-      await privateStatus()
-        .getByText(/Private activity authorized/)
-        .waitFor({ timeout: 30000 });
-      assert.equal(total(await liveGraph()), 10);
+      // Removing the graph withdraws access at once, without Publish: the
+      // dialog says so, private counts leave the live site, and the grant
+      // is revoked at GitHub.
       await (await outline(page))
         .getByRole("button", { name: "GitHub activity", exact: true })
         .press("Delete");
@@ -782,8 +798,18 @@ export async function checkGitHubGraphJourney({
         .locator("dialog.component-removal")
         .waitFor({ state: "detached", timeout: 30000 });
       assert.equal((await connection()).private_enabled, 0);
+      assert.equal((await connection()).token_enc, null);
       assert.equal(total(await liveGraph()), 2);
       assert.equal(await settled(), "idle");
+      assert.ok(
+        github.state.calls.some((call) => call.kind === "delete-grant"),
+      );
+      assert.equal(
+        [...github.tokens.values()].some(
+          (item) => item.login === "private-owner" && item.valid,
+        ),
+        false,
+      );
       page = getPage();
     },
   );
@@ -839,22 +865,24 @@ export async function checkGitHubGraphJourney({
         throw new Error(message);
       };
       let page = await start("refresh-graph");
-      github.state.callbackOrigin = new URL(page.url()).origin;
-      let controls = await addGraph(page);
-      await fetchFor(controls, "Refresh-Owner", /Connected\. Fetched/);
+      let controls = await connectFor(
+        await addGraph(page),
+        "Refresh-Owner",
+        /Connected\. 7 contributions/,
+      );
       await publish();
-      assert.equal(total(await liveGraph()), 3);
+      assert.equal(total(await liveGraph()), 7);
 
       // A visit past the TTL gets the last good graph at once and one
       // background refresh; the live graph then updates without Publish.
       user.counts[recent] = 5;
       await ageCalendars();
       const stale = await liveGraph();
-      assert.equal(total(stale), 3);
+      assert.equal(total(stale), 7);
       assert.equal(stale.fetchedAt, agedAt);
       const fresh = await until(async () => {
         const graph = await liveGraph();
-        return total(graph) === 5 && graph;
+        return total(graph) === 9 && graph;
       }, "the live graph did not refresh");
       assert.ok(Date.parse(fresh.fetchedAt) > Date.parse(agedAt));
       const requested = await requests();
@@ -871,60 +899,33 @@ export async function checkGitHubGraphJourney({
       await ageCalendars();
       await ageRequest();
       github.state.failure = 502;
-      assert.equal(total(await liveGraph()), 5);
+      assert.equal(total(await liveGraph()), 9);
       await until(
         async () =>
           (
             await sql(
-              `SELECT public_error FROM github_activity WHERE portfolio_id=${portfolio}`,
+              `SELECT authorized_error FROM github_activity WHERE portfolio_id=${portfolio}`,
             )
-          )[0]?.public_error,
+          )[0]?.authorized_error,
         "the failed refresh was not recorded",
       );
       const kept = await liveGraph();
-      assert.equal(total(kept), 5);
+      assert.equal(total(kept), 9);
       assert.equal(kept.fetchedAt, agedAt);
-      const reopen = async () => {
-        await page.waitForURL(/\/editor(\?github=consent)?$/, {
-          timeout: 60000,
-        });
-        await page.waitForFunction(() => window.editorFixture?.ready);
-        controls = page.getByRole("region", {
-          name: "GitHub activity controls",
-          exact: true,
-        });
-        await controls.waitFor({ timeout: 30000 });
-      };
       // The fixed consent return reopens the GitHub section and reads status.
       await page.goto(new URL("/editor?github=consent", page.url()).href);
-      await reopen();
+      controls = await reopen();
       await controls
         .getByRole("status")
-        .getByText(/Couldn't refresh GitHub\. Showing the graph from/)
+        .getByText(/Couldn't refresh GitHub\. Showing 9 contributions from/)
         .waitFor({ timeout: 30000 });
       github.state.failure = null;
       await age();
       await controls.getByRole("button", { name: "Refresh activity" }).click();
       await controls
         .getByRole("status")
-        .getByText(/Connected\. Fetched/)
+        .getByText(/Connected\. 9 contributions/)
         .waitFor({ timeout: 30000 });
-      assert.equal(total(await liveGraph()), 5);
-
-      // Private activity goes live with Publish.
-      await controls
-        .getByRole("switch", { name: /Include private activity/ })
-        .check();
-      await controls
-        .getByRole("button", { name: "Authorize private activity" })
-        .click();
-      await reopen();
-      const privateStatus = () =>
-        controls.locator("[data-github-private-status]");
-      await privateStatus()
-        .getByText(/Private activity authorized/)
-        .waitFor({ timeout: 30000 });
-      await publish();
       assert.equal(total(await liveGraph()), 9);
 
       // The owner removes the app on GitHub. The next refresh sees 401 and
@@ -949,16 +950,18 @@ export async function checkGitHubGraphJourney({
         "the refused grant was not released",
       );
       await page.goto(new URL("/editor?github=consent", page.url()).href);
-      await reopen();
-      await privateStatus()
-        .getByText(/GitHub no longer allows private access/)
+      controls = await reopen();
+      await controls
+        .getByRole("status")
+        .getByText(/GitHub no longer allows access to this account's activity/)
         .waitFor({ timeout: 30000 });
 
       // Reconnect: authorizing again restores private counts without Publish.
       await controls.getByRole("button", { name: "Authorize again" }).click();
-      await reopen();
-      await privateStatus()
-        .getByText(/Private activity authorized/)
+      controls = await reopen();
+      await controls
+        .getByRole("status")
+        .getByText(/Connected\. 9 contributions/)
         .waitFor({ timeout: 30000 });
       assert.equal(total(await liveGraph()), 9);
       page = getPage();
@@ -966,12 +969,13 @@ export async function checkGitHubGraphJourney({
   );
 
   await run(
-    "Connected sign-in methods: disconnecting GitHub withdraws private activity through the same cleanup, keeps the last method, and reconnecting needs new consent",
+    "Connected sign-in methods: disconnecting GitHub withdraws the graph's access through the same cleanup, keeps the last method, and reconnecting needs new consent",
     async () => {
       github.state.failure = null;
       github.state.consent = { as: null, cancel: false };
       github.addUser({
         login: "Signin-Owner",
+        databaseId: 4444,
         counts: { [recent]: 1 },
         privateCounts: { [recent]: 6 },
       });
@@ -982,14 +986,16 @@ export async function checkGitHubGraphJourney({
         const graph = await response.json();
         return graph.days.reduce((sum, item) => sum + item.count, 0);
       };
+      // Every grant of the account, for the sign-in and activity apps.
       const settled = async () => {
         for (let attempt = 0; attempt < 100; attempt++) {
-          const state = (
+          const states = (
             await sql(
               "SELECT state FROM github_grant WHERE github_user_id='node-signin-owner'",
             )
-          )[0]?.state;
-          if (state !== "pending" && state !== "inflight") return state;
+          ).map((row) => row.state);
+          if (!states.some((state) => ["pending", "inflight"].includes(state)))
+            return states.join();
           await getPage().waitForTimeout(100);
         }
         throw new Error("grant cleanup did not finish");
@@ -1000,53 +1006,34 @@ export async function checkGitHubGraphJourney({
             "SELECT provider_id FROM account WHERE user_id='draft-alice' ORDER BY provider_id",
           )
         ).map((row) => row.provider_id);
-      const link = (provider) => {
+      const link = (provider, token = null) => {
         const now = Date.now();
         return sql(
-          "INSERT INTO account(id,account_id,provider_id,user_id,created_at,updated_at) VALUES(?,?,?,?,?,?)",
+          "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
           [
             `alice-${provider}`,
-            `alice-${provider}-id`,
+            provider === "github" ? "4444" : `alice-${provider}-id`,
             provider,
             "draft-alice",
+            token,
             now,
             now,
           ],
         );
       };
-      let page = await start("signin-graph");
-      github.state.callbackOrigin = new URL(page.url()).origin;
-      let controls = await addGraph(page);
-      const reopen = async () => {
-        await page.waitForURL(/\/editor(\?github=consent)?$/, {
-          timeout: 60000,
-        });
-        await page.waitForFunction(() => window.editorFixture?.ready);
-        controls = page.getByRole("region", {
-          name: "GitHub activity controls",
-          exact: true,
-        });
-        await controls.waitFor({ timeout: 30000 });
-      };
-      const authorize = async () => {
-        await controls
-          .getByRole("switch", { name: /Include private activity/ })
-          .check();
-        await controls
-          .getByRole("button", { name: "Authorize private activity" })
-          .click();
-        await reopen();
-        await controls
-          .locator("[data-github-private-status]")
-          .getByText(/Private activity authorized/)
-          .waitFor({ timeout: 30000 });
-      };
+      let page;
+      let controls;
       try {
         await sql("DELETE FROM account WHERE user_id='draft-alice'");
-        await link("github");
+        await link("github", github.issueSignInToken("Signin-Owner"));
         await link("google");
-        await fetchFor(controls, "Signin-Owner", /Connected\. Fetched/);
-        await authorize();
+        page = await start("signin-graph");
+        // The GitHub sign-in connects the graph on its own.
+        controls = await addGraph(page);
+        await controls
+          .getByRole("status")
+          .getByText(/Connected\. 7 contributions/)
+          .waitFor({ timeout: 60000 });
         await publish();
         assert.equal(await total(), 7);
         github.state.calls.length = 0;
@@ -1074,7 +1061,8 @@ export async function checkGitHubGraphJourney({
         assert.deepEqual(await providers(), ["github", "google"]);
 
         // Disconnecting GitHub sign-in runs the Phase 41 withdrawal: private
-        // counts leave the live site without Publish and the grant is revoked.
+        // counts leave the live site without Publish and the sign-in app's
+        // grant is revoked.
         await methods
           .getByRole("button", { name: "Disconnect GitHub", exact: true })
           .click();
@@ -1091,13 +1079,16 @@ export async function checkGitHubGraphJourney({
         assert.equal((await connection()).token_enc, null);
         assert.equal(await settled(), "idle");
         assert.ok(
-          github.state.calls.some((call) => call.kind === "delete-grant"),
+          github.state.calls.some(
+            (call) => call.kind === "delete-grant" && call.app === "fixture",
+          ),
         );
+        // The draft keeps its account; the graph asks to authorize again.
         await flush();
         assert.equal(
           (await savedDraft()).components.find((item) => item.type === "github")
             .data.includePrivate,
-          false,
+          true,
         );
 
         // The last method cannot be disconnected.
@@ -1156,9 +1147,9 @@ export async function checkGitHubGraphJourney({
           .getByRole("button", { name: "Connect GitHub", exact: true })
           .waitFor();
 
-        // Reconnected sign-in restores nothing by itself: private activity
-        // needs new consent, which proceeds because the cleanup finished.
-        await link("github");
+        // Reconnected sign-in restores nothing by itself: the graph needs new
+        // consent, which proceeds because the cleanup finished.
+        await link("github", github.issueSignInToken("Signin-Owner"));
         await page.goto(`${editorOrigin}/editor?account=connected`);
         await page.waitForFunction(() => window.editorFixture?.ready);
         await methods
@@ -1175,14 +1166,19 @@ export async function checkGitHubGraphJourney({
           name: "GitHub activity controls",
           exact: true,
         });
-        assert.equal(
-          await controls
-            .getByRole("switch", { name: /Include private activity/ })
-            .isChecked(),
-          false,
-        );
+        await controls
+          .getByRole("status")
+          .getByText(/Authorize this account on GitHub/)
+          .waitFor({ timeout: 30000 });
         assert.equal((await connection()).private_enabled, 0);
-        await authorize();
+        await controls
+          .getByRole("button", { name: "Authorize on GitHub" })
+          .click();
+        controls = await reopen();
+        await controls
+          .getByRole("status")
+          .getByText(/Connected\. 7 contributions/)
+          .waitFor({ timeout: 30000 });
         assert.equal((await connection()).private_enabled, 1);
       } finally {
         // Other groups expect an owner without a GitHub sign-in.

@@ -2,11 +2,11 @@ import { createComponent, createEmptyDraft } from "@hasaweb/schema";
 import { describe, expect, it, vi } from "vitest";
 import type { DraftController } from "../draft/controller";
 import {
+  connectSignInGraph,
   GraphSetupError,
   loadGraphPreview,
   readGraphStatus,
-  setGitHubPrivate,
-  setGitHubUsername,
+  setGitHubAccount,
   startPrivateConsent,
   withdrawGraphAccess,
 } from "./github-graph";
@@ -25,7 +25,7 @@ const status = {
   },
   private: { state: "consent_failed", reason: "wrong_account" },
   privateAvailable: true,
-  canDetect: false,
+  githubSignIn: true,
 };
 const reply = (body: unknown, status = 200) =>
   vi.fn(async () => Response.json(body, { status })) as unknown as typeof fetch;
@@ -86,14 +86,26 @@ describe("GitHub graph browser client", () => {
       "/api/owner/github/preview?private=1",
     ]);
   });
-  it("turns private activity off when the account changes", () => {
+  it("connects the sign-in with an empty body and closed errors", async () => {
+    const send = reply(status);
+    expect((await connectSignInGraph(send)).connection?.username).toBe("octo");
+    const [path, init] = (send as unknown as ReturnType<typeof vi.fn>).mock
+      .calls[0] as [string, RequestInit];
+    expect(path).toBe("/api/owner/github/connect");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({});
+    await expect(
+      connectSignInGraph(reply({ error: "reauthorize" }, 409)),
+    ).rejects.toEqual(new GraphSetupError("reauthorize"));
+  });
+  it("always includes private activity for the selected account", () => {
     const draft = createEmptyDraft({
       themeId: "default",
       fontId: "default",
       colorMode: "system",
     });
     const graph = createComponent("github", "graph");
-    graph.data = { username: "octo", includePrivate: true };
+    graph.data = { username: "octo", includePrivate: false };
     let working = { ...draft, components: [graph] };
     const controller = {
       store: { getState: () => ({ working }) },
@@ -105,11 +117,9 @@ describe("GitHub graph browser client", () => {
       working.components[0]?.type === "github"
         ? working.components[0].data
         : null;
-    setGitHubUsername(controller, "graph", "Octo");
+    setGitHubAccount(controller, "graph", "Octo");
     expect(data()).toEqual({ username: "Octo", includePrivate: true });
-    setGitHubUsername(controller, "graph", "someone-else");
-    expect(data()).toEqual({ username: "someone-else", includePrivate: false });
-    setGitHubPrivate(controller, "graph", true);
+    setGitHubAccount(controller, "graph", "someone-else");
     expect(data()).toEqual({ username: "someone-else", includePrivate: true });
   });
 });

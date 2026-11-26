@@ -13,6 +13,7 @@ import {
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { getOAuthState, getSessionFromCtx } from "better-auth/api";
+import { symmetricDecrypt } from "better-auth/crypto";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { providerPhotoUrl } from "./provider-photo";
@@ -87,6 +88,19 @@ export function appAuthRequest(request: Request, env: AuthEnvironment) {
   return new Request(`${origin}${url.pathname}${url.search}`, request);
 }
 
+/**
+ * The plaintext of a stored sign-in access token. Tokens written before
+ * encryption was enabled are returned as stored; GitHub checks them anyway.
+ */
+export async function signInAccessToken(
+  env: AuthEnvironment,
+  stored: string,
+): Promise<string> {
+  // Better Auth's own test for its encrypted form: hex of even length.
+  if (stored.length % 2 !== 0 || !/^[0-9a-f]+$/i.test(stored)) return stored;
+  return symmetricDecrypt({ key: authSettings(env).secret, data: stored });
+}
+
 export function createProductAuth(env: AuthEnvironment) {
   const settings = authSettings(env);
   const db = drizzle(env.DB);
@@ -103,11 +117,16 @@ export function createProductAuth(env: AuthEnvironment) {
       github: {
         ...settings.github,
         disableDefaultScope: true,
-        scope: ["user:email"],
+        // `read:user` lets the owner's own GitHub graph include private
+        // contribution counts without a second authorization.
+        scope: ["read:user", "user:email"],
       },
       google: { ...settings.google },
     },
     account: {
+      // The GitHub token can read private contribution counts, so it is
+      // stored encrypted. `signInAccessToken` reads it back for the graph.
+      encryptOAuthTokens: true,
       accountLinking: {
         enabled: true,
         trustedProviders: [],

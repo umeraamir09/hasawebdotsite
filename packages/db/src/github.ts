@@ -360,16 +360,19 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
       const row = await read();
       return row ? connectionView(row) : undefined;
     },
-    // The numeric account ID of the owner's GitHub sign-in, if they have one.
-    // It only suggests a username. It never creates or selects a graph.
-    async signInAccountId() {
+    // The owner's GitHub sign-in, if they have one: its numeric account ID
+    // and the stored access token (encrypted by the auth layer, or null).
+    // Reading it never creates or selects a graph.
+    async signInAccount() {
       await requirePortfolio();
       const row = await query(
         db,
-        `SELECT a.account_id FROM account a WHERE a.user_id=? AND a.provider_id='github' LIMIT 1`,
+        `SELECT a.account_id,a.access_token FROM account a WHERE a.user_id=? AND a.provider_id='github' LIMIT 1`,
         userId,
-      ).first<{ account_id: string }>();
-      return row?.account_id ?? null;
+      ).first<{ account_id: string; access_token: string | null }>();
+      return row
+        ? { accountId: row.account_id, accessToken: row.access_token }
+        : null;
     },
     async getActivity() {
       const row = await query(

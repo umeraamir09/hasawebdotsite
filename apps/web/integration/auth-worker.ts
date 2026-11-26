@@ -9,6 +9,7 @@ import {
   authResponse,
   createProductAuth,
   currentOwner,
+  signInAccessToken,
 } from "../lib/auth";
 
 const origin = "https://hasaweb.site";
@@ -138,6 +139,22 @@ export default {
           .bind(owner.identity.user.id)
           .first(),
       );
+    }
+    // The signed-in owner's stored GitHub token: whether it is stored
+    // encrypted, and what it decrypts to. Never a product route.
+    if (url.pathname === "/__fixture/github-token") {
+      const owner = await currentOwner(settings, request.headers, auth);
+      if (!owner) return privateJson(null, 401);
+      const row = await env.DB.prepare(
+        "SELECT access_token FROM account WHERE user_id=? AND provider_id='github'",
+      )
+        .bind(owner.identity.user.id)
+        .first<{ access_token: string | null }>();
+      const stored = row?.access_token ?? null;
+      return privateJson({
+        stored,
+        plain: stored && (await signInAccessToken(settings, stored)),
+      });
     }
     if (["/__fixture/expire", "/__fixture/delete"].includes(url.pathname)) {
       const owner = await currentOwner(settings, request.headers, auth);

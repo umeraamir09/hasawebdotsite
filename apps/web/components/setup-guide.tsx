@@ -14,8 +14,15 @@ import { DraftFailure } from "../lib/draft/types";
 import {
   type GraphSetupStatus,
   readGraphStatus,
+  withdrawGraphAccess,
 } from "../lib/editor/github-graph";
-import { findGraph, graphGap, graphGapMessage } from "../lib/guide/github";
+import {
+  acceptGraph,
+  findGraph,
+  graphConnected,
+  graphGap,
+  graphGapMessage,
+} from "../lib/guide/github";
 import {
   findOptional,
   type OptionalType,
@@ -386,10 +393,11 @@ function Scope({
     await go(target);
   }
 
-  // The GitHub screen continues only with a complete graph configuration, or
-  // without a graph. An unfinished one offers Retry, Use public activity only
-  // (in the panel) and Finish later, which keeps it with its publication
-  // blocker. No graph state ever blocks reaching the editor.
+  // The GitHub screen continues only with a complete graph, or without one.
+  // A graph connected from the GitHub sign-in is added here. An unfinished
+  // one offers Authorize again or Retry (in the panel) and Finish later,
+  // which keeps it with its publication blocker. No graph state ever blocks
+  // reaching the editor.
   async function continueGitHub() {
     if (navigating) return;
     const target = nextStep("github");
@@ -400,9 +408,11 @@ function Scope({
       const graph = findGraph(controller.store.getState().working);
       if (!graph) {
         if (addingGraph) {
-          setStepError(graphGapMessage.fetch);
+          setStepError(graphGapMessage.connect);
           return;
         }
+        if (graphStatus?.connection && graphConnected(graphStatus))
+          acceptGraph(controller, graphStatus.connection.username);
       } else {
         let status: GraphSetupStatus;
         try {
@@ -434,12 +444,21 @@ function Scope({
     await go(target);
   }
 
-  // Skipping keeps entered content, and for GitHub the graph, its connection
-  // and any granted access: skipping never disconnects.
+  // Skipping keeps entered content, and for GitHub an added graph, its
+  // connection and its access. A graph connected from the GitHub sign-in but
+  // never added is left out, and its access is withdrawn.
   async function skip(from: GuideStep, target: GuideStep | null) {
     if (navigating || !target) return;
     if (from === "skills" || from === "projects")
       settleOptional(controller, from);
+    if (
+      from === "github" &&
+      !findGraph(controller.store.getState().working) &&
+      graphStatus &&
+      graphConnected(graphStatus)
+    )
+      // A failure keeps the unused grant; removing a graph later withdraws it.
+      await withdrawGraphAccess().catch(() => undefined);
     await go(target);
   }
 

@@ -6,6 +6,7 @@ const service = {
   preview: vi.fn(),
   detect: vi.fn(),
   setup: vi.fn(),
+  connectSignIn: vi.fn(),
   retry: vi.fn(),
 };
 const consent = {
@@ -14,7 +15,6 @@ const consent = {
 };
 const db = vi.hoisted(() => ({
   withdraw: vi.fn(),
-  publicOnly: vi.fn(),
   cleanups: vi.fn(),
   refresh: vi.fn(),
   sweep: vi.fn(),
@@ -24,6 +24,7 @@ const db = vi.hoisted(() => ({
 const owner = vi.hoisted(() => ({ current: true }));
 vi.mock("@hasaweb/auth", () => ({
   authSettings: () => ({ origin: "https://hasaweb.site" }),
+  signInAccessToken: async (_env: unknown, stored: string) => `plain:${stored}`,
   currentOwner: async () =>
     owner.current
       ? { identity: { user: { id: "owner-1" }, session: { id: "s" } } }
@@ -40,7 +41,6 @@ vi.mock("@hasaweb/db", async (importOriginal) => ({
   enqueueGitHubRefresh: db.enqueue,
   ownerPrivateActivity: () => consent,
   withdrawPrivateActivity: db.withdraw,
-  choosePublicOnly: db.publicOnly,
   runGitHubCleanups: db.cleanups,
 }));
 
@@ -75,11 +75,13 @@ function call(
 const status = {
   connection: null,
   public: { state: "pending" },
-  canDetect: false,
+  githubSignIn: false,
 };
 
 // 32 bytes of 7, base64.
 const ACTIVITY = {
+  GITHUB_CLIENT_ID: "sign-in-client",
+  GITHUB_CLIENT_SECRET: "sign-in-secret",
   GITHUB_ACTIVITY_CLIENT_ID: "activity-client",
   GITHUB_ACTIVITY_CLIENT_SECRET: "activity-secret",
   GITHUB_ACTIVITY_KEY: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))),
@@ -375,7 +377,47 @@ describe("private activity consent routes", () => {
     expect((await call("/withdraw", { method: "POST" })).status).toBe(401);
     expect((await call("/consent", { method: "POST" })).status).toBe(401);
   });
-  it("withdraws and chooses public only without any provider configuration", async () => {
+  it("connects the GitHub sign-in with a decrypted token and closed errors", async () => {
+    service.connectSignIn.mockImplementationOnce(
+      async (decrypt: (stored: string) => Promise<string>) => {
+        expect(await decrypt("envelope")).toBe("plain:envelope");
+        return { ok: true, status };
+      },
+    );
+    const connected = await call("/connect", { method: "POST", env: ACTIVITY });
+    expect(connected.status).toBe(200);
+    expect(await connected.json()).toEqual(status);
+    for (const [error, code] of [
+      ["reauthorize", 409],
+      ["consent_busy", 409],
+      ["too_soon", 429],
+      ["unavailable", 503],
+      ["private_unavailable", 503],
+    ] as const) {
+      service.connectSignIn.mockResolvedValueOnce({ ok: false, error });
+      const failed = await call("/connect", { method: "POST" });
+      expect(failed.status).toBe(code);
+      expect(await failed.json()).toEqual({ error });
+    }
+    // The body must be empty: the browser never names an account or token.
+    expect(
+      (await call("/connect", { method: "POST", body: { token: "x" } })).status,
+    ).toBe(422);
+    expect((await call("/connect")).status).toBe(405);
+    expect(service.connectSignIn).toHaveBeenCalledTimes(6);
+  });
+  it("gives the sign-in app to private activity and its revocation", async () => {
+    service.status.mockResolvedValue(status);
+    await call("", { env: ACTIVITY });
+    expect(db.setupEnv.mock.calls[0]?.[0].activity.signInApp).toEqual({
+      id: "sign-in-client",
+      secret: "sign-in-secret",
+    });
+    const { sweepGitHubCleanups } = await import("./github-routes");
+    await sweepGitHubCleanups({ ...env, ...ACTIVITY } as never);
+    expect(db.cleanups.mock.calls[0]?.[1].signInApp.id).toBe("sign-in-client");
+  });
+  it("withdraws without any provider configuration", async () => {
     db.withdraw.mockResolvedValueOnce(true);
     const withdrawn = await call("/withdraw", {
       method: "POST",
@@ -385,19 +427,13 @@ describe("private activity consent routes", () => {
     expect(await withdrawn.json()).toEqual({ ok: true });
     db.withdraw.mockResolvedValueOnce(false);
     expect((await call("/withdraw", { method: "POST" })).status).toBe(409);
-    const publicOnly = await call("/public-only", {
-      method: "POST",
-      env: { GITHUB_SERVICE_TOKEN: undefined },
-    });
-    expect(publicOnly.status).toBe(200);
-    expect(db.publicOnly).toHaveBeenCalledTimes(1);
-    for (const path of ["/withdraw", "/public-only"]) {
-      expect(
-        (await call(path, { method: "POST", body: { all: true } })).status,
-      ).toBe(422);
-      expect((await call(path)).status).toBe(405);
-    }
+    expect(
+      (await call("/withdraw", { method: "POST", body: { all: true } })).status,
+    ).toBe(422);
+    expect((await call("/withdraw")).status).toBe(405);
     expect(db.withdraw).toHaveBeenCalledTimes(2);
+    // Public-only graphs no longer exist.
+    expect((await call("/public-only", { method: "POST" })).status).toBe(404);
   });
 });
 

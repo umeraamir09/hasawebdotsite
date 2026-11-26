@@ -8,7 +8,7 @@ GOOGLE_CLIENT_SECRET=replace-with-local-google-oauth-client-secret
 # Separate zero-scope classic personal access token from a dedicated GitHub
 # account that owns no portfolio. It reads public contribution calendars only.
 GITHUB_SERVICE_TOKEN=replace-with-the-platform-public-read-token
-# Optional: the separate private-activity OAuth app (never the sign-in app).
+# Optional: the separate activity OAuth app, for graph accounts other than the sign-in.
 # Callback: {APP_ORIGIN}/api/owner/github/consent/callback. The key is base64
 # of 32 random bytes (for example `openssl rand -base64 32`).
 GITHUB_ACTIVITY_CLIENT_ID=replace-with-local-activity-oauth-client-id

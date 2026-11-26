@@ -41,6 +41,8 @@ import { createOwnerRouter } from "./owner-api";
 const env = {
   APP_ENV: "production",
   DB: {} as D1Database,
+  GITHUB_CLIENT_ID: "sign-in-client",
+  GITHUB_CLIENT_SECRET: "sign-in-secret",
   GITHUB_ACTIVITY_CLIENT_ID: "activity-client",
   GITHUB_ACTIVITY_CLIENT_SECRET: "activity-secret",
   GITHUB_ACTIVITY_KEY: btoa(String.fromCharCode(...new Uint8Array(32).fill(7))),

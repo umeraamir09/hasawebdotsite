@@ -1,6 +1,11 @@
 import {
+  authorizedRefreshResult,
+  fetchAuthorizedActivity,
+  fetchViewer,
   type GitHubTransport,
+  hasActivityScope,
   isGitHubLogin,
+  lastYearRange,
   lookupLoginById,
   parseCalendar,
   projectPublishedActivity,
@@ -12,15 +17,18 @@ import {
   ownerPrivateActivity,
   type PrivateEnvironment,
   type PrivateState,
+  releaseStaleReservation,
   releaseUnusedConsent,
 } from "./github-private";
 import { connectionRefreshDue, refreshPublicCalendar } from "./github-refresh";
 import type { SessionIdentity } from "./repositories";
 
-// GitHub graph setup for the signed-in owner. The public part uses only the
-// separate platform credential and public data. Private activity (Phase 41,
-// `github-private.ts`) is reported and refreshed here when the activity app
-// is configured, and is never part of the public fetch.
+// GitHub graph setup for the signed-in owner. A graph shows public and
+// private activity of one account the owner authorized: their GitHub sign-in
+// (`connectSignIn`, with the sign-in token) or another account (`setup` and
+// then consent in `github-private.ts`). The public baseline uses only the
+// separate platform credential and public data, and is never mixed with the
+// authorized calendar.
 
 /** Retry and setup share one cooldown so a click cannot hammer the provider. */
 export const GRAPH_RETRY_COOLDOWN_MS = 10_000;
@@ -32,7 +40,13 @@ export type GraphFailure =
   | "misconfigured"
   | "too_soon"
   | "conflict"
-  | "no_graph";
+  | "no_graph"
+  // The sign-in token can't read private activity (missing, refused or too
+  // few scopes). The owner authorizes on GitHub instead.
+  | "reauthorize"
+  // Earlier access for this account is still being revoked at GitHub.
+  | "consent_busy"
+  | "private_unavailable";
 
 export type GraphPublicState =
   // The account is selected and no fetch has finished for this selection.
@@ -57,10 +71,11 @@ export type GraphStatus = {
   public: GraphPublicState;
   // Private activity for the selected account. `off` without a connection.
   private: PrivateState;
-  // Whether the separate activity app is configured on this deployment.
+  // Whether private activity is configured on this deployment.
   privateAvailable: boolean;
-  // Whether this owner signed in with GitHub, so a username can be suggested.
-  canDetect: boolean;
+  // Whether this owner signed in with GitHub, so their graph can connect
+  // from that sign-in.
+  githubSignIn: boolean;
 };
 
 export type GraphEnvironment = {
@@ -125,7 +140,7 @@ export function ownerGraphSetup(
 
   async function status(): Promise<GraphStatus> {
     const connection = await owner.getConnection();
-    const canDetect = (await owner.signInAccountId()) !== null;
+    const githubSignIn = (await owner.signInAccount()) !== null;
     const privateAvailable = privateActivity !== null;
     if (!connection)
       return {
@@ -133,7 +148,7 @@ export function ownerGraphSetup(
         public: { state: "pending" },
         private: { state: "off" },
         privateAvailable,
-        canDetect,
+        githubSignIn,
       };
     // Without the activity app, an existing grant is still reported as data
     // state only: it can be withdrawn but not created or refreshed.
@@ -158,7 +173,7 @@ export function ownerGraphSetup(
       public: publicState(connection, await owner.getActivity()),
       private: privateState,
       privateAvailable,
-      canDetect,
+      githubSignIn,
     };
   }
 
@@ -180,22 +195,132 @@ export function ownerGraphSetup(
   return {
     status,
     /**
-     * Suggests a username from the owner's GitHub sign-in. It selects nothing
-     * and creates no graph. A Google-only owner gets no suggestion.
+     * The username of the owner's GitHub sign-in, for authorizing it on
+     * GitHub when its sign-in token can't be used. It selects nothing and
+     * creates no graph. A Google-only owner gets none.
      */
     async detect(): Promise<
       { ok: true; login: string | null } | { ok: false; error: GraphFailure }
     > {
-      const accountId = await owner.signInAccountId();
-      if (!accountId) return { ok: true, login: null };
+      const account = await owner.signInAccount();
+      if (!account) return { ok: true, login: null };
       const found = await lookupLoginById(
         env.transport,
         env.platformToken,
-        accountId,
+        account.accountId,
       );
       if (found.status === "found") return { ok: true, login: found.login };
       if (found.status === "not_found") return { ok: true, login: null };
       return { ok: false, error: "unavailable" };
+    },
+    /**
+     * Connects the owner's GitHub sign-in account with public and private
+     * activity. `decrypt` turns the stored sign-in token into plaintext.
+     * The token is kept as this graph's encrypted grant for the sign-in app,
+     * the same record a consented activity token gets, so refresh,
+     * withdrawal and revocation work unchanged. `reauthorize` means the
+     * sign-in token can't be used and the owner authorizes on GitHub.
+     */
+    async connectSignIn(
+      decrypt: (stored: string) => Promise<string>,
+    ): Promise<
+      { ok: true; status: GraphStatus } | { ok: false; error: GraphFailure }
+    > {
+      const activity = env.activity;
+      if (!activity) return { ok: false, error: "private_unavailable" };
+      const stored = (await owner.signInAccount())?.accessToken;
+      if (!stored) return { ok: false, error: "reauthorize" };
+      let connection = await owner.getConnection();
+      if (
+        connection?.lastCheckedAt != null &&
+        now() - connection.lastCheckedAt < GRAPH_RETRY_COOLDOWN_MS
+      )
+        return { ok: false, error: "too_soon" };
+      // An undecryptable token (for example after a secret change) is one
+      // the owner replaces by authorizing again.
+      const token = await decrypt(stored).catch(() => null);
+      if (!token) return { ok: false, error: "reauthorize" };
+      const found = await fetchViewer(activity.transport, token);
+      if (found.status === "failed")
+        return {
+          ok: false,
+          error: found.error === "credential" ? "reauthorize" : "unavailable",
+        };
+      if (!hasActivityScope(found.scopes))
+        return { ok: false, error: "reauthorize" };
+      if (!connection || !sameIdentity(connection.identity, found.viewer)) {
+        if (connection) await releaseUnusedConsent(db, identity, now());
+        const selected = await owner.select(
+          found.viewer,
+          connection ? connection.generation : null,
+        );
+        if (!selected) return { ok: false, error: "conflict" };
+        connection = selected;
+      }
+      if (!connection.privateEnabled || connection.status !== "ok") {
+        const app = activity.signInApp.id;
+        await releaseStaleReservation(db, app, found.viewer.id, now());
+        // Waits for revocation of earlier access to this account, like consent.
+        const ticket = await owner.beginConsent(app, connection.generation);
+        if (!ticket) return { ok: false, error: "consent_busy" };
+        // The reservation guards against a concurrent grant-wide revocation.
+        // Releasing it is safe whenever this token was not stored: the
+        // sign-in still holds the token, and nothing here issued it.
+        const release = () => owner.cancelUnissuedConsent(ticket);
+        const fetchedAt = new Date(now());
+        const fetched = await fetchAuthorizedActivity(
+          activity.transport,
+          token,
+          ticket.identity,
+          lastYearRange(fetchedAt),
+          fetchedAt.toISOString(),
+        ).catch(async (error: unknown) => {
+          await release();
+          throw error;
+        });
+        if (fetched.status === "failed") {
+          await release();
+          return {
+            ok: false,
+            error:
+              fetched.error === "credential" ? "reauthorize" : "unavailable",
+          };
+        }
+        let enabled: Awaited<ReturnType<typeof owner.finishConsent>>;
+        try {
+          enabled = await owner.finishConsent(
+            ticket,
+            activity.key,
+            token,
+            "read:user",
+            fetched.viewer,
+          );
+        } catch (error) {
+          // The token named another account between the two reads. It is
+          // already queued for revocation.
+          if (
+            error instanceof Error &&
+            error.message === "Invalid activity consent"
+          )
+            return { ok: false, error: "reauthorize" };
+          await release();
+          throw error;
+        }
+        // The selection changed meanwhile. finishConsent queued the token.
+        if (!enabled) return { ok: false, error: "conflict" };
+        await jobs.refresh(
+          {
+            portfolioId: enabled.portfolioId,
+            generation: enabled.generation,
+            identity: enabled.identity,
+          },
+          authorizedRefreshResult(fetched, enabled.identity),
+          now(),
+        );
+        connection = enabled;
+      }
+      await fetchAndStore(connection);
+      return { ok: true, status: await status() };
     },
     /**
      * Selects the typed username (detected or manual, with no sign-in link

@@ -44,7 +44,11 @@ import type { SessionIdentity } from "./repositories";
 export type ActivityApp = { id: string; secret: string };
 export type PrivateEnvironment = {
   transport: GitHubTransport;
+  // The activity app: consent for a graph account other than the sign-in.
   app: ActivityApp;
+  // The GitHub sign-in app. The owner's own graph stores the sign-in token,
+  // so its grant is revoked with these credentials.
+  signInApp: ActivityApp;
   key: CryptoKey;
   // https://github.com, or a local fixture.
   oauthOrigin: string;
@@ -128,7 +132,7 @@ const ticketOf = (row: ConsentRow): ConsentTicket => ({
 /**
  * Voids this owner's unused consent attempts and attempts left `exchanging`
  * by a crashed callback, then releases their reservations. Selecting another
- * account, Public only, withdrawal and a new consent all call this first.
+ * account, withdrawal and a new consent all call this first.
  */
 export async function releaseUnusedConsent(
   db: D1Database,
@@ -210,43 +214,27 @@ export async function withdrawPrivateActivity(
   return false;
 }
 
-/** Public only: clears an unfinished or failed private request. */
-export async function choosePublicOnly(
-  db: D1Database,
-  identity: SessionIdentity,
-  now = Date.now(),
-) {
-  await releaseUnusedConsent(db, identity, now);
-  await db
-    .prepare(
-      `UPDATE github_consent SET outcome='public_only'
-      WHERE portfolio_id IN (${owned}) AND state IN ('finished','void')
-        AND outcome IN ('cancelled','wrong_account','scope','failed','expired','interrupted')`,
-    )
-    .bind(identity.user.id, identity.session.id, Date.now())
-    .run();
-}
-
-/** Runs due remote revocations for the configured activity app. */
+/** Runs due remote revocations for the activity and sign-in apps. */
 export async function runGitHubCleanups(
   db: D1Database,
-  env: { app: ActivityApp; key: CryptoKey; transport: GitHubTransport },
+  env: {
+    app: ActivityApp;
+    signInApp: ActivityApp;
+    key: CryptoKey;
+    transport: GitHubTransport;
+  },
   now = Date.now(),
   limit = 10,
 ) {
   const outcomes: string[] = [];
   for (const ticket of await pendingGitHubCleanups(db, now, limit)) {
+    const app = [env.app, env.signInApp].find(
+      (item) => item.id === ticket.appId,
+    );
     // Another app's credentials cannot revoke this grant. Leave it pending.
-    if (ticket.appId !== env.app.id) continue;
+    if (!app) continue;
     outcomes.push(
-      await runGitHubGrantCleanup(
-        db,
-        ticket,
-        env.key,
-        env.app,
-        env.transport,
-        now,
-      ),
+      await runGitHubGrantCleanup(db, ticket, env.key, app, env.transport, now),
     );
   }
   return outcomes;

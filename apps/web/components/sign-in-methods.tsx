@@ -3,10 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { type Provider, providerNames } from "../lib/auth-client";
 import type { DraftController } from "../lib/draft/controller";
-import {
-  bumpGraphRevision,
-  setGitHubPrivate,
-} from "../lib/editor/github-graph";
+import { bumpGraphRevision } from "../lib/editor/github-graph";
 import {
   connectSignInMethod,
   disconnectSignInMethod,
@@ -82,15 +79,9 @@ export function SignInMethods({
       provider,
     );
     if (result === "disconnected") {
-      if (provider === "github") {
-        // The server already withdrew private access. Turn the draft's
-        // private choice off too, as Remove private access does.
-        for (const component of controller.store.getState().working
-          ?.components ?? [])
-          if (component.type === "github" && component.data.includePrivate)
-            setGitHubPrivate(controller, component.id, false);
-        bumpGraphRevision();
-      }
+      // The server already withdrew the graph's access. The graph asks to
+      // authorize again.
+      if (provider === "github") bumpGraphRevision();
       setNotice({
         kind: "success",
         text: `${providerNames[provider]} disconnected.`,

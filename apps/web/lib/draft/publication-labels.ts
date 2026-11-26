@@ -70,7 +70,7 @@ export function publicationIssueLabel(
     address: "Reserve or restore your address",
     catalog: `Choose an approved ${field}`,
     asset: `Replace the unavailable ${field}`,
-    github: "Connect GitHub and fetch activity",
+    github: "Connect your GitHub account",
     recipient: "Verify your contact recipient",
     case_study_url:
       "Reload the editor to restore this case study's published address",
