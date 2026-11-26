@@ -208,6 +208,18 @@ export function useGitHubGraph({
       .then(async (next) => {
         if (!current) return;
         setStatus(next);
+        // A remount (or a connect that finished after the previous effect
+        // was cleaned up) can already be connected on the server. Still
+        // write the account into the draft when it does not name one.
+        if (
+          autoConnect &&
+          !draftUsername &&
+          next.connection &&
+          graphConnected(next)
+        ) {
+          callbacks.current.onConnected(next.connection.username);
+          return;
+        }
         if (
           !autoConnect ||
           draftUsername ||

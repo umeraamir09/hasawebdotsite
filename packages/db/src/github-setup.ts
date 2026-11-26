@@ -230,12 +230,6 @@ export function ownerGraphSetup(
       if (!activity) return { ok: false, error: "private_unavailable" };
       const stored = (await owner.signInAccount())?.accessToken;
       if (!stored) return { ok: false, error: "reauthorize" };
-      let connection = await owner.getConnection();
-      if (
-        connection?.lastCheckedAt != null &&
-        now() - connection.lastCheckedAt < GRAPH_RETRY_COOLDOWN_MS
-      )
-        return { ok: false, error: "too_soon" };
       // An undecryptable token (for example after a secret change) is one
       // the owner replaces by authorizing again.
       const token = await decrypt(stored).catch(() => null);
@@ -248,6 +242,24 @@ export function ownerGraphSetup(
         };
       if (!hasActivityScope(found.scopes))
         return { ok: false, error: "reauthorize" };
+      let connection = await owner.getConnection();
+      // Already connected as this sign-in: return status. Do not apply the
+      // retry cooldown, so a remount that races the first connect still
+      // reports success and can write the account into the draft.
+      if (
+        connection &&
+        sameIdentity(connection.identity, found.viewer) &&
+        connection.privateEnabled &&
+        connection.status === "ok"
+      ) {
+        await fetchAndStore(connection);
+        return { ok: true, status: await status() };
+      }
+      if (
+        connection?.lastCheckedAt != null &&
+        now() - connection.lastCheckedAt < GRAPH_RETRY_COOLDOWN_MS
+      )
+        return { ok: false, error: "too_soon" };
       if (!connection || !sameIdentity(connection.identity, found.viewer)) {
         if (connection) await releaseUnusedConsent(db, identity, now());
         const selected = await owner.select(

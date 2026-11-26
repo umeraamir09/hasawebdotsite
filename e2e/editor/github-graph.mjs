@@ -375,7 +375,28 @@ export async function checkGitHubGraphJourney({
     "GitHub graph publishes frozen configuration, live counts and no private data",
     async () => {
       github.state.failure = null;
+      // The previous group may have left this account's grant pending. Finish
+      // that cleanup so consent is not blocked by consent_busy.
+      await sql(
+        "UPDATE github_grant SET retry_at=0 WHERE github_user_id='node-fixture-owner' AND state IN ('pending','inflight','uncertain')",
+      );
       const page = await start("graph-site");
+      await page.evaluate(() =>
+        fetch("/api/owner/github/retry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        }).then((response) => response.status),
+      );
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const state = (
+          await sql(
+            "SELECT state FROM github_grant WHERE github_user_id='node-fixture-owner'",
+          )
+        )[0]?.state;
+        if (state !== "pending" && state !== "inflight") break;
+        await page.waitForTimeout(100);
+      }
       let controls = await connectFor(
         await addGraph(page),
         "Fixture-Owner",
@@ -675,6 +696,11 @@ export async function checkGitHubGraphJourney({
     "GitHub authorization for another account: consent recovery, Publish boundary and withdrawal without Publish",
     async () => {
       github.state.failure = null;
+      // Earlier groups may leave due grant cleanups. Finish them so this
+      // group's delete-token / delete-grant checks only see its own calls.
+      await sql(
+        "UPDATE github_grant SET retry_at=0 WHERE state IN ('pending','inflight','uncertain')",
+      );
       github.addUser({
         login: "Private-Owner",
         counts: { [recent]: 2 },
@@ -703,6 +729,25 @@ export async function checkGitHubGraphJourney({
         throw new Error("grant cleanup did not finish");
       };
       let page = await start("private-graph");
+      // Drain leftover cleanups through the same path setup uses, then
+      // count only this group's GitHub calls.
+      await page.evaluate(() =>
+        fetch("/api/owner/github/retry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        }).then((response) => response.status),
+      );
+      for (let attempt = 0; attempt < 100; attempt++) {
+        const pending = (
+          await sql(
+            "SELECT count(*) n FROM github_grant WHERE state IN ('pending','inflight')",
+          )
+        )[0].n;
+        if (pending === 0) break;
+        await page.waitForTimeout(100);
+      }
+      github.state.calls.length = 0;
       let controls = await addGraph(page);
       const status = () => controls.locator("[data-github-status]");
 

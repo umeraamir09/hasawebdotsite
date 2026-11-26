@@ -378,12 +378,13 @@ export async function checkGuideGitHub({
         );
         assert.equal(validToken("Guide-Hub"), false);
 
-        // Signing in again issues a new token. Back on the step it connects
-        // again, and Continue adds the graph.
+        // Signing in again issues a new token. Back remounts the step, which
+        // connects from the new sign-in. A full reload here would race the
+        // Back save and leave IndexedDB recovery that blocks Continue.
         await signIn(github.issueSignInToken("Guide-Hub"));
         await age();
         await back(page);
-        await open(page, "github");
+        await page.locator('[data-save-status="saved"]').waitFor();
         await connected(page);
         await proceed(page);
         await waitStep(page, "review");
