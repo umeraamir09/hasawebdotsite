@@ -129,6 +129,10 @@ export async function checkAuthUi({
       "GOOGLE_CLIENT_ID:fixture-google",
       "--var",
       "GOOGLE_CLIENT_SECRET:fixture-secret",
+      // Local apps/web/.dev.vars may open the gate; this suite asserts the
+      // committed closed state (welcome shell, no /editor/preview document).
+      "--var",
+      "OWNER_ENTRY_ACTIVATION:",
     ],
     {
       cwd: root,

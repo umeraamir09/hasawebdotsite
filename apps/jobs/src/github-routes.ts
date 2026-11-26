@@ -1,7 +1,6 @@
-import { authSettings } from "@hasaweb/auth";
+import { authSettings, signInAccessToken } from "@hasaweb/auth";
 import {
   type ConsentReturn,
-  choosePublicOnly,
   dueGitHubSweep,
   enqueueGitHubRefresh,
   type GraphFailure,
@@ -62,7 +61,12 @@ export function consentReturn(returnTo: ConsentReturn = "editor") {
   });
 }
 
-type ActivityBindings = Partial<GitHubBindings> & { APP_ENV: string };
+type ActivityBindings = Partial<GitHubBindings> & {
+  APP_ENV: string;
+  // The sign-in app. The owner's own graph grant is revoked with it.
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+};
 const keys = new Map<string, Promise<CryptoKey>>();
 function activityKey(encoded: string) {
   let key = keys.get(encoded);
@@ -84,7 +88,10 @@ function activityKey(encoded: string) {
 const fixtureOrigin = (env: ActivityBindings) =>
   ["local", "test"].includes(env.APP_ENV) ? env.GITHUB_API_ORIGIN : undefined;
 
-/** The activity app, or null when this deployment has none configured. */
+/**
+ * Private activity: the activity and sign-in apps and the token key, or null
+ * when this deployment has them not all configured.
+ */
 export async function activityEnvironment(
   env: ActivityBindings,
   appOrigin: string,
@@ -92,7 +99,9 @@ export async function activityEnvironment(
   if (
     !env.GITHUB_ACTIVITY_CLIENT_ID ||
     !env.GITHUB_ACTIVITY_CLIENT_SECRET ||
-    !env.GITHUB_ACTIVITY_KEY
+    !env.GITHUB_ACTIVITY_KEY ||
+    !env.GITHUB_CLIENT_ID ||
+    !env.GITHUB_CLIENT_SECRET
   )
     return null;
   return {
@@ -100,6 +109,10 @@ export async function activityEnvironment(
     app: {
       id: env.GITHUB_ACTIVITY_CLIENT_ID,
       secret: env.GITHUB_ACTIVITY_CLIENT_SECRET,
+    },
+    signInApp: {
+      id: env.GITHUB_CLIENT_ID,
+      secret: env.GITHUB_CLIENT_SECRET,
     },
     key: await activityKey(env.GITHUB_ACTIVITY_KEY),
     oauthOrigin: fixtureOrigin(env) ?? "https://github.com",
@@ -203,6 +216,9 @@ const failureStatus = {
   too_soon: 429,
   conflict: 409,
   no_graph: 409,
+  reauthorize: 409,
+  consent_busy: 409,
+  private_unavailable: 503,
 } as const satisfies Record<GraphFailure, number>;
 const consentStatus = {
   no_graph: 409,
@@ -322,6 +338,13 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
     const result = await service.detect();
     return result.ok ? privateJson({ login: result.login }) : outcome(result);
   });
+  // The owner's GitHub sign-in becomes the graph, public and private.
+  route("post", "/connect", async (service, c) => {
+    emptySchema.parse(await readBody(c.req.raw, 256));
+    return outcome(
+      await service.connectSignIn((stored) => signInAccessToken(c.env, stored)),
+    );
+  });
   route("post", "/setup", async (service, c) => {
     const command = setupSchema.parse(await readBody(c.req.raw, 512));
     return outcome(await service.setup(command.username));
@@ -388,17 +411,8 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
     }
     return consentReturn(returnTo);
   });
-  // Public only and withdrawal need no platform token or activity app, so a
-  // misconfigured provider never blocks public setup or graph removal.
-  app.post("/api/owner/github/public-only", async (c) => {
-    try {
-      emptySchema.parse(await readBody(c.req.raw, 256));
-      await choosePublicOnly(c.env.DB, c.get("identity"));
-      return privateJson({ ok: true });
-    } catch (error) {
-      return closed(error);
-    }
-  });
+  // Withdrawal needs no platform token or activity app, so a misconfigured
+  // provider never blocks graph removal.
   app.post("/api/owner/github/withdraw", async (c) => {
     try {
       emptySchema.parse(await readBody(c.req.raw, 256));
@@ -417,11 +431,11 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
     "",
     "/preview",
     "/detect",
+    "/connect",
     "/setup",
     "/retry",
     "/consent",
     "/consent/callback",
-    "/public-only",
     "/withdraw",
   ])
     app.all(`/api/owner/github${action}`, () =>

@@ -46,6 +46,11 @@
   line-height: 1.6;
   color: #596053;
 }
+.github-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
 .editor-field {
   display: grid;
   gap: 8px;

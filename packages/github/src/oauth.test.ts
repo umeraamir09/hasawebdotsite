@@ -26,15 +26,18 @@ describe("activity consent", () => {
     expect(await consentStateHash(a)).toMatch(/^[a-f\d]{64}$/);
     expect(await consentStateHash(a)).not.toBe(await consentStateHash(b));
   });
-  it("accepts exactly read:user", () => {
+  it("accepts read:user, alone or with the sign-in app's user:email", () => {
     expect(hasActivityScope("read:user")).toBe(true);
     expect(hasActivityScope(" read:user ")).toBe(true);
+    expect(hasActivityScope("read:user, user:email")).toBe(true);
+    expect(hasActivityScope("user:email,read:user")).toBe(true);
     for (const value of [
       "",
       null,
       "user",
+      "user:email",
       "read:user,repo",
-      "read:user user:email",
+      "read:user,user:email,repo",
       "repo",
     ])
       expect(hasActivityScope(value)).toBe(false);

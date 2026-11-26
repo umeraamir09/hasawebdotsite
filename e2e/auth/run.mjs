@@ -142,7 +142,9 @@ async function login(provider, code, jar = new Jar()) {
   const scopes = url.searchParams.get("scope").split(" ").sort();
   assert.deepEqual(
     scopes,
-    provider === "github" ? ["user:email"] : ["email", "openid", "profile"],
+    provider === "github"
+      ? ["read:user", "user:email"]
+      : ["email", "openid", "profile"],
   );
   const completed = await callback(provider, jar, data.url, code);
   assert.equal(completed.status, 302);
@@ -259,6 +261,14 @@ try {
         owner.data?.user?.id,
         `GitHub callback: ${owner.completed.headers.get("location")}`,
       );
+      // The token can read private contribution counts, so it is stored
+      // encrypted and only the graph service decrypts it.
+      const token = await (
+        await request("/__fixture/github-token", owner.jar)
+      ).json();
+      assert.equal(token.plain, "shared");
+      assert.notEqual(token.stored, "shared");
+      assert.ok(!token.stored.includes("shared"));
       const google = await login("google", "shared");
       assert.ok(
         google.data?.user?.id,

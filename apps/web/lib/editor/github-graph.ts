@@ -2,9 +2,11 @@ import { clearSample } from "@hasaweb/schema";
 import { z } from "zod";
 import type { DraftController } from "../draft/controller";
 
-// Browser adapter for the owner-only GitHub graph routes (public setup and
-// Phase 41 private activity). Every response is parsed strictly. Provider
-// detail never reaches this code: the server returns closed error codes only.
+// Browser adapter for the owner-only GitHub graph routes. A graph shows the
+// public and private activity of one GitHub account the owner authorized:
+// their GitHub sign-in, or another account they sign in to on GitHub. Every
+// response is parsed strictly. Provider detail never reaches this code: the
+// server returns closed error codes only.
 
 const consentFailureSchema = z.enum([
   "cancelled",
@@ -61,7 +63,7 @@ const statusSchema = z.strictObject({
   ]),
   private: privateStateSchema,
   privateAvailable: z.boolean(),
-  canDetect: z.boolean(),
+  githubSignIn: z.boolean(),
 });
 export type GraphSetupStatus = z.infer<typeof statusSchema>;
 
@@ -78,6 +80,7 @@ export const graphFailureSchema = z.enum([
   "already_authorized",
   "consent_busy",
   "private_unavailable",
+  "reauthorize",
 ]);
 export type GraphSetupFailure = z.infer<typeof graphFailureSchema>;
 
@@ -132,6 +135,18 @@ async function call(
 
 export const readGraphStatus = async (send?: typeof fetch) =>
   statusSchema.parse(await call("", {}, send));
+/**
+ * Connects the owner's GitHub sign-in as the graph, with private activity.
+ * `reauthorize` means its sign-in token can't be used: authorize on GitHub.
+ */
+export const connectSignInGraph = async (send?: typeof fetch) => {
+  const status = statusSchema.parse(
+    await call("/connect", { method: "POST" }, send),
+  );
+  bumpGraphRevision();
+  return status;
+};
+/** Selects another account by username, before authorizing it on GitHub. */
 export const setupGraph = async (username: string, send?: typeof fetch) => {
   const status = statusSchema.parse(
     await call("/setup", { method: "POST", body: { username } }, send),
@@ -150,10 +165,10 @@ export const retryGraph = async (send?: typeof fetch) => {
 export type ConsentReturn = "editor" | "setup";
 
 /**
- * Starts private-activity consent and returns GitHub's authorize URL. The
- * caller saves the draft first and then navigates in the same tab. The
- * browser names only a fixed context; the server stores it with the attempt
- * and maps it to a fixed path.
+ * Starts GitHub authorization for the selected account and returns GitHub's
+ * authorize URL. The caller saves the draft first and then navigates in the
+ * same tab. The browser names only a fixed context; the server stores it
+ * with the attempt and maps it to a fixed path.
  */
 export async function startPrivateConsent(
   send?: typeof fetch,
@@ -165,11 +180,6 @@ export async function startPrivateConsent(
       await call("/consent", { method: "POST", body: { returnTo } }, send),
     );
   return body.url;
-}
-/** Clears an unfinished or failed private request. Grants are unchanged. */
-export async function choosePublicOnly(send?: typeof fetch) {
-  await call("/public-only", { method: "POST" }, send);
-  bumpGraphRevision();
 }
 /**
  * Withdraws private access now, without Publish, and queues revocation at
@@ -280,31 +290,17 @@ function updateGraph(
 }
 
 /**
- * Writes the fetched account's canonical username into the draft component.
- * A different account turns private activity off: it needs new permission.
+ * Writes the selected account's canonical username into the draft
+ * component. Every graph shows public and private activity, so Publish needs
+ * the account to be authorized.
  */
-export function setGitHubUsername(
+export function setGitHubAccount(
   controller: DraftController,
   componentId: string,
   username: string,
 ): boolean {
-  return updateGraph(controller, componentId, (data) => ({
+  return updateGraph(controller, componentId, () => ({
     username,
-    includePrivate:
-      data.username.toLowerCase() === username.toLowerCase()
-        ? data.includePrivate
-        : false,
-  }));
-}
-
-/** The draft's private-activity choice. It goes live only with Publish. */
-export function setGitHubPrivate(
-  controller: DraftController,
-  componentId: string,
-  includePrivate: boolean,
-): boolean {
-  return updateGraph(controller, componentId, (data) => ({
-    ...data,
-    includePrivate,
+    includePrivate: true,
   }));
 }

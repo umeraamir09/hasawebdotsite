@@ -53,6 +53,52 @@ function identity(value: unknown): GitHubIdentity | null {
   return { id: data.id, login: data.login };
 }
 
+const VIEWER_QUERY = "query Viewer { viewer { id login } }";
+
+/**
+ * The account an owner token belongs to, and the scopes GitHub reports for
+ * it. The owner's own graph starts here: the sign-in token names the account.
+ */
+export async function fetchViewer(
+  transport: GitHubTransport,
+  token: string,
+): Promise<
+  | { status: "answered"; viewer: GitHubIdentity; scopes: string }
+  | Extract<AuthorizedFetch, { status: "failed" }>
+> {
+  let response: Response;
+  try {
+    response = await transport("https://api.github.com/graphql", {
+      method: "POST",
+      redirect: "manual",
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "hasaweb-activity",
+      },
+      body: JSON.stringify({ query: VIEWER_QUERY }),
+    });
+  } catch {
+    return { status: "failed", error: "network" };
+  }
+  if (response.status === 401) return { status: "failed", error: "credential" };
+  if (!response.ok)
+    return {
+      status: "failed",
+      error:
+        response.status === 403 || response.status === 429 ? "rate" : "server",
+    };
+  const body = object(await response.json().catch(() => null));
+  const viewer = identity(object(body?.data)?.viewer);
+  if (!viewer) return { status: "failed", error: "payload" };
+  return {
+    status: "answered",
+    viewer,
+    scopes: response.headers.get("X-OAuth-Scopes") ?? "",
+  };
+}
+
 export async function fetchAuthorizedActivity(
   transport: GitHubTransport,
   token: string,

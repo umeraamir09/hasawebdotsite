@@ -2,17 +2,26 @@ import { createHash, randomBytes } from "node:crypto";
 import { createServer } from "node:http";
 
 // A local stand-in for the GitHub endpoints the graph services call: the
-// public GraphQL reads with the platform credential, and (Phase 41) the
-// activity app's authorize page, PKCE token exchange, owner-token GraphQL and
-// grant/token revocation. It enforces the credentials and answers with the
-// envelopes the production code parses. No test sees a real token or account.
+// public GraphQL reads with the platform credential, the activity app's
+// authorize page and PKCE token exchange, owner-token GraphQL (activity and
+// sign-in tokens) and grant/token revocation for both apps. It enforces the
+// credentials and answers with the envelopes the production code parses. No
+// test sees a real token or account.
 export const PLATFORM_TOKEN = "platform-fixture-token";
 export const ACTIVITY_CLIENT_ID = "activity-fixture-client";
 export const ACTIVITY_CLIENT_SECRET = "activity-fixture-secret";
 // Base64 of 32 bytes: the local AES-GCM key for stored activity tokens.
 export const ACTIVITY_KEY = Buffer.alloc(32, 41).toString("base64");
+// The sign-in app the owner runtime configures. Its tokens are revoked too.
+export const SIGN_IN_CLIENT_ID = "fixture";
+export const SIGN_IN_CLIENT_SECRET = "fixture";
 const platform = { id: "platform-node", login: "platform-account" };
-const basic = `Basic ${Buffer.from(`${ACTIVITY_CLIENT_ID}:${ACTIVITY_CLIENT_SECRET}`).toString("base64")}`;
+const basic = (id, secret) =>
+  `Basic ${Buffer.from(`${id}:${secret}`).toString("base64")}`;
+const apps = new Map([
+  [ACTIVITY_CLIENT_ID, basic(ACTIVITY_CLIENT_ID, ACTIVITY_CLIENT_SECRET)],
+  [SIGN_IN_CLIENT_ID, basic(SIGN_IN_CLIENT_ID, SIGN_IN_CLIENT_SECRET)],
+]);
 
 export async function startGitHubFixture(port) {
   const users = new Map();
@@ -24,7 +33,7 @@ export async function startGitHubFixture(port) {
   // deliver it later, twice, or from another session. `callbackOrigin` stands
   // in for the browser origin in front of the app (the harness proxies it).
   // `revokeFailure` answers grant/token deletion with that status, and
-  // `activityFailure` only the calendar read (the account still resolves).
+  // `activityFailure` only calendar reads (the account still resolves).
   const state = {
     failure: null,
     activityFailure: null,
@@ -159,7 +168,12 @@ export async function startGitHubFixture(port) {
         )
           return send(200, { error: "bad_verification_code" });
         const token = `gho_fixture_${randomBytes(8).toString("hex")}`;
-        tokens.set(token, { login: code.login.toLowerCase(), valid: true });
+        tokens.set(token, {
+          login: code.login.toLowerCase(),
+          app: ACTIVITY_CLIENT_ID,
+          scope: "read:user",
+          valid: true,
+        });
         return send(200, {
           access_token: token,
           scope: "read:user",
@@ -171,15 +185,15 @@ export async function startGitHubFixture(port) {
       );
       if (application) {
         const token = JSON.parse(body || "{}").access_token;
-        const grant = tokens.get(token);
+        // Another app's token is unknown to this app.
+        const found = tokens.get(token);
+        const grant = found?.app === application[1] ? found : undefined;
         state.calls.push({
           kind: `${request.method.toLowerCase()}-${application[2]}`,
+          app: application[1],
           login: grant?.login,
         });
-        if (
-          application[1] !== ACTIVITY_CLIENT_ID ||
-          request.headers.authorization !== basic
-        )
+        if (apps.get(application[1]) !== request.headers.authorization)
           return send(401, {});
         if (request.method === "POST")
           return send(grant?.valid ? 200 : 404, {});
@@ -189,7 +203,8 @@ export async function startGitHubFixture(port) {
         if (application[2] === "token") grant.valid = false;
         else
           for (const item of tokens.values())
-            if (item.login === grant.login) item.valid = false;
+            if (item.login === grant.login && item.app === grant.app)
+              item.valid = false;
         response.writeHead(204).end();
         return;
       }
@@ -200,7 +215,21 @@ export async function startGitHubFixture(port) {
         const input = JSON.parse(body || "{}");
         state.calls.push({ kind: "authorized", login: input.variables?.login });
         if (!owner.valid) return send(401, { message: "Bad credentials" });
+        // An outage fails calendar reads with either kind of credential.
+        if (state.failure && input.variables) return send(state.failure, {});
+        if (state.activityFailure && input.variables)
+          return send(state.activityFailure, {});
         const viewer = users.get(owner.login);
+        if (!input.variables)
+          return send(
+            200,
+            {
+              data: {
+                viewer: viewer && { id: viewer.id, login: viewer.login },
+              },
+            },
+            owner.scope,
+          );
         const user = users.get(String(input.variables?.login).toLowerCase());
         if (!viewer || !user)
           return send(
@@ -212,7 +241,7 @@ export async function startGitHubFixture(port) {
               },
               errors: [{ type: "NOT_FOUND", path: ["user"] }],
             },
-            "read:user",
+            owner.scope,
           );
         return send(
           200,
@@ -236,7 +265,7 @@ export async function startGitHubFixture(port) {
               },
             },
           },
-          "read:user",
+          owner.scope,
         );
       }
       if (url.pathname === "/graphql" && request.method === "POST") {
@@ -300,6 +329,17 @@ export async function startGitHubFixture(port) {
     state,
     users,
     tokens,
+    // A GitHub sign-in token, as Better Auth stores it after sign-in.
+    issueSignInToken(login, scope = "read:user, user:email") {
+      const token = `gho_sign_in_${randomBytes(8).toString("hex")}`;
+      tokens.set(token, {
+        login: login.toLowerCase(),
+        app: SIGN_IN_CLIENT_ID,
+        scope,
+        valid: true,
+      });
+      return token;
+    },
     // Revokes every token of an account, as removing the app on GitHub does.
     revokeAll(login) {
       for (const item of tokens.values())

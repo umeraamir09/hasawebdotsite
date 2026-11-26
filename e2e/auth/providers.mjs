@@ -58,7 +58,9 @@ export async function checkConnectedProviders({
     );
     assert.deepEqual(
       authorization.searchParams.get("scope").split(" ").sort(),
-      provider === "github" ? ["user:email"] : ["email", "openid", "profile"],
+      provider === "github"
+        ? ["read:user", "user:email"]
+        : ["email", "openid", "profile"],
     );
     const completed = await callback(provider, jar, url, code);
     assert.equal(completed.status, 302);

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { authorizedRefreshResult, fetchAuthorizedActivity } from "./authorized";
+import {
+  authorizedRefreshResult,
+  fetchAuthorizedActivity,
+  fetchViewer,
+} from "./authorized";
 
 const selected = { id: "node-owner", login: "Fixture-Owner" };
 const range = {
@@ -169,5 +173,52 @@ describe("authorized activity fetch", () => {
     expect(authorizedRefreshResult(result, selected)).toMatchObject({
       error: "payload",
     });
+  });
+});
+
+describe("token viewer", () => {
+  const viewer = (response: Response | (() => Promise<Response>)) =>
+    fetchViewer(async (url, init) => {
+      expect(url).toBe("https://api.github.com/graphql");
+      expect(init.redirect).toBe("manual");
+      expect(String(init.body)).not.toContain("user(");
+      return typeof response === "function" ? response() : response;
+    }, "owner-token");
+  it("names the token's account and reports its scopes", async () => {
+    expect(
+      await viewer(
+        answer(
+          { viewer: { id: "node-owner", login: "Fixture-Owner" } },
+          { scopes: "read:user, user:email" },
+        ),
+      ),
+    ).toEqual({
+      status: "answered",
+      viewer: selected,
+      scopes: "read:user, user:email",
+    });
+  });
+  it("classifies refused, failed and unusable answers", async () => {
+    expect(await viewer(answer(null, { status: 401 }))).toEqual({
+      status: "failed",
+      error: "credential",
+    });
+    expect(await viewer(answer(null, { status: 403 }))).toEqual({
+      status: "failed",
+      error: "rate",
+    });
+    expect(await viewer(answer(null, { status: 502 }))).toEqual({
+      status: "failed",
+      error: "server",
+    });
+    expect(await viewer(answer({ viewer: { id: "x" } }))).toEqual({
+      status: "failed",
+      error: "payload",
+    });
+    expect(
+      await viewer(async () => {
+        throw new TypeError("offline");
+      }),
+    ).toEqual({ status: "failed", error: "network" });
   });
 });

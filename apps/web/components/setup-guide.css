@@ -213,6 +213,18 @@
 .guide-big-field input::placeholder {
   color: var(--wb-text-tertiary);
 }
+.guide-github-account {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--wb-text-primary);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.2px;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .guide-big-field-status {
   display: flex;
   flex: none;

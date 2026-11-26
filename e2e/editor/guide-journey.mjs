@@ -343,11 +343,13 @@ export async function checkGuideJourney({
     const page = await guidePage();
     await provision(page, "alice");
     await sql("DELETE FROM account WHERE id='journey-account'");
+    // A GitHub sign-up holds the sign-in token its graph connects with.
     await sql(
-      "INSERT INTO account(id,account_id,provider_id,user_id,created_at,updated_at) VALUES('journey-account',?,?,'draft-alice',?,?)",
+      "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES('journey-account',?,?,'draft-alice',?,?,?)",
       [
         signup === "github" ? "7399" : "google-7342",
         signup,
+        signup === "github" ? github.issueSignInToken("Journey-Hub") : null,
         Date.now(),
         Date.now(),
       ],
@@ -527,18 +529,20 @@ export async function checkGuideJourney({
         .getByLabel("Code URL", { exact: true })
         .fill("https://example.com/alpha");
       await page.getByLabel("Code URL", { exact: true }).press("Escape");
-      await proceed(page);
-
-      // GitHub: the detected username, looked up explicitly, public only.
+      // GitHub: the sign-up's own graph, public and private, is connected
+      // when the step opens; Continue adds it.
       github.addUser({
         login: "Journey-Hub",
         databaseId: 7399,
         counts: { [recentDay]: 2 },
+        privateCounts: { [recentDay]: 1 },
       });
+      await proceed(page);
       await waitStep(page, "github");
-      await page.getByRole("button", { name: "Use @Journey-Hub" }).click();
-      await page.getByRole("button", { name: "Fetch activity" }).click();
-      await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
+      await page
+        .getByRole("region", { name: "GitHub activity controls", exact: true })
+        .getByText("Connected", { exact: true })
+        .waitFor({ timeout: 30000 });
       await proceed(page);
       await waitStep(page, "review");
       await page.locator('.guide-save[data-save-status="saved"]').waitFor();
@@ -783,22 +787,16 @@ export async function checkGuideJourney({
         name: "GitHub activity controls",
         exact: true,
       });
-      await panel.getByLabel("GitHub username").fill("Journey-Private");
-      await panel.getByRole("button", { name: "Fetch activity" }).click();
-      await page.getByText(/Connected\. Fetched/).waitFor({ timeout: 30000 });
-      // Public + private, then GitHub authorization is cancelled: the
-      // request stays in the draft, unfinished.
+      // GitHub authorization for the typed account is cancelled: the graph
+      // stays in the draft, unfinished.
       github.state.consent = { as: null, cancel: true, hold: false };
-      await panel.getByRole("radio", { name: "Public + private" }).click();
-      await page
-        .getByRole("dialog", { name: "Include private contributions?" })
-        .getByRole("button", { name: "Continue to GitHub" })
-        .click();
+      await panel.getByLabel("GitHub username").fill("Journey-Private");
+      await panel.getByLabel("GitHub username").press("Enter");
       await page.waitForURL(/\/auth\/entry$/, { timeout: 60000 });
       await page.waitForFunction(() => window.guideFixture?.ready);
       await waitStep(page, "github");
       await panel
-        .locator("[data-github-private-status]")
+        .locator("[data-github-status]")
         .getByText(/Authorization was cancelled/)
         .waitFor({ timeout: 30000 });
       github.state.consent = { as: null, cancel: false, hold: false };
@@ -856,24 +854,31 @@ export async function checkGuideJourney({
         fullPage: true,
       });
 
-      // Repair in the editor: complete the project, use public activity only.
+      // Repair in the editor: complete the project, authorize the account.
       await openSection(page, "Projects");
       await page
         .getByLabel("Summary", { exact: true })
         .fill("Finished in the editor.");
+      await until(
+        async () =>
+          (await stored()).components[0].data.entries[0].summary ===
+          "Finished in the editor.",
+        "the project repair was not saved",
+      );
       await openSection(page, "GitHub activity");
       await page
         .getByRole("region", { name: "GitHub activity controls", exact: true })
-        .getByRole("button", { name: "Use public activity only" })
+        .getByRole("button", { name: "Authorize again" })
         .click();
-      await until(async () => {
-        const draft = await stored();
-        return (
-          draft.components[0].data.entries[0].summary ===
-            "Finished in the editor." &&
-          draft.components[1].data.includePrivate === false
-        );
-      }, "the editor repairs were not saved");
+      await page.waitForURL(/\/editor(\?github=consent)?$/, {
+        timeout: 60000,
+      });
+      await page.waitForFunction(() => window.editorFixture?.ready);
+      await page
+        .getByRole("region", { name: "GitHub activity controls", exact: true })
+        .getByRole("status")
+        .getByText(/Connected\. 6 contributions/)
+        .waitFor({ timeout: 60000 });
       await page.waitForFunction(
         () =>
           !window.editorFixture.recovery.store

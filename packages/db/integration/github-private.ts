@@ -12,9 +12,10 @@ import {
 } from "../src/github";
 import {
   CONSENT_EXCHANGE_DEADLINE_MS,
-  choosePublicOnly,
   ownerPrivateActivity,
   releaseStaleReservation,
+  releaseUnusedConsent,
+  runGitHubCleanups,
   withdrawPrivateActivity,
 } from "../src/github-private";
 import { ownerGraphSetup } from "../src/github-setup";
@@ -35,6 +36,7 @@ function ok(value: unknown, message: string): asserts value {
 }
 
 export const app = { id: "activity-app", secret: "activity-secret" };
+export const signInApp = { id: "sign-in-app", secret: "sign-in-secret" };
 const callbackUrl = "https://hasaweb.site/api/owner/github/consent/callback";
 export type Account = GitHubIdentity & { public: number; all: number };
 // The grant coordinator is global per app/account, so each check uses its own.
@@ -106,7 +108,7 @@ export function fakeGitHub() {
     ).replace(/^Bearer /, "");
     if (target.pathname === "/graphql") {
       const request = JSON.parse(String(init.body));
-      const login = String(request.variables.login).toLowerCase();
+      const login = String(request.variables?.login).toLowerCase();
       const user = registry.get(login);
       // The zero-scope platform credential used by public setup.
       if (bearer === "platform-token") {
@@ -160,6 +162,15 @@ export function fakeGitHub() {
       if (control.graphql === "503") return new Response("{}", { status: 503 });
       const grant = tokens.get(bearer);
       if (!grant?.valid) return new Response("{}", { status: 401 });
+      if (!request.variables)
+        return Response.json(
+          {
+            data: {
+              viewer: { id: grant.account.id, login: grant.account.login },
+            },
+          },
+          { headers: { "X-OAuth-Scopes": grant.scope } },
+        );
       const from = Date.parse(request.variables.from.slice(0, 10));
       return Response.json(
         {
@@ -241,7 +252,22 @@ export function fakeGitHub() {
     for (const item of tokens.values())
       if (item.account.id === account.id) item.valid = false;
   };
-  return { transport, authorize, calls, control, tokens, valid, revokeAll };
+  /** A token GitHub issued outside this adapter, like a sign-in token. */
+  function issue(account: GitHubIdentity, scope: string) {
+    const token = `gho_sign_in_${++issued}`;
+    tokens.set(token, { account, scope, valid: true });
+    return token;
+  }
+  return {
+    transport,
+    authorize,
+    issue,
+    calls,
+    control,
+    tokens,
+    valid,
+    revokeAll,
+  };
 }
 
 export async function runPrivateActivityChecks(
@@ -343,6 +369,7 @@ export async function runPrivateActivityChecks(
     const env = {
       transport: github.transport,
       app,
+      signInApp,
       key,
       oauthOrigin: "https://github.com",
       callbackUrl,
@@ -504,6 +531,7 @@ export async function runPrivateActivityChecks(
       const env = {
         transport: t.github.transport,
         app,
+        signInApp,
         key,
         oauthOrigin: "https://github.com",
         callbackUrl,
@@ -566,9 +594,9 @@ export async function runPrivateActivityChecks(
         [before?.login, before?.generation, before?.public_calendar],
       );
       equal((await t.setup.status()).public.state, "ready");
-      // Retry starts a new attempt; Public only then clears it and the old link dies.
+      // Retry starts a new attempt; releasing it clears it and the old link dies.
       const again = await t.consent();
-      await choosePublicOnly(db, t.identity, clock);
+      await releaseUnusedConsent(db, t.identity, clock);
       equal(await t.service.status(), { state: "off" });
       equal((await grant(t.selected))?.state, "idle");
       equal((await t.service.callback(again.params)).outcome, "invalid");
@@ -785,6 +813,7 @@ export async function runPrivateActivityChecks(
       const env = {
         transport: t.github.transport,
         app,
+        signInApp,
         key,
         oauthOrigin: "https://github.com",
         callbackUrl,
@@ -1067,6 +1096,7 @@ export async function runPrivateActivityChecks(
       const rivalService = ownerPrivateActivity(db, rival, {
         transport: t.github.transport,
         app,
+        signInApp,
         key,
         oauthOrigin: "https://github.com",
         callbackUrl,
@@ -1104,6 +1134,111 @@ export async function runPrivateActivityChecks(
       equal(
         t.github.calls.filter((call) => call.includes("access_token")).length,
         2,
+      );
+    },
+  );
+  await check(
+    "Sign-in connect stores the sign-in token as the graph grant, and withdrawal revokes it with the sign-in app",
+    async () => {
+      const github = fakeGitHub();
+      const env = {
+        transport: github.transport,
+        app,
+        signInApp,
+        key,
+        oauthOrigin: "https://github.com",
+        callbackUrl,
+        now: () => clock,
+      };
+      async function signedIn(id: string, scope: string | null) {
+        const identity = await makeOwner(id);
+        const selected = account(`${id}-owner`, { public: 2, all: 9 });
+        const token = scope ? github.issue(selected, scope) : null;
+        await db
+          .prepare(
+            "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,'github',?,?,1,1)",
+          )
+          .bind(`account-${id}`, String(9000 + registry.size), id, token)
+          .run();
+        const setup = ownerGraphSetup(db, identity, {
+          transport: github.transport,
+          platformToken: "platform-token",
+          now: () => clock,
+          activity: env,
+        });
+        const portfolioId = `portfolio-${id}`;
+        return { identity, selected, token, setup, portfolioId };
+      }
+      const signInGrant = (selected: GitHubIdentity) =>
+        db
+          .prepare(
+            "SELECT state FROM github_grant WHERE app_id=? AND github_user_id=?",
+          )
+          .bind(signInApp.id, selected.id)
+          .first<{ state: string }>();
+      const plain = async (stored: string) => stored;
+
+      const t = await signedIn("gh-sign-in", "read:user, user:email");
+      const connected = await t.setup.connectSignIn(plain);
+      ok(connected.ok, `connect ${JSON.stringify(connected)}`);
+      equal(connected.status.connection?.username, t.selected.login);
+      equal(connected.status.private.state, "ready");
+      equal(connected.status.githubSignIn, true);
+      const row = await raw(t.portfolioId);
+      equal(
+        [row?.login, row?.private_enabled, row?.status],
+        [t.selected.login, 1, "ok"],
+      );
+      // Only the encrypted envelope is stored, never the token.
+      ok(
+        typeof row?.token_enc === "string" &&
+          !row.token_enc.includes(t.token ?? ""),
+        "encrypted token",
+      );
+      equal((await signInGrant(t.selected))?.state, "active");
+      equal(total(await t.setup.preview(true)), 9);
+      equal(total(await t.setup.preview(false)), 2);
+      // Connecting again changes nothing and needs no new grant.
+      clock += 60_000;
+      const again = await t.setup.connectSignIn(plain);
+      ok(again.ok, "reconnect is a no-op");
+      equal((await raw(t.portfolioId))?.generation, row?.generation);
+
+      // Withdrawal revokes the grant with the sign-in app's credentials.
+      ok(await withdrawPrivateActivity(db, t.identity, clock), "withdrawn");
+      equal((await signInGrant(t.selected))?.state, "pending");
+      const outcomes = await runGitHubCleanups(db, env, clock, 100);
+      ok(outcomes.includes("deleted"), `cleanup ${JSON.stringify(outcomes)}`);
+      equal((await signInGrant(t.selected))?.state, "idle");
+      equal(github.valid(t.selected), false);
+      // The revoked sign-in token now needs authorization on GitHub.
+      clock += 60_000;
+      equal(await t.setup.connectSignIn(plain), {
+        ok: false,
+        error: "reauthorize",
+      });
+
+      // A sign-in token without read:user, or none, is never stored.
+      for (const [id, scope] of [
+        ["gh-sign-in-email", "user:email"],
+        ["gh-sign-in-broad", "read:user,repo"],
+        ["gh-sign-in-none", null],
+      ] as const) {
+        const owner = await signedIn(id, scope);
+        equal(await owner.setup.connectSignIn(plain), {
+          ok: false,
+          error: "reauthorize",
+        });
+        equal(await signInGrant(owner.selected), null);
+        equal((await raw(owner.portfolioId))?.private_enabled ?? 0, 0);
+      }
+      // An undecryptable token asks for authorization too.
+      const broken = await signedIn("gh-sign-in-broken", "read:user");
+      equal(
+        await broken.setup.connectSignIn(async () => {
+          throw new Error("bad envelope");
+        }),
+        { ok: false, error: "reauthorize" },
       );
     },
   );

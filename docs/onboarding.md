@@ -19,7 +19,7 @@ This experience is required for the MVP launch. It applies to new signups starti
 | 3 | Links, required | At least one labeled social/website HTTP(S) URL or email address. Add, edit, remove, and order entries. Email rows carry a Public pill. | Shared link records with profile placement enabled. Do not automatically add a separate social links component. |
 | 4 | Skills, optional | Add, remove, and reorder manually entered skill names. | One skills component with entries in supplied order. Categories remain editable in the editor. No component when no content was entered. |
 | 5 | Projects, optional | Add multiple projects. Title and summary are required for each entry when using Continue. Contribution, technologies, image, and code/demo links are optional. | One projects component containing owner entries. Images use the shared private upload path. Case studies remain in the editor. |
-| 6 | GitHub, optional | Look up a username, see its graph, choose Public or Public + private, and show connection/fetch status and recovery choices. | One graph component plus separate owner-scoped connection/activity records. Signup alone adds neither a graph nor private consent. |
+| 6 | GitHub, optional | A GitHub signup sees its own graph, public and private, already connected. Another account (and every Google owner's) is entered by username and authorized on GitHub. Show connection/fetch status and recovery choices. | One graph component, added on Continue or when leaving to authorize another account, plus separate owner-scoped connection/activity records. Skip adds no graph and withdraws an unused sign-in connection. |
 | 7 | Review | Render the actual private draft under its address bar, switch desktop/mobile and light/dark preview, go Back to revise answers, and Open editor. The top bar's Private pill shows nothing is published. | A confirmed first editor handoff using the same saved draft. No publication or permanent claim; the reserved address is already held. |
 
 The profile remains at the top. Initially include optional sections in Skills, Projects, GitHub order, omitting sections with no entered content. Partially entered optional content is retained as described below. The editor can subsequently change component and entry order through its normal controls.
@@ -33,7 +33,7 @@ The default appearance comes from the single template and the [approved catalog]
 - The profile screen remains one step even though cropping opens a dialog. The Links step requires at least one valid, nonempty profile-displayed link.
 - Address continuation requires valid format, a successful current availability check, and a successful reservation save. Once the name is held, another owner cannot take it, and a later availability change cannot remove a valid reservation. Availability changes do not force a completed owner back through onboarding. First Publish verifies the reservation before converting it to the permanent claim.
 - After required setup, each optional screen offers Skip and Skip to review. Skip advances to the next screen; Skip to review opens Review.
-- Skipping stops questions and preserves entered content and granted access. It is different from explicit Remove, which confirms deletion and applies the GitHub access rules below.
+- Skipping stops questions and preserves entered content and the access of an added graph. It is different from explicit Remove, which confirms deletion and applies the GitHub access rules below.
 - Back navigation edits the same stable records. Revisiting, retrying, or repeating a callback must not append duplicate links, components, projects, or portfolios.
 - Direct navigation to later screens or editor routes must not bypass required setup. If a user revises required content before first editor entry, Open editor must still validate the saved required content. The milestone cannot be set from a client-supplied flag.
 - Sign-out and abandoning a session remain possible. Returning before first editor entry resumes saved progress. After the first handoff, sign-in opens the editor directly and onboarding cannot be rerun in this version.
@@ -52,25 +52,25 @@ Keep the existing upload approach: crop and re-encode on the client, then upload
 
 ## GitHub setup, authorization, and removal
 
-Offer graph setup to both signup providers. Suggest the detected username for GitHub signup and allow correction. Google owners enter the selected username. A public graph uses a separately verified platform credential; it does not require linking GitHub as another sign-in provider.
+Every graph shows one account's public and private activity. For a GitHub signup, the step connects the sign-in account when it opens: the sign-in token (`read:user` with `user:email`) becomes the graph's encrypted grant, and the step shows the graph with a Connected pill. Continue adds it. Skip adds nothing and withdraws that access. If the sign-in token can't be used (missing, revoked, or from before the sign-in asked for `read:user`), Connect GitHub authorizes the sign-in account on GitHub instead.
 
-Private activity is an explicit additional choice for either provider. Choosing Public + private opens a dialog that lists daily contribution counts as Shown and repository names and code as Hidden; Continue to GitHub starts authorization. Use the separate activity app/grant established by S-6, requesting `read:user`; keep sign-in at its existing identity/email scope. Verify the selected GitHub account's stable identity and username. Never change the selected graph username silently to match a wrong-account callback. Activity authorization does not add GitHub sign-in to a Google owner's account.
+Use another account, and every Google owner, enters a username. The server resolves it with the platform credential, the guide adds the graph, and the browser leaves to authorize that account with the separate activity app/grant established by S-6, requesting `read:user`. The owner signs in to that account on GitHub. Verify the selected GitHub account's stable identity and username. Never change the selected graph username silently to match a wrong-account callback. Activity authorization does not add GitHub sign-in to a Google owner's account.
 
-Private authorization returns to the same saved graph setup. It must use one-use, expiring, owner/session-bound state and PKCE, preserve recoverable work through reauthentication, and reject mismatched or replayed callbacks. Successful authorization still requires a successful fetch before that private configuration is publishable. Zero contributions are a valid success.
+Authorization returns to the same saved graph setup. It must use one-use, expiring, owner/session-bound state and PKCE, preserve recoverable work through reauthentication, and reject mismatched or replayed callbacks. Successful authorization still requires a successful fetch before that private configuration is publishable. Zero contributions are a valid success.
 
-If authorization is cancelled, fails, or uses the wrong account, retain the existing public graph and offer:
+If authorization is cancelled, fails, or uses the wrong account, keep the selected account and offer:
 
-- Retry private authorization for the selected account.
-- Use public activity only, clearing the unfinished private request. A public graph still needs a successful public fetch.
+- Authorize again for the selected account.
+- Use another account.
 - Finish setup later in the editor, preserving an incomplete configuration that blocks publication until resolved or removed.
 
-First-fetch failures also offer Retry or later editor repair. These optional failures must not create another mandatory editor gate. Unavailable graphs show an honest status while the rest of the private portfolio remains usable.
+First-fetch failures also offer Authorize again, Retry or later editor repair. These optional failures must not create another mandatory editor gate. Unavailable graphs show an honest status while the rest of the private portfolio remains usable.
 
-Explicit graph removal in onboarding or the editor requires confirmation explaining withdrawal of private access. Remove the graph from the draft, immediately disable private access and remove private data from public responses/cache, clear the local token, and revoke the separate remote grant with retryable cleanup. Keep GitHub sign-in connected. Draft component removal otherwise becomes public on Publish; immediate private-data withdrawal is the existing exception. Skip actions retain the component and connection.
+Explicit graph removal in onboarding or the editor requires confirmation explaining withdrawal of private access. Remove the graph from the draft, immediately disable private access and remove private data from public responses/cache, clear the local token, and revoke the remote grant (sign-in or activity app) with retryable cleanup. Keep GitHub sign-in connected. Draft component removal otherwise becomes public on Publish; immediate private-data withdrawal is the existing exception. Skip actions retain an added component and its connection.
 
 Connection generations must reject refresh results and errors from earlier grants, disconnects, or usernames. Select either the safe public calendar or the complete authorized calendar. Never add those calendars together or derive daily private counts by subtraction. Existing refresh, revocation, and public-cache policies apply.
 
-Remote activity-grant deletion affects all tokens for that app/account. Coordinate cleanup and new private consent so a delayed removal task cannot revoke a newly authorized connection. Pending/in-flight cleanup must finish before starting new consent for that same app/account; show its retry state while public-only setup and later editor repair remain available. This is a technical dependency of the agreed removal behavior, not another mandatory onboarding step.
+Remote activity-grant deletion affects all tokens for that app/account. Coordinate cleanup and new private consent so a delayed removal task cannot revoke a newly authorized connection. Pending/in-flight cleanup must finish before starting new consent for that same app/account; show its retry state while another account and later editor repair remain available. This is a technical dependency of the agreed removal behavior, not another mandatory onboarding step.
 
 ## Persistence, recovery, and editor handoff
 
