@@ -1013,9 +1013,18 @@ button.guide-kbd:disabled {
   margin: 0;
 }
 .guide-recovery {
+  /* The shared recovery controls use the light-only legacy tokens; map them
+     to Workbench tokens so they follow the OS scheme here. */
+  --bg-page: var(--wb-bg-sunken);
+  --bg-surface: var(--wb-bg-sunken);
+  --bg-raised: var(--wb-bg-panel);
+  --text-primary: var(--wb-text-primary);
+  --text-secondary: var(--wb-text-secondary);
+  --border-control: var(--wb-line-strong);
   padding: 16px;
   border-radius: 16px;
   background: var(--wb-bg-panel);
+  color: var(--wb-text-primary);
   font-size: 13px;
 }
 

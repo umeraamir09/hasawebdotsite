@@ -206,7 +206,18 @@ export async function checkSetupGuide({
       );
       assert.deepEqual(await claims(), []);
 
-      // A valid name is checked, reserved, then progress advances.
+      // A valid name is checked, reserved, then progress advances. The
+      // reservation and progress saves show only in the top bar; the recovery
+      // panel never mounts for a save that is still in flight.
+      await page.evaluate(() => {
+        window.recoveryShown = false;
+        new MutationObserver((records) => {
+          for (const record of records)
+            for (const node of record.addedNodes)
+              if (node instanceof Element && node.matches(".guide-recovery"))
+                window.recoveryShown = true;
+        }).observe(document.body, { childList: true, subtree: true });
+      });
       const name = `guide-${suffix()}`;
       await field(page).fill(name);
       await field(page).press("Tab");
@@ -241,6 +252,8 @@ export async function checkSetupGuide({
         .locator(`[data-guide-address="${name}"]`)
         .filter({ hasText: "Private" })
         .waitFor();
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor();
+      assert.equal(await page.evaluate(() => window.recoveryShown), false);
       await noBypass(page);
       await page.screenshot({ path: join(evidence, "guide-profile.png") });
 

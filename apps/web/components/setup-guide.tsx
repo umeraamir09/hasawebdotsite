@@ -466,14 +466,16 @@ function Scope({
       (graphUnchecked ||
         (graphStatus && graphGap(graphStatus, currentGraph) !== null)),
   );
+  // Every autosave and reservation sets `batch` and `pending` while it is in
+  // flight, and the top bar already shows that. They need the owner only once
+  // the save stops with an error.
   const needsAttention =
     ["failed", "blocked"].includes(state.status) ||
     state.recoveries.length > 0 ||
     Boolean(recoveryState.review) ||
     Boolean(recoveryState.error) ||
     !state.localRecoveryAvailable ||
-    Boolean(state.pending) ||
-    Boolean(state.batch) ||
+    (state.error !== null && Boolean(state.pending || state.batch)) ||
     Boolean(state.validationJournal) ||
     Boolean(state.discardJournal);
   // The top bar shows the address once the server confirms the hold.
