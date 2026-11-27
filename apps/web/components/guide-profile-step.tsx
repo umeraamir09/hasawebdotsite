@@ -1,17 +1,19 @@
 "use client";
 
 import { BIO_MAX, clearSample } from "@hasaweb/schema";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { editEditorField, readEditorField } from "../lib/editor/fields";
 import { profileSuggestions } from "../lib/editor/provider-suggestions";
 import { DraftField } from "./draft-field";
 import { ImageSlot } from "./image-slot";
-import { Button, Icon } from "./workbench";
+import { Icon } from "./workbench";
 import "./profile-editor.css";
 
 type Suggestion = { name: string; photoAvailable: boolean } | null;
+
+const NAME_PATH = ["profile", "name"];
 
 // The Profile step (Figma 471:11559, provider suggestions 460:10310): the
 // profile card is the form. The banner and avatar use the shared image slots
@@ -46,11 +48,20 @@ function Card({
       });
     return () => request.abort();
   }, [controller]);
+  // The account's name fills an empty Name field once; the owner edits it
+  // in place, and Continue confirms it.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    const suggested = suggestion?.name.trim();
+    if (!suggested || prefilled.current || inactive) return;
+    prefilled.current = true;
+    if (readEditorField(controller.store.getState(), NAME_PATH).trim()) return;
+    editEditorField(controller, NAME_PATH, suggested);
+  }, [suggestion, inactive, controller]);
   const draft = state.working;
   if (!draft) return null;
-  const namePath = ["profile", "name"];
-  const name = readEditorField(state, namePath);
-  const nameUnfinished = Boolean(state.inputs[JSON.stringify(namePath)]);
+  const name = readEditorField(state, NAME_PATH);
+  const nameUnfinished = Boolean(state.inputs[JSON.stringify(NAME_PATH)]);
   const pendingImage = (key: string) => (pending: boolean) =>
     controller.store.setState((current) => ({
       pendingImages: { ...current.pendingImages, [key]: pending },
@@ -97,7 +108,6 @@ function Card({
       onDescription: (value: string) => editEditorField(controller, alt, value),
     } as const;
   };
-  const suggestedName = suggestion?.name.trim() ?? "";
   return (
     <section className="guide-card guide-profile" aria-label="Profile card">
       <div className="guide-profile-images">
@@ -128,26 +138,11 @@ function Card({
             disabled={inactive}
             aria-invalid={nameUnfinished || undefined}
             onChange={(event) =>
-              editEditorField(controller, namePath, event.target.value)
+              editEditorField(controller, NAME_PATH, event.target.value)
             }
           />
           <Icon name="pencil" size={16} />
         </div>
-        {suggestedName && suggestedName !== name.trim() && (
-          <div className="guide-suggested">
-            <Icon name="user" size={16} />
-            <strong>{suggestedName}</strong>
-            <Button
-              size="s"
-              disabled={inactive}
-              onClick={() => {
-                editEditorField(controller, namePath, suggestedName);
-              }}
-            >
-              Use this name
-            </Button>
-          </div>
-        )}
         <DraftField
           controller={controller}
           disabled={inactive}

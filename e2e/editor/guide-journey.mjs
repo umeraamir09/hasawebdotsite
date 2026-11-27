@@ -452,23 +452,22 @@ export async function checkGuideJourney({
       await waitStep(page, "profile");
       assert.deepEqual(await claims(), [{ name: replacement, state: "held" }]);
 
-      // Profile: the provider name and photo are used only on request; a
-      // failed photo import keeps the form and a retry reaches the crop.
-      await page.getByLabel("Name", { exact: true }).waitFor();
-      assert.equal(
-        await page.getByLabel("Name", { exact: true }).inputValue(),
-        "",
+      // Profile: the account name fills the empty Name field and stays
+      // editable; the photo is used only on request; a failed photo import
+      // keeps the form and a retry reaches the crop.
+      const nameField = page.getByLabel("Name", { exact: true });
+      await page.waitForFunction(
+        () =>
+          document.querySelector(".guide-profile-name input")?.value ===
+          "GitHub Owner",
       );
-      await page.getByRole("button", { name: "Use this name" }).waitFor();
       assert.equal(
-        await page.getByLabel("Name", { exact: true }).inputValue(),
-        "",
+        await page.getByRole("button", { name: "Use this name" }).count(),
+        0,
       );
-      await click(page, "Use this name");
-      assert.equal(
-        await page.getByLabel("Name", { exact: true }).inputValue(),
-        "GitHub Owner",
-      );
+      await nameField.fill("GitHub Owner (edited)");
+      assert.equal(await nameField.inputValue(), "GitHub Owner (edited)");
+      await nameField.fill("GitHub Owner");
       await sql("UPDATE user SET image=? WHERE id='draft-alice'", [
         "https://avatars.githubusercontent.com/fixture/missing",
       ]);
@@ -683,7 +682,10 @@ export async function checkGuideJourney({
       const page = await signedUp("google");
       const name = `skipped-${suffix()}`;
       await enterAddress(page, name);
-      await click(page, "Use this name");
+      // The account name is already in the Name field.
+      await page.waitForFunction(
+        () => document.querySelector(".guide-profile-name input")?.value !== "",
+      );
       await click(page, "Edit avatar");
       await click(page, "Use my account photo");
       await page.getByRole("dialog", { name: "Adjust avatar" }).waitFor();

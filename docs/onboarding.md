@@ -42,7 +42,7 @@ The default appearance comes from the single template and the [approved catalog]
 
 Prefill the signup provider's name for review. Offer Use this photo only when a provider photo is available; it requires explicit acceptance, the shared crop experience, and a successful private upload. Do not treat a remote provider URL as an owned draft asset. A missing or failed provider photo can be replaced by an uploaded image.
 
-The guide's Profile step uses the same image slots, private provider-photo import path and crop dialogs as the editor's profile editor. The step offers the provider name beside the name field and the provider photo in the avatar's options. Use this name and Apply crop are the only ways to accept a provider suggestion.
+The guide's Profile step uses the same image slots, private provider-photo import path and crop dialogs as the editor's profile editor. When the step opens with an empty Name, the provider name fills it once; the owner can edit or clear it, and continuing from the step confirms it. The provider photo is offered in the avatar's options, and Apply crop is the only way to accept it.
 
 Owners enter their own bio and select a banner. A bio holds at most 160 characters. The bio field shows the count, and a longer bio blocks Profile continuation and Publish without being cut. Account email is only a suggestion for a public link, never silently copied to public identity. The Links step shows it as a pill, and picking that pill adds the link, whose row then carries a Public pill. An email link and a private contact-form recipient remain separate concepts.
 

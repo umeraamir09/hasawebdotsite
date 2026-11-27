@@ -582,23 +582,6 @@ button.guide-kbd:disabled {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.guide-suggested {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 6px 6px 10px;
-  background: var(--wb-bg-sunken);
-  clip-path: var(--px-sm);
-  color: var(--wb-text-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-.guide-suggested strong {
-  flex: 1 1 auto;
-  color: var(--wb-text-primary);
-  font-weight: 500;
-}
 .guide-profile .image-slot-status:empty {
   display: none;
 }
