@@ -52,7 +52,7 @@ export async function createEditorHarness({
     platform: "browser",
     format: "esm",
     jsx: "automatic",
-    external: ["/fonts/*", "/portfolio-platform/*"],
+    external: ["/fonts/*", "/landing/*", "/portfolio-platform/*"],
     // The Workbench CSS self-hosts Geist; the bundle emits the font files.
     loader: { ".ttf": "file" },
     assetNames: "[name]-[hash]",
@@ -256,9 +256,19 @@ export async function createEditorHarness({
         res.end(await readFile(join(directory, url.pathname.slice(1))));
         return;
       }
-      if (/^\/geist(?:-mono)?-variable-[A-Z0-9]+\.ttf$/.test(url.pathname)) {
+      if (
+        /^\/(?:geist(?:-mono)?-variable|HostGrotesk-Variable|Silkscreen-Bold)-[A-Z0-9]+\.ttf$/.test(
+          url.pathname,
+        )
+      ) {
         res.setHeader("Content-Type", "font/ttf");
         res.end(await readFile(join(directory, url.pathname.slice(1))));
+        return;
+      }
+      // The setup guide's pixel sprites (home mark and cat).
+      if (/^\/landing\/town\/s_[a-z]+\.png$/.test(url.pathname)) {
+        res.setHeader("Content-Type", "image/png");
+        res.end(await readFile(join(root, "apps/web/public", url.pathname)));
         return;
       }
       if (/^\/assets\/crop\/[a-z-]+\.svg$/.test(url.pathname)) {
