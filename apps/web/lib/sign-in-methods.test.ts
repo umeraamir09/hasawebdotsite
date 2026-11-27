@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { disconnectSignInMethod, linkReturnNotice } from "./sign-in-methods";
+import {
+  disconnectSignInMethod,
+  linkReturnNotice,
+  linkReturnSearch,
+} from "./sign-in-methods";
 
 describe("connected sign-in methods", () => {
   it("reads only the fixed link outcome and known error codes", () => {
@@ -13,7 +17,17 @@ describe("connected sign-in methods", () => {
       linkReturnNotice(
         "?account=not-connected&error=account_already_linked_to_different_user",
       )?.text,
-    ).toMatch(/different hasaweb\.site account/);
+    ).toBe(
+      "This account is already linked to another hasaweb.site account, so it wasn't connected.",
+    );
+    expect(
+      linkReturnNotice(
+        "?account=not-connected&error=account_already_linked_to_different_user",
+        "GitHub",
+      )?.text,
+    ).toBe(
+      "Your GitHub account is already linked to another hasaweb.site account, so it wasn't connected.",
+    );
     expect(
       linkReturnNotice("?account=not-connected&error=email_does_not_match")
         ?.text,
@@ -23,6 +37,22 @@ describe("connected sign-in methods", () => {
     );
     expect(reflected?.kind).toBe("error");
     expect(reflected?.text).not.toMatch(/provider|secret/);
+  });
+
+  it("keeps only the link outcome and error code for the setup guide", () => {
+    expect(linkReturnSearch("")).toBe("");
+    expect(linkReturnSearch("?github=consent")).toBe("");
+    expect(linkReturnSearch("?account=other&error=x")).toBe("");
+    expect(linkReturnSearch("?account=connected&error=x")).toBe(
+      "?account=connected",
+    );
+    expect(
+      linkReturnSearch(
+        "?account=not-connected&error=account_already_linked_to_different_user&error_description=%3Cb%3E",
+      ),
+    ).toBe(
+      "?account=not-connected&error=account_already_linked_to_different_user",
+    );
   });
 
   it("sends the expected owner and maps outcomes", async () => {

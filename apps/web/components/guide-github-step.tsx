@@ -11,34 +11,29 @@ import {
   withdrawGraphAccess,
 } from "../lib/editor/github-graph";
 import { acceptGraph, findGraph } from "../lib/guide/github";
+import { clearLinkReturn, linkReturnNotice } from "../lib/sign-in-methods";
 import { ComponentRemovalDialog } from "./section-removal-dialog";
-import { LOGIN, useGitHubGraph } from "./use-github-graph";
+import { useGitHubGraph } from "./use-github-graph";
 import { Button, Icon, StatusPill } from "./workbench";
 
 // The GitHub step (Figma 471:11820). A GitHub sign-up sees its own graph,
 // public and private, already connected; Continue adds it and Skip leaves it
-// out. Another account, or a Google owner's, is entered by username and
-// authorized on GitHub, which returns to this saved step.
+// out. A Google owner connects GitHub as a sign-in method; that account
+// becomes the graph. Authorization returns to this saved step.
 export function GuideGitHub({
   controller,
   disabled,
-  onAdding,
   onStatus,
   beforeConsent,
 }: {
   controller: DraftController;
   disabled: boolean;
-  // A username was typed but no account has been selected yet.
-  onAdding(adding: boolean): void;
   onStatus(status: GraphSetupStatus | null): void;
   beforeConsent(): Promise<boolean>;
 }) {
   const state = useStore(controller.store);
   const graph = findGraph(state.working);
   const id = useId();
-  const field = useRef<HTMLInputElement>(null);
-  const [choosing, setChoosing] = useState(false);
-  const [typed, setTyped] = useState("");
   const [removing, setRemoving] = useState(false);
   const [preview, setPreview] = useState<GraphPreviewData>(null);
   const inactive =
@@ -57,23 +52,26 @@ export function GuideGitHub({
     },
   });
   const { status, account, busy } = flow;
+  // Linking GitHub returns here through `/editor`. A refused link (for
+  // example, the account signs in to another hasaweb.site account) is
+  // shown once; a successful one connects on open.
+  const setProblem = flow.setProblem;
+  useEffect(() => {
+    const notice = linkReturnNotice(location.search, "GitHub");
+    if (!notice) return;
+    clearLinkReturn();
+    if (notice.kind === "error") setProblem(notice.text);
+  }, [setProblem]);
   const reportStatus = useRef(onStatus);
   reportStatus.current = onStatus;
   useEffect(() => {
     if (status) reportStatus.current(status);
   }, [status]);
   const off = inactive || busy;
-  const offerSignIn =
-    !account && !!status?.githubSignIn && !choosing && status.privateAvailable;
-  const askUsername = choosing || (!!status && !account && !offerSignIn);
-  const candidate = typed.trim();
-  const reportAdding = useRef(onAdding);
-  reportAdding.current = onAdding;
-  // A typed username that hasn't been taken to GitHub yet.
-  const adding = askUsername && Boolean(candidate) && !graph;
-  useEffect(() => {
-    reportAdding.current(adding);
-  }, [adding]);
+  // Offer Connect whenever the graph is not live: link GitHub if missing,
+  // connect the sign-in token, or replace a stale selected account after
+  // the owner switches GitHub sign-in.
+  const canConnect = !flow.connected && !!status && status.privateAvailable;
 
   const privateState = status?.private.state ?? "off";
   const statusAt =
@@ -103,16 +101,6 @@ export function GuideGitHub({
     );
   const canRetry =
     !!account && !flow.connected && ["pending", "error"].includes(privateState);
-  function submit() {
-    if (off) return;
-    if (!LOGIN.test(candidate)) {
-      flow.setProblem(
-        "Enter a GitHub username: letters, numbers and single hyphens, up to 39 characters.",
-      );
-      return;
-    }
-    void flow.connectAccount(candidate);
-  }
   const pill = busy
     ? { status: "pending" as const, label: account ? "Checking" : "Connecting" }
     : flow.connected
@@ -128,7 +116,7 @@ export function GuideGitHub({
         graph ? "added" : flow.connected ? "connected" : "none"
       }
     >
-      {account && !askUsername && (
+      {account && (
         <div className="guide-big-field" data-publication-field="username">
           <Icon name="github" size={20} />
           <a
@@ -146,59 +134,14 @@ export function GuideGitHub({
           )}
         </div>
       )}
-      {askUsername && (
-        <div className="guide-big-field" data-publication-field="username">
-          <Icon name="github" size={20} />
-          <label htmlFor={id} className="wb-visually-hidden">
-            GitHub username
-          </label>
-          <input
-            ref={field}
-            id={id}
-            value={typed}
-            placeholder="GitHub username"
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            maxLength={39}
-            disabled={off}
-            aria-describedby={`${id}-status`}
-            onChange={(event) => {
-              setTyped(event.target.value);
-              flow.setProblem("");
-            }}
-            onKeyDown={(event) => {
-              if (event.key !== "Enter") return;
-              event.preventDefault();
-              submit();
-            }}
-          />
-          {busy ? (
-            <span className="guide-big-field-status">
-              <StatusPill status="pending">Checking</StatusPill>
-            </span>
-          ) : (
-            <button
-              type="button"
-              className="guide-kbd"
-              aria-label="Continue on GitHub"
-              data-github-action="continue"
-              disabled={off || !LOGIN.test(candidate)}
-              onClick={submit}
-            >
-              ↵
-            </button>
-          )}
-        </div>
-      )}
-      {offerSignIn && (
+      {canConnect && (
         <div className="guide-github-actions">
           <Button
             kind="primary"
             icon="github"
             data-github-action="connect"
             disabled={off}
-            onClick={() => void flow.connectSignIn()}
+            onClick={() => void flow.connectGitHub()}
           >
             {busy ? "Connecting..." : "Connect GitHub"}
           </Button>
@@ -255,34 +198,6 @@ export function GuideGitHub({
             onClick={() => void flow.retry()}
           >
             Retry
-          </Button>
-        )}
-        {status && !askUsername && (
-          <Button
-            size="s"
-            kind="ghost"
-            data-github-action="other-account"
-            disabled={off}
-            onClick={() => {
-              setChoosing(true);
-              queueMicrotask(() => field.current?.focus());
-            }}
-          >
-            Use another account
-          </Button>
-        )}
-        {choosing && (
-          <Button
-            size="s"
-            kind="ghost"
-            disabled={busy}
-            onClick={() => {
-              setChoosing(false);
-              setTyped("");
-              flow.setProblem("");
-            }}
-          >
-            Cancel
           </Button>
         )}
         {graph && (

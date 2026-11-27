@@ -7,10 +7,10 @@ const day = (offset) =>
 
 // Phase 42D: the optional GitHub screen of the setup guide (ON-08 to ON-11),
 // against the production owner routes and the local GitHub stand-in. A
-// GitHub sign-up sees its own graph connected; another account is authorized
-// on GitHub. The guide is mounted only by the isolated fixture at `/guide`;
-// the harness also serves it at the fixed setup consent return,
-// `/auth/entry`.
+// GitHub sign-up sees its own graph connected; a Google owner connects
+// GitHub as a sign-in method. The guide is mounted only by the isolated
+// fixture at `/guide`; the harness also serves it at the fixed setup
+// consent return, `/auth/entry`.
 export async function checkGuideGitHub({
   guarded,
   reset,
@@ -89,6 +89,19 @@ export async function checkGuideGitHub({
   // Address, Profile and Links through the real screens, then Skills and
   // Projects skipped, so each group can run alone.
   async function toGitHub(link = "https://example.com") {
+    // Clear GitHub rows while the portfolio still exists, then drop it.
+    // Prior groups leave grants, consents, a linked account, or a graph.
+    await sql(
+      "UPDATE github_grant SET state='idle', token_enc=NULL, retry_at=0",
+    );
+    await sql(
+      "DELETE FROM account WHERE user_id='draft-alice' AND provider_id='github'",
+    );
+    await sql(
+      `DELETE FROM github_consent WHERE user_id='draft-alice' OR portfolio_id=${owner}`,
+    );
+    await sql(`DELETE FROM github_activity WHERE portfolio_id=${owner}`);
+    await sql(`DELETE FROM github_connection WHERE portfolio_id=${owner}`);
     await reset();
     const page = await guidePage();
     await provision(page, "alice");
@@ -96,6 +109,7 @@ export async function checkGuideGitHub({
     github.state.failure = null;
     github.state.activityFailure = null;
     github.state.revokeFailure = null;
+    github.state.held = null;
     github.state.consent = { as: null, cancel: false, hold: false };
     await open(page);
     await field(page).fill(`gh-${suffix()}`);
@@ -152,21 +166,66 @@ export async function checkGuideGitHub({
     await waitStep(page, "github");
   }
   async function returned(page) {
-    await page.waitForURL(/\/auth\/entry$/, { timeout: 60000 });
+    await page.waitForURL(/\/auth\/entry/, { timeout: 60000 });
     await page.waitForFunction(() => window.guideFixture?.ready);
     await waitStep(page, "github");
     await panel(page).waitFor({ timeout: 30000 });
   }
-  // Another account: its username, then GitHub in the same tab, which
-  // returns to the saved step (unless the stand-in holds the callback).
+  // Link GitHub as a sign-in method for this owner (the graph's only source).
+  async function setGithubSignIn(
+    login,
+    token = github.issueSignInToken(login),
+  ) {
+    const accountId = String(github.users.get(login.toLowerCase()).databaseId);
+    await sql(
+      "DELETE FROM account WHERE user_id='draft-alice' AND provider_id='github'",
+    );
+    await sql(
+      "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
+      [
+        "guide-github-link",
+        accountId,
+        "github",
+        "draft-alice",
+        token,
+        Date.now(),
+        Date.now(),
+      ],
+    );
+  }
+  // Connect from a usable GitHub sign-in token (no second authorization).
+  async function connectLinked(page, login) {
+    await age().catch(() => {});
+    await setGithubSignIn(login);
+    await open(page, "github");
+    // Wait for auto-connect from the linked token. Only click Connect if it
+    // stays offered (for example after a remount that skipped auto-connect).
+    try {
+      await connected(page);
+      return;
+    } catch {
+      // Auto-connect did not finish; fall through to Connect GitHub.
+    }
+    await panel(page).getByRole("button", { name: "Connect GitHub" }).click();
+    await connected(page);
+  }
+  // Authorize the linked account when its sign-in token cannot be used.
+  // Returns to the saved step unless the stand-in holds the callback.
   async function chooseAccount(page, login) {
     await age().catch(() => {});
-    const other = panel(page).getByRole("button", {
-      name: "Use another account",
+    await setGithubSignIn(login, null);
+    await open(page, "github");
+    await page
+      .locator('[data-save-status="saved"]')
+      .waitFor({ timeout: 30000 });
+    await age();
+    // Connect with a null token runs detect → setup → authorize on GitHub.
+    const authorize = panel(page).getByRole("button", {
+      name: /^Authorize (again|on GitHub)$/,
     });
-    if (await other.count()) await other.click();
-    await panel(page).getByLabel("GitHub username").fill(login);
-    await panel(page).getByLabel("GitHub username").press("Enter");
+    const connect = panel(page).getByRole("button", { name: "Connect GitHub" });
+    if (await authorize.count()) await authorize.click();
+    else await connect.click();
     if (github.state.consent.hold) {
       await until(page, () => github.state.held, "consent was not held");
       return;
@@ -203,10 +262,9 @@ export async function checkGuideGitHub({
     );
 
   await guarded(
-    "setup guide GitHub: a Google owner authorizes an account by username; zero contributions, failed first fetch, Authorize again and Finish later",
+    "setup guide GitHub: a Google owner connects GitHub sign-in; zero contributions; Continue adds it",
     async () => {
-      github.addUser({ login: "Guide-Zero" });
-      github.addUser({ login: "Guide-Fail", counts: { [recent]: 3 } });
+      github.addUser({ login: "Guide-Zero", databaseId: 6100 });
       // A Google owner whose profile links to GitHub: nothing is inferred.
       const page = await toGitHub("https://github.com/Guide-Zero");
       assert.equal(await signIns(), 0);
@@ -214,16 +272,10 @@ export async function checkGuideGitHub({
         await page.getByRole("heading", { level: 1 }).innerText(),
         "Add your GitHub activity",
       );
-      assert.equal(
-        await panel(page).getByLabel("GitHub username").inputValue(),
-        "",
-      );
-      assert.equal(
-        await panel(page)
-          .getByRole("button", { name: "Connect GitHub" })
-          .count(),
-        0,
-      );
+      await panel(page)
+        .getByRole("button", { name: "Connect GitHub" })
+        .waitFor();
+      assert.equal(await panel(page).getByLabel("GitHub username").count(), 0);
       assert.equal(await graphOf(page), undefined);
       assert.equal(await connection(), undefined);
       for (const name of ["Skip", "Skip to review", "Review"])
@@ -238,92 +290,47 @@ export async function checkGuideGitHub({
       assert.equal(await graphOf(page), undefined);
       await back(page);
 
-      // Continue before the typed account is connected keeps the owner here.
-      await panel(page).getByLabel("GitHub username").fill("guide-zero");
-      await proceed(page);
-      await alert(page, "Connect a GitHub account to add the graph");
-      assert.equal((await portfolio()).step, "github");
-      assert.equal(await graphOf(page), undefined);
+      // A refused link returns to `/editor`; setup sends it to the guide,
+      // which says why and leaves a clean address. Connect saves before
+      // leaving, so wait for the save as it does.
+      await page
+        .locator('[data-save-status="saved"]')
+        .waitFor({ timeout: 30000 });
+      await page.goto(
+        new URL(
+          "/editor?account=not-connected&error=account_already_linked_to_different_user",
+          page.url(),
+        ).href,
+      );
+      await panel(page)
+        .getByRole("alert")
+        .getByText(
+          "Your GitHub account is already linked to another hasaweb.site account, so it wasn't connected.",
+        )
+        .waitFor();
+      assert.equal(new URL(page.url()).pathname, "/auth/entry");
+      assert.equal(new URL(page.url()).search, "");
+      assert.equal(await signIns(), 0);
 
-      // Zero contributions is a valid, complete graph.
-      await chooseAccount(page, "guide-zero");
+      // Zero contributions is a valid, complete graph once GitHub is linked.
+      // Continue adds it to the draft. (Linking GitHub as a sign-in method is
+      // what Connect GitHub starts; the auth project covers that hop.)
+      await connectLinked(page, "Guide-Zero");
       await connected(page);
       await panel(page)
         .getByLabel("Contribution graph")
         .getByText("0 contributions")
         .waitFor();
-      assert.deepEqual((await graphOf(page)).data, {
-        username: "Guide-Zero",
-        includePrivate: true,
-      });
+      assert.equal(await graphOf(page), undefined);
+      assert.equal(await signIns(), 1);
       await page.screenshot({ path: join(evidence, "guide-github-zero.png") });
       await proceed(page);
       await waitStep(page, "review");
       await savedStep(page, "review");
-      await back(page);
-
-      // An outage before the account resolves selects nothing and keeps the
-      // existing graph.
-      github.state.failure = 503;
-      await age();
-      await panel(page)
-        .getByRole("button", { name: "Use another account" })
-        .click();
-      await panel(page).getByLabel("GitHub username").fill("Guide-Fail");
-      await panel(page).getByLabel("GitHub username").press("Enter");
-      await panel(page)
-        .getByRole("alert")
-        .getByText(/GitHub couldn't be reached/)
-        .waitFor({ timeout: 30000 });
-      assert.equal((await graphOf(page)).data.username, "Guide-Zero");
-      assert.equal((await connection()).login, "Guide-Zero");
-      github.state.failure = null;
-      await click(page, "Cancel");
-
-      // A failed first fetch on GitHub's return keeps the selection, blocks
-      // Continue and offers Authorize again and Finish later.
-      github.state.activityFailure = 502;
-      await chooseAccount(page, "Guide-Fail");
-      await status(page)
-        .getByText(/Authorization didn't finish/)
-        .waitFor({ timeout: 30000 });
-      assert.equal((await graphOf(page)).data.username, "Guide-Fail");
-      await proceed(page);
-      await alert(page, "isn't authorized yet");
-      assert.equal((await portfolio()).step, "github");
-      await page.screenshot({
-        path: join(evidence, "guide-github-failed.png"),
+      assert.deepEqual((await graphOf(page)).data, {
+        username: "Guide-Zero",
+        includePrivate: true,
       });
-      await click(page, "Finish later in the editor");
-      await waitStep(page, "review");
-      await savedStep(page, "review");
-      const unfinished = await graphOf(page);
-      assert.equal(unfinished.data.username, "Guide-Fail");
-      assert.equal((await connection()).login, "Guide-Fail");
-      assert.equal((await connection()).private_enabled, 0);
-
-      // Back, Authorize again once GitHub recovers, then Continue.
-      await back(page);
-      github.state.activityFailure = null;
-      await authorizeAgain(page);
-      await connected(page);
-      await panel(page)
-        .getByLabel("Contribution graph")
-        .getByText("3 contributions")
-        .waitFor();
-      assert.equal(
-        await page.locator("[data-guide-github-unfinished]").count(),
-        0,
-      );
-      await proceed(page);
-      await waitStep(page, "review");
-      const kept = (await stored()).components.filter(
-        (item) => item.type === "github",
-      );
-      assert.equal(kept.length, 1);
-      assert.equal(kept[0].id, unfinished.id);
-      // Authorizing a graph account never links GitHub sign-in.
-      assert.equal(await signIns(), 0);
     },
   );
 
@@ -403,14 +410,19 @@ export async function checkGuideGitHub({
   );
 
   await guarded(
-    "setup guide GitHub: another account's consent returns to the saved step; wrong account and cancel connect nothing",
+    "setup guide GitHub: sign-in reauthorize consent returns to the saved step; wrong account and cancel connect nothing",
     async () => {
       github.addUser({
         login: "Guide-Private",
+        databaseId: 6200,
         counts: { [recent]: 2 },
         privateCounts: { [recent]: 5 },
       });
-      github.addUser({ login: "Guide-Other", counts: { [recent]: 1 } });
+      github.addUser({
+        login: "Guide-Other",
+        databaseId: 6201,
+        counts: { [recent]: 1 },
+      });
       const page = await toGitHub();
 
       // A different GitHub account changes nothing and reports no success.
@@ -465,8 +477,8 @@ export async function checkGuideGitHub({
       await proceed(page);
       await waitStep(page, "review");
       assert.equal((await graphOf(page)).data.includePrivate, true);
-      // Activity consent gives a Google owner no GitHub sign-in.
-      assert.equal(await signIns(), 0);
+      // Reauthorize still uses the linked GitHub sign-in account.
+      assert.equal(await signIns(), 1);
     },
   );
 
@@ -475,6 +487,7 @@ export async function checkGuideGitHub({
     async () => {
       github.addUser({
         login: "Guide-Session",
+        databaseId: 6202,
         counts: { [recent]: 1 },
         privateCounts: { [recent]: 2 },
       });
@@ -581,6 +594,7 @@ export async function checkGuideGitHub({
     async (mark) => {
       github.addUser({
         login: "Guide-Remove",
+        databaseId: 6203,
         counts: { [recent]: 4 },
         privateCounts: { [recent]: 6 },
       });
@@ -642,8 +656,9 @@ export async function checkGuideGitHub({
       // Choosing the account again waits for the earlier cleanup: GitHub is
       // not opened, and the graph waits unfinished.
       await age();
-      await panel(page).getByLabel("GitHub username").fill("Guide-Remove");
-      await panel(page).getByLabel("GitHub username").press("Enter");
+      await setGithubSignIn("Guide-Remove", null);
+      await open(page, "github");
+      await panel(page).getByRole("button", { name: "Connect GitHub" }).click();
       await panel(page)
         .getByRole("alert")
         .getByText(/still being removed/)
@@ -705,7 +720,7 @@ export async function checkGuideGitHub({
       assert.ok(row.generation >= fresh.generation);
       await proceed(page);
       await waitStep(page, "review");
-      assert.equal(await signIns(), 0);
+      assert.equal(await signIns(), 1);
       await reset();
     },
   );

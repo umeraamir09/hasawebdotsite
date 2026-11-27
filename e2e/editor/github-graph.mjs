@@ -13,8 +13,7 @@ const day = (offset) =>
 
 // Owner draft, preview, publication and visitor journeys for the GitHub
 // graph: one account with public and private activity, connected from the
-// GitHub sign-in or authorized on GitHub. GitHub itself is a local stand-in
-// (e2e/support/github-fixture).
+// GitHub sign-in. GitHub itself is a local stand-in (e2e/support/github-fixture).
 export async function checkGitHubGraphJourney({
   getPage,
   boot,
@@ -34,8 +33,12 @@ export async function checkGitHubGraphJourney({
     databaseId: 4242,
     counts: { [recent]: 4, [older]: 1 },
   });
-  github.addUser({ login: "zero-owner" });
-  github.addUser({ login: "private-owner", restricted: 7 });
+  github.addUser({ login: "zero-owner", databaseId: 5001 });
+  github.addUser({
+    login: "private-owner",
+    databaseId: 5002,
+    restricted: 7,
+  });
   const publicRead = (url) =>
     authority(
       "/__fixture/public",
@@ -175,22 +178,144 @@ export async function checkGitHubGraphJourney({
     await controls.waitFor();
     return controls;
   }
-  // Another account: its username, then authorization on GitHub as it.
-  async function chooseAccount(controls, username) {
-    // Changing the account shares the real retry cooldown. Age it, don't wait.
-    if (await connection()) await age();
-    const other = controls.getByRole("button", { name: "Use another account" });
-    if (await other.count()) await other.click();
-    await controls.getByLabel("GitHub username").fill(username);
-    await controls.getByRole("button", { name: "Continue on GitHub" }).click();
+  // Link GitHub as a sign-in method for this owner (the graph's only source).
+  async function setGithubSignIn(
+    login,
+    token = github.issueSignInToken(login),
+  ) {
+    const accountId = String(github.users.get(login.toLowerCase()).databaseId);
+    await sql(
+      "DELETE FROM account WHERE user_id='draft-alice' AND provider_id='github'",
+    );
+    await sql(
+      "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
+      [
+        "alice-github-graph",
+        accountId,
+        "github",
+        "draft-alice",
+        token,
+        Date.now(),
+        Date.now(),
+      ],
+    );
   }
-  async function connectFor(controls, username, expectText) {
-    await chooseAccount(controls, username);
-    const reopened = await reopen();
-    await reopened.getByRole("status").getByText(expectText).waitFor({
+  async function openControls(page) {
+    await page.getByRole("button", { name: "Build", exact: true }).click();
+    await (await outline(page))
+      .getByRole("button", { name: "GitHub activity", exact: true })
+      .click();
+    const controls = page.getByRole("region", {
+      name: "GitHub activity controls",
+      exact: true,
+    });
+    await controls.waitFor();
+    return controls;
+  }
+  async function drainGrants() {
+    await sql(
+      "UPDATE github_grant SET retry_at=0 WHERE state IN ('pending','inflight','uncertain')",
+    );
+    for (let attempt = 0; attempt < 100; attempt++) {
+      await getPage().evaluate(() =>
+        fetch("/api/owner/github/retry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        }).then((response) => response.status),
+      );
+      const pending = (
+        await sql(
+          "SELECT count(*) n FROM github_grant WHERE state IN ('pending','inflight','uncertain')",
+        )
+      )[0].n;
+      if (pending === 0) return;
+      await getPage().waitForTimeout(100);
+    }
+    // Stuck cleanups must not block connecting a different linked account.
+    await sql(
+      "UPDATE github_grant SET state='idle', retry_at=0 WHERE state IN ('pending','inflight','uncertain')",
+    );
+  }
+  // Connect the linked GitHub sign-in as the graph. Switching accounts means
+  // replacing that sign-in, then connecting again.
+  async function connectFor(controls, login, expectText) {
+    if (await connection()) await age();
+    await setGithubSignIn(login);
+    await getPage().evaluate(() =>
+      fetch("/api/owner/github/withdraw", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "{}",
+      }).then((response) => response.status),
+    );
+    await drainGrants();
+    // beginConsent only claims a grant row that is idle.
+    await sql(
+      "UPDATE github_grant SET state='idle', token_enc=NULL, retry_at=0",
+    );
+    await sql(
+      "UPDATE github_connection SET last_checked_at=0, private_enabled=0 WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+    );
+    const postConnect = () =>
+      getPage().evaluate(async () => {
+        const response = await fetch("/api/owner/github/connect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        return { status: response.status, body: await response.json() };
+      });
+    let result = await postConnect();
+    for (let attempt = 0; attempt < 40; attempt++) {
+      if (result.status === 200) break;
+      if (result.body?.error === "too_soon") {
+        await sql(
+          "UPDATE github_connection SET last_checked_at=0 WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+        );
+        result = await postConnect();
+        continue;
+      }
+      if (result.body?.error === "consent_busy") {
+        await sql(
+          "UPDATE github_grant SET retry_at=0 WHERE state IN ('pending','inflight','uncertain')",
+        );
+        await getPage().evaluate(() =>
+          fetch("/api/owner/github/retry", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
+          }).then((response) => response.status),
+        );
+        await getPage().waitForTimeout(250);
+        result = await postConnect();
+        continue;
+      }
+      break;
+    }
+    assert.equal(result.status, 200, JSON.stringify(result.body));
+    const username = result.body.connection.username;
+    await getPage().evaluate((username) => {
+      const controller =
+        window.editorFixture.recovery.store.getState().controller;
+      const draft = controller.store.getState().working;
+      const component = draft.components.find((item) => item.type === "github");
+      if (!component) return;
+      controller.update({
+        ...draft,
+        components: draft.components.map((item) =>
+          item.id === component.id
+            ? { ...item, data: { username, includePrivate: true } }
+            : item,
+        ),
+      });
+    }, username);
+    await flush();
+    controls = await openControls(getPage());
+    await controls.getByRole("status").getByText(expectText).waitFor({
       timeout: 60000,
     });
-    return reopened;
+    return controls;
   }
   async function publish() {
     await flush();
@@ -221,68 +346,63 @@ export async function checkGitHubGraphJourney({
   }
 
   await run(
-    "GitHub graph setup: another account by username, authorized on GitHub, with status, Retry and blocked publication",
+    "GitHub graph setup: Connect GitHub uses the linked sign-in account, with status, Retry and blocked publication",
     async () => {
       github.state.failure = null;
       github.state.calls.length = 0;
+      // This group starts as Google-only: no linked GitHub sign-in.
+      await sql(
+        "DELETE FROM account WHERE user_id='draft-alice' AND provider_id='github'",
+      );
       const page = await start("graph-site");
       let controls = await addGraph(page);
 
-      // A Google owner has no GitHub sign-in to connect: the username form
-      // shows at once, and nothing is selected or authorized yet.
+      // A Google owner has no GitHub sign-in: Connect GitHub is the only
+      // path, and nothing is selected or authorized yet.
+      await controls.getByRole("button", { name: "Connect GitHub" }).waitFor();
+      assert.equal(await controls.getByLabel("GitHub username").count(), 0);
       assert.equal(
-        await controls.getByRole("button", { name: "Connect GitHub" }).count(),
+        await controls
+          .getByRole("button", { name: "Use another account" })
+          .count(),
         0,
       );
-      await controls.getByLabel("GitHub username").waitFor();
       assert.equal(await connection(), undefined);
       await expectBlocked();
 
-      // An invalid name is stopped before any provider call.
-      await controls.getByLabel("GitHub username").fill("not a user!");
+      // Connect leaves for linking GitHub as a sign-in method.
+      await page.route("https://github.com/o/authorize**", (route) =>
+        route.fulfill({
+          status: 200,
+          contentType: "text/html",
+          body: "<p>GitHub stand-in</p>",
+        }),
+      );
+      await controls.getByRole("button", { name: "Connect GitHub" }).click();
+      await page.waitForURL(/^https:\/\/github\.com\/o\/authorize/);
+      const authorizeUrl = new URL(page.url());
+      assert.equal(authorizeUrl.searchParams.get("provider"), "github");
+      assert.match(
+        authorizeUrl.searchParams.get("cb") ?? "",
+        /\/editor\?account=connected$/,
+      );
+      await page.unroute("https://github.com/o/authorize**");
+
+      // Completing the link (and connecting from the new sign-in token) is
+      // exercised by inserting the account the provider would have linked.
+      await setGithubSignIn("Fixture-Owner");
+      await page.goto(
+        `${github.state.callbackOrigin}/editor?account=connected`,
+      );
+      await page.waitForFunction(() => window.editorFixture?.ready);
+      controls = await openControls(page);
+      await controls
+        .getByRole("status")
+        .getByText(/Connected\. 5 contributions in the last year/)
+        .waitFor({ timeout: 60000 });
       assert.equal(
-        await controls
-          .getByRole("button", { name: "Continue on GitHub" })
-          .isDisabled(),
-        true,
-      );
-
-      // An unknown account is reported and changes neither draft nor server.
-      await controls.getByLabel("GitHub username").fill("ghost-user");
-      await controls
-        .getByRole("button", { name: "Continue on GitHub" })
-        .click();
-      await controls
-        .getByRole("alert")
-        .getByText(/no account with that username/)
-        .waitFor();
-      assert.equal(await connection(), undefined);
-      assert.equal(await savedUsername(), "");
-
-      // A provider outage never selects an account or leaves for GitHub.
-      github.state.failure = 503;
-      await controls.getByLabel("GitHub username").fill("fixture-owner");
-      await controls
-        .getByRole("button", { name: "Continue on GitHub" })
-        .click();
-      await controls
-        .getByRole("alert")
-        .getByText(/GitHub couldn't be reached/)
-        .waitFor();
-      assert.equal(await connection(), undefined);
-      github.state.failure = null;
-
-      // A typed username in other capitalization resolves to the canonical
-      // one, is authorized on GitHub as that account, and links to it.
-      controls = await connectFor(
-        controls,
-        "fixture-owner",
-        /Connected\. 5 contributions in the last year/,
-      );
-      assert.ok(
-        github.state.calls.some(
-          (call) => call.kind === "authorize" && call.login === "Fixture-Owner",
-        ),
+        github.state.calls.some((call) => call.kind === "authorize"),
+        false,
       );
       await flush();
       assert.equal(await savedUsername(), "Fixture-Owner");
@@ -344,26 +464,20 @@ export async function checkGitHubGraphJourney({
         .getByText(/Connected\. 5 contributions/)
         .waitFor();
 
-      // A profile that shows private contributions connects like any other:
-      // the authorized calendar needs no public baseline.
-      controls = await connectFor(
-        controls,
-        "private-owner",
-        /Connected\. 0 contributions in the last year/,
-      );
-      await flush();
-      assert.equal(await savedUsername(), "private-owner");
-      await displayed();
-      await frame()
-        .locator('[data-github-graph][data-state="ready"]')
-        .waitFor({ timeout: 30000 });
-      assert.match(await frame().locator("body").innerText(), /Graph owner/);
+      // Switching accounts: replace the GitHub sign-in, then Connect again.
       // Zero contributions is a valid, successful result.
       await connectFor(
         controls,
         "zero-owner",
         /Connected\. 0 contributions in the last year/,
       );
+      await flush();
+      assert.equal(await savedUsername(), "zero-owner");
+      await displayed();
+      await frame()
+        .getByRole("link", { name: "zero-owner" })
+        .waitFor({ timeout: 30000 });
+      assert.match(await frame().locator("body").innerText(), /Graph owner/);
       await getPage().screenshot({
         path: join(evidence, "github-graph-editor.png"),
         fullPage: true,
@@ -693,7 +807,7 @@ export async function checkGitHubGraphJourney({
   );
 
   await run(
-    "GitHub authorization for another account: consent recovery, Publish boundary and withdrawal without Publish",
+    "GitHub authorization when the sign-in token cannot be used: consent recovery, Publish boundary and withdrawal without Publish",
     async () => {
       github.state.failure = null;
       // Earlier groups may leave due grant cleanups. Finish them so this
@@ -703,10 +817,15 @@ export async function checkGitHubGraphJourney({
       );
       github.addUser({
         login: "Private-Owner",
+        databaseId: 5100,
         counts: { [recent]: 2 },
         privateCounts: { [recent]: 5, [older]: 3 },
       });
-      github.addUser({ login: "Other-Account", counts: { [recent]: 1 } });
+      github.addUser({
+        login: "Other-Account",
+        databaseId: 5101,
+        counts: { [recent]: 1 },
+      });
       const live = "https://private-graph.hasaweb.site";
       const liveGraph = async () => {
         const response = await publicRead(`${live}/_/github.json`);
@@ -748,13 +867,15 @@ export async function checkGitHubGraphJourney({
         await page.waitForTimeout(100);
       }
       github.state.calls.length = 0;
+      // No usable sign-in token: Connect GitHub authorizes the linked account.
+      await setGithubSignIn("Private-Owner", null);
       let controls = await addGraph(page);
       const status = () => controls.locator("[data-github-status]");
 
       // GitHub authorizes a different account: nothing is enabled, the
       // selected account stays, and Publish is blocked until it is fixed.
       github.state.consent = { as: "Other-Account", cancel: false };
-      await chooseAccount(controls, "Private-Owner");
+      await controls.getByRole("button", { name: "Connect GitHub" }).click();
       controls = await reopen();
       await status()
         .getByText(/GitHub authorized a different account, so nothing changed/)

@@ -15,13 +15,15 @@ import {
   startPrivateConsent,
 } from "../lib/editor/github-graph";
 import { graphConnected } from "../lib/guide/github";
+import { connectSignInMethod } from "../lib/sign-in-methods";
 
 // The graph flow shared by the editor section and the setup guide's GitHub
-// step. A graph is one GitHub account with public and private activity: the
-// owner's GitHub sign-in connects on its own, and another account (or a
-// Google owner's) is authorized on GitHub by signing in to it there.
+// step. A graph is the owner's GitHub sign-in account, public and private.
+// Connect GitHub links that sign-in when missing, or authorizes it when the
+// stored token cannot be used. Another account means disconnect GitHub
+// sign-in, then Connect GitHub again.
 
-export const LOGIN = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
+const LOGIN = /^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i;
 
 const failures: Record<GraphSetupFailure, string> = {
   invalid_username:
@@ -97,7 +99,7 @@ export function describeGraph(status: GraphSetupStatus | null): {
       };
     case "consent_failed":
       return {
-        text: `${consentFailures[state.reason]} Authorize again, or use another account.${blocked}`,
+        text: `${consentFailures[state.reason]} Authorize again.${blocked}`,
         ok: false,
       };
     case "reconnect":
@@ -166,8 +168,10 @@ export function useGitHubGraph({
     // Stay busy while the browser leaves.
     await new Promise(() => {});
   }
-  async function connectAccount(username: string) {
-    const next = await setupGraph(username);
+  async function authorizeSignInAccount() {
+    const login = await detectGraphUsername();
+    if (!login || !LOGIN.test(login)) throw new GraphSetupError("unavailable");
+    const next = await setupGraph(login);
     if (!alive.current) return;
     setStatus(next);
     if (!next.connection) return;
@@ -291,20 +295,28 @@ export function useGitHubGraph({
     summary: describeGraph(
       matches ? status : status && { ...status, connection: null },
     ),
-    /** Connects the GitHub sign-in, or authorizes it on GitHub. */
-    connectSignIn: () =>
+    /**
+     * Connects the GitHub sign-in as the graph. Without a GitHub sign-in,
+     * starts linking one. A sign-in token that cannot be used authorizes
+     * that same account on GitHub.
+     */
+    connectGitHub: () =>
       run(async () => {
+        if (!status?.githubSignIn) {
+          // Save first: an interrupted save would greet the return with
+          // the recovery panel.
+          if (!(await callbacks.current.beforeConsent())) {
+            setProblem(
+              "Your draft couldn't be saved, so connecting didn't start. Retry.",
+            );
+            return;
+          }
+          await connectSignInMethod("github");
+          await new Promise(() => {});
+          return;
+        }
         if (await connectSignIn()) return;
-        const login = await detectGraphUsername();
-        if (!login) throw new GraphSetupError("unavailable");
-        await connectAccount(login);
-      }),
-    /** Selects another account and authorizes it on GitHub. */
-    connectAccount: (username: string) =>
-      run(async () => {
-        if (!LOGIN.test(username))
-          throw new GraphSetupError("invalid_username");
-        await connectAccount(username);
+        await authorizeSignInAccount();
       }),
     /** Authorizes the selected account on GitHub again. */
     authorize: () => run(authorize),

@@ -195,7 +195,6 @@ function Scope({
   const revision = state.confirmed?.revision;
   // The GitHub screen: whether a username was typed before any account was
   // accepted, the step's latest status, and a failed status read.
-  const [addingGraph, setAddingGraph] = useState(false);
   const [graphStatus, setGraphStatus] = useState<GraphSetupStatus | null>(null);
   const [graphUnchecked, setGraphUnchecked] = useState(false);
   const [reviewAction, setReviewAction] = useState<ReviewAction>("idle");
@@ -272,9 +271,8 @@ function Scope({
     if (shownStep.current === step) return;
     shownStep.current = step;
     setStepError("");
-    // Leaving the GitHub screen forgets a typed username nobody looked up;
-    // the step reads a fresh status when it is shown again.
-    setAddingGraph(false);
+    // Leaving the GitHub screen drops the last status read; the step reads
+    // a fresh one when it is shown again.
     setGraphStatus(null);
     setGraphUnchecked(false);
     heading.current?.focus();
@@ -407,10 +405,6 @@ function Scope({
     try {
       const graph = findGraph(controller.store.getState().working);
       if (!graph) {
-        if (addingGraph) {
-          setStepError(graphGapMessage.connect);
-          return;
-        }
         if (graphStatus?.connection && graphConnected(graphStatus))
           acceptGraph(controller, graphStatus.connection.username);
       } else {
@@ -690,9 +684,6 @@ function Scope({
                 </form>
               ) : step === "github" ? (
                 <>
-                  {/* The lookup field and its buttons stay outside the form,
-                      so Enter in the username field looks it up instead of
-                      continuing. */}
                   <form
                     id={formId}
                     aria-label="Your GitHub activity"
@@ -706,7 +697,6 @@ function Scope({
                     <GuideGitHub
                       controller={controller}
                       disabled={disabled}
-                      onAdding={setAddingGraph}
                       onStatus={(status) => {
                         setGraphStatus(status);
                         if (status) setGraphUnchecked(false);

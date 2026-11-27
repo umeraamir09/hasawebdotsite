@@ -36,7 +36,7 @@ import {
   siteHost,
   usePublicationSite,
 } from "../lib/editor/use-publication-site";
-import { LINK_RETURN_PARAM, linkReturnNotice } from "../lib/sign-in-methods";
+import { clearLinkReturn, linkReturnNotice } from "../lib/sign-in-methods";
 import { AccountDeleted, AccountDeletionDialog } from "./account-deletion";
 import { AppearanceControls } from "./appearance-controls";
 import { DraftRecovery } from "./draft-recovery";
@@ -151,12 +151,7 @@ function Scope({
     typeof location === "undefined" ? null : linkReturnNotice(location.search),
   );
   useEffect(() => {
-    if (!linkNotice) return;
-    const url = new URL(location.href);
-    url.searchParams.delete(LINK_RETURN_PARAM);
-    url.searchParams.delete("error");
-    url.searchParams.delete("error_description");
-    history.replaceState(history.state, "", url);
+    if (linkNotice) clearLinkReturn();
   }, [linkNotice]);
   const [panel, setPanel] = useState<Panel>("build");
   // Build shows the page outline or one section's editor under a back

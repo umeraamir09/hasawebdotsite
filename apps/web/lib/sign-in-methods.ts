@@ -86,10 +86,33 @@ export async function connectSignInMethod(provider: Provider) {
 }
 
 /**
+ * The link-return parameters to keep when an owner still in setup is sent
+ * from `/editor` to the guide, so the GitHub step can report the outcome.
+ */
+export function linkReturnSearch(search: string) {
+  const params = new URLSearchParams(search);
+  const outcome = params.get(LINK_RETURN_PARAM);
+  if (outcome !== "connected" && outcome !== "not-connected") return "";
+  const kept = new URLSearchParams({ [LINK_RETURN_PARAM]: outcome });
+  const error = params.get("error");
+  if (outcome === "not-connected" && error) kept.set("error", error);
+  return `?${kept}`;
+}
+
+/** Drops a link return's parameters from the address bar. */
+export function clearLinkReturn() {
+  const url = new URL(location.href);
+  url.searchParams.delete(LINK_RETURN_PARAM);
+  url.searchParams.delete("error");
+  url.searchParams.delete("error_description");
+  history.replaceState(history.state, "", url);
+}
+
+/**
  * The notice for a link return. Only the fixed outcome and Better Auth's
  * error code are read; provider descriptions are never shown.
  */
-export function linkReturnNotice(search: string) {
+export function linkReturnNotice(search: string, provider?: "GitHub") {
   const params = new URLSearchParams(search);
   const outcome = params.get(LINK_RETURN_PARAM);
   if (outcome === "connected")
@@ -105,7 +128,7 @@ export function linkReturnNotice(search: string) {
       : error === "email_does_not_match"
         ? "That Google account uses a different email address. Connect the Google account that uses your hasaweb.site account's email."
         : error === "account_already_linked_to_different_user"
-          ? "That account already signs in to a different hasaweb.site account, so it wasn't connected."
+          ? `${provider ? `Your ${provider} account` : "This account"} is already linked to another hasaweb.site account, so it wasn't connected.`
           : error === "unable_to_link_account" ||
               error === "email_not_verified" ||
               error === "email_not_found"

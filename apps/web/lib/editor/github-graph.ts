@@ -4,7 +4,7 @@ import type { DraftController } from "../draft/controller";
 
 // Browser adapter for the owner-only GitHub graph routes. A graph shows the
 // public and private activity of one GitHub account the owner authorized:
-// their GitHub sign-in, or another account they sign in to on GitHub. Every
+// their GitHub sign-in. Every
 // response is parsed strictly. Provider detail never reaches this code: the
 // server returns closed error codes only.
 
@@ -146,7 +146,7 @@ export const connectSignInGraph = async (send?: typeof fetch) => {
   bumpGraphRevision();
   return status;
 };
-/** Selects another account by username, before authorizing it on GitHub. */
+/** Selects the linked sign-in account by username before authorizing it. */
 export const setupGraph = async (username: string, send?: typeof fetch) => {
   const status = statusSchema.parse(
     await call("/setup", { method: "POST", body: { username } }, send),
