@@ -19,6 +19,21 @@
   font-display: swap;
   src: url("../../fonts/geist-mono/geist-mono-variable.ttf") format("truetype");
 }
+@font-face {
+  font-family: "Silkscreen";
+  font-style: normal;
+  font-weight: 700 700;
+  font-display: swap;
+  src: url("../../fonts/silkscreen/Silkscreen-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Host Grotesk";
+  font-style: normal;
+  font-weight: 300 800;
+  font-display: swap;
+  src: url("../../fonts/host-grotesk/HostGrotesk-Variable.ttf")
+    format("truetype");
+}
 
 :root,
 [data-wb-scheme="light"] {

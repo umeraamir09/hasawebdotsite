@@ -1,11 +1,124 @@
 /* Setup guide (Figma "Setup v2" on page 325:2; kit 471:11455). Desktop
    frames 471:11501 and 477:13531, mobile frames 476:12712 and 477:14158.
-   Colors come from the Workbench tokens, so both schemes follow the OS. */
+   It wears the pixel-town landing's look (page 553:2): Host Grotesk, ink
+   lines with stepped corners, lime selection. Colors come from the
+   Workbench tokens, so both schemes follow the OS. */
 
 .setup-guide {
+  --wb-font-sans: "Host Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --px-font: "Silkscreen", var(--wb-font-mono);
+  --wb-bg-canvas: #ffffff;
+  /* Nothing is outlined: each piece is a filled shape whose stepped
+     corners come from its clip. Containers (cards, lists, the Review
+     frame) sit on a warm surface, as the landing's browser window does;
+     fields, pills and secondary buttons take a deeper fill. */
+  --px-surface: #f4f3ef;
+  --px-fill: #e9e8e2;
+  --px-fill-hover: #dfded7;
+  --px-raised: #ffffff;
+  --px-focus: var(--wb-text-primary);
+  --px-lime: #c4f25c;
+  --px-green: #7fd13b;
+  --px-moss: #3d8a1f;
+  --px-on-lime: #151515;
+  /* Pixel-circle corners cut by clip-path, stepped on a 2px grid:
+     sm for buttons, pills and chips, md for fields, lists and the avatar
+     photo, lg for cards, the Review frame and the avatar ring. */
+  --px-sm: polygon(
+    0 4px,
+    2px 4px,
+    2px 2px,
+    4px 2px,
+    4px 0,
+    calc(100% - 4px) 0,
+    calc(100% - 4px) 2px,
+    calc(100% - 2px) 2px,
+    calc(100% - 2px) 4px,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(100% - 4px) calc(100% - 2px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    4px calc(100% - 2px),
+    2px calc(100% - 2px),
+    2px calc(100% - 4px),
+    0 calc(100% - 4px)
+  );
+  --px-md: polygon(
+    0 6px,
+    2px 6px,
+    2px 4px,
+    2px 2px,
+    6px 2px,
+    6px 0,
+    calc(100% - 6px) 0,
+    calc(100% - 6px) 2px,
+    calc(100% - 2px) 2px,
+    calc(100% - 2px) 4px,
+    calc(100% - 2px) 6px,
+    100% 6px,
+    100% calc(100% - 6px),
+    calc(100% - 2px) calc(100% - 6px),
+    calc(100% - 2px) calc(100% - 4px),
+    calc(100% - 2px) calc(100% - 2px),
+    calc(100% - 6px) calc(100% - 2px),
+    calc(100% - 6px) 100%,
+    6px 100%,
+    6px calc(100% - 2px),
+    2px calc(100% - 2px),
+    2px calc(100% - 4px),
+    2px calc(100% - 6px),
+    0 calc(100% - 6px)
+  );
+  --px-lg: polygon(
+    0 8px,
+    2px 8px,
+    2px 6px,
+    2px 4px,
+    4px 4px,
+    4px 2px,
+    8px 2px,
+    8px 0,
+    calc(100% - 8px) 0,
+    calc(100% - 8px) 2px,
+    calc(100% - 4px) 2px,
+    calc(100% - 4px) 4px,
+    calc(100% - 2px) 4px,
+    calc(100% - 2px) 6px,
+    calc(100% - 2px) 8px,
+    100% 8px,
+    100% calc(100% - 8px),
+    calc(100% - 2px) calc(100% - 8px),
+    calc(100% - 2px) calc(100% - 6px),
+    calc(100% - 2px) calc(100% - 4px),
+    calc(100% - 4px) calc(100% - 4px),
+    calc(100% - 4px) calc(100% - 2px),
+    calc(100% - 8px) calc(100% - 2px),
+    calc(100% - 8px) 100%,
+    8px 100%,
+    8px calc(100% - 2px),
+    4px calc(100% - 2px),
+    4px calc(100% - 4px),
+    2px calc(100% - 4px),
+    2px calc(100% - 6px),
+    2px calc(100% - 8px),
+    0 calc(100% - 8px)
+  );
   min-height: 100dvh;
   background: var(--wb-bg-canvas);
 }
+@media (prefers-color-scheme: dark) {
+  .setup-guide {
+    --wb-bg-canvas: #0e0e10;
+    --px-surface: #17171a;
+    --px-fill: #232327;
+    --px-fill-hover: #2c2c31;
+    --px-raised: #2a2a2f;
+  }
+}
+
 .guide-loading {
   margin: 0;
   padding: 48px 16px;
@@ -36,17 +149,13 @@
   min-width: 0;
 }
 .guide-mark {
-  display: grid;
+  display: flex;
   flex: none;
-  place-items: center;
+}
+.guide-mark img {
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  background: var(--wb-ink-fill);
-  color: var(--wb-text-inverse);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
+  image-rendering: pixelated;
 }
 .guide-held {
   display: flex;
@@ -80,17 +189,18 @@
   gap: 4px;
 }
 .guide-progress ol li {
-  width: 32px;
-  height: 4px;
-  border-radius: 2px;
+  width: 24px;
+  height: 8px;
   background: var(--wb-line-strong);
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .guide-progress ol li[data-state="done"] {
   background: var(--wb-ink-fill);
 }
 .guide-progress ol li[data-state="current"] {
-  background: var(--wb-signal-base);
+  background: var(--px-lime);
 }
 .guide-topbar-end {
   grid-column: 3;
@@ -122,7 +232,6 @@
 .guide-save-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
   background: var(--wb-warning-base);
 }
 
@@ -149,19 +258,25 @@
   margin-bottom: 20px;
   text-align: center;
 }
+/* Silkscreen is drawn on an 8px grid; its size stays a multiple of 8 so
+   its pixels land on whole device pixels. */
 .guide-kicker {
   margin: 0;
   color: var(--wb-text-tertiary);
-  font-family: var(--wb-font-mono);
-  font-size: 13px;
-  line-height: 18px;
+  font-family: var(--px-font);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 16px;
+  text-transform: uppercase;
 }
+/* Titles set like the landing's headings. */
 .guide-prompt h1 {
   margin: 0;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 44px;
-  letter-spacing: -1.2px;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.05em;
+  text-wrap: balance;
 }
 .guide-prompt h1:focus {
   outline: none;
@@ -181,20 +296,16 @@
   min-width: 0;
   height: 64px;
   padding: 0 16px 0 22px;
-  border: 1.5px solid var(--wb-line-hairline);
-  border-radius: 18px;
-  background: var(--wb-bg-panel);
-  box-shadow:
-    0 1px 2px #0d0d0f0a,
-    0 6px 20px #0d0d0f0a;
+  background: var(--px-fill);
   color: var(--wb-text-secondary);
   cursor: text;
+  clip-path: var(--px-md);
 }
 .guide-big-field:focus-within {
-  border-color: var(--wb-signal-base);
+  box-shadow: inset 0 0 0 3px var(--px-focus);
 }
 .guide-big-field[data-invalid] {
-  border-color: var(--wb-danger-base);
+  background: var(--wb-danger-soft);
 }
 .guide-big-field input {
   flex: 1 1 auto;
@@ -243,7 +354,12 @@
   white-space: pre;
   font-size: 20px;
   font-weight: 500;
-  letter-spacing: -0.2px;
+}
+.guide-address-value::after,
+.guide-address-value input,
+.guide-address-suffix {
+  font-family: var(--wb-font-mono);
+  letter-spacing: 0;
 }
 .guide-address-value::after,
 .guide-address-value input {
@@ -268,11 +384,9 @@
   min-width: 22px;
   margin-left: auto;
   padding: 2px 6px;
-  border: 1px solid var(--wb-line-hairline);
-  border-bottom-width: 2px;
-  border-radius: 6px;
-  background: var(--wb-bg-panel);
+  background: var(--wb-bg-canvas);
   color: var(--wb-text-tertiary);
+  clip-path: var(--px-sm);
   font-family: var(--wb-font-mono);
   font-size: 13px;
   font-weight: 500;
@@ -280,6 +394,24 @@
 }
 button.guide-kbd:disabled {
   cursor: default;
+}
+/* The landing's cat sits on the address field. */
+.guide-stage[data-step-kind="address"] .guide-prompt {
+  margin-bottom: 40px;
+}
+.guide-stage[data-step-kind="address"] .guide-answer {
+  position: relative;
+}
+.guide-stage[data-step-kind="address"] .guide-answer::before {
+  content: "";
+  position: absolute;
+  top: -42px;
+  right: 28px;
+  width: 36px;
+  height: 44px;
+  background: url("/landing/town/s_cat.png") center / contain no-repeat;
+  image-rendering: pixelated;
+  pointer-events: none;
 }
 .guide-field-error {
   margin: -8px 0 0;
@@ -305,22 +437,21 @@ button.guide-kbd:disabled {
   max-width: 100%;
   height: 34px;
   padding: 0 14px 0 10px;
-  border: 1px solid var(--wb-line-hairline);
-  border-radius: 17px;
-  background: var(--wb-bg-panel);
+  border: 0;
+  background: var(--px-fill);
   color: var(--wb-text-primary);
+  clip-path: var(--px-sm);
   font-size: 13px;
   font-weight: 500;
   line-height: 18px;
   white-space: nowrap;
 }
 .guide-pill:hover:not(:disabled) {
-  background: var(--wb-bg-hover);
+  background: var(--px-fill-hover);
 }
 .guide-pill[aria-pressed="true"] {
-  border-color: var(--wb-signal-base);
-  background: var(--wb-signal-wash);
-  color: var(--wb-signal-base);
+  background: var(--px-lime);
+  color: var(--px-on-lime);
 }
 .guide-pill:disabled {
   cursor: default;
@@ -330,11 +461,8 @@ button.guide-kbd:disabled {
 .guide-card {
   position: relative;
   overflow: hidden;
-  border-radius: 24px;
-  background: var(--wb-bg-panel);
-  box-shadow:
-    0 1px 2px #0d0d0f0a,
-    0 6px 20px #0d0d0f0a;
+  background: var(--px-surface);
+  clip-path: var(--px-lg);
 }
 .guide-popover-fields {
   display: flex;
@@ -357,14 +485,43 @@ button.guide-kbd:disabled {
   margin-top: -56px;
   padding-left: 24px;
 }
+/* The avatar is a stepped shape: a ring in the card's surface where it
+   overlaps the banner, then the photo. Both are pseudo layers or clipped
+   children so the camera button outside the picture stays visible. */
 .guide-profile .image-slot[data-variant="avatar"] .image-slot-picture {
+  /* Its own layer keeps the ring under the photo; z-index lifts that layer,
+     and the menu it opens, above the name and bio. */
+  z-index: 2;
+  isolation: isolate;
   width: 108px;
   height: 108px;
-  border-width: 4px;
-  border-radius: 24px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.guide-profile .image-slot[data-variant="avatar"] .image-slot-picture::before,
+.guide-profile .image-slot[data-variant="avatar"] .image-slot-picture::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+}
+.guide-profile .image-slot[data-variant="avatar"] .image-slot-picture::before {
+  inset: 0;
+  background: var(--px-surface);
+  clip-path: var(--px-lg);
+}
+.guide-profile .image-slot[data-variant="avatar"] .image-slot-picture::after {
+  inset: 4px;
+  background: var(--px-fill);
+  clip-path: var(--px-md);
 }
 .guide-profile .image-slot[data-variant="avatar"] .image-slot-picture img {
-  border-radius: 20px;
+  inset: 4px;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  border-radius: 0;
+  clip-path: var(--px-md);
 }
 .guide-profile .image-slot[data-variant="avatar"] .wb-popover-anchor,
 .guide-profile
@@ -425,23 +582,6 @@ button.guide-kbd:disabled {
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.guide-suggested {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 6px 6px 10px;
-  border-radius: 12px;
-  background: var(--wb-bg-sunken);
-  color: var(--wb-text-secondary);
-  font-size: 13px;
-  line-height: 18px;
-}
-.guide-suggested strong {
-  flex: 1 1 auto;
-  color: var(--wb-text-primary);
-  font-weight: 500;
-}
 .guide-profile .image-slot-status:empty {
   display: none;
 }
@@ -473,13 +613,23 @@ button.guide-kbd:disabled {
   gap: 16px;
 }
 .guide-link-rows {
+  position: relative;
+  isolation: isolate;
   margin: 0;
-  padding: 0;
+  padding: 2px;
   overflow: visible;
-  border: 1px solid var(--wb-line-hairline);
-  border-radius: 16px;
-  background: var(--wb-bg-panel);
   list-style: none;
+}
+/* Rows open popovers, so the shape is drawn behind them instead of
+   clipping the list. */
+.guide-link-rows::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: var(--px-surface);
+  clip-path: var(--px-md);
+  pointer-events: none;
 }
 .guide-link-row {
   display: flex;
@@ -487,7 +637,7 @@ button.guide-kbd:disabled {
   gap: 10px;
   height: 46px;
   padding: 0 12px 0 8px;
-  border-bottom: 1px solid var(--wb-line-hairline);
+  border-bottom: 2px solid var(--wb-bg-canvas);
 }
 .guide-link-row:last-child {
   border-bottom: 0;
@@ -514,15 +664,15 @@ button.guide-kbd:disabled {
   height: 36px;
   padding: 0 6px;
   border: 0;
-  border-radius: 8px;
   background: transparent;
   color: var(--wb-text-primary);
   font-size: 13px;
   line-height: 18px;
   text-align: left;
+  clip-path: var(--px-sm);
 }
 .guide-link-open:hover:not(:disabled) {
-  background: var(--wb-bg-hover);
+  background: var(--px-fill);
 }
 .guide-link-value {
   flex: 1 1 auto;
@@ -556,16 +706,12 @@ button.guide-kbd:disabled {
   gap: 6px;
   min-height: 64px;
   padding: 12px 14px;
-  border: 1.5px solid var(--wb-line-hairline);
-  border-radius: 18px;
-  background: var(--wb-bg-panel);
-  box-shadow:
-    0 1px 2px #0d0d0f0a,
-    0 6px 20px #0d0d0f0a;
+  background: var(--px-fill);
   cursor: text;
+  clip-path: var(--px-md);
 }
 .guide-token-box:focus-within {
-  border-color: var(--wb-signal-base);
+  box-shadow: inset 0 0 0 3px var(--px-focus);
 }
 .guide-tokens {
   display: contents;
@@ -579,15 +725,16 @@ button.guide-kbd:disabled {
   gap: 2px;
   height: 30px;
   padding: 0 4px 0 2px;
-  border-radius: 8px;
-  background: var(--wb-bg-sunken);
+  background: var(--px-lime);
+  color: var(--px-on-lime);
+  clip-path: var(--px-sm);
 }
 .guide-token-name {
   height: 26px;
   padding: 0 6px;
   border: 0;
-  border-radius: 6px;
   background: transparent;
+  color: inherit;
   font-size: 13px;
   font-weight: 500;
   line-height: 18px;
@@ -599,13 +746,12 @@ button.guide-kbd:disabled {
   height: 20px;
   padding: 0;
   border: 0;
-  border-radius: 6px;
   background: transparent;
-  color: var(--wb-text-tertiary);
+  color: inherit;
+  clip-path: var(--px-sm);
 }
 .guide-token-remove:hover:not(:disabled) {
-  background: var(--wb-bg-hover);
-  color: var(--wb-text-primary);
+  background: #15151520;
 }
 .guide-token-input {
   flex: 1 1 120px;
@@ -626,10 +772,9 @@ button.guide-kbd:disabled {
   gap: 2px;
   margin: 0;
   padding: 6px;
-  border: 1px solid var(--wb-line-hairline);
-  border-radius: 16px;
-  background: var(--wb-bg-panel);
+  background: var(--px-surface);
   list-style: none;
+  clip-path: var(--px-md);
 }
 .guide-options[hidden] {
   display: none;
@@ -640,16 +785,17 @@ button.guide-kbd:disabled {
   gap: 10px;
   height: 40px;
   padding: 0 10px;
-  border-radius: 10px;
   color: var(--wb-text-primary);
   font-size: 14px;
   cursor: pointer;
+  clip-path: var(--px-sm);
 }
 .guide-option .wb-icon {
   color: var(--wb-text-tertiary);
 }
 .guide-option[aria-selected="true"] {
-  background: var(--wb-bg-hover);
+  background: var(--px-lime);
+  color: var(--px-on-lime);
 }
 
 /* Projects (471:11747) */
@@ -672,10 +818,10 @@ button.guide-kbd:disabled {
   gap: 8px;
   height: 38px;
   padding: 0 14px 0 4px;
-  border: 1.5px solid var(--wb-line-hairline);
-  border-radius: 12px;
-  background: var(--wb-bg-panel);
+  border: 0;
+  background: var(--px-fill);
   font-size: 13px;
+  clip-path: var(--px-sm);
   font-weight: 500;
 }
 .guide-project-tab > .wb-icon {
@@ -685,17 +831,20 @@ button.guide-kbd:disabled {
 .guide-project-tab img {
   width: 28px;
   height: 28px;
-  border-radius: 8px;
   object-fit: cover;
 }
 .guide-project-tab[aria-pressed="true"] {
-  border-color: var(--wb-signal-base);
+  background: var(--px-lime);
+  color: var(--px-on-lime);
+}
+.guide-project-tab[aria-pressed="true"] > .wb-icon {
+  color: inherit;
 }
 .guide-project-add.wb-icon-button {
   width: 38px;
   height: 38px;
-  border: 1.5px dashed var(--wb-line-strong);
-  border-radius: 12px;
+  border: 0;
+  background: var(--px-fill);
 }
 .guide-project .image-slot[data-variant="tile"] .image-slot-picture {
   aspect-ratio: 558 / 200;
@@ -752,8 +901,11 @@ button.guide-kbd:disabled {
   justify-content: center;
   align-items: center;
   gap: 8px;
+  width: 100%;
   height: 200px;
-  border: 1.5px dashed var(--wb-line-strong);
+  border: 0;
+  background: var(--px-fill);
+  clip-path: var(--px-md);
   color: var(--wb-text-secondary);
   font-size: 14px;
   font-weight: 500;
@@ -793,32 +945,19 @@ button.guide-kbd:disabled {
   overflow: hidden;
 }
 .guide-calendar span {
-  border-radius: 2px;
   background: var(--wb-bg-sunken);
 }
 .guide-calendar span[data-level="1"] {
-  background: color-mix(
-    in srgb,
-    var(--wb-success-base) 30%,
-    var(--wb-bg-panel)
-  );
+  background: color-mix(in srgb, var(--px-lime) 50%, var(--wb-bg-panel));
 }
 .guide-calendar span[data-level="2"] {
-  background: color-mix(
-    in srgb,
-    var(--wb-success-base) 55%,
-    var(--wb-bg-panel)
-  );
+  background: var(--px-lime);
 }
 .guide-calendar span[data-level="3"] {
-  background: color-mix(
-    in srgb,
-    var(--wb-success-base) 80%,
-    var(--wb-bg-panel)
-  );
+  background: var(--px-green);
 }
 .guide-calendar span[data-level="4"] {
-  background: var(--wb-success-base);
+  background: var(--px-moss);
 }
 .guide-github-note {
   margin: 0;
@@ -836,6 +975,25 @@ button.guide-kbd:disabled {
   flex-wrap: wrap;
   gap: 8px;
 }
+/* Connect is the step's answer surface, shaped like the answer fields on
+   the other steps, so Continue stays the one dark button. */
+.setup-guide .guide-github-connect.wb-button {
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  height: 64px;
+  padding: 0 22px;
+  background: var(--px-fill);
+  color: var(--wb-text-primary);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.2px;
+  clip-path: var(--px-md);
+}
+.setup-guide .guide-github-connect.wb-button:hover:not(:disabled) {
+  background: var(--px-fill-hover);
+}
 .guide-github-remove {
   align-self: flex-start;
 }
@@ -843,9 +1001,9 @@ button.guide-kbd:disabled {
   margin: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--wb-line-hairline);
-  border-radius: 14px;
+  background: var(--px-surface);
   list-style: none;
+  clip-path: var(--px-md);
 }
 .guide-shared li {
   display: flex;
@@ -856,7 +1014,7 @@ button.guide-kbd:disabled {
   color: var(--wb-text-secondary);
 }
 .guide-shared li + li {
-  border-top: 1px solid var(--wb-line-hairline);
+  border-top: 2px solid var(--wb-bg-canvas);
 }
 .guide-shared li > span:not(.wb-status) {
   flex: 1 1 auto;
@@ -890,9 +1048,7 @@ button.guide-kbd:disabled {
   text-align: left;
 }
 .guide-stage[data-step-kind="review"] .guide-prompt h1 {
-  font-size: 24px;
-  line-height: 30px;
-  letter-spacing: -0.48px;
+  font-size: 28px;
 }
 .guide-review {
   display: contents;
@@ -903,10 +1059,9 @@ button.guide-kbd:disabled {
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: 3px;
-  border: 1px solid var(--wb-line-hairline);
-  border-radius: 11px;
-  background: var(--wb-bg-panel);
+  padding: 4px;
+  background: var(--px-surface);
+  clip-path: var(--px-sm);
 }
 .guide-review-controls .wb-segmented {
   padding: 0;
@@ -916,10 +1071,10 @@ button.guide-kbd:disabled {
 .guide-review-controls .wb-icon-button {
   width: 30px;
   height: 28px;
-  border-radius: 8px;
 }
 .guide-review-controls .wb-icon-button[aria-pressed="true"] {
-  background: var(--wb-bg-sunken);
+  background: var(--px-lime);
+  color: var(--px-on-lime);
 }
 .guide-review-divider {
   width: 1px;
@@ -927,26 +1082,44 @@ button.guide-kbd:disabled {
   margin: 0 2px;
   background: var(--wb-line-hairline);
 }
-.guide-review-frame {
-  overflow: hidden;
-  border-radius: 20px;
-  background: var(--wb-bg-panel);
-  box-shadow:
-    0 2px 6px #0d0d0f0d,
-    0 28px 64px #0d0d0f1f;
+.guide-review-frame,
+.guide-review-status {
+  grid-column: 1 / -1;
 }
+.guide-review-frame {
+  position: relative;
+  overflow: hidden;
+  background: var(--px-surface);
+  clip-path: var(--px-lg);
+}
+/* Browser chrome as on the landing: three colored squares and the
+   address. */
 .guide-review-address {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 6px;
-  height: 36px;
+  height: 40px;
   margin: 0;
-  border-bottom: 1px solid var(--wb-line-hairline);
+  background: var(--px-surface);
   color: var(--wb-text-tertiary);
   font-family: var(--wb-font-mono);
   font-size: 12px;
   line-height: 16px;
+}
+.guide-review-address::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  width: 40px;
+  height: 8px;
+  background:
+    linear-gradient(#ff9ec9, #ff9ec9) 0 0 / 8px 8px no-repeat,
+    linear-gradient(#ffd84a, #ffd84a) 16px 0 / 8px 8px no-repeat,
+    linear-gradient(var(--px-green), var(--px-green)) 32px 0 / 8px 8px no-repeat;
+  transform: translateY(-50%);
 }
 .guide-review-frame .editor-canvas {
   display: flex;
@@ -1034,10 +1207,10 @@ button.guide-kbd:disabled {
   --text-secondary: var(--wb-text-secondary);
   --border-control: var(--wb-line-strong);
   padding: 16px;
-  border-radius: 16px;
-  background: var(--wb-bg-panel);
+  background: var(--wb-danger-soft);
   color: var(--wb-text-primary);
   font-size: 13px;
+  clip-path: var(--px-md);
 }
 
 /* Setup v2 / Actions (471:11461) */
@@ -1059,6 +1232,88 @@ button.guide-kbd:disabled {
   margin-left: -14px;
 }
 
+/* Controls inside the guide take the stepped corners. Focus rings sit
+   inside the clipped edge so they stay visible. */
+.setup-guide :is(.wb-button, .wb-icon-button) {
+  border-radius: 0;
+  clip-path: var(--px-sm);
+}
+.setup-guide :is(.wb-button, .wb-icon-button)[data-kind="secondary"] {
+  border-color: transparent;
+  background: var(--px-fill);
+}
+.setup-guide
+  :is(
+    .wb-button,
+    .wb-icon-button,
+    .guide-pill,
+    .guide-project-tab,
+    .guide-kbd,
+    .guide-link-open,
+    .guide-token-name
+  ):focus-visible {
+  outline-offset: -5px;
+}
+.setup-guide .wb-popover {
+  border: 0;
+  border-radius: 0;
+  background: var(--px-raised);
+  box-shadow: none;
+  clip-path: var(--px-md);
+}
+.setup-guide .wb-field-box {
+  border-radius: 0;
+  background: var(--px-fill);
+  clip-path: var(--px-sm);
+}
+/* The stepped clip would cut an outline at the corners, so focus and
+   errors draw inside the shape, as on the answer fields. */
+.setup-guide .wb-field-box:focus-within {
+  background: var(--px-fill);
+  outline: 0;
+  box-shadow: inset 0 0 0 3px var(--px-focus);
+}
+.setup-guide .wb-field[data-invalid] .wb-field-box {
+  background: var(--wb-danger-soft);
+  outline: 0;
+}
+/* No borders under the stepped clip: a border or outside ring would be cut
+   at the corners, so states change the fill instead. */
+.setup-guide .wb-button[data-kind="danger"]:hover:not(:disabled) {
+  border-color: transparent;
+}
+.setup-guide
+  :is(.wb-segment, .wb-chip, .wb-chip-remove, .wb-status, .wb-toggle) {
+  border: 0;
+  border-radius: 0;
+  clip-path: var(--px-sm);
+}
+/* Matches Workbench's small-segment rule so the guide's fill wins. */
+.setup-guide .wb-segmented[data-size] .wb-segment[aria-checked="true"] {
+  background: var(--px-lime);
+  box-shadow: none;
+  color: var(--px-on-lime);
+}
+.setup-guide .wb-chip {
+  background: var(--px-fill);
+}
+/* The status dot and the switch knob are square pixels. */
+.setup-guide .wb-status::before {
+  border-radius: 0;
+}
+.setup-guide .wb-toggle::after {
+  border-radius: 0;
+  box-shadow: none;
+  clip-path: var(--px-sm);
+}
+.setup-guide
+  :is(.wb-segment, .wb-chip-remove, .guide-token-remove):focus-visible {
+  outline-offset: -4px;
+}
+/* Tertiary text falls under 4.5:1 on the deeper field fill. */
+.setup-guide .wb-field-counter {
+  color: var(--wb-text-secondary);
+}
 @media (prefers-reduced-motion: reduce) {
   .guide-progress ol li {
     transition: none;
@@ -1090,7 +1345,8 @@ button.guide-kbd:disabled {
     gap: 3px;
   }
   .guide-progress ol li {
-    width: 20px;
+    width: 16px;
+    height: 6px;
   }
   /* The recovery controls under the step carry a failed save here; the
      top row keeps its room for Skip. */
@@ -1130,9 +1386,7 @@ button.guide-kbd:disabled {
     margin-bottom: 8px;
   }
   .guide-prompt h1 {
-    font-size: 24px;
-    line-height: 30px;
-    letter-spacing: -0.48px;
+    font-size: 32px;
   }
   .guide-big-field {
     height: 56px;

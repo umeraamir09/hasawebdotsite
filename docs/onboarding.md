@@ -42,7 +42,7 @@ The default appearance comes from the single template and the [approved catalog]
 
 Prefill the signup provider's name for review. Offer Use this photo only when a provider photo is available; it requires explicit acceptance, the shared crop experience, and a successful private upload. Do not treat a remote provider URL as an owned draft asset. A missing or failed provider photo can be replaced by an uploaded image.
 
-The guide's Profile step uses the same image slots, private provider-photo import path and crop dialogs as the editor's profile editor. The step offers the provider name beside the name field and the provider photo in the avatar's options. Use this name and Apply crop are the only ways to accept a provider suggestion.
+The guide's Profile step uses the same image slots, private provider-photo import path and crop dialogs as the editor's profile editor. When the step opens with an empty Name, the provider name fills it once; the owner can edit or clear it, and continuing from the step confirms it. The provider photo is offered in the avatar's options, and Apply crop is the only way to accept it.
 
 Owners enter their own bio and select a banner. A bio holds at most 160 characters. The bio field shows the count, and a longer bio blocks Profile continuation and Publish without being cut. Account email is only a suggestion for a public link, never silently copied to public identity. The Links step shows it as a pill, and picking that pill adds the link, whose row then carries a Public pill. An email link and a private contact-form recipient remain separate concepts.
 
@@ -99,7 +99,7 @@ All onboarding content remains enterable, editable, replaceable, reorderable, or
 
 ## Visual direction and accessibility
 
-The guide follows the "Setup v2" frames in the [Figma file](ui-direction.md) with the Workbench tokens and controls, in both color schemes. Each step asks one question: a kicker and a title with no subtitle, then one centered answer surface. The top bar shows segmented progress (three required and three optional segments) and the save state, and, once the address is held, the address with a Private pill. Back, Skip to review, Skip and the primary action sit in one row under the answer; the primary action is Continue, Review on GitHub and Open editor on Review. On phones Back and Skip move to the top row and the primary action spans a fixed footer with Skip to review under it.
+The guide follows the "Setup v2" frames in the [Figma file](ui-direction.md) with the Workbench tokens and controls, in both color schemes, styled after the pixel town landing (see [ui-direction.md](ui-direction.md)). Each step asks one question: a kicker and a title with no subtitle, then one centered answer surface. The top bar shows segmented progress (three required and three optional segments) and the save state, and, once the address is held, the address with a Private pill. Back, Skip to review, Skip and the primary action sit in one row under the answer; the primary action is Continue, Review on GitHub and Open editor on Review. On phones Back and Skip move to the top row and the primary action spans a fixed footer with Skip to review under it.
 
 The design shows state instead of explaining it. The address field's pill, the top bar's Private pill, the email row's Public pill, the private-activity dialog and Review's address bar replace explanatory sentences. Errors and recovery choices still appear as text where a pill cannot say what to do.
 

@@ -515,18 +515,30 @@ export async function checkSetupGuide({
         );
       }
       assert.ok(reached, "Tab reaches the address field");
-      // The focused field shows the signal border.
-      assert.equal(
+      // The focused field shows a 3px focus ring.
+      assert.match(
+        await page.evaluate(
+          () =>
+            getComputedStyle(document.querySelector(".guide-address-field"))
+              .boxShadow,
+        ),
+        / 0px 0px 0px 3px inset$/,
+      );
+      // A press anywhere in the field, here on the suffix, focuses the input
+      // with the caret at the end.
+      await page
+        .locator(".guide-address-field")
+        .evaluate((field) => field.querySelector("input").blur());
+      await page.locator(".guide-address-suffix").click();
+      assert.deepEqual(
         await page.evaluate(() => {
-          const box = document.querySelector(".guide-address-field");
-          const probe = document.createElement("i");
-          probe.style.color = "var(--wb-signal-base)";
-          box.append(probe);
-          const signal = getComputedStyle(probe).color;
-          probe.remove();
-          return getComputedStyle(box).borderTopColor === signal;
+          const field = document.activeElement;
+          return [
+            field?.getAttribute("name"),
+            field?.selectionStart === field?.value.length,
+          ];
         }),
-        true,
+        ["address", true],
       );
       assert.equal(
         await page.evaluate(

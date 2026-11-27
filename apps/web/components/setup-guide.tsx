@@ -539,8 +539,8 @@ function Scope({
       <header className="guide-topbar">
         <div className="guide-topbar-start">
           <a className="guide-mark" href="/">
-            <span aria-hidden="true">h</span>
-            <span className="wb-visually-hidden">hasaweb.site home</span>
+            {/* biome-ignore lint/performance/noImgElement: a static pixel sprite; Cloudflare image optimization is disabled. */}
+            <img src="/landing/town/s_house.png" alt="hasaweb.site home" />
           </a>
           {heldAddress && (
             <span className="guide-held" data-guide-address={heldAddress}>

@@ -182,7 +182,9 @@ describe("Workbench fonts", () => {
       const tags = Array.from({ length: bytes.readUInt16BE(4) }, (_, index) =>
         bytes.toString("ascii", 12 + index * 16, 16 + index * 16),
       );
-      expect(tags).toContain("fvar");
+      // A family pinned to one weight is a static face; a range needs the
+      // variable font's weight axis.
+      if (font.weight[0] !== font.weight[1]) expect(tags).toContain("fvar");
       expect(readFileSync(new URL(font.license, fontsDir), "utf8")).toContain(
         "SIL OPEN FONT LICENSE Version 1.1",
       );
