@@ -11,6 +11,7 @@ const service = {
 };
 const consent = {
   start: vi.fn(),
+  startSwitch: vi.fn(),
   callback: vi.fn(),
 };
 const db = vi.hoisted(() => ({
@@ -287,6 +288,18 @@ describe("private activity consent routes", () => {
           .status,
       ).toBe(422);
     expect(consent.start).toHaveBeenCalledTimes(5);
+    consent.startSwitch.mockResolvedValueOnce({
+      ok: true,
+      url: "https://github.com/login/oauth/authorize?switch",
+    });
+    const switched = await call("/consent", {
+      method: "POST",
+      body: { returnTo: "editor", intent: "switch" },
+      env: ACTIVITY,
+    });
+    expect(switched.status).toBe(200);
+    expect(consent.startSwitch).toHaveBeenCalledWith("editor");
+    expect(consent.start).toHaveBeenCalledTimes(5);
   });
   it("returns every callback to the fixed editor path with no referrer", async () => {
     consent.callback.mockResolvedValueOnce({
@@ -357,7 +370,7 @@ describe("private activity consent routes", () => {
     ).rejects.toThrow("Invalid activity key");
     expect(db.cleanups).not.toHaveBeenCalled();
     expect(
-      errors.mock.calls.some((args) =>
+      errors.mock.calls.some((args: unknown[]) =>
         String(args[0]).includes("activity app misconfigured"),
       ),
     ).toBe(true);
@@ -494,10 +507,11 @@ describe("independent refresh (Phase 42)", () => {
         message,
       );
     }
-    expect(db.refresh.mock.calls.map((call) => call[2].authorized)).toEqual([
-      null,
-      null,
-    ]);
+    expect(
+      db.refresh.mock.calls.map(
+        (call: { authorized?: unknown }[]) => call[2]?.authorized,
+      ),
+    ).toEqual([null, null]);
     expect(db.cleanups).not.toHaveBeenCalled();
     expect(error).toHaveBeenCalledTimes(1);
     error.mockRestore();

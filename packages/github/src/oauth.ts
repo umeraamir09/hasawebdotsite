@@ -70,20 +70,21 @@ export function activityAuthorizeUrl(options: {
   redirectUri: string;
   state: string;
   challenge: string;
-  login: string;
+  // Suggests one account. Omit it so GitHub can show the account picker.
+  login?: string;
 }) {
   const url = new URL("/login/oauth/authorize", options.oauthOrigin);
-  url.search = new URLSearchParams({
+  const params = new URLSearchParams({
     client_id: options.clientId,
     redirect_uri: options.redirectUri,
     scope: ACTIVITY_SCOPE,
     state: options.state,
     code_challenge: options.challenge,
     code_challenge_method: "S256",
-    // Suggests the selected account. The callback still verifies the identity.
-    login: options.login,
     allow_signup: "false",
-  }).toString();
+  });
+  if (options.login) params.set("login", options.login);
+  url.search = params.toString();
   return url.toString();
 }
 

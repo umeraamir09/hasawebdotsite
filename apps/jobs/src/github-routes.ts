@@ -206,6 +206,7 @@ export async function sweepGitHubRefreshes(
 const setupSchema = z.strictObject({ username: z.string().min(1).max(64) });
 const consentSchema = z.strictObject({
   returnTo: z.enum(["editor", "setup"]),
+  intent: z.enum(["repair", "switch"]).optional(),
 });
 const emptySchema = z.strictObject({});
 const failureStatus = {
@@ -366,11 +367,15 @@ export function addGitHubRoutes(app: Hono<OwnerBindings>) {
         authSettings(c.env).origin,
       );
       if (!activity) return privateJson({ error: "private_unavailable" }, 503);
-      const result = await ownerPrivateActivity(
+      const activityOwner = ownerPrivateActivity(
         c.env.DB,
         c.get("identity"),
         activity,
-      ).start(command.returnTo);
+      );
+      const result =
+        command.intent === "switch"
+          ? await activityOwner.startSwitch(command.returnTo)
+          : await activityOwner.start(command.returnTo);
       return result.ok
         ? privateJson({ url: result.url })
         : privateJson({ error: result.error }, consentStatus[result.error]);

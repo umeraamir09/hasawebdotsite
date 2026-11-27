@@ -17,6 +17,7 @@ import {
   releaseUnusedConsent,
   runGitHubCleanups,
   withdrawPrivateActivity,
+  withdrawSignInGraph,
 } from "../src/github-private";
 import { ownerGraphSetup } from "../src/github-setup";
 import { runRefreshChecks } from "./github-refresh";
@@ -1240,6 +1241,86 @@ export async function runPrivateActivityChecks(
         }),
         { ok: false, error: "reauthorize" },
       );
+    },
+  );
+  await check(
+    "Switch consent can replace the graph account, and a same-account approval keeps the working grant",
+    async () => {
+      const t = await prepared("gh-switch");
+      const first = await t.consent();
+      equal((await t.service.callback(first.params)).outcome, "connected");
+      const started = await t.service.startSwitch("editor");
+      ok(started.ok, `switch start ${JSON.stringify(started)}`);
+      const authorize = new URL(started.url);
+      equal(authorize.searchParams.get("login"), null);
+      const same = t.github.authorize(started.url, t.selected);
+      equal((await t.service.callback(same)).outcome, "connected");
+      equal((await raw(t.portfolioId))?.login, t.selected.login);
+      equal((await raw(t.portfolioId))?.private_enabled, 1);
+      ok(t.github.valid(t.selected), "working grant stays");
+      const again = await t.service.startSwitch("editor");
+      ok(again.ok, "switch to another account");
+      const moved = t.github.authorize(again.url, t.other);
+      equal((await t.service.callback(moved)).outcome, "connected");
+      equal((await raw(t.portfolioId))?.github_user_id, t.other.id);
+      equal((await raw(t.portfolioId))?.private_enabled, 1);
+      const third = await t.service.startSwitch("editor");
+      ok(third.ok, "switch cancel");
+      const cancelled = t.github.authorize(third.url, "cancel");
+      equal((await t.service.callback(cancelled)).outcome, "cancelled");
+      equal((await raw(t.portfolioId))?.private_enabled, 0);
+    },
+  );
+  await check(
+    "Disconnecting GitHub sign-in withdraws only a graph stored with the sign-in app",
+    async () => {
+      const activityGraph = await prepared("gh-activity-grant");
+      const consented = await activityGraph.consent();
+      equal(
+        (await activityGraph.service.callback(consented.params)).outcome,
+        "connected",
+      );
+      ok(
+        await withdrawSignInGraph(
+          db,
+          activityGraph.identity,
+          signInApp.id,
+          clock,
+        ),
+        "activity grant stays",
+      );
+      equal((await raw(activityGraph.portfolioId))?.private_enabled, 1);
+      const github = fakeGitHub();
+      const identity = await makeOwner("gh-signin-grant");
+      const selected = account("gh-signin-grant-owner");
+      const token = github.issue(selected, "read:user");
+      await db
+        .prepare(
+          "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,'github',?,?,1,1)",
+        )
+        .bind("account-gh-signin-grant", "9101", identity.user.id, token)
+        .run();
+      const setup = ownerGraphSetup(db, identity, {
+        transport: github.transport,
+        platformToken: "platform-token",
+        now: () => clock,
+        activity: {
+          transport: github.transport,
+          app,
+          signInApp,
+          key,
+          oauthOrigin: "https://github.com",
+          callbackUrl,
+          now: () => clock,
+        },
+      });
+      const connected = await setup.connectSignIn(async (stored) => stored);
+      ok(connected.ok, `sign-in graph ${JSON.stringify(connected)}`);
+      ok(
+        await withdrawSignInGraph(db, identity, signInApp.id, clock),
+        "sign-in grant withdrawn",
+      );
+      equal((await raw(`portfolio-${identity.user.id}`))?.private_enabled, 0);
     },
   );
   // Phase 42 refresh checks reuse these owners, the fake and the clock.

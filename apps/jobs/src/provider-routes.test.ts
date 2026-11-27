@@ -25,7 +25,7 @@ vi.mock("@hasaweb/db", async (importOriginal) => ({
       return db.remove(provider);
     },
   }),
-  withdrawPrivateActivity: async () => {
+  withdrawSignInGraph: async () => {
     calls.push("withdraw");
     return db.withdraw();
   },
