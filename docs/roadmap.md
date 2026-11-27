@@ -156,7 +156,8 @@ Phases 51A to 51C test whether a beta of about 15 portfolios (5 editing sessions
 - Replace the single every-minute trigger with separate Cron Triggers that `scheduled()` dispatches on `event.cron` (Free allows five per account): publication, withdrawal, unpublish and deletion sweeps plus GitHub grant cleanup every minute; the contact outbox every two minutes; maintenance every five minutes; the private GitHub refresh and the D1 size check hourly. Each sweep gets its own error handling, so one failure no longer skips the rest.
 - Lower the per-tick batches to suit the beta: contact `SWEEP_MESSAGES` from 10 to 3 and `PRIVATE_SWEEP_BATCH` from 25 to 10. Read the publication batch from `PUBLICATION_TASK_BATCH` (default 16) instead of the literal in `apps/jobs/src/publication-routes.ts`.
 - Add a local test that counts D1 queries per scheduled invocation with every sweep's work due. Update the per-tick numbers and schedules in [architecture](architecture.md) §6 and §9.
-- [ ] Complete when every trigger stays at or under 50 D1 queries with all sweeps loaded (a `batch()` counts as one), a failing sweep leaves the others running, and `publication` and `api` pass in full.
+- [x] Complete when every trigger stays at or under 50 D1 queries with all sweeps loaded (a `batch()` counts as one), a failing sweep leaves the others running, and `publication` and `api` pass in full.
+  - Four cron triggers, contact sweep of 3 messages and 3 notices, hourly private refresh of 10, publication batch from `PUBLICATION_TASK_BATCH`, and `publication` and `api` passed.
 
 ### Phase 51B. Measure the Free plan natively
 

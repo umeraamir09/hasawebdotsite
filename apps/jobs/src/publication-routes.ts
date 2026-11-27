@@ -20,11 +20,13 @@ import type { Hono } from "hono";
 import { ZodError } from "zod";
 import { readBody } from "./draft-routes";
 import type { OwnerBindings } from "./owner-api";
+import { publicationTaskBatch } from "./publication-task-batch";
 
 export type PublicationBindings = {
   ASSET_ORIGIN: string;
   PUBLICATION_QUEUE: PublicationPolicy["queue"] &
     Queue<UnpublishWake | DeletionWake>;
+  PUBLICATION_TASK_BATCH?: string;
 };
 export function addPublicationRoutes(app: Hono<OwnerBindings>) {
   app.post("/api/owner/publication/case-studies", async (c) => {
@@ -85,7 +87,7 @@ export function addPublicationRoutes(app: Hono<OwnerBindings>) {
         return privateJson({ error: "publication_unavailable" }, 503);
       const policy = {
         assetOrigin: c.env.ASSET_ORIGIN,
-        batchSize: 16,
+        batchSize: publicationTaskBatch(c.env.PUBLICATION_TASK_BATCH),
         queue: c.env.PUBLICATION_QUEUE,
       };
       const operations = ownerPublicationOperations(

@@ -16,21 +16,13 @@ export type MaintenanceEnv = {
   PUBLICATION_QUEUE: { send(body: Wake): Promise<unknown> };
 };
 
-/** Collection runs on every fifth cron minute; the size check once an hour. */
-export const MAINTENANCE_EVERY_MINUTES = 5;
-
 /**
- * Phase 51 garbage collection, one bounded pass per task. Each task is
- * independent, so one failing (logged without details) does not stop the
- * others; every pass is repeatable and resumes on the next tick.
+ * Phase 51 garbage collection, run by the five-minute cron with its
+ * scheduled time as now. One bounded pass per task. Each task is
+ * independent. A failure is logged without details and the next task still
+ * runs. Every pass is repeatable and resumes on the next tick.
  */
-export async function runMaintenance(
-  env: MaintenanceEnv,
-  scheduledTime: number,
-) {
-  const minute = new Date(scheduledTime).getUTCMinutes();
-  if (minute % MAINTENANCE_EVERY_MINUTES !== 0) return null;
-  const now = scheduledTime;
+export async function runMaintenance(env: MaintenanceEnv, now: number) {
   const tasks = {
     uploads: async () => {
       const response = await env.PRIVATE_SOURCE.fetch(
@@ -54,19 +46,6 @@ export async function runMaintenance(
         await env.PUBLICATION_QUEUE.send({ candidateId });
       return restarted.length;
     },
-    size: async () => {
-      if (minute !== 0) return null;
-      const size = await databaseSize(env.DB);
-      // Structured so a log alert can match it (Phase 52 wires the alert).
-      const log = size.alert ? console.error : console.log;
-      log(
-        JSON.stringify({
-          event: size.alert ? "d1_size_alert" : "d1_size",
-          bytes: size.bytes,
-        }),
-      );
-      return size;
-    },
   };
   const results: Record<string, unknown> = {};
   for (const [name, task] of Object.entries(tasks))
@@ -79,4 +58,18 @@ export async function runMaintenance(
       return "failed";
     });
   return results;
+}
+
+/** Logs the D1 size as d1_size or d1_size_alert. */
+export async function logDatabaseSize(env: Pick<MaintenanceEnv, "DB">) {
+  const size = await databaseSize(env.DB);
+  // Structured so a log alert can match it. Phase 52 wires the alert.
+  const log = size.alert ? console.error : console.log;
+  log(
+    JSON.stringify({
+      event: size.alert ? "d1_size_alert" : "d1_size",
+      bytes: size.bytes,
+    }),
+  );
+  return size;
 }

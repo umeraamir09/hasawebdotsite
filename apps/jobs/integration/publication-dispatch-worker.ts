@@ -16,6 +16,7 @@ import {
   runPublicationBatch,
   sweepPublicationTasks,
 } from "../src/publication-dispatch";
+import { publicationTaskBatch } from "../src/publication-task-batch";
 import { withdrawUnpublished } from "../src/publication-unpublish";
 import { withPublicationFault } from "./publication-faults";
 import { measureDispatch } from "./publication-measure";
@@ -105,7 +106,7 @@ export default {
           "s8-portfolio",
           body.revision,
           {
-            batchSize: Number(env.PUBLICATION_TASK_BATCH ?? 16),
+            batchSize: publicationTaskBatch(env.PUBLICATION_TASK_BATCH),
             assetOrigin: env.ASSET_ORIGIN,
           },
         );
