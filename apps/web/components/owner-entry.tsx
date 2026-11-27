@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { resumeAccountDeletion } from "../lib/account-deletion";
 import { resolveAccountEntry, signOutOwner } from "../lib/auth-client";
 import type { RecoveryCoordinator } from "../lib/draft/recovery-coordinator";
+import { linkReturnSearch } from "../lib/sign-in-methods";
 import { Brand } from "./brand";
 import { EditorSession } from "./editor-session";
 import { SetupGuide } from "./setup-guide";
@@ -58,8 +59,9 @@ export function OwnerEntry({
         const kind = current.entry.kind;
         if (kind === "setup" && route === "editor") {
           // Setup consent returns are resolved from saved progress, so no
-          // marker needs to travel; the guide shows the saved step.
-          navigate("/auth/entry");
+          // marker needs to travel; the guide shows the saved step. A
+          // sign-in link return keeps its outcome for the GitHub step.
+          navigate(`/auth/entry${linkReturnSearch(location.search)}`);
           return;
         }
         if (kind === "editor" && route === "entry") {

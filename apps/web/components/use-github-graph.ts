@@ -303,6 +303,14 @@ export function useGitHubGraph({
     connectGitHub: () =>
       run(async () => {
         if (!status?.githubSignIn) {
+          // Save first: an interrupted save would greet the return with
+          // the recovery panel.
+          if (!(await callbacks.current.beforeConsent())) {
+            setProblem(
+              "Your draft couldn't be saved, so connecting didn't start. Retry.",
+            );
+            return;
+          }
           await connectSignInMethod("github");
           await new Promise(() => {});
           return;

@@ -290,6 +290,28 @@ export async function checkGuideGitHub({
       assert.equal(await graphOf(page), undefined);
       await back(page);
 
+      // A refused link returns to `/editor`; setup sends it to the guide,
+      // which says why and leaves a clean address. Connect saves before
+      // leaving, so wait for the save as it does.
+      await page
+        .locator('[data-save-status="saved"]')
+        .waitFor({ timeout: 30000 });
+      await page.goto(
+        new URL(
+          "/editor?account=not-connected&error=account_already_linked_to_different_user",
+          page.url(),
+        ).href,
+      );
+      await panel(page)
+        .getByRole("alert")
+        .getByText(
+          "Your GitHub account is already linked to another hasaweb.site account, so it wasn't connected.",
+        )
+        .waitFor();
+      assert.equal(new URL(page.url()).pathname, "/auth/entry");
+      assert.equal(new URL(page.url()).search, "");
+      assert.equal(await signIns(), 0);
+
       // Zero contributions is a valid, complete graph once GitHub is linked.
       // Continue adds it to the draft. (Linking GitHub as a sign-in method is
       // what Connect GitHub starts; the auth project covers that hop.)

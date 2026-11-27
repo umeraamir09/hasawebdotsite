@@ -11,6 +11,7 @@ import {
   withdrawGraphAccess,
 } from "../lib/editor/github-graph";
 import { acceptGraph, findGraph } from "../lib/guide/github";
+import { clearLinkReturn, linkReturnNotice } from "../lib/sign-in-methods";
 import { ComponentRemovalDialog } from "./section-removal-dialog";
 import { useGitHubGraph } from "./use-github-graph";
 import { Button, Icon, StatusPill } from "./workbench";
@@ -51,6 +52,16 @@ export function GuideGitHub({
     },
   });
   const { status, account, busy } = flow;
+  // Linking GitHub returns here through `/editor`. A refused link (for
+  // example, the account signs in to another hasaweb.site account) is
+  // shown once; a successful one connects on open.
+  const setProblem = flow.setProblem;
+  useEffect(() => {
+    const notice = linkReturnNotice(location.search, "GitHub");
+    if (!notice) return;
+    clearLinkReturn();
+    if (notice.kind === "error") setProblem(notice.text);
+  }, [setProblem]);
   const reportStatus = useRef(onStatus);
   reportStatus.current = onStatus;
   useEffect(() => {
