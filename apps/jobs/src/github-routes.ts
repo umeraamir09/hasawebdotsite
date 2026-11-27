@@ -186,9 +186,9 @@ export async function processGitHubRefresh(
 }
 
 /**
- * Daily private sweep (Phase 42). Each cron tick requests at most one bounded
- * batch of private connections whose authorized calendar is a day old; the
- * consumer validates the token, so revocation made on GitHub is detected.
+ * Daily private sweep (Phase 42). The hourly cron requests at most
+ * PRIVATE_SWEEP_BATCH connections whose authorized calendar is a day old.
+ * The consumer validates the token, so revocation made on GitHub is detected.
  */
 export async function sweepGitHubRefreshes(
   env: RefreshBindings,
