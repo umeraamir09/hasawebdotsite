@@ -153,6 +153,16 @@ function Scope({
   useEffect(() => {
     if (linkNotice) clearLinkReturn();
   }, [linkNotice]);
+  // Reload can restore a scroll offset from the last visit. The shell is the
+  // viewport, so that offset would slide it up over the page background.
+  useEffect(() => {
+    const previous = history.scrollRestoration;
+    history.scrollRestoration = "manual";
+    window.scrollTo(0, 0);
+    return () => {
+      history.scrollRestoration = previous;
+    };
+  }, []);
   const [panel, setPanel] = useState<Panel>("build");
   // Build shows the page outline or one section's editor under a back
   // header (Figma 409:2175). The editor opens on the profile.
@@ -476,12 +486,22 @@ function Scope({
                   const control = document.querySelector<HTMLElement>(
                     `[data-publication-field="${key}"]`,
                   );
-                  control?.scrollIntoView({ block: "center" });
+                  const scroller = control?.closest(
+                    ".editor-panel, .editor-publish",
+                  );
+                  if (control && scroller instanceof HTMLElement) {
+                    const next =
+                      control.getBoundingClientRect().top -
+                      scroller.getBoundingClientRect().top +
+                      scroller.scrollTop -
+                      (scroller.clientHeight - control.offsetHeight) / 2;
+                    scroller.scrollTo({ top: next });
+                  }
                   (
                     control?.querySelector<HTMLElement>(
                       "input,textarea,button",
                     ) ?? control
-                  )?.focus();
+                  )?.focus({ preventScroll: true });
                 });
               }
             }}

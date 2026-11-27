@@ -169,7 +169,9 @@ export function EditorPreview({
         element.clientHeight -
         Number.parseFloat(style.paddingTop) -
         Number.parseFloat(style.paddingBottom);
-      const scale = Math.min(1, inner / FRAME_WIDTH[width]);
+      // A zero-width canvas would divide by zero and give the frame an
+      // infinite layout height while it is being measured.
+      const scale = inner > 0 ? Math.min(1, inner / FRAME_WIDTH[width]) : 1;
       setFit({ scale, height: Math.max(0, height / scale) });
     };
     measure();

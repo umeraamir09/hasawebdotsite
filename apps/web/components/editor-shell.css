@@ -1,9 +1,22 @@
 /* Editor shell (Figma 406:1147): top bar, rail, 392 px panel and canvas.
    Below 1024 px the preview comes first and the panel is a bottom sheet
    (417:11033, 417:11661). */
+/* The shell is the viewport. Scrolling the document slides it up and leaves
+   the page background in the gap, so the page itself does not scroll. */
+html:has(.owner-editor),
+html:has(.owner-editor) body {
+  overflow: clip;
+  overscroll-behavior: none;
+  background: var(--wb-bg-canvas);
+}
 .owner-editor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100dvh;
   overflow: hidden;
+  overscroll-behavior: none;
   background: var(--wb-bg-canvas);
   color: var(--wb-text-primary);
   font-size: 14px;
@@ -519,10 +532,14 @@
   display: flex;
   justify-content: center;
   height: 100%;
+  min-height: 0;
   overflow: hidden;
+  overscroll-behavior: none;
 }
 .editor-canvas-fit {
+  position: relative;
   overflow: hidden;
+  contain: paint;
   border-radius: 20px;
   background: var(--wb-bg-panel);
   box-shadow:
@@ -534,6 +551,14 @@
   height: 100%;
   border: 0;
   transform-origin: 0 0;
+  overscroll-behavior: none;
+}
+/* The frame keeps the preview's real width and is scaled down to fit. Out of
+   flow, that unscaled height cannot make the document taller. */
+.owner-editor .editor-canvas-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 /* Phone and tablet */
