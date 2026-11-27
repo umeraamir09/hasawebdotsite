@@ -46,7 +46,8 @@ const UNCONFIRMED_RECHECK_MS = 5 * MINUTE;
 const NOTICE_ATTEMPTS = 3;
 const NOTICE_RETRY_MS = 5 * MINUTE;
 const SWEEP_MESSAGES = 3;
-const SWEEP_NOTICES = 5;
+// Three notices, with the three messages above, stay within 50 D1 queries.
+const SWEEP_NOTICES = 3;
 
 /** The queue hand-off for one accepted message: only its outbox ID. */
 export const outboxMessageSchema = z.strictObject({

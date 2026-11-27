@@ -51,8 +51,8 @@ const ACTIVITY = {
 const QUERY_LIMIT = 50;
 // runGitHubCleanups selects this many pending grants per call.
 const GRANT_LIMIT = 10;
-// Beta page. This branch still selects 10 messages and 25 connections.
 const MESSAGE_LIMIT = 3;
+const NOTICE_LIMIT = 3;
 const PRIVATE_LIMIT = 10;
 
 type Bound = {
@@ -518,10 +518,10 @@ async function measureSweeps(cron: string) {
       await sweepContactOutbox(loaded.world.db, accepted, Date.now());
       return loaded.world.count();
     };
-    const both = await count(MESSAGE_LIMIT, 5);
+    const both = await count(MESSAGE_LIMIT, NOTICE_LIMIT);
     const messages = await count(MESSAGE_LIMIT, 0);
-    const notices = await count(0, 5);
-    return `sweepContactOutbox ${both}, 3 messages measured alone ${messages}, 5 notices measured alone ${notices}`;
+    const notices = await count(0, NOTICE_LIMIT);
+    return `sweepContactOutbox ${both}, ${MESSAGE_LIMIT} messages measured alone ${messages}, ${NOTICE_LIMIT} notices measured alone ${notices}`;
   }
   if (cron === CRON_EVERY_FIVE_MINUTES) {
     const loaded = harness();
@@ -623,8 +623,7 @@ describe("scheduled D1 query budget", () => {
 
   it("keeps a loaded two-minute trigger within 50 queries", async () => {
     const loaded = harness();
-    // SWEEP_NOTICES is 5. Seed 3 messages, the beta page, not the current 10.
-    seedOutbox(loaded.world, MESSAGE_LIMIT, 5);
+    seedOutbox(loaded.world, MESSAGE_LIMIT, NOTICE_LIMIT);
     const detail = await schedule(loaded, CRON_EVERY_TWO_MINUTES, TWO_AT);
     expect(
       loaded.world
@@ -639,7 +638,7 @@ describe("scheduled D1 query budget", () => {
           "SELECT notice FROM contact_outbox WHERE id LIKE 'notice-%' ORDER BY id",
         )
         .map((row) => row.notice),
-    ).toEqual(["sent", "sent", "sent", "sent", "sent"]);
+    ).toEqual(Array.from({ length: NOTICE_LIMIT }, () => "sent"));
     expect(loaded.world.count(), detail).toBeLessThanOrEqual(QUERY_LIMIT);
   });
 
