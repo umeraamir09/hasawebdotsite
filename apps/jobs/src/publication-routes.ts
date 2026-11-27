@@ -20,7 +20,7 @@ import type { Hono } from "hono";
 import { ZodError } from "zod";
 import { readBody } from "./draft-routes";
 import type { OwnerBindings } from "./owner-api";
-import { publicationTaskBatch } from "./publication-dispatch";
+import { publicationTaskBatch } from "./publication-task-batch";
 
 export type PublicationBindings = {
   ASSET_ORIGIN: string;

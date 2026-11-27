@@ -13,10 +13,10 @@ import { servePublic } from "../../site/src/public-serving";
 import { runAccountDeletion } from "../src/account-deletion";
 import {
   type DispatchEnv,
-  publicationTaskBatch,
   runPublicationBatch,
   sweepPublicationTasks,
 } from "../src/publication-dispatch";
+import { publicationTaskBatch } from "../src/publication-task-batch";
 import { withdrawUnpublished } from "../src/publication-unpublish";
 import { withPublicationFault } from "./publication-faults";
 import { measureDispatch } from "./publication-measure";

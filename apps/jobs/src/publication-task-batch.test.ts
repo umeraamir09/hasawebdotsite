@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { publicationTaskBatch } from "./publication-dispatch";
+import { publicationTaskBatch } from "./publication-task-batch";
 
 it("uses an in-range publication batch and falls back to 16", () => {
   expect(publicationTaskBatch(undefined)).toBe(16);

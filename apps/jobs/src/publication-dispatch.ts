@@ -43,12 +43,6 @@ export type DispatchEnv = {
   PUBLICATION_TASK_BATCH?: string;
 };
 
-export function publicationTaskBatch(value: string | undefined): number {
-  if (value === undefined || value === "") return 16;
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 32) return 16;
-  return parsed;
-}
 const root = (id: string) => `candidate/${id}/`;
 // Resume PDFs download from the asset URL and embed from its /view variant.
 const publicAsset = (
