@@ -5,7 +5,6 @@ import { uploadCollection } from "../../web/lib/assets/collection";
 import { logDatabaseSize, runMaintenance } from "./maintenance";
 
 const DAY = 86_400_000;
-// 12:05 UTC: a collection minute that is not the hourly size check.
 const NOW = Date.UTC(2027, 0, 4, 12, 5);
 const OLD = NOW - UPLOAD_UNREFERENCED_MS - DAY;
 
@@ -74,11 +73,6 @@ afterEach(() => {
 });
 
 describe("scheduled maintenance", () => {
-  it("runs only on collection minutes", async () => {
-    const w = world();
-    expect(await runMaintenance(w.env, NOW + 60_000)).toBeNull();
-  });
-
   it("removes abandoned uploads and orphans but never setup or draft assets", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     const w = world();
@@ -96,7 +90,7 @@ describe("scheduled maintenance", () => {
     await w.object("draft/deleted-portfolio/left");
     await w.object(`draft/${editor}/fresh`, NOW - 60_000);
     const result = await runMaintenance(w.env, NOW);
-    expect(result?.uploads).toEqual({ abandoned: 1, orphans: 1 });
+    expect(result.uploads).toEqual({ abandoned: 1, orphans: 1 });
     expect([...w.draft.objects.keys()].sort()).toEqual([
       `draft/${editor}/fresh`,
       `draft/${editor}/used`,
@@ -111,7 +105,7 @@ describe("scheduled maintenance", () => {
       await w.object(`draft/gone/${String(n).padStart(3, "0")}`);
     const counts: unknown[] = [];
     for (let tick = 0; tick < 3; tick++)
-      counts.push((await runMaintenance(w.env, NOW))?.uploads);
+      counts.push((await runMaintenance(w.env, NOW)).uploads);
     // Deleting shifts the memory listing; every orphan is still reached.
     for (let tick = 0; tick < 3 && w.draft.objects.size; tick++)
       await runMaintenance(w.env, NOW);

@@ -42,7 +42,6 @@ export type DispatchEnv = {
   ASSET_ORIGIN: string;
   PUBLICATION_TASK_BATCH?: string;
 };
-
 const root = (id: string) => `candidate/${id}/`;
 // Resume PDFs download from the asset URL and embed from its /view variant.
 const publicAsset = (

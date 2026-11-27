@@ -17,23 +17,12 @@ export type MaintenanceEnv = {
 };
 
 /**
- * Garbage collection runs every fifth minute. The hourly cron logs the
- * database size.
- */
-export const MAINTENANCE_EVERY_MINUTES = 5;
-
-/**
- * Phase 51 garbage collection, one bounded pass per task. Each task is
+ * Phase 51 garbage collection, run by the five-minute cron with its
+ * scheduled time as now. One bounded pass per task. Each task is
  * independent. A failure is logged without details and the next task still
  * runs. Every pass is repeatable and resumes on the next tick.
  */
-export async function runMaintenance(
-  env: MaintenanceEnv,
-  scheduledTime: number,
-) {
-  const minute = new Date(scheduledTime).getUTCMinutes();
-  if (minute % MAINTENANCE_EVERY_MINUTES !== 0) return null;
-  const now = scheduledTime;
+export async function runMaintenance(env: MaintenanceEnv, now: number) {
   const tasks = {
     uploads: async () => {
       const response = await env.PRIVATE_SOURCE.fetch(

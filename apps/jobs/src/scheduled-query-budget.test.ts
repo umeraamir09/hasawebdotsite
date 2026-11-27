@@ -623,22 +623,19 @@ describe("scheduled D1 query budget", () => {
 
   it("keeps a loaded two-minute trigger within 50 queries", async () => {
     const loaded = harness();
-    seedOutbox(loaded.world, MESSAGE_LIMIT, NOTICE_LIMIT);
+    // One more of each than a sweep takes, so the limits are what stop it.
+    seedOutbox(loaded.world, MESSAGE_LIMIT + 1, NOTICE_LIMIT + 1);
     const detail = await schedule(loaded, CRON_EVERY_TWO_MINUTES, TWO_AT);
     expect(
-      loaded.world
-        .rows(
-          "SELECT id, status FROM contact_outbox WHERE id LIKE 'message-%' ORDER BY id",
-        )
-        .map((row) => row.status),
-    ).toEqual(["sent", "sent", "sent"]);
+      loaded.world.one(
+        "SELECT count(*) AS sent FROM contact_outbox WHERE id LIKE 'message-%' AND status='sent'",
+      ),
+    ).toEqual({ sent: MESSAGE_LIMIT });
     expect(
-      loaded.world
-        .rows(
-          "SELECT notice FROM contact_outbox WHERE id LIKE 'notice-%' ORDER BY id",
-        )
-        .map((row) => row.notice),
-    ).toEqual(Array.from({ length: NOTICE_LIMIT }, () => "sent"));
+      loaded.world.one(
+        "SELECT count(*) AS sent FROM contact_outbox WHERE id LIKE 'notice-%' AND notice='sent'",
+      ),
+    ).toEqual({ sent: NOTICE_LIMIT });
     expect(loaded.world.count(), detail).toBeLessThanOrEqual(QUERY_LIMIT);
   });
 
@@ -677,19 +674,20 @@ describe("scheduled D1 query budget", () => {
 
   it("keeps a loaded hourly trigger within 50 queries", async () => {
     const loaded = harness();
-    for (const id of numbered("private", PRIVATE_LIMIT))
-      seedConnection(loaded.world, id);
+    // One more than a sweep takes, so the limit is what stops it.
+    const seeded = numbered("private", PRIVATE_LIMIT + 1);
+    for (const id of seeded) seedConnection(loaded.world, id);
     // Collection would remove this. The hourly trigger must leave it.
     seedDormant(loaded.world, HOUR_AT);
     const detail = await schedule(loaded, CRON_HOURLY, HOUR_AT);
     expect(loaded.world.count(), detail).toBeLessThanOrEqual(QUERY_LIMIT);
+    const requested = loaded.refreshes.map((refresh) => refresh.portfolioId);
+    expect(new Set(requested).size).toBe(PRIVATE_LIMIT);
     expect(
-      loaded.refreshes.map((refresh) => refresh.portfolioId).sort(),
-    ).toEqual(
-      numbered("private", PRIVATE_LIMIT)
-        .map((id) => `${id}-portfolio`)
-        .sort(),
-    );
+      requested.every((id) =>
+        seeded.some((seed) => id === `${seed}-portfolio`),
+      ),
+    ).toBe(true);
     expect(
       loaded.refreshes.every((refresh) => refresh.kind === "github-refresh"),
     ).toBe(true);
