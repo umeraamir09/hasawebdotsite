@@ -24,11 +24,11 @@ import { connectionRefreshDue, refreshPublicCalendar } from "./github-refresh";
 import type { SessionIdentity } from "./repositories";
 
 // GitHub graph setup for the signed-in owner. A graph shows public and
-// private activity of one account the owner authorized: their GitHub sign-in
-// (`connectSignIn`, with the sign-in token) or another account (`setup` and
-// then consent in `github-private.ts`). The public baseline uses only the
-// separate platform credential and public data, and is never mixed with the
-// authorized calendar.
+// private activity of the owner's GitHub sign-in (`connectSignIn`, with the
+// sign-in token). When that token cannot be used, `detect` plus `setup` and
+// consent in `github-private.ts` authorize the same linked account. The
+// public baseline uses only the separate platform credential and public
+// data, and is never mixed with the authorized calendar.
 
 /** Retry and setup share one cooldown so a click cannot hammer the provider. */
 export const GRAPH_RETRY_COOLDOWN_MS = 10_000;

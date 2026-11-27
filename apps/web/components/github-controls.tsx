@@ -1,14 +1,14 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId } from "react";
 import { useStore } from "zustand";
 import type { DraftController } from "../lib/draft/controller";
 import { setGitHubAccount } from "../lib/editor/github-graph";
-import { LOGIN, useGitHubGraph } from "./use-github-graph";
+import { useGitHubGraph } from "./use-github-graph";
 
 // The editor's graph section. The owner's GitHub sign-in connects on its
-// own, with public and private activity. Another account is chosen by
-// username and authorized on GitHub, where the owner signs in to it. The
+// own, with public and private activity. Connect GitHub links that sign-in
+// when missing, or authorizes it when the stored token cannot be used. The
 // draft records the account; authorization and removal of access act at
 // once, while the graph goes live with Publish.
 export function GitHubSetupPanel({
@@ -23,8 +23,6 @@ export function GitHubSetupPanel({
   beforeConsent(): Promise<boolean>;
 }) {
   const id = useId();
-  const [choosing, setChoosing] = useState(false);
-  const [typed, setTyped] = useState("");
   const graph = useGitHubGraph({
     draftUsername: savedUsername,
     autoConnect: true,
@@ -36,6 +34,10 @@ export function GitHubSetupPanel({
   const { status, account, busy } = graph;
   const off = inactive || busy;
   const privateState = status?.private.state ?? "off";
+  // Offer Connect whenever the graph is not live: link GitHub if missing,
+  // connect the sign-in token, or replace a stale selected account after
+  // the owner switches GitHub sign-in.
+  const canConnect = !graph.connected && !!status && status.privateAvailable;
   const canAuthorize =
     !!account &&
     !graph.connected &&
@@ -44,11 +46,6 @@ export function GitHubSetupPanel({
     );
   const canRetry =
     !!account && ["ready", "pending", "error"].includes(privateState);
-  // Without an account, a GitHub sign-in offers itself first.
-  const offerSignIn =
-    !account && !!status?.githubSignIn && !choosing && status.privateAvailable;
-  const askUsername = choosing || (!!status && !account && !offerSignIn);
-  const candidate = typed.trim();
   return (
     <section
       aria-label="GitHub activity controls"
@@ -84,12 +81,12 @@ export function GitHubSetupPanel({
         </p>
       )}
       <div className="github-actions">
-        {offerSignIn && (
+        {canConnect && (
           <button
             type="button"
             data-github-action="connect"
             disabled={off}
-            onClick={() => void graph.connectSignIn()}
+            onClick={() => void graph.connectGitHub()}
           >
             Connect GitHub
           </button>
@@ -114,63 +111,7 @@ export function GitHubSetupPanel({
             {graph.connected ? "Refresh activity" : "Retry"}
           </button>
         )}
-        {!askUsername && status && (
-          <button
-            type="button"
-            data-github-action="other-account"
-            disabled={off}
-            onClick={() => setChoosing(true)}
-          >
-            Use another account
-          </button>
-        )}
       </div>
-      {askUsername && (
-        <form
-          className="editor-field"
-          onSubmit={(event) => {
-            event.preventDefault();
-            void graph.connectAccount(candidate);
-          }}
-        >
-          <label htmlFor={id}>GitHub username</label>
-          <input
-            id={id}
-            value={typed}
-            disabled={off}
-            autoComplete="off"
-            autoCapitalize="none"
-            spellCheck={false}
-            maxLength={39}
-            aria-describedby={`${id}-status`}
-            onChange={(event) => {
-              setTyped(event.target.value);
-              graph.setProblem("");
-            }}
-          />
-          <div className="github-actions">
-            <button
-              type="submit"
-              data-github-action="continue"
-              disabled={off || !LOGIN.test(candidate)}
-            >
-              {busy ? "Working..." : "Continue on GitHub"}
-            </button>
-            {status?.githubSignIn && (
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setChoosing(false);
-                  setTyped("");
-                }}
-              >
-                Cancel
-              </button>
-            )}
-          </div>
-        </form>
-      )}
     </section>
   );
 }

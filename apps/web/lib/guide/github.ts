@@ -20,9 +20,9 @@ export function findGraph(draft: DraftDoc | null | undefined) {
 
 /**
  * Records an account the server selected. The graph component is created
- * only here: when the owner continues with a connected graph, or picks
- * another account and leaves to authorize it. Visiting or skipping the
- * screen never adds a graph.
+ * only here: when the owner continues with a connected graph, or leaves to
+ * authorize the sign-in account. Visiting or skipping the screen never adds
+ * a graph.
  */
 export function acceptGraph(
   controller: DraftController,

@@ -767,6 +767,7 @@ export async function checkGuideJourney({
     async () => {
       github.addUser({
         login: "Journey-Private",
+        databaseId: 6300,
         counts: { [recentDay]: 2 },
         privateCounts: { [recentDay]: 4 },
       });
@@ -787,12 +788,43 @@ export async function checkGuideJourney({
         name: "GitHub activity controls",
         exact: true,
       });
-      // GitHub authorization for the typed account is cancelled: the graph
-      // stays in the draft, unfinished.
+      // Link GitHub without a usable token, remount so status sees it, then
+      // cancel authorization: the graph stays in the draft, unfinished.
+      await sql(
+        "DELETE FROM account WHERE user_id='draft-alice' AND provider_id='github'",
+      );
+      await sql(
+        "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES(?,?,?,?,?,?,?)",
+        [
+          "journey-github-link",
+          "6300",
+          "github",
+          "draft-alice",
+          null,
+          Date.now(),
+          Date.now(),
+        ],
+      );
+      await page.goto(`${browserOrigin}/auth/entry`);
+      await page.waitForFunction(() => window.guideFixture?.ready);
+      await waitStep(page, "github");
+      const discard = page.getByRole("button", {
+        name: "Discard local recovery",
+        exact: true,
+      });
+      if (await discard.count()) await discard.click();
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor({
+        timeout: 30000,
+      });
       github.state.consent = { as: null, cancel: true, hold: false };
-      await panel.getByLabel("GitHub username").fill("Journey-Private");
-      await panel.getByLabel("GitHub username").press("Enter");
-      await page.waitForURL(/\/auth\/entry$/, { timeout: 60000 });
+      // Prefer Authorize when the linked account is already selected.
+      const authorize = panel.getByRole("button", {
+        name: /^Authorize (again|on GitHub)$/,
+      });
+      const connect = panel.getByRole("button", { name: "Connect GitHub" });
+      if (await authorize.count()) await authorize.click();
+      else await connect.click();
+      await page.waitForURL(/\/auth\/entry/, { timeout: 60000 });
       await page.waitForFunction(() => window.guideFixture?.ready);
       await waitStep(page, "github");
       await panel
