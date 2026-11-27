@@ -1286,7 +1286,8 @@ button.guide-kbd:disabled {
   border-radius: 0;
   clip-path: var(--px-sm);
 }
-.setup-guide .wb-segment[aria-checked="true"] {
+/* Matches Workbench's small-segment rule so the guide's fill wins. */
+.setup-guide .wb-segmented[data-size] .wb-segment[aria-checked="true"] {
   background: var(--px-lime);
   box-shadow: none;
   color: var(--px-on-lime);
