@@ -18,6 +18,24 @@
       "license": "geist-mono/OFL.txt",
       "source": "https://raw.githubusercontent.com/google/fonts/121c8e30e20960139d24d1e93f350745205dd680/ofl/geistmono/GeistMono%5Bwght%5D.ttf",
       "sha256": "d00e590b8eb3a59acc329b2d044fd143ae935090b7da33199ebee27cc7de8196"
+    },
+    {
+      "family": "Host Grotesk",
+      "weight": [300, 800],
+      "style": "normal",
+      "asset": "host-grotesk/HostGrotesk-Variable.ttf",
+      "license": "host-grotesk/OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/5b5a99da970ec99e2ac88042fbb2b7f225ec55ac/ofl/hostgrotesk/HostGrotesk%5Bwght%5D.ttf",
+      "sha256": "74c77b8e850d58dd3d8b22e39111a73bef3450de9fb57018ef99119f2d484f5d"
+    },
+    {
+      "family": "Silkscreen",
+      "weight": [700, 700],
+      "style": "normal",
+      "asset": "silkscreen/Silkscreen-Bold.ttf",
+      "license": "silkscreen/OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/7e8d490955e9d2629cd3095e8dadd6fafe3c16b8/ofl/silkscreen/Silkscreen-Bold.ttf",
+      "sha256": "768476aa712d4f5c3e18d3bce80f980a8bd3f72b7094d22ec5e768df3acfed61"
     }
   ]
 }
