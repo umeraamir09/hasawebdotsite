@@ -138,9 +138,20 @@ export function GuideAddress({
         void submit();
       }}
     >
+      {/* The input is only as wide as the address, so a press anywhere in the
+          field (icon, suffix, status, padding) moves focus into it. Keyboard
+          users reach the input directly. */}
+      {/* biome-ignore lint/a11y/noStaticElementInteractions: a pointer convenience for the input inside; the input itself takes focus and keys. */}
       <div
         className="guide-big-field guide-address-field"
         data-invalid={pill?.status === "issue" ? "" : undefined}
+        onMouseDown={(event) => {
+          const field = input.current;
+          if (!field || field.disabled || event.target === field) return;
+          event.preventDefault();
+          field.focus();
+          field.setSelectionRange(field.value.length, field.value.length);
+        }}
       >
         <Icon name="globe" size={20} />
         <label htmlFor={id} className="wb-visually-hidden">

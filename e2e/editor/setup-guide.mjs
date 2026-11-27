@@ -524,6 +524,22 @@ export async function checkSetupGuide({
         ),
         / 0px 0px 0px 3px inset$/,
       );
+      // A press anywhere in the field, here on the suffix, focuses the input
+      // with the caret at the end.
+      await page
+        .locator(".guide-address-field")
+        .evaluate((field) => field.querySelector("input").blur());
+      await page.locator(".guide-address-suffix").click();
+      assert.deepEqual(
+        await page.evaluate(() => {
+          const field = document.activeElement;
+          return [
+            field?.getAttribute("name"),
+            field?.selectionStart === field?.value.length,
+          ];
+        }),
+        ["address", true],
+      );
       assert.equal(
         await page.evaluate(
           () =>
