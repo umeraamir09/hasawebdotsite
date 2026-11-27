@@ -69,7 +69,7 @@
     ]
   },
   "triggers": {
-    "crons": ["* * * * *"]
+    "crons": ["* * * * *", "*/2 * * * *", "*/5 * * * *", "0 * * * *"]
   },
   "assets": {
     "directory": "dist/platform",

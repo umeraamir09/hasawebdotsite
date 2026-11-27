@@ -8,7 +8,6 @@ import {
   deliverMessage,
   type OutboxMessage,
   outboxMessageSchema,
-  sweepContactOutbox,
   type UnpublishWake,
   unpublishWakeSchema,
   type Wake,
@@ -16,31 +15,16 @@ import {
 } from "@hasaweb/db";
 import { emailProvider } from "@hasaweb/email";
 import { parseRefreshMessage, type RefreshMessage } from "@hasaweb/github";
-import { runAccountDeletion, sweepAccountDeletions } from "./account-deletion";
+import { runAccountDeletion } from "./account-deletion";
 import type { ContactBindings } from "./contact-routes";
-import {
-  type GitHubBindings,
-  processGitHubRefresh,
-  sweepGitHubCleanups,
-  sweepGitHubRefreshes,
-} from "./github-routes";
-import { runMaintenance } from "./maintenance";
+import { type GitHubBindings, processGitHubRefresh } from "./github-routes";
 import { ownerRouter } from "./owner-api";
 import type { PublicationCacheEnv } from "./publication-cache";
-import {
-  type DispatchEnv,
-  runPublicationBatch,
-  sweepPublicationTasks,
-} from "./publication-dispatch";
+import { type DispatchEnv, runPublicationBatch } from "./publication-dispatch";
 import type { PublicationBindings } from "./publication-routes";
-import {
-  sweepUnpublishWithdrawals,
-  withdrawUnpublished,
-} from "./publication-unpublish";
-import {
-  sweepPublicationWithdrawals,
-  withdrawPublication,
-} from "./publication-withdrawal";
+import { withdrawUnpublished } from "./publication-unpublish";
+import { withdrawPublication } from "./publication-withdrawal";
+import { runScheduled } from "./scheduled";
 
 // Only a named service binding can reach this API. The default HTTP entry has no owner routes.
 export class OwnerApi extends WorkerEntrypoint<
@@ -206,30 +190,10 @@ export default {
     }
   },
   async scheduled(event, env) {
-    await sweepPublicationTasks(env);
-    await sweepPublicationWithdrawals(env);
-    await sweepUnpublishWithdrawals(env);
-    await sweepAccountDeletions(env);
-    // Durable grant revocation: pending cleanups retry here until GitHub
-    // confirms them. Uncertain ones wait for reconciliation (Phase 11D).
-    await sweepGitHubCleanups(env).catch(() => []);
-    // Contact delivery retries, interrupted attempts and owner notices.
-    await sweepContactOutbox(env.DB, emailProvider(env), Date.now()).catch(
-      (error: unknown) =>
-        console.error(
-          "contact sweep failed",
-          error instanceof Error ? error.name : typeof error,
-        ),
+    await runScheduled(
+      { cron: event.cron, scheduledTime: event.scheduledTime },
+      env,
     );
-    // Daily private refresh: one bounded batch of due connections per tick.
-    await sweepGitHubRefreshes(env).catch((error: unknown) =>
-      console.error(
-        "github refresh sweep failed",
-        error instanceof Error ? error.name : typeof error,
-      ),
-    );
-    // Phase 51 garbage collection and the D1 size check (each task bounded).
-    await runMaintenance(env, event.scheduledTime);
     if (env.APP_ENV !== "local") return;
     await env.DB.prepare(
       "INSERT OR REPLACE INTO runtime_probe (key, value) VALUES ('cron', 'complete')",
