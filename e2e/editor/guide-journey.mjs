@@ -103,7 +103,8 @@ export async function checkGuideJourney({
   const recoveryReady = (page) =>
     page.getByRole("button", { name: "Continue preserved edits" });
 
-  // Address and the Profile name, so that the next field is a real edit.
+  // Address, then Profile once the account name has filled the empty Name
+  // field and saved, so that the next field is a real edit.
   async function toProfile(page, name) {
     await open(page);
     await field(page).fill(name);
@@ -111,6 +112,10 @@ export async function checkGuideJourney({
     await addressStatus(page).filter({ hasText: "Available" }).waitFor();
     await proceed(page);
     await waitStep(page, "profile");
+    await until(
+      async () => Boolean((await stored()).profile?.name),
+      "the account name was not prefilled",
+    );
     await page.locator('.guide-save[data-save-status="saved"]').waitFor();
   }
 
@@ -128,12 +133,15 @@ export async function checkGuideJourney({
           await provision(page, "alice");
           const name = `recover-${suffix()}`;
           await toProfile(page, name);
+          // The prefilled account name is saved; the edit below is the one
+          // the expired session must not save.
+          const prefilled = "alice";
 
           // The session ends while the owner types a valid name.
           await cookie("expired");
           await page.getByLabel("Name", { exact: true }).fill(`Via ${label}`);
           await signInButton(page, label).waitFor({ timeout: 30000 });
-          assert.equal((await stored()).profile?.name ?? "", "");
+          assert.equal((await stored()).profile?.name, prefilled);
           provider.as = "alice";
           await signInButton(page, label).click();
 
@@ -143,7 +151,7 @@ export async function checkGuideJourney({
             timeout: 30000,
           });
           await recoveryReady(page).waitFor({ timeout: 30000 });
-          assert.equal((await stored()).profile?.name ?? "", "");
+          assert.equal((await stored()).profile?.name, prefilled);
           const saved = JSON.parse(await continuation(page));
           assert.deepEqual(Object.keys(saved).sort(), [
             "context",
@@ -166,7 +174,7 @@ export async function checkGuideJourney({
           // A callback reload keeps the offer and saves nothing.
           await page.reload();
           await recoveryReady(page).waitFor({ timeout: 30000 });
-          assert.equal((await stored()).profile?.name ?? "", "");
+          assert.equal((await stored()).profile?.name, prefilled);
           await recoveryReady(page).click();
           await until(
             async () => (await stored()).profile?.name === `Via ${label}`,
@@ -243,7 +251,7 @@ export async function checkGuideJourney({
           .filter({ hasText: "Sign-in didn't finish" })
           .waitFor({ timeout: 30000 });
         assert.equal(await continuation(page), interrupted);
-        assert.equal((await stored()).profile?.name ?? "", "");
+        assert.equal((await stored()).profile?.name, "alice");
 
         // Another account signs in: a clear mismatch, original untouched.
         provider.as = "bob";
@@ -253,7 +261,7 @@ export async function checkGuideJourney({
           .getByText(/different account or portfolio/)
           .waitFor({ timeout: 30000 });
         assert.equal(await continuation(page), before);
-        assert.equal((await stored()).profile?.name ?? "", "");
+        assert.equal((await stored()).profile?.name, "alice");
         assert.equal((await stored("draft-bob")).profile?.name ?? "", "");
         assert.equal(
           await page

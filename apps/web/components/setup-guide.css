@@ -975,6 +975,25 @@ button.guide-kbd:disabled {
   flex-wrap: wrap;
   gap: 8px;
 }
+/* Connect is the step's answer surface, shaped like the answer fields on
+   the other steps, so Continue stays the one dark button. */
+.setup-guide .guide-github-connect.wb-button {
+  justify-content: flex-start;
+  gap: 12px;
+  width: 100%;
+  height: 64px;
+  padding: 0 22px;
+  background: var(--px-fill);
+  color: var(--wb-text-primary);
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+  letter-spacing: -0.2px;
+  clip-path: var(--px-md);
+}
+.setup-guide .guide-github-connect.wb-button:hover:not(:disabled) {
+  background: var(--px-fill-hover);
+}
 .guide-github-remove {
   align-self: flex-start;
 }

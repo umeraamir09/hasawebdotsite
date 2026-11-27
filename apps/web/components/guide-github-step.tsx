@@ -137,12 +137,12 @@ export function GuideGitHub({
       {canConnect && (
         <div className="guide-github-actions">
           <Button
-            kind="primary"
-            icon="github"
+            className="guide-github-connect"
             data-github-action="connect"
             disabled={off}
             onClick={() => void flow.connectGitHub()}
           >
+            <Icon name="github" size={20} />
             {busy ? "Connecting..." : "Connect GitHub"}
           </Button>
         </div>
