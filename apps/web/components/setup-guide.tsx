@@ -284,12 +284,19 @@ function Scope({
     setNavigating(true);
     setStepError("");
     setHandoffNotice("");
+    const started = document.activeElement;
     try {
       controller.changeProgress(progressFor(target));
       await controller.flushValid();
       // The control that started navigation may have been removed with its
-      // step; move focus to the new heading once rendering has settled.
-      requestAnimationFrame(() => heading.current?.focus());
+      // step; move focus to the new heading once rendering has settled. The
+      // new step shows before the save finishes, so the owner may already be
+      // typing in it. Keep that focus.
+      requestAnimationFrame(() => {
+        const active = document.activeElement;
+        if (!active || active === started || active === document.body)
+          heading.current?.focus();
+      });
       return true;
     } catch {
       setStepError(
