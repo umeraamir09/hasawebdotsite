@@ -13,6 +13,7 @@ import { servePublic } from "../../site/src/public-serving";
 import { runAccountDeletion } from "../src/account-deletion";
 import {
   type DispatchEnv,
+  publicationTaskBatch,
   runPublicationBatch,
   sweepPublicationTasks,
 } from "../src/publication-dispatch";
@@ -105,7 +106,7 @@ export default {
           "s8-portfolio",
           body.revision,
           {
-            batchSize: Number(env.PUBLICATION_TASK_BATCH ?? 16),
+            batchSize: publicationTaskBatch(env.PUBLICATION_TASK_BATCH),
             assetOrigin: env.ASSET_ORIGIN,
           },
         );

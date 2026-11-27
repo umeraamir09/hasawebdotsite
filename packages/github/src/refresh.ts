@@ -11,8 +11,8 @@ export const REFRESH_TTL_MS = 6 * 60 * 60_000;
 export const REFRESH_REQUEST_WINDOW_MS = 15 * 60_000;
 /** Daily private sweep: an authorized calendar older than this is due. */
 export const PRIVATE_SWEEP_INTERVAL_MS = 24 * 60 * 60_000;
-/** Bounded work: at most this many private connections are requested per cron tick. */
-export const PRIVATE_SWEEP_BATCH = 25;
+/** Each cron tick requests at most 10 private connections. */
+export const PRIVATE_SWEEP_BATCH = 10;
 
 /**
  * One Queue message refreshes one portfolio: its public calendar, its

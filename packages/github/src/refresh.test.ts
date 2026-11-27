@@ -13,7 +13,7 @@ describe("GitHub refresh policy", () => {
     expect(REFRESH_TTL_MS).toBe(6 * 60 * 60_000);
     expect(REFRESH_REQUEST_WINDOW_MS).toBe(15 * 60_000);
     expect(PRIVATE_SWEEP_INTERVAL_MS).toBe(24 * 60 * 60_000);
-    expect(PRIVATE_SWEEP_BATCH).toBe(25);
+    expect(PRIVATE_SWEEP_BATCH).toBe(10);
   });
   it("is due only once the TTL passed since the last successful fetch", () => {
     const fetchedAt = "2026-11-08T00:00:00.000Z";

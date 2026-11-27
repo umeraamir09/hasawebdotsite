@@ -45,7 +45,7 @@ const ABANDON_AFTER_MS = HOUR;
 const UNCONFIRMED_RECHECK_MS = 5 * MINUTE;
 const NOTICE_ATTEMPTS = 3;
 const NOTICE_RETRY_MS = 5 * MINUTE;
-const SWEEP_MESSAGES = 10;
+const SWEEP_MESSAGES = 3;
 const SWEEP_NOTICES = 5;
 
 /** The queue hand-off for one accepted message: only its outbox ID. */
