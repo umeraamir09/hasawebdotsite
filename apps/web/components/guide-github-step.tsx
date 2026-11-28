@@ -68,11 +68,6 @@ export function GuideGitHub({
     if (status) reportStatus.current(status);
   }, [status]);
   const off = inactive || busy;
-  // Offer Connect whenever the graph is not live: link GitHub if missing,
-  // connect the sign-in token, or replace a stale selected account after
-  // the owner switches GitHub sign-in.
-  const canConnect = !flow.connected && !!status && status.privateAvailable;
-
   const privateState = status?.private.state ?? "off";
   const statusAt =
     status?.private.state === "ready" ? status.private.fetchedAt : "";
@@ -96,11 +91,17 @@ export function GuideGitHub({
   const canAuthorize =
     !!account &&
     !flow.connected &&
-    ["off", "consent_failed", "reconnect", "authorizing"].includes(
-      privateState,
-    );
+    ["consent_failed", "reconnect", "authorizing"].includes(privateState);
   const canRetry =
     !!account && !flow.connected && ["pending", "error"].includes(privateState);
+  // One Connect button until authorization has already failed. Connect links
+  // a missing sign-in, uses its token, or continues into authorization.
+  const canConnect =
+    !flow.connected &&
+    !!status &&
+    status.privateAvailable &&
+    !canAuthorize &&
+    !canRetry;
   const pill = busy
     ? { status: "pending" as const, label: account ? "Checking" : "Connecting" }
     : flow.connected

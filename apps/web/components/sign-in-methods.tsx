@@ -16,7 +16,7 @@ type Notice = { kind: "success" | "error"; text: string };
 
 const disconnectNotes: Record<Provider, string> = {
   github:
-    "You won't be able to sign in with GitHub until you connect it again. Private GitHub activity access is removed now, without publishing, and revoked at GitHub. Your graph keeps showing public contributions.",
+    "You won't be able to sign in with GitHub until you connect it again. Private GitHub activity access is removed now, without publishing, and revoked at GitHub when the graph uses that sign-in. A graph connected as a different account stays.",
   google:
     "You won't be able to sign in with Google until you connect it again.",
 };

@@ -433,6 +433,10 @@ export const githubConsent = sqliteTable(
     verifier: text("verifier").notNull(),
     // Where the callback returns: the editor, or the setup guide (Phase 42D).
     returnTo: text("return_to", { enum: ["editor", "setup"] }).notNull(),
+    // `repair` must match the selected account. `switch` may replace it.
+    intent: text("intent", { enum: ["repair", "switch"] })
+      .notNull()
+      .default("repair"),
     state: text("state", {
       enum: ["issued", "exchanging", "finished", "void"],
     }).notNull(),
@@ -448,6 +452,7 @@ export const githubConsent = sqliteTable(
       sql`${t.state} in ('issued','exchanging','finished','void')`,
     ),
     check("github_consent_return", sql`${t.returnTo} in ('editor','setup')`),
+    check("github_consent_intent", sql`${t.intent} in ('repair','switch')`),
     check(
       "github_consent_verifier",
       sql`(${t.state} in ('issued','exchanging')) = (length(${t.verifier}) = 43)`,

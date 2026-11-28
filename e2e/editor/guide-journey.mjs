@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { join } from "node:path";
 import { addLink, addSkill, editLink } from "./links.mjs";
-import { openChecklist, openSection } from "./shell.mjs";
+import { addSection, openChecklist, openSection } from "./shell.mjs";
 
 // Phase 42F: the Phase 15 callback continuation and the complete new-user
 // journey through the production guide, Review, handoff, editor and Publish.
@@ -913,9 +913,27 @@ export async function checkGuideJourney({
         "the project repair was not saved",
       );
       await openSection(page, "GitHub activity");
+      // A failed authorization removes the section. Adding it again connects.
+      await page.waitForFunction(
+        () => {
+          const recovery = window.editorFixture?.recovery;
+          if (!recovery) return false;
+          return !recovery.store
+            .getState()
+            .controller.store.getState()
+            .working.components.some((item) => item.type === "github");
+        },
+        null,
+        { timeout: 30000 },
+      );
+      await sql(
+        "UPDATE github_connection SET last_checked_at=0 WHERE portfolio_id=(SELECT id FROM portfolio WHERE user_id='draft-alice')",
+      );
+      await addSection(page, "GitHub activity");
+      await openSection(page, "GitHub activity");
       await page
         .getByRole("region", { name: "GitHub activity controls", exact: true })
-        .getByRole("button", { name: "Authorize again" })
+        .getByRole("button", { name: "Connect GitHub" })
         .click();
       await page.waitForURL(/\/editor(\?github=consent)?$/, {
         timeout: 60000,

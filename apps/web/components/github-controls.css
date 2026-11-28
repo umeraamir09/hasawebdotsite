@@ -1,0 +1,31 @@
+.github-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.github-account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.github-account a {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.github-account-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.github-controls .github-connect {
+  justify-content: center;
+  width: 100%;
+}

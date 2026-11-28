@@ -173,12 +173,18 @@ export type ConsentReturn = "editor" | "setup";
 export async function startPrivateConsent(
   send?: typeof fetch,
   returnTo: ConsentReturn = "editor",
+  intent: "repair" | "switch" = "repair",
 ) {
-  const body = z
-    .strictObject({ url: z.string().url() })
-    .parse(
-      await call("/consent", { method: "POST", body: { returnTo } }, send),
-    );
+  const body = z.strictObject({ url: z.string().url() }).parse(
+    await call(
+      "/consent",
+      {
+        method: "POST",
+        body: intent === "switch" ? { returnTo, intent } : { returnTo },
+      },
+      send,
+    ),
+  );
   return body.url;
 }
 /**

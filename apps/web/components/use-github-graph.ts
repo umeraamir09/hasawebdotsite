@@ -211,19 +211,19 @@ export function useGitHubGraph({
     readGraphStatus()
       .then(async (next) => {
         if (!current) return;
-        setStatus(next);
-        // A remount (or a connect that finished after the previous effect
-        // was cleaned up) can already be connected on the server. Still
-        // write the account into the draft when it does not name one.
-        if (
-          autoConnect &&
-          !draftUsername &&
-          next.connection &&
-          graphConnected(next)
-        ) {
-          callbacks.current.onConnected(next.connection.username);
+        // A connected graph names the account, including after a switch
+        // that replaced the one the draft still has.
+        if (next.connection && graphConnected(next)) {
+          const name = next.connection.username;
+          if (
+            !draftUsername ||
+            name.toLowerCase() !== draftUsername.toLowerCase()
+          )
+            callbacks.current.onConnected(name);
+          setStatus(next);
           return;
         }
+        setStatus(next);
         if (
           !autoConnect ||
           draftUsername ||
@@ -320,6 +320,19 @@ export function useGitHubGraph({
       }),
     /** Authorizes the selected account on GitHub again. */
     authorize: () => run(authorize),
+    /** Replaces the connected graph account. Sign-in is left in place. */
+    switchAccount: () =>
+      run(async () => {
+        if (!(await callbacks.current.beforeConsent())) {
+          setProblem(
+            "Your draft couldn't be saved, so switching didn't start. Retry.",
+          );
+          return;
+        }
+        const url = await startPrivateConsent(undefined, returnTo, "switch");
+        location.assign(url);
+        await new Promise(() => {});
+      }),
     retry: () =>
       run(async () => {
         const next = await retryGraph();

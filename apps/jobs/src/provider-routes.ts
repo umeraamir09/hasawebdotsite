@@ -3,7 +3,7 @@ import {
   privateJson,
   SaveError,
   SIGN_IN_PROVIDERS,
-  withdrawPrivateActivity,
+  withdrawSignInGraph,
 } from "@hasaweb/db";
 import type { Hono } from "hono";
 import { z } from "zod";
@@ -52,10 +52,16 @@ export function addProviderRoutes(app: Hono<OwnerBindings>) {
       return privateJson({ error: "not_connected" }, 409);
     if (connected.length < 2) return privateJson({ error: "last_method" }, 409);
     if (provider === "github") {
-      // Disconnecting GitHub removes private activity access through the
-      // Phase 41 withdrawal before the sign-in goes, so a failure leaves
-      // sign-in in place and the owner can retry. The public graph stays.
-      if (!(await withdrawPrivateActivity(c.env.DB, c.get("identity"))))
+      // The sign-in token is the graph grant only when this portfolio stored
+      // it. An activity-app grant for another account stays. A failure leaves
+      // sign-in in place so the owner can retry.
+      if (
+        !(await withdrawSignInGraph(
+          c.env.DB,
+          c.get("identity"),
+          c.env.GITHUB_CLIENT_ID ?? "",
+        ))
+      )
         return privateJson({ error: "conflict" }, 409);
     }
     const removal = await providers.remove(provider);

@@ -544,6 +544,41 @@ export function ownerGithub(db: D1Database, sourceIdentity: SessionIdentity) {
         binding,
       );
     },
+    /**
+     * Queues one spare activity token for revocation when that app/account
+     * has no live grant. An active grant is left untouched: the caller
+     * revokes the spare token itself.
+     */
+    async parkToken(input: {
+      identity: GitHubIdentity;
+      portfolioId: string;
+      generation: number;
+      operationId: string;
+      envelope: string;
+      binding: string;
+      appId: string;
+    }) {
+      parseIdentity(input.identity);
+      const row = await query(
+        db,
+        `INSERT INTO github_grant(app_id,github_user_id,portfolio_id,operation_id,generation,state,token_enc,token_binding,retry_at)
+        VALUES(?,?,?,?,?,'pending',?,?,0)
+        ON CONFLICT(app_id,github_user_id) DO UPDATE SET portfolio_id=excluded.portfolio_id,
+          operation_id=excluded.operation_id,generation=excluded.generation,state='pending',
+          token_enc=excluded.token_enc,token_binding=excluded.token_binding,retry_at=0,
+          last_error=NULL,provider_rejected=0
+        WHERE github_grant.state='idle'
+        RETURNING state`,
+        input.appId,
+        input.identity.id,
+        input.portfolioId,
+        input.operationId,
+        input.generation,
+        input.envelope,
+        input.binding,
+      ).first();
+      return row !== null;
+    },
     // Call only when the OAuth flow proves no token was issued/exchange started.
     async cancelUnissuedConsent(ticket: ConsentTicket) {
       const portfolioId = await requirePortfolio();

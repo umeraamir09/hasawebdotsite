@@ -3,8 +3,13 @@ import {
   authorizedRefreshResult,
   CONSENT_TTL_MS,
   consentStateHash,
+  credentialBinding,
+  deleteActivityCredential,
+  encryptActivityToken,
   exchangeActivityCode,
   fetchAuthorizedActivity,
+  fetchViewer,
+  type GitHubIdentity,
   type GitHubTransport,
   hasActivityScope,
   isConsentValue,
@@ -102,6 +107,7 @@ type ConsentRow = {
   generation: number;
   verifier: string;
   return_to: ConsentReturn;
+  intent: "repair" | "switch";
   state: "issued" | "exchanging" | "finished" | "void";
   outcome: string | null;
   created_at: number;
@@ -212,6 +218,29 @@ export async function withdrawPrivateActivity(
     if (await owner.disconnect(connection.generation)) return true;
   }
   return false;
+}
+
+/**
+ * Withdraws the graph only when its stored grant is the GitHub sign-in token.
+ * An activity-app grant for another account stays. No private grant is a no-op.
+ */
+export async function withdrawSignInGraph(
+  db: D1Database,
+  identity: SessionIdentity,
+  signInAppId: string,
+  now = Date.now(),
+): Promise<boolean> {
+  const owner = ownerGithub(db, identity);
+  const connection = await owner.getConnection();
+  if (!connection?.privateEnabled) return true;
+  const row = await db
+    .prepare(
+      `SELECT app_id FROM github_connection WHERE portfolio_id=? AND generation=?`,
+    )
+    .bind(connection.portfolioId, connection.generation)
+    .first<{ app_id: string | null }>();
+  if (signInAppId && row?.app_id && row.app_id !== signInAppId) return true;
+  return withdrawPrivateActivity(db, identity, now);
 }
 
 /** Runs due remote revocations for the activity and sign-in apps. */
@@ -373,8 +402,8 @@ export function ownerPrivateActivity(
         const inserted = await db
           .prepare(
             `INSERT INTO github_consent(state_hash,user_id,session_id,portfolio_id,app_id,github_user_id,login,
-              operation_id,generation,verifier,return_to,state,created_at,expires_at)
-            SELECT ?,?,?,?,?,?,?,?,?,?,?,'issued',?,? WHERE ? IN (${owned})
+              operation_id,generation,verifier,return_to,state,created_at,expires_at,intent)
+            SELECT ?,?,?,?,?,?,?,?,?,?,?,'issued',?,?,'repair' WHERE ? IN (${owned})
             AND EXISTS(SELECT 1 FROM github_grant g WHERE g.app_id=? AND g.github_user_id=?
               AND g.operation_id=? AND g.state='consent')`,
           )
@@ -434,6 +463,66 @@ export function ownerPrivateActivity(
       };
     },
     /**
+     * Starts consent that may replace the connected graph account. The
+     * authorize URL does not suggest an account. Sign-in rows are not written.
+     */
+    async startSwitch(
+      returnTo: ConsentReturn,
+    ): Promise<
+      | { ok: true; url: string }
+      | { ok: false; error: "no_graph" | "consent_busy" }
+    > {
+      const connection = await owner.getConnection();
+      if (!connection?.privateEnabled || connection.status !== "ok")
+        return { ok: false, error: "no_graph" };
+      await releaseUnusedConsent(db, identity, now());
+      const state = randomConsentValue();
+      const verifier = randomConsentValue();
+      const at = now();
+      const operationId = crypto.randomUUID();
+      const inserted = await db
+        .prepare(
+          `INSERT INTO github_consent(state_hash,user_id,session_id,portfolio_id,app_id,github_user_id,login,
+            operation_id,generation,verifier,return_to,state,created_at,expires_at,intent)
+          SELECT ?,?,?,?,?,?,?,?,?,?,?,'issued',?,?,'switch' WHERE ? IN (${owned})
+          AND EXISTS(SELECT 1 FROM github_connection c WHERE c.portfolio_id=? AND c.generation=?
+            AND c.github_user_id=? AND c.private_enabled=1 AND c.status='ok')`,
+        )
+        .bind(
+          await consentStateHash(state),
+          identity.user.id,
+          identity.session.id,
+          connection.portfolioId,
+          env.app.id,
+          connection.identity.id,
+          connection.identity.login,
+          operationId,
+          connection.generation,
+          verifier,
+          returnTo,
+          at,
+          at + CONSENT_TTL_MS,
+          connection.portfolioId,
+          ...ownerValues(),
+          connection.portfolioId,
+          connection.generation,
+          connection.identity.id,
+        )
+        .run();
+      if (inserted.meta.changes !== 1)
+        return { ok: false, error: "consent_busy" };
+      return {
+        ok: true,
+        url: activityAuthorizeUrl({
+          oauthOrigin: env.oauthOrigin,
+          clientId: env.app.id,
+          redirectUri: env.callbackUrl,
+          state,
+          challenge: await pkceChallenge(verifier),
+        }),
+      };
+    },
+    /**
      * Completes a consent callback for this exact owner session. Replayed,
      * expired, other-owner and other-session states change nothing.
      */
@@ -455,9 +544,14 @@ export function ownerPrivateActivity(
           `UPDATE github_consent SET state='exchanging', exchange_started_at=?
           WHERE state_hash=? AND state='issued' AND expires_at>? AND user_id=? AND session_id=?
             AND portfolio_id IN (${owned})
-            AND EXISTS(SELECT 1 FROM github_grant g WHERE g.app_id=github_consent.app_id
-              AND g.github_user_id=github_consent.github_user_id
-              AND g.operation_id=github_consent.operation_id AND g.state='consent')
+            AND (
+              (intent='repair' AND EXISTS(SELECT 1 FROM github_grant g WHERE g.app_id=github_consent.app_id
+                AND g.github_user_id=github_consent.github_user_id
+                AND g.operation_id=github_consent.operation_id AND g.state='consent'))
+              OR (intent='switch' AND EXISTS(SELECT 1 FROM github_connection c
+                WHERE c.portfolio_id=github_consent.portfolio_id AND c.generation=github_consent.generation
+                AND c.github_user_id=github_consent.github_user_id AND c.private_enabled=1 AND c.status='ok'))
+            )
           RETURNING *`,
         )
         .bind(
@@ -491,6 +585,141 @@ export function ownerPrivateActivity(
         returnTo: row.return_to,
         outcome: await finish(hash, outcome),
       });
+      if (row.intent === "switch") {
+        const drop = () => owner.disconnect(row.generation);
+        const revokeSpare = async (token: string, viewer: GitHubIdentity) => {
+          const operationId = crypto.randomUUID();
+          const portfolioId = row.portfolio_id ?? "";
+          const binding = credentialBinding(
+            portfolioId,
+            env.app.id,
+            viewer.id,
+            operationId,
+            "token",
+          );
+          const parked = await owner.parkToken({
+            identity: viewer,
+            portfolioId,
+            generation: row.generation,
+            operationId,
+            appId: env.app.id,
+            binding,
+            envelope: await encryptActivityToken(env.key, token, binding),
+          });
+          if (!parked)
+            await deleteActivityCredential(
+              env.transport,
+              env.app,
+              token,
+              "token",
+            );
+        };
+        if (params.error || !params.code) {
+          await drop();
+          return done(
+            params.error === "access_denied" ? "cancelled" : "failed",
+          );
+        }
+        const exchanged = await exchangeActivityCode(
+          env.transport,
+          env.oauthOrigin,
+          env.app,
+          {
+            code: params.code.slice(0, 256),
+            verifier: row.verifier,
+            redirectUri: env.callbackUrl,
+          },
+        );
+        if (exchanged.status === "none") {
+          await drop();
+          return done(exchanged.reason === "code" ? "expired" : "failed");
+        }
+        const viewed = await fetchViewer(env.transport, exchanged.token);
+        if (viewed.status === "failed") {
+          await deleteActivityCredential(
+            env.transport,
+            env.app,
+            exchanged.token,
+            "token",
+          );
+          await drop();
+          return done("failed");
+        }
+        if (!hasActivityScope(viewed.scopes)) {
+          await revokeSpare(exchanged.token, viewed.viewer);
+          await drop();
+          return done("scope");
+        }
+        if (sameIdentity(viewed.viewer, ticket.identity)) {
+          await revokeSpare(exchanged.token, viewed.viewer);
+          return done("connected");
+        }
+        const selected = await owner.select(viewed.viewer, row.generation);
+        if (!selected) {
+          await revokeSpare(exchanged.token, viewed.viewer);
+          await drop();
+          return done("failed");
+        }
+        const reserved = await owner.beginConsent(
+          env.app.id,
+          selected.generation,
+        );
+        if (!reserved) {
+          await revokeSpare(exchanged.token, viewed.viewer);
+          return done("failed");
+        }
+        const fetchedAt = new Date(now());
+        const fetched = await fetchAuthorizedActivity(
+          env.transport,
+          exchanged.token,
+          reserved.identity,
+          lastYearRange(fetchedAt),
+          fetchedAt.toISOString(),
+        ).catch(async (error: unknown) => {
+          await owner.discardIssuedToken(reserved, env.key, exchanged.token);
+          throw error;
+        });
+        if (fetched.status === "failed") {
+          await owner.discardIssuedToken(reserved, env.key, exchanged.token);
+          return done("failed");
+        }
+        const scopes = hasActivityScope(fetched.scopes)
+          ? "read:user"
+          : fetched.scopes || "none";
+        let enabled: Awaited<ReturnType<typeof owner.finishConsent>>;
+        try {
+          enabled = await owner.finishConsent(
+            reserved,
+            env.key,
+            exchanged.token,
+            scopes,
+            fetched.viewer,
+          );
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message === "Invalid activity consent"
+          )
+            return done(
+              sameIdentity(fetched.viewer, reserved.identity)
+                ? "scope"
+                : "wrong_account",
+            );
+          await owner.discardIssuedToken(reserved, env.key, exchanged.token);
+          throw error;
+        }
+        if (!enabled) return done("failed");
+        await jobs.refresh(
+          {
+            portfolioId: enabled.portfolioId,
+            generation: enabled.generation,
+            identity: enabled.identity,
+          },
+          authorizedRefreshResult(fetched, enabled.identity),
+          now(),
+        );
+        return done("connected");
+      }
       if (params.error || !params.code) {
         // The owner declined (or GitHub refused) before any code existed.
         await owner.cancelUnissuedConsent(ticket);

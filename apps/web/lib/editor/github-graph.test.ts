@@ -79,7 +79,7 @@ describe("GitHub graph browser client", () => {
     await loadGraphPreview(signal, true, send);
     expect(
       (send as unknown as ReturnType<typeof vi.fn>).mock.calls.map(
-        (call) => call[0],
+        (call: unknown[]) => call[0],
       ),
     ).toEqual([
       "/api/owner/github/preview",

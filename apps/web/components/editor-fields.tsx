@@ -28,7 +28,9 @@ export function EditorFields(props: Parameters<typeof SectionFields>[0]) {
     props.controller.store
       .getState()
       .working?.components.some(
-        (item) => item.id === selected.id && item.type === "social-links",
+        (item) =>
+          item.id === selected.id &&
+          (item.type === "social-links" || item.type === "github"),
       );
   if (modern) return <SectionFields {...props} />;
   return (

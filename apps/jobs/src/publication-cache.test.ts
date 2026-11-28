@@ -86,7 +86,10 @@ it("requires no-store absence and the current page hash without following redire
     status: 200,
     sha256: "new-hash",
   });
-  expect(send.mock.calls.every(([, init]) => init?.redirect === "manual")).toBe(
-    true,
-  );
+  expect(
+    send.mock.calls.every((call: unknown[]) => {
+      const init = call[1] as { redirect?: string } | undefined;
+      return init?.redirect === "manual";
+    }),
+  ).toBe(true);
 });
