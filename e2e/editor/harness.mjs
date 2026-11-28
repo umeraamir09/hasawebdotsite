@@ -8,6 +8,17 @@ import { createGroupRunner } from "../support/groups.mjs";
 import { freePort } from "../support/ports.mjs";
 import { linkFields, openPanel, outline, resize } from "./shell.mjs";
 
+// The editor shell fills the viewport. Scrolling the document would slide the
+// shell up and show the page background underneath.
+function pageFitsViewport() {
+  window.scrollTo(0, 2000);
+  return (
+    window.scrollY === 0 &&
+    document.documentElement.scrollWidth <= innerWidth &&
+    document.documentElement.scrollHeight <= innerHeight + 1
+  );
+}
+
 // Serves the editor, guide and owner-entry fixtures through a local proxy in
 // front of the owner runtime and opens one Chromium context. `core()` runs the
 // editor's own groups; journeys in this folder receive `controls`.
@@ -565,12 +576,7 @@ export async function createEditorHarness({
           /Current reservation: editor-reservation\.hasaweb\.site/,
         );
         await resize(page, { width: 390, height: 844 });
-        assert.equal(
-          await page.evaluate(
-            () => document.documentElement.scrollWidth <= innerWidth,
-          ),
-          true,
-        );
+        assert.equal(await page.evaluate(pageFitsViewport), true);
         await openPanel(page, "Share");
         await page
           .getByRole("textbox", { name: "Address name" })
@@ -703,12 +709,7 @@ export async function createEditorHarness({
         // The confirmed viewport matrix: desktop, tablet and phone.
         for (const parentWidth of [1280, 768, 360]) {
           await resize(page, { width: parentWidth, height: 1000 });
-          assert.equal(
-            await page.evaluate(
-              () => document.documentElement.scrollWidth <= innerWidth,
-            ),
-            true,
-          );
+          assert.equal(await page.evaluate(pageFitsViewport), true);
           for (const [label, width] of [
             ["Desktop", 1120],
             ["Mobile", 390],
