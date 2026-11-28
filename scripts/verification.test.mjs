@@ -66,9 +66,15 @@ it("plans every e2e project in seven parallel CI jobs", async () => {
   const { ciMatrix } = await import("./ci-plan.mjs");
   expect(ciMatrix()).toEqual(
     [
-      ["editor 1/3", "--project=editor --shard=1/3"],
-      ["editor 2/3", "--project=editor --shard=2/3"],
-      ["editor 3/3", "--project=editor --shard=3/3"],
+      ["editor setup guide", '--project=editor --grep="setup guide"'],
+      [
+        "editor 1/2",
+        '--project=editor --grep-invert="setup guide" --shard=1/2',
+      ],
+      [
+        "editor 2/2",
+        '--project=editor --grep-invert="setup guide" --shard=2/2',
+      ],
       ["autosave", "--project=autosave"],
       ["uploads and auth", "--project=uploads --project=auth"],
       ["renderer and runtime", "--project=renderer --project=runtime"],

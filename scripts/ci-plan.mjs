@@ -3,32 +3,35 @@
 //   node scripts/ci-plan.mjs
 //
 // Every code change runs every e2e project, split into seven parallel
-// one-worker jobs.
+// one-worker jobs. The two setup guide tests are the slowest editor tests, so
+// they get a job of their own and the other editor tests split in two.
 import { appendFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+const guide = "setup guide";
+
 const groups = [
-  { name: "editor 1/3", projects: ["editor"], shard: "1/3" },
-  { name: "editor 2/3", projects: ["editor"], shard: "2/3" },
-  { name: "editor 3/3", projects: ["editor"], shard: "3/3" },
+  { name: "editor setup guide", projects: ["editor"], grep: guide },
+  { name: "editor 1/2", projects: ["editor"], invert: guide, shard: "1/2" },
+  { name: "editor 2/2", projects: ["editor"], invert: guide, shard: "2/2" },
   { name: "autosave", projects: ["autosave"] },
   { name: "uploads and auth", projects: ["uploads", "auth"] },
   { name: "renderer and runtime", projects: ["renderer", "runtime"] },
   { name: "publication and api", projects: ["publication", "api"] },
 ];
 
-const args = (names, shard) =>
+// The workflow pastes `args` into a shell command, so grep patterns are quoted.
+const args = ({ projects, grep, invert, shard }) =>
   [
-    ...names.map((name) => `--project=${name}`),
+    ...projects.map((name) => `--project=${name}`),
+    ...(grep ? [`--grep="${grep}"`] : []),
+    ...(invert ? [`--grep-invert="${invert}"`] : []),
     ...(shard ? [`--shard=${shard}`] : []),
   ].join(" ");
 
 export function ciMatrix() {
-  return groups.map((group) => ({
-    name: group.name,
-    args: args(group.projects, group.shard),
-  }));
+  return groups.map((group) => ({ name: group.name, args: args(group) }));
 }
 
 if (
