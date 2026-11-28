@@ -111,6 +111,9 @@ jobs:
     env:
       # Hosted runners have two cores: one runtime and browser at a time.
       E2E_WORKERS: "1"
+      # The slowest passing browser group takes about 23s, so a stuck step
+      # fails in 60s instead of the local default of 120s.
+      BROWSER_GROUP_LIMIT_MS: "60000"
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

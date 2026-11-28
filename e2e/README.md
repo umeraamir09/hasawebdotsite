@@ -41,7 +41,7 @@ The api project is one Playwright test that runs every check in `draft-api/check
 
 Don't reuse the seeded owners (`alice`, `bob`, `revoked`) for checks that claim an address, set a contact recipient or delete the account (`leaver` and `closer`, each with an `-other` session, exist for deletion). Address claims are permanent by trigger (`claim_no_delete`, `claim_no_transfer`), so cleanup fails and later checks see the claim. Insert a dedicated synthetic owner and portfolio for that check instead.
 
-Each browser group has a 120-second limit (`BROWSER_GROUP_LIMIT_MS`). Lower it while debugging so a step that waits forever fails quickly.
+Each browser group has a 120-second limit locally and 60 seconds in CI (`BROWSER_GROUP_LIMIT_MS`). Lower it while debugging so a step that waits forever fails quickly.
 
 In CI, Playwright retries a failed test once and reports a pass on retry as flaky. Treat flaky reports as bugs to fix with a proper wait, not as noise. Local runs don't retry unless you set `E2E_RETRIES`, so a failure reports after one attempt.
 

@@ -28,7 +28,8 @@ import { expect, step, test } from "./support/fixtures.mjs";
 // Each journey boots its own editor state, so journeys run in any order and
 // spread across workers. Groups inside a journey are test steps;
 // GROUP_FILTER=<regexp> runs a subset of them.
-// Order balances CI's three editor shards (9/8/8 tests, about 2.3 min each).
+// CI runs the two setup guide tests in their own job and splits the rest in
+// order across two shards (13/12 tests).
 const journeys = {
   "setup guide": (editor) =>
     checkSetupGuide({ ...editor.controls, errors: editor.errors }),
