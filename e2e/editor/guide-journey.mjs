@@ -294,6 +294,9 @@ export async function checkGuideJourney({
 
   // ---- The complete journeys -------------------------------------------
 
+  // A locator for the preview iframe rather than a Frame object: Review
+  // remounts the preview when its draft reloads, and a held Frame would
+  // then wait forever on the detached document.
   const reviewFrame = async (page) => {
     await page.waitForFunction(
       () =>
@@ -302,22 +305,24 @@ export async function checkGuideJourney({
       undefined,
       { timeout: 45000 },
     );
-    const frame = page.frames().find((candidate) => {
-      try {
-        return new URL(candidate.url()).pathname === "/editor/preview";
-      } catch {
-        return false;
-      }
-    });
-    assert.ok(frame, "the production /editor/preview document is mounted");
-    return frame;
+    const iframe = page.locator(
+      'iframe[title="Your private portfolio preview"]',
+    );
+    assert.equal(
+      new URL(await iframe.getAttribute("src"), page.url()).pathname,
+      "/editor/preview",
+      "the production /editor/preview document is mounted",
+    );
+    return iframe.contentFrame();
   };
   const sectionTypes = (frame) =>
-    frame.evaluate(() =>
-      [...document.querySelectorAll("[data-component-id]")].map(
-        (element) => element.closest("[data-component]")?.dataset.component,
-      ),
-    );
+    frame
+      .locator("[data-component-id]")
+      .evaluateAll((elements) =>
+        elements.map(
+          (element) => element.closest("[data-component]")?.dataset.component,
+        ),
+      );
   const pngFile = async (page, color) => ({
     name: "a.png",
     mimeType: "image/png",

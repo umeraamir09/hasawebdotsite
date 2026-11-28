@@ -116,6 +116,9 @@ export async function checkGuideReview({
     await waitStep(page, "skills");
   }
 
+  // A locator for the preview iframe rather than a Frame object: Review
+  // remounts the preview when its draft reloads, and a held Frame would
+  // then wait forever on the detached document.
   const reviewFrame = async (page) => {
     await page.waitForFunction(
       () =>
@@ -124,22 +127,24 @@ export async function checkGuideReview({
       undefined,
       { timeout: 45000 },
     );
-    const frame = page.frames().find((candidate) => {
-      try {
-        return new URL(candidate.url()).pathname === "/editor/preview";
-      } catch {
-        return false;
-      }
-    });
-    assert.ok(frame, "Review uses the production /editor/preview document");
-    return frame;
+    const iframe = page.locator(
+      'iframe[title="Your private portfolio preview"]',
+    );
+    assert.equal(
+      new URL(await iframe.getAttribute("src"), page.url()).pathname,
+      "/editor/preview",
+      "Review uses the production /editor/preview document",
+    );
+    return iframe.contentFrame();
   };
   const sectionTypes = (frame) =>
-    frame.evaluate(() =>
-      [...document.querySelectorAll("[data-component-id]")].map(
-        (element) => element.closest("[data-component]")?.dataset.component,
-      ),
-    );
+    frame
+      .locator("[data-component-id]")
+      .evaluateAll((elements) =>
+        elements.map(
+          (element) => element.closest("[data-component]")?.dataset.component,
+        ),
+      );
 
   await guarded(
     "setup guide Review, Skip to review, statuses and handoff into the editor",
@@ -459,7 +464,7 @@ export async function checkGuideReview({
 
   await guarded(
     "setup guide Review with every optional step skipped, missing content and access",
-    async () => {
+    async (mark) => {
       await reset();
       const page = await guidePage();
       await provision(page, "alice");
@@ -470,6 +475,7 @@ export async function checkGuideReview({
       await skip(page, "Skip to review");
       await waitStep(page, "review");
 
+      mark("Review preview frame");
       // Only the real profile and link: no sections, no samples.
       const frame = await reviewFrame(page);
       await frame.getByText("Review Owner", { exact: true }).first().waitFor();
@@ -481,6 +487,7 @@ export async function checkGuideReview({
         .getByText(/Nothing in your saved draft is unfinished/)
         .waitFor({ timeout: 30000 });
 
+      mark("accessibility and layout");
       // Accessibility and layout at desktop and phone widths.
       await page.evaluate(
         await readFile(
@@ -517,6 +524,7 @@ export async function checkGuideReview({
       });
       await page.setViewportSize({ width: 1500, height: 1000 });
 
+      mark("other owner and visitor reads");
       // Another owner and a signed-out visitor get none of the draft's data,
       // images or graph preview.
       const avatar = (await stored()).profile.avatar.assetId;
@@ -551,6 +559,7 @@ export async function checkGuideReview({
         }
       }
 
+      mark("invalid required content");
       // Required content that stops being valid after Review cannot hand
       // off: the guide returns to its step and records no milestone.
       await sql("UPDATE asset SET status='failed' WHERE id=?", [avatar]);
