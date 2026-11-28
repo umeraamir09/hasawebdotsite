@@ -252,6 +252,11 @@ export async function checkSetupGuide({
         .locator(`[data-guide-address="${name}"]`)
         .filter({ hasText: "Private" })
         .waitFor();
+      // The account name fills Name once its read returns; the reload
+      // below must come after that edit saves.
+      await page.waitForFunction(
+        () => document.querySelector(".guide-profile-name input")?.value,
+      );
       await page.locator('.guide-save[data-save-status="saved"]').waitFor();
       assert.equal(await page.evaluate(() => window.recoveryShown), false);
       await noBypass(page);
@@ -334,6 +339,13 @@ export async function checkSetupGuide({
       await field(page).fill(name);
       await proceed(page);
       await waitStep(page, "profile");
+      // The account name fills Name once its read returns. Forge after it
+      // saves: a fill that lands after the forge and before the reload is
+      // unsaved local input, and the reload would open recovery instead.
+      await page.waitForFunction(
+        () => document.querySelector(".guide-profile-name input")?.value,
+      );
+      await page.locator('.guide-save[data-save-status="saved"]').waitFor();
       await forge("github");
       await page.reload();
       await page.waitForFunction(() => window.guideFixture?.ready);

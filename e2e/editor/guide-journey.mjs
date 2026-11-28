@@ -350,7 +350,12 @@ export async function checkGuideJourney({
     await reset();
     const page = await guidePage();
     await provision(page, "alice");
-    await sql("DELETE FROM account WHERE id='journey-account'");
+    // Earlier groups leave GitHub sign-ins on alice, some without a token.
+    // The server reads one GitHub account per owner, so this sign-up's
+    // account must be her only one.
+    await sql(
+      "DELETE FROM account WHERE id='journey-account' OR (user_id='draft-alice' AND provider_id='github')",
+    );
     // A GitHub sign-up holds the sign-in token its graph connects with.
     await sql(
       "INSERT INTO account(id,account_id,provider_id,user_id,access_token,created_at,updated_at) VALUES('journey-account',?,?,'draft-alice',?,?,?)",
